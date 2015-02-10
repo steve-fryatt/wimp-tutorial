@@ -1,0 +1,95 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+
+<manual>
+<title>Wimp Programming In C</title>
+
+<!-- Chapter 1 -->
+
+<chapter>
+<title>Chapter 1</title>
+
+<section>
+<para>This is an introduction.</para>
+
+</section>
+
+<section>
+<title>Section the First</title>
+
+<para>For anyone familiar with writing in BASIC, the main polling loop is surprisingly simple.</para>
+
+<code lang="bbcbasic">10 REM >Days2
+20 REM Calculates day of week
+
+30 ON ERROR REPORT:PRINT " at line ";ERL:END
+40 DIM monnum%(12),day$(6)
+50 FOR m%=1 TO 12:READ monnum%(m%):NEXT
+60 FOR d%=0 TO 6:READ day$(d%):NEXT
+70 REPEAT
+80 INPUT "Please enter the day of the month "date%
+90 INPUT "Now enter month number (1-12) "mon%
+100 INPUT "Now enter the year "year%
+110 IF year%&lt;40 year%=100
+120 IF year%&lt;140 year%=1900
+130 IF year%&lt;1900 OR year%&gt;2099 THEN PRINT'"Sorry, this program only works with years 1900 to 2099"':UNTIL FALSE
+140 year%-=1900
+150 leaps%=year% DIV 4
+160 IF (year% MOD 4)=0 AND mon%&lt;3 AND year%&gt;0 THEN leaps%-=1
+170 total%=year%+leaps%+monnum%(mon%)+date%
+180 total%=total% MOD 7
+190 PRINT '"That day was a "day$(total%)
+200 INPUT '"Do you want another go (y/n)",char$
+210 PRINT
+220 UNTIL LEFT$(char$,1)&lt;&gt;"Y" AND LEFT$(char$,1)&lt;&gt;"y"
+230 DATA 0,3,3,6,1,4,6,2,5,0,3,5
+240 DATA Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday</code>
+
+
+<code lang="c">/**
+ * Wimp Poll loop.
+ */
+
+static void main_poll_loop(void)
+{
+	wimp_block	blk;
+	wimp_event_no	reason;
+	int		pollword;
+
+	while (!main_quit_flag) {
+		reason = wimp_poll(wimp_MASK_NULL, &amp;blk, &amp;pollword);
+
+		/* Events are passed to Event Lib first; only if this fails to
+		 * handle them do they get passed on to the switch statement.
+		 */
+
+		if (!event_process_event(reason, &amp;blk, pollword)) {
+			switch (reason) {
+
+			case wimp_OPEN_WINDOW_REQUEST:
+				wimp_open_window(&amp;(blk.open));
+				break;
+
+			case wimp_CLOSE_WINDOW_REQUEST:
+				wimp_close_window(blk.close.w);
+				break;
+			}
+		}
+	}
+}</code>
+
+<para>While main_quit_flag is FALSE, the loop repeatedly calls Wimp_Poll and passes the results on to event_process_event() so that Event Lib can do the hard work. It will look at the details in the poll block (such as target window handles or message types) and try to match the event up to one of the handler functions that have been registered with it; if this succeeds, the function will be called with the details in the block.</para>
+
+<para>It's only if Event Lib fails to find anything to do with the information returned by the Wimp (in which case event_process_event() returns FALSE) that the poll loop needs to do anything itself. At present it just contains two &quot;handlers of last resort&quot; for Open_Window and Close_Window events: often these need little or no special handling, so providing generic code for them makes sense.</para>
+
+</section>
+
+</chapter>
+
+<!-- Chapter 2 -->
+
+<chapter>
+<title>Chapter 2 And A Bit</title>
+
+</chapter>
+
+</manual>
