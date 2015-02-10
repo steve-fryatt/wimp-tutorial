@@ -6,12 +6,67 @@
 <!-- Chapter 1 -->
 
 <chapter>
+<title>From BASIC to C</title>
+
+<section>
+<para>Like many other RISC OS users, I started programming in BBC BASIC. Although it served me well, I began to find that it didn't always scale well -- especially when software had to handle large, variable amounts of data or multiple documents.</para>
+
+<para>After learning C on Unix systems, I began to investigate how it could be used on RISC OS. My first efforts directly copied the techniques used in BASIC, and quickly became just as unweildy as their predecessors.</para>
+
+<para>Eventually I settled on using a combination of OSLib and my own libraries -- imaginatively called SFLib -- based on it. Together, these have formed the basis of all of my software which has been started since 2000.</para>
+
+<para>The aim of this guide is to give some help to those who are competent in C but have not used it when writing for the RISC OS desktop. It will also introduce the use of SFLib, which may be of interest to those writing Wimp software using OSLib.</para>
+</section>
+
+<section>
+<title>Starting in BASIC</title>
+
+<para>It doesn't take many lines of code to get a very simple application running under the RISC OS Wimp. The example here will run quietly in the background until quit via the Task Manager, and should be familiar to anyone who has ever written a Wimp application in BASIC.</para>
+
+<code lang="bbcbasic">REM >Example 1.1
+REM
+REM (c) Stephen Fryatt, 2015
+
+DIM b% 255
+
+SYS "Wimp_Initialise", 310, &amp;4B534154, "Wimp Task", 0
+
+quit% = FALSE
+
+REPEAT
+	SYS "Wimp_Poll", &amp;1A73, b% TO reason%
+
+	CASE reason% OF
+	WHEN 17, 18
+		IF b%!16 = 0 THEN quit% = TRUE
+	ENDCASE
+UNTIL quit%
+
+END</code>
+
+<para>After initialising itself via Wimp_Initialise, the program sets the quit% flag to FALSE and then polls the Wimp via Wimp_Poll until a Message_Quit is received. At this stage, it exits.</para>
+
+</section>
+
+</chapter>
+
+<chapter>
 <title>Chapter 1</title>
 
 <section>
 <para>This is an introduction.</para>
 
+
+
+
+
+
+
 </section>
+
+
+
+
 
 <section>
 <title>Section the First</title>
