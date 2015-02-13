@@ -17,6 +17,7 @@
 <!-- Chapter 1 -->
 
 <chapter>
+<filename>introduction.html</filename>
 <title>From BASIC to C</title>
 
 <section>
@@ -62,6 +63,7 @@ END</code>
 </chapter>
 
 <chapter>
+<filename>intro2.html</filename>
 <title>Chapter 1</title>
 
 <section>
@@ -154,6 +156,7 @@ static void main_poll_loop(void)
 <!-- Chapter 2 -->
 
 <chapter>
+<filename>chapter2.html</filename>
 <title>Chapter 2 And A Bit</title>
 
 </chapter>
