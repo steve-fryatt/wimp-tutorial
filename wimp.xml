@@ -1,5 +1,16 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
 
+<!DOCTYPE xmlmanual [
+	<!ENTITY ldquo "ldquo">
+	<!ENTITY lsquo "lsquo">
+	<!ENTITY minus "minus">
+	<!ENTITY nbsp "nbsp">
+	<!ENTITY ndash "ndash">
+	<!ENTITY rdquo "rdquo">
+	<!ENTITY rsquo "rsquo">
+	<!ENTITY times "times">
+]>
+
 <manual xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="xmldoc.xsd" version="1.8.6">
 <title>Wimp Programming In C</title>
 
@@ -9,19 +20,19 @@
 <title>From BASIC to C</title>
 
 <section>
-<p>Like many other RISC OS users, I started programming in BBC BASIC. Although it served me well, I began to find that it didn't always scale well -- especially when software had to handle large, variable amounts of data or multiple documents.</p>
+<p>Like many other RISC&nbsp;OS users, I started programming in BBC&nbsp;BASIC. Although it served me well, I began to find that it didn&rsquo;t always scale well &ndash; especially when software had to handle large, variable amounts of data or multiple documents.</p>
 
-<p>After learning C on Unix systems, I began to investigate how it could be used on RISC OS. My first efforts directly copied the techniques used in BASIC, and quickly became just as unweildy as their predecessors.</p>
+<p>After learning C on Unix systems, I began to investigate how it could be used on RISC&nbsp;OS. My first efforts directly copied the techniques used in BASIC, and quickly became just as unweildy as their predecessors.</p>
 
-<p>Eventually I settled on using a combination of OSLib and my own libraries -- imaginatively called SFLib -- based on it. Together, these have formed the basis of all of my software which has been started since 2000.</p>
+<p>Eventually I settled on using a combination of OSLib and my own libraries &ndash; imaginatively called SFLib &ndash; based on it. Together, these have formed the basis of all of my software which has been started since 2000.</p>
 
-<p>The aim of this guide is to give some help to those who are competent in C but have not used it when writing for the RISC OS desktop. It will also introduce the use of SFLib, which may be of interest to those writing Wimp software using OSLib.</p>
+<p>The aim of this guide is to give some help to those who are competent in C but have not used it when writing for the RISC&nbsp;OS desktop. It will also introduce the use of SFLib, which may be of interest to those writing Wimp software using OSLib.</p>
 </section>
 
 <section>
 <title>Starting in BASIC</title>
 
-<p>It doesn't take many lines of code to get a very simple application running under the RISC OS Wimp. The example here will run quietly in the background until quit via the Task Manager, and should be familiar to anyone who has ever written a Wimp application in BASIC.</p>
+<p>It doesn&rsquo;t take many lines of code to get a very simple application running under the RISC&nbsp;OS Wimp. The example here will run quietly in the background until quit via the Task Manager, and should be familiar to anyone who has ever written a Wimp application in BASIC.</p>
 
 <code lang="bbcbasic">REM >Example 1.1
 REM
@@ -134,7 +145,7 @@ static void main_poll_loop(void)
 
 <p>While <variable>main_quit_flag</variable> is <const>FALSE</const>, the loop repeatedly calls <swi>Wimp_Poll</swi> and passes the results on to <function>event_process_event()</function> so that Event Lib can do the hard work. It will look at the details in the poll block (such as target window handles or message types) and try to match the event up to one of the handler functions that have been registered with it; if this succeeds, the function will be called with the details in the block.</p>
 
-<p>It's only if Event Lib fails to find anything to do with the information returned by the Wimp (in which case <function>event_process_event()</function> returns <const>FALSE</const>) that the poll loop needs to do anything itself. At present it just contains two &quot;handlers of last resort&quot; for <name>Open_Window</name> and <name>Close_Window</name> events: often these need little or no special handling, so providing generic code for them makes sense.</p>
+<p>It&rsquo;s only if Event Lib fails to find anything to do with the information returned by the Wimp (in which case <function>event_process_event()</function> returns <const>FALSE</const>) that the poll loop needs to do anything itself. At present it just contains two &ldquo;handlers of last resort&rdquo; for <name>Open_Window</name> and <name>Close_Window</name> events: often these need little or no special handling, so providing generic code for them makes sense.</p>
 
 </section>
 
