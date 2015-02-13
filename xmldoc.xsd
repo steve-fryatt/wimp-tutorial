@@ -22,11 +22,22 @@
   <xsd:complexType name="SectionType">
     <xsd:sequence>
       <xsd:element name="title" type="xsd:string" minOccurs="0" maxOccurs="1"/>
-      <xsd:element name="para" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="p" type="ParagraphType" minOccurs="0" maxOccurs="unbounded"/>
       <xsd:element name="code" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
     </xsd:sequence>
 <!--    <xsd:attribute name="refid" type="xsd:string" use="required"/> -->
 <!--    <xsd:attribute name="kind" type="MemberKind" use="required"/>  -->
+  </xsd:complexType>
+  
+  <xsd:complexType name="ParagraphType">
+    <xsd:sequence>
+      <xsd:element name="const" type="xsd:string"/>
+      <xsd:element name="event" type="xsd:string"/>
+      <xsd:element name="function" type="xsd:string"/>
+      <xsd:element name="name" type="xsd:string"/>
+      <xsd:element name="swi" type="xsd:string"/>
+      <xsd:element name="variable" type="xsd:string"/>
+    </xsd:sequence>
   </xsd:complexType>
 
 <!--  
