@@ -159,6 +159,10 @@ static void main_poll_loop(void)
 <filename>chapter2.html</filename>
 <title>Chapter 2 And A Bit</title>
 
+<section>
+<p>This is some text!</p>
+
+</section>
 </chapter>
 
 </manual>
