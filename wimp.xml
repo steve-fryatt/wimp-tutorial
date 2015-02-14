@@ -13,12 +13,33 @@
 
 <manual xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="xmldoc.xsd" version="1.8.6">
 <title>Wimp Programming In C</title>
+<breadcrumb><dir>Home</dir><dir>Documentation</dir></breadcrumb>
+
+<!-- Index -->
+
+<index>
+<section>
+<p>Like many other RISC&nbsp;OS users, I started programming in BBC&nbsp;BASIC. Although it served me well, I began to find that it didn&rsquo;t always scale well &ndash; especially when software had to handle large, variable amounts of data or multiple documents.</p>
+
+<p>After learning C on Unix systems, I began to investigate how it could be used on RISC&nbsp;OS. My first efforts directly copied the techniques used in BASIC, and quickly became just as unweildy as their predecessors.</p>
+
+<p>Eventually I settled on using a combination of OSLib and my own libraries &ndash; imaginatively called SFLib &ndash; based on it. Together, these have formed the basis of all of my software which has been started since 2000.</p>
+
+<p>The aim of this guide is to give some help to those who are competent in C but have not used it when writing for the RISC&nbsp;OS desktop. It will also introduce the use of SFLib, which may be of interest to those writing Wimp software using OSLib.</p>
+</section>
+
+<chapterlist/>
+
+</index>
+
 
 <!-- Chapter 1 -->
 
 <chapter>
 <filename>introduction.html</filename>
 <title>From BASIC to C</title>
+
+<summary>In which we discuss SWIs like <swi>Wimp_Poll</swi> and make up some pointless waffle.</summary>
 
 <section>
 <p>Like many other RISC&nbsp;OS users, I started programming in BBC&nbsp;BASIC. Although it served me well, I began to find that it didn&rsquo;t always scale well &ndash; especially when software had to handle large, variable amounts of data or multiple documents.</p>
@@ -157,7 +178,7 @@ static void main_poll_loop(void)
 
 <chapter>
 <filename>chapter2.html</filename>
-<title>Chapter 2 And A Bit</title>
+<!-- title>Chapter 2 And A Bit</title -->
 
 <section>
 <p>This is some text!</p>
