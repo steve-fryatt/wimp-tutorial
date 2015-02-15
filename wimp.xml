@@ -42,13 +42,9 @@
 <summary>In which we discuss SWIs like <swi>Wimp_Poll</swi> and make up some pointless waffle.</summary>
 
 <section>
-<p>Like many other RISC&nbsp;OS users, I started programming in BBC&nbsp;BASIC. Although it served me well, I began to find that it didn&rsquo;t always scale well &ndash; especially when software had to handle large, variable amounts of data or multiple documents.</p>
+<p>Making the move from BASIC to C can be confusing at first, not least because the way that code is structured in the two languages varies significantly. Trying to write C code &ldquo;in a BASIC style&rdquo; will be doomed to failure: the strengths of C come in part from the different ways in which it allows applications &ndash; especially larger ones &ndash; to be developed.</p>
 
-<p>After learning C on Unix systems, I began to investigate how it could be used on RISC&nbsp;OS. My first efforts directly copied the techniques used in BASIC, and quickly became just as unweildy as their predecessors.</p>
-
-<p>Eventually I settled on using a combination of OSLib and my own libraries &ndash; imaginatively called SFLib &ndash; based on it. Together, these have formed the basis of all of my software which has been started since 2000.</p>
-
-<p>The aim of this guide is to give some help to those who are competent in C but have not used it when writing for the RISC&nbsp;OS desktop. It will also introduce the use of SFLib, which may be of interest to those writing Wimp software using OSLib.</p>
+<p>That said, there are some advantages to starting by comparing the two methods using a direct translation. We&rsquo;ll start with that approach here, creating a simple &lsquo;application&rsquo; in BASIC and then converting it into C &ndash; before looking at how C will allow us to restructure the code to make it easier to work with.</p>
 </section>
 
 <section>
@@ -62,12 +58,12 @@ REM (c) Stephen Fryatt, 2015
 
 DIM b% 255
 
-SYS "Wimp_Initialise", 310, &amp;4B534154, "Wimp Task", 0
+SYS &quot;Wimp_Initialise&quot;, 310, &amp;4B534154, &quot;Wimp Task&quot;, 0
 
 quit% = FALSE
 
 REPEAT
-	SYS "Wimp_Poll", &amp;1A73, b% TO reason%
+	SYS &quot;Wimp_Poll&quot;, &amp;1A73, b% TO reason%
 
 	CASE reason% OF
 	WHEN 17, 18
@@ -79,8 +75,54 @@ END</code>
 
 <p>After initialising itself via <swi>Wimp_Initialise</swi>, the program sets the <variable>quit%</variable> flag to <const>FALSE</const> and then polls the Wimp via <swi>Wimp_Poll</swi> until a <message>Message_Quit</message> is received. At this stage, it exits.</p>
 
+<p><swi>Wimp_Initialise</swi> specifies 310 as the required Window Manager version, and passes zero in R3 to indicate that the <em>only</em> messgae that should be reported is <message>Message_Quit</message>. In this example, it&rsquo;s all we need.</p>
+
+<p>It&rsquo;s not exactly a <em>useful</em> application, it does show the main structure required to interact with the Wimp.</p>
+
 </section>
 
+<section>
+<title>Moving to C</title>
+
+<p>We can do something very similar in C, and while not a great example of why the language is more suited to large-scale Wimp application development than BASIC, it has the same structure as its BASIC sibling &ndash; allowing the two to be compared easily.</p>
+
+<code lang="c">/**
+ * Example 1.2
+ *
+ * (c) Stephen Fryatt, 2015
+ */
+
+#include "oslib/wimp.h"
+
+int main()
+{
+	osbool		quit = FALSE;
+	wimp_block	block;
+	wimp_event_no	reason;
+
+	wimp_initialise(wimp_VERSION_RO3, &quot;Wimp Task&quot;, NULL, NULL);
+
+	while (!quit) {
+		reason = wimp_poll((wimp_poll_flags) 0x1a73, &amp;block, NULL);
+
+		switch (reason) {
+		case wimp_USER_MESSAGE:
+		case wimp_USER_MESSAGE_RECORDED:
+			if (block.message.action == message_QUIT)
+				quit = TRUE;
+		}
+	}
+
+	wimp_close_down(0);
+
+	return 0;
+}</code>
+
+<p>Just as in BASIC, the code initialises with the wimp via <swi>Wimp_Initialise</swi> and then calls <swi>Wimp_Poll</swi> until a <message>Message_Quit</message> is received.</p>
+
+<p>There&rsquo;s little sign here of why we might want to move to C. One thing that <em>is</em> noticable immediately is the reduction in &ldquo;magic numbers&rsquo;. Whereas the BASIC version contained comparisons like <code>IF b%!16 = 0</code>, the C makes use of OSLib to present it as <code>if (block.message.action == message_QUIT)</code>. It&rsquo;s not much, but it does make the code a lot more self-documenting and easier to follow without a copy of the PRM to hand.</p>
+
+</section>
 </chapter>
 
 <chapter>
