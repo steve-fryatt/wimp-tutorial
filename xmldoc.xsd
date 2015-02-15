@@ -18,6 +18,7 @@
       <xsd:element name="section" type="SectionType" minOccurs="0" maxOccurs="unbounded"/>
       <xsd:element name="chapterlist" type="ChapterListType" minOccurs="0" maxOccurs="1"/>
     </xsd:sequence>
+    <xsd:attribute name="id" type="xsd:string"/>
   </xsd:complexType>
 
   <xsd:complexType name="ChapterType">
@@ -27,7 +28,7 @@
       <xsd:element name="summary" type="ParagraphType" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="section" type="SectionType" minOccurs="0" maxOccurs="unbounded"/>
     </xsd:sequence>
-<!--    <xsd:attribute name="refid" type="xsd:string" use="required"/>  -->
+    <xsd:attribute name="id" type="xsd:string"/>
 <!--    <xsd:attribute name="kind" type="CompoundKind" use="required"/> -->
   </xsd:complexType>
 
@@ -38,10 +39,15 @@
     <xsd:sequence>
       <xsd:element name="title" type="xsd:string" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="p" type="ParagraphType" minOccurs="0" maxOccurs="unbounded"/>
-      <xsd:element name="code" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="code" type="CodeType" minOccurs="0" maxOccurs="unbounded"/>
     </xsd:sequence>
-<!--    <xsd:attribute name="refid" type="xsd:string" use="required"/> -->
+    <xsd:attribute name="id" type="xsd:string"/>
 <!--    <xsd:attribute name="kind" type="MemberKind" use="required"/>  -->
+  </xsd:complexType>
+  
+  <xsd:complexType name="CodeType">
+    <xsd:attribute name="lang" type="xsd:string" use="required"/>
+    <xsd:attribute name="id" type="xsd:string"/>
   </xsd:complexType>
   
   <xsd:complexType name="ParagraphType">
