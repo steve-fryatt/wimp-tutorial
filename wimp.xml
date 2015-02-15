@@ -39,7 +39,7 @@
 <filename>introduction.html</filename>
 <title>From BASIC to C</title>
 
-<summary>In which we discuss SWIs like <swi>Wimp_Poll</swi> and make up some pointless waffle.</summary>
+<summary>An introduction to using C for Wimp programming, with a look at converting a very simple program in a like-for-like way.</summary>
 
 <section>
 <p>Making the move from BASIC to C can be confusing at first, not least because the way that code is structured in the two languages varies significantly. Trying to write C code &ldquo;in a BASIC style&rdquo; will be doomed to failure: the strengths of C come in part from the different ways in which it allows applications &ndash; especially larger ones &ndash; to be developed.</p>
@@ -52,7 +52,7 @@
 
 <p>It doesn&rsquo;t take many lines of code to get a very simple application running under the RISC&nbsp;OS Wimp. The example here will run quietly in the background until quit via the Task Manager, and should be familiar to anyone who has ever written a Wimp application in BASIC.</p>
 
-<code lang="bbcbasic">REM >Example 1.1
+<code id="1-1" lang="bbcbasic">REM >Example 1.1
 REM
 REM (c) Stephen Fryatt, 2015
 
@@ -86,7 +86,7 @@ END</code>
 
 <p>We can do something very similar in C, and while not a great example of why the language is more suited to large-scale Wimp application development than BASIC, it has the same structure as its BASIC sibling &ndash; allowing the two to be compared easily.</p>
 
-<code lang="c">/**
+<code id="1-2" lang="c">/**
  * Example 1.2
  *
  * (c) Stephen Fryatt, 2015
@@ -94,7 +94,7 @@ END</code>
 
 #include "oslib/wimp.h"
 
-int main()
+int main(int argc, char *argv[])
 {
 	osbool		quit = FALSE;
 	wimp_block	block;
@@ -125,55 +125,157 @@ int main()
 </section>
 </chapter>
 
+
+<!-- Chapter 2
+   -
+   - Event Driven Programming
+  -->
+
 <chapter>
-<filename>intro2.html</filename>
-<title>Chapter 1</title>
+<filename>events.html</filename>
+<title>Event Driven Programming</title>
+
+<summary>The RISC&nbsp;OS Wimp is essentially an event-driven environment, so why don&rsquo;t we take advantage of that?</summary>
 
 <section>
-<p>This is an introduction.</p>
+<p>Anyone who has ever written software for other windowing systems &ndash; especially those that use so-called &lsquo;visual&rsquo; development environments &ndash; will be familiar with the concept of event-driven programming. An action button can have a function associated with it, which gets called whenever the user clicks on the button; windows can have functions which are called whenever they are moved or require redrawing.</p>
 
+<p>While it&rsquo;s relatively simple for beginners &ndash; and open to abuse &ndash; the approach does have advantages. These &lsquo;event handlers&rsquo; can be self-contained, and often don&rsquo;t need to be known about outside of the code that they relate to; this makes it possible to write extremely modular code, which can be much easier to update and maintain.</p>
 
-
-
-
-
-
+<p>The RISC&nbsp;OS Wimp is also event-driven, although to a casual observer &ndash; especially one working in BASIC &ndash; it&rsquo;s quite well hidden. With the exception, perhaps, of <name>Null_Reason</name>, the information returned by <swi>Wimp_Poll</swi> is a series of events: a <name>Mouse_Click</name> could be an event destined for an action button in a window somewhere, while <name>Redraw_Window_Request</name> is an indication that a window wishes to be redrawn.</p>
 </section>
 
+<section>
+<title>Routing Events</title>
 
+<p>In BASIC, it&rsquo;s common to use a <keyword>CASE</keyword> statement after <swi>Wimp_Poll</swi>, to split the returned events up by reason code and pass them on to appropriate handlers. The example here should be familiar to anyone who has ever written an application in BASIC.</p>
 
+<code id="2-1" lang="bbcbasic">DEF PROCpoll
+LOCAL reason%
 
+SYS &quot;Wimp_Poll&quot;, &amp;3831, b%, TO reason%
+
+CASE reason% OF
+        WHEN 1          : PROCredraw_handler(b%)
+        WHEN 2          : SYS &quot;Wimp_OpenWindow&quot;,,b%
+        WHEN 3          : SYS &quot;Wimp_CloseWindow&quot;,,b%
+        WHEN 6          : PROCmouse_click_handler(b%)
+        WHEN 8          : PROCkeypress_handler(b%)
+        WHEN 9          : PROCmenu_selection_handler(b%)
+        WHEN 17, 18     : PROCwimp_message_handler(b%)
+        WHEN 19         : PROCbounced_message_handler(b%)
+ENDCASE
+ENDPROC</code>
+
+<p>Events are split up by reason code, and passed on to mode dedicated blocks of code which can then look at the contents of the poll block and pass the information on its way to the intended recipient. For example, the code following might be used to interpret <name>Mouse_Click</name> events.</p>
+
+<code id="2-2" lang="bbcbasic">DEF PROCmouse_click_handler(block%)
+
+REM Pass the event details around any code modules that might be interested.
+
+IF FNchoices_process_mouse(block%) THEN ENDPROC
+IF FNignore_process_mouse(block%) THEN ENDPROC
+
+REM If we're still here, try to handle the event directly.
+
+CASE block%!12 OF
+WHEN -2
+        CASE block%!8 OF
+        WHEN 4
+                PROCset_help_state(NOT ChoicesDisplayBubbles%)
+        WHEN 2
+                PROCmenu_set_state(IconbarMenu%, 3, ShowAllHelp%, FALSE)
+                PROCmenu_create_iconbar(IconbarMenu%, !block%)
+        WHEN 1
+                PROCchoices_open_window(!block%, block%!4)
+        ENDCASE
+
+WHEN ColoursWindow%
+        IF block%!16 >= 1 THEN PROCchoices_colour_selection(block%!16 - 1)
+        PROCwindow_close(ColoursWindow%)
+
+WHEN InfoWindow%
+        IF block%!16 = 8 THEN
+                PROCurl_launch(FNmessage_lookup(&quot;SupportURL&quot;))
+                PROCmenu_create(-1, 0, 0)
+        ENDIF
+ENDCASE
+ENDPROC</code>
+
+<p>The problem here is that, even when code simply passes the events on to a separate subroutine (such as <function>FNchoices_process_mouse()</function>), the handler still needs to know about all the possible claimants of <name>Mouse_Click</name> events and their interfaces to <swi>Wimp_Poll</swi>. They&rsquo;re not self-contained.</p>
+</section>
 
 <section>
-<title>Section the First</title>
+<title>Event Dispatch</title>
 
-<p>For anyone familiar with writing in BASIC, the main polling loop is surprisingly simple.</p>
+<p>Unlike BASIC, C has a concept of pointers to functions: it&rsquo;s possible to take a pointer to a function, and the call it via that pointer. Using this facility, it&rsquo;s fairly straightforward to create code to dispatch the events from <swi>Wimp_Poll</swi> in a manner that&rsquo;s much more familiar to anyone who has written code for other platforms.</p>
 
-<code lang="bbcbasic">10 REM >Days2
-20 REM Calculates day of week
+<p>Over the years, several libraries have been written which include a Wimp event dispatcher, and I&rsquo;m afraid to say that SFLib is no exception. Which library to use is a matter of personal preference; this guide will be sticking to SFLib (and in turn OSLib) throughout.</p>
 
-30 ON ERROR REPORT:PRINT " at line ";ERL:END
-40 DIM monnum%(12),day$(6)
-50 FOR m%=1 TO 12:READ monnum%(m%):NEXT
-60 FOR d%=0 TO 6:READ day$(d%):NEXT
-70 REPEAT
-80 INPUT "Please enter the day of the month "date%
-90 INPUT "Now enter month number (1-12) "mon%
-100 INPUT "Now enter the year "year%
-110 IF year%&lt;40 year%=100
-120 IF year%&lt;140 year%=1900
-130 IF year%&lt;1900 OR year%&gt;2099 THEN PRINT'"Sorry, this program only works with years 1900 to 2099"':UNTIL FALSE
-140 year%-=1900
-150 leaps%=year% DIV 4
-160 IF (year% MOD 4)=0 AND mon%&lt;3 AND year%&gt;0 THEN leaps%-=1
-170 total%=year%+leaps%+monnum%(mon%)+date%
-180 total%=total% MOD 7
-190 PRINT '"That day was a "day$(total%)
-200 INPUT '"Do you want another go (y/n)",char$
-210 PRINT
-220 UNTIL LEFT$(char$,1)&lt;&gt;"Y" AND LEFT$(char$,1)&lt;&gt;"y"
-230 DATA 0,3,3,6,1,4,6,2,5,0,3,5
-240 DATA Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday</code>
+<p>The first thing to do is to take the code from <!-- TODO --> (Help!) and re-write it in a slightly more modular form. This isn&rsquo;t essential, but will help to keep things clear as we go on.</p>
+
+<code lang="c">/**
+ * Example 2.1
+ *
+ * (c) Stephen Fryatt, 2015.
+ */
+
+#include &quot;oslib/wimp.h&quot;
+
+/* Global Variables */
+
+static osbool main_quit_flag = FALSE;
+
+/* Function Prototypes */
+
+static void main_initialise(void);
+static void main_poll(void);
+static void main_terminate(void);
+
+/* Main code entry point. */
+
+int main(int argc, char *argv[])
+{
+	main_initialise();
+	main_poll();
+	main_terminate();
+
+	return 0;
+}
+
+/* Global application initialisation. */
+
+static void main_initialise(void)
+{
+	wimp_initialise(wimp_VERSION_RO3, &quot;Wimp Task&quot;, NULL, NULL);
+}
+
+/* Wimp_Poll loop. */
+
+static void main_poll(void)
+{
+	wimp_block	block;
+	wimp_event_no	reason;
+
+	while (!main_quit_flag) {
+		reason = wimp_poll((wimp_poll_flags) 0x1a73, &amp;block, NULL);
+
+		switch (reason) {
+		case wimp_USER_MESSAGE:
+		case wimp_USER_MESSAGE_RECORDED:
+			if (block.message.action == message_QUIT)
+				main_quit_flag = TRUE;
+		}
+	}
+}
+
+/* Global application termination. */
+
+static void main_terminate(void)
+{
+	wimp_close_down(0);
+}</code>
+
 
 
 <code lang="c">/**
