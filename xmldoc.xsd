@@ -58,10 +58,16 @@
       <xsd:element name="event" type="xsd:string"/>
       <xsd:element name="function" type="xsd:string"/>
       <xsd:element name="name" type="xsd:string"/>
+      <xsd:element name="reference" type="ReferenceType"/>
       <xsd:element name="swi" type="xsd:string"/>
       <xsd:element name="variable" type="xsd:string"/>
     </xsd:sequence>
   </xsd:complexType>
+
+  <xsd:complexType name="ReferenceType">
+    <xsd:attribute name="id" type="xsd:string" use="required"/>
+  </xsd:complexType>
+  
 
 <!--  
   <xsd:simpleType name="CompoundKind">

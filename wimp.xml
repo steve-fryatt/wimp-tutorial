@@ -110,6 +110,7 @@ int main(int argc, char *argv[])
 		case wimp_USER_MESSAGE_RECORDED:
 			if (block.message.action == message_QUIT)
 				quit = TRUE;
+			break;
 		}
 	}
 
@@ -148,7 +149,7 @@ int main(int argc, char *argv[])
 <section>
 <title>Routing Events</title>
 
-<p>In BASIC, it&rsquo;s common to use a <keyword>CASE</keyword> statement after <swi>Wimp_Poll</swi>, to split the returned events up by reason code and pass them on to appropriate handlers. The example here should be familiar to anyone who has ever written an application in BASIC.</p>
+<p>In BASIC, it&rsquo;s common to use a <keyword>CASE</keyword> statement after <swi>Wimp_Poll</swi>, to split the returned events up by reason code and pass them on to appropriate handlers. The code in <reference id="2-1"/> should be familiar to anyone who has ever written an application in BASIC.</p>
 
 <code id="2-1" lang="bbcbasic">DEF PROCpoll
 LOCAL reason%
@@ -167,7 +168,7 @@ CASE reason% OF
 ENDCASE
 ENDPROC</code>
 
-<p>Events are split up by reason code, and passed on to mode dedicated blocks of code which can then look at the contents of the poll block and pass the information on its way to the intended recipient. For example, the code following might be used to interpret <name>Mouse_Click</name> events.</p>
+<p>Events are split up by reason code, and passed on to mode dedicated blocks of code which can then look at the contents of the poll block and pass the information on its way to the intended recipient. For example, the code in <reference id="2-2"/> might be used to interpret <name>Mouse_Click</name> events.</p>
 
 <code id="2-2" lang="bbcbasic">DEF PROCmouse_click_handler(block%)
 
@@ -212,7 +213,7 @@ ENDPROC</code>
 
 <p>Over the years, several libraries have been written which include a Wimp event dispatcher, and I&rsquo;m afraid to say that SFLib is no exception. Which library to use is a matter of personal preference; this guide will be sticking to SFLib (and in turn OSLib) throughout.</p>
 
-<p>The first thing to do is to take the code from <!-- TODO --> (Help!) and re-write it in a slightly more modular form. This isn&rsquo;t essential, but will help to keep things clear as we go on.</p>
+<p>The first thing to do is to take the code from <reference id="1-2"/> and re-write it in a slightly more modular form. This isn&rsquo;t essential, but will help to keep things clear as we go on.</p>
 
 <code lang="c">/**
  * Example 2.1
@@ -265,6 +266,7 @@ static void main_poll(void)
 		case wimp_USER_MESSAGE_RECORDED:
 			if (block.message.action == message_QUIT)
 				main_quit_flag = TRUE;
+			break;
 		}
 	}
 }
@@ -276,13 +278,47 @@ static void main_terminate(void)
 	wimp_close_down(0);
 }</code>
 
+<p>There&rsquo;s now an initialisation, poll and termination routine, which breaks the code up into logical chunks. Each has a name starting with <code>main_</code> &ndash; this isn&rsquo;t important at the moment, but will again become relevant when the code grows.</p>
 
+<p>The next step is to add a reference to SFLib&rsquo;s event library: we do this by adding a suitable <code>#include</code> to the top of the file to make the functions available to us.</p>
 
-<code lang="c">/**
- * Wimp Poll loop.
- */
+<code lang="c">#include "oslib/wimp.h"
+#include "sflib/event.h"</code>
 
-static void main_poll_loop(void)
+<p>The only Wimp events that the code currently responds to are <name>User_Message</name> and <name>User_Message_Recorded</name>: when either is received, a check is made to see if the message is <message>Message_Quit</message> and, if it is, <variable>main_quit_flag</variable> is set to <name>TRUE</name> so that the poll loop exits. This was done using an entry in the reason code <code>switch</code> statement.</p>
+
+<code lang="c">switch (reason) {
+case wimp_USER_MESSAGE:
+case wimp_USER_MESSAGE_RECORDED:
+	if (block.message.action == message_QUIT)
+		main_quit_flag = TRUE;
+	break;
+}</code>
+
+<p>To move the code over to use a system of event handlers, we need to add a handler to respond when a <message>Message_Quit</message> is received. Ignoring the checks to see if this really is a <message>Message_Quit</message> (which will be handled for us by the event library), this boils down to the following.</p>
+
+<code lang="c">static osbool main_message_quit(wimp_message *message)
+{
+	main_quit_flag = TRUE;
+
+	return TRUE;
+}</code>
+
+<p>This function shows the standard form of a message event handler for use with SFLib: it takes a single parameter <code>wimp_message *message</code>, which is a pointer to the message block that arrived from <swi>Wimp_Poll</swi>, and returns <name>TRUE</name> or <name>FALSE</name> to indicate whether or not the handler wishes to claim the message for itself or pass it on to other claimants <em>within the application</em>. This is not related to the act of claiming the message with the Wimp, to prevent other applications from seeing it (although the message handler could do that as one of the actions that it carries out).</p>
+
+<p>This handler returns <name>TRUE</name>, so SFLib won&rsquo;t bother passing details of the <message>Message_Quit</message> on to any other hander functions which have been registered with it. If it returned <name>FALSE</name>, SFLib would try passing the message to any other handers that it knows of &ndash; until one returns <name>TRUE</name> or it runs out of handers to try.</p>
+
+<p>To let SFLib&rsquo;s event library know that this hander exists, we can add a line to <function>main_initialise()</function> to register it.</p>
+
+<code lang="c">event_add_message_handler(message_QUIT, EVENT_MESSAGE_INCOMING, main_message_quit);</code>
+
+<p>This call to <function>event_add_message_handler()</function> lets the event dispatcher know that <function>main_message_quit()</function> is interested in receiving details of <message>Message_Quit</message> &ndash; it&rsquo;s only possible to specify one message, but the same handler can be registered multiple times (with different messages in each) if required. <name>EVENT_MESSAGE_INCOMING</name> indicates that the handler is interested in messages arriving by both the <name>User_Message</name> and <name>User_Message_Recorded</name> events &ndash; to request only one or the other, <name>EVENT_MESSAGE</name> or <name>EVENT_MESSAGE_RECORDED</name> could be specified instead.</p>
+
+<p>On registering a handler for a message which the application is not currently receiving, the event library calls <swi>Wimp_AddMessages</swi> to ensure that it is sent by the Wimp; it also does this automatically for events that the library itself requires. This means that it&rsquo;s recommended to pass a <name>NULL</name> pointer to <name>R3</name> of <swi>Wimp_Initialise</swi> to specify &ldquo;no messages&rdquo;, and let the library add the messages as required.</p>
+
+<p>The final thing that we need to do it make the event dispatcher aware of events arriving from <swi>Wimp_Poll</swi>. We do this by changing the main polling loop to pass details of the incoming events on to the dispatcher.</p>
+
+<code lang="c">static void main_poll(void)
 {
 	wimp_block	blk;
 	wimp_event_no	reason;
@@ -291,31 +327,86 @@ static void main_poll_loop(void)
 	while (!main_quit_flag) {
 		reason = wimp_poll(wimp_MASK_NULL, &amp;blk, &amp;pollword);
 
-		/* Events are passed to Event Lib first; only if this fails to
-		 * handle them do they get passed on to the switch statement.
-		 */
-
-		if (!event_process_event(reason, &amp;blk, pollword)) {
-			switch (reason) {
-
-			case wimp_OPEN_WINDOW_REQUEST:
-				wimp_open_window(&amp;(blk.open));
-				break;
-
-			case wimp_CLOSE_WINDOW_REQUEST:
-				wimp_close_window(blk.close.w);
-				break;
-			}
-		}
+		event_process_event(reason, &amp;blk, pollword);
 	}
 }</code>
 
-<p>While <variable>main_quit_flag</variable> is <const>FALSE</const>, the loop repeatedly calls <swi>Wimp_Poll</swi> and passes the results on to <function>event_process_event()</function> so that Event Lib can do the hard work. It will look at the details in the poll block (such as target window handles or message types) and try to match the event up to one of the handler functions that have been registered with it; if this succeeds, the function will be called with the details in the block.</p>
+<p>Now, instead of passing incoming reason codes to a <code>switch</code> statement, they&rsquo;re passed directly to the event library. Internally this will use a similar approach to determine where events should end up &ndash; but it does this without us having to worry about it.</p>
 
-<p>It&rsquo;s only if Event Lib fails to find anything to do with the information returned by the Wimp (in which case <function>event_process_event()</function> returns <const>FALSE</const>) that the poll loop needs to do anything itself. At present it just contains two &ldquo;handlers of last resort&rdquo; for <name>Open_Window</name> and <name>Close_Window</name> events: often these need little or no special handling, so providing generic code for them makes sense.</p>
+<p>Putting this all together results in the following code, which should perform exactly the same as <reference id="1-2"/> when run.</p>
+
+<code lang="c">/**
+ * Example 2.2
+ *
+ * (c) Stephen Fryatt, 2015.
+ */
+
+#include &quot;oslib/wimp.h&quot;
+#include &quot;sflib/event.h&quot;
+
+/* Global Variables */
+
+static osbool main_quit_flag = FALSE;
+
+/* Function Prototypes */
+
+static void main_initialise(void);
+static void main_poll(void);
+static void main_terminate(void);
+static osbool main_message_quit(wimp_message *message);
+
+/* Main code entry point. */
+
+int main(int argc, char *argv[])
+{
+	main_initialise();
+	main_poll();
+	main_terminate();
+
+	return 0;
+}
+
+/* Global application initialisation. */
+
+static void main_initialise(void)
+{
+	wimp_initialise(wimp_VERSION_RO3, &quot;Wimp Task&quot;, NULL, NULL);
+
+	event_add_message_handler(message_QUIT, EVENT_MESSAGE_INCOMING, main_message_quit);
+}
+
+/* Wimp_Poll loop. */
+
+static void main_poll(void)
+{
+	wimp_block	blk;
+	wimp_event_no	reason;
+	int		pollword;
+
+	while (!main_quit_flag) {
+		reason = wimp_poll(wimp_MASK_NULL, &amp;blk, &amp;pollword);
+
+		event_process_event(reason, &amp;blk, pollword);
+	}
+}
+
+/* Global application termination. */
+
+static void main_terminate(void)
+{
+	wimp_close_down(0);
+}
+
+/* Message_Quit event handler. */
+
+static osbool main_message_quit(wimp_message *message)
+{
+	main_quit_flag = TRUE;
+
+	return TRUE;
+}</code>
 
 </section>
-
 </chapter>
 
 <!-- Chapter 2 -->
