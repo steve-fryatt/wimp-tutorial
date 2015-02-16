@@ -40,6 +40,7 @@
       <xsd:element name="title" type="xsd:string" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="p" type="ParagraphType" minOccurs="0" maxOccurs="unbounded"/>
       <xsd:element name="code" type="CodeType" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="image" type="ImageType" minOccurs="0" maxOccurs="unbounded"/>
     </xsd:sequence>
     <xsd:attribute name="id" type="xsd:string"/>
 <!--    <xsd:attribute name="kind" type="MemberKind" use="required"/>  -->
@@ -50,6 +51,12 @@
     <xsd:attribute name="id" type="xsd:string"/>
   </xsd:complexType>
   
+  <xsd:complexType name="ImageType">
+    <xsd:attribute name="file" type="xsd:string" use="required"/>
+    <xsd:attribute name="id" type="xsd:string"/>
+    <xsd:attribute name="title" type="xsd:string"/>
+  </xsd:complexType>
+ 
   <xsd:complexType name="ParagraphType">
     <xsd:sequence>
       <xsd:element name="code" type="xsd:string"/>
