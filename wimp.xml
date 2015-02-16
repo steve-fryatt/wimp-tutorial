@@ -209,7 +209,7 @@ ENDPROC</code>
 <section>
 <title>Event Dispatch</title>
 
-<p>Unlike BASIC, C has a concept of pointers to functions: it&rsquo;s possible to take a pointer to a function, and the call it via that pointer. Using this facility, it&rsquo;s fairly straightforward to create code to dispatch the events from <swi>Wimp_Poll</swi> in a manner that&rsquo;s much more familiar to anyone who has written code for other platforms.</p>
+<p>Unlike BASIC, C has a concept of pointers to functions: it&rsquo;s possible to take a pointer to a function, and then call it via that pointer. Using this facility, it&rsquo;s fairly straightforward to create code to dispatch the events from <swi>Wimp_Poll</swi> in a manner that&rsquo;s much more familiar to anyone who has written code for other platforms.</p>
 
 <p>Over the years, several libraries have been written which include a Wimp event dispatcher, and I&rsquo;m afraid to say that SFLib is no exception. Which library to use is a matter of personal preference; this guide will be sticking to SFLib (and in turn OSLib) throughout.</p>
 
@@ -304,7 +304,9 @@ case wimp_USER_MESSAGE_RECORDED:
 	return TRUE;
 }</code>
 
-<p>This function shows the standard form of a message event handler for use with SFLib: it takes a single parameter <code>wimp_message *message</code>, which is a pointer to the message block that arrived from <swi>Wimp_Poll</swi>, and returns <name>TRUE</name> or <name>FALSE</name> to indicate whether or not the handler wishes to claim the message for itself or pass it on to other claimants <em>within the application</em>. This is not related to the act of claiming the message with the Wimp, to prevent other applications from seeing it (although the message handler could do that as one of the actions that it carries out).</p>
+<p>This function shows the standard form of a message event handler for use with SFLib: it takes a single parameter <code>wimp_message *message</code>, which is a pointer to the message block that arrived from <swi>Wimp_Poll</swi>, and will be called whenever a <message>Message_Quit</message> is received by the application.</p>
+
+<p>The function returns <name>TRUE</name> or <name>FALSE</name> to indicate whether or not the handler wishes to claim the message for itself or pass it on to other claimants <em>within the application</em>. This is not related to the act of claiming the message with the Wimp, to prevent other applications from seeing it (although the message handler could do that as one of the actions that it carries out).</p>
 
 <p>This handler returns <name>TRUE</name>, so SFLib won&rsquo;t bother passing details of the <message>Message_Quit</message> on to any other hander functions which have been registered with it. If it returned <name>FALSE</name>, SFLib would try passing the message to any other handers that it knows of &ndash; until one returns <name>TRUE</name> or it runs out of handers to try.</p>
 
@@ -331,7 +333,7 @@ case wimp_USER_MESSAGE_RECORDED:
 	}
 }</code>
 
-<p>Now, instead of passing incoming reason codes to a <code>switch</code> statement, they&rsquo;re passed directly to the event library. Internally this will use a similar approach to determine where events should end up &ndash; but it does this without us having to worry about it.</p>
+<p>Now, instead of passing incoming reason codes to a <code>switch</code> statement, they&rsquo;re passed directly to the event library. Internally this will use a similar approach to determine where events should end up &ndash; but it does this without us having to worry about it. The code here isn&rsquo;t quite the full story &ndash; we&rsquo;ll add the additional bits when they&rsquo;re required in a later example.</p>
 
 <p>Putting this all together results in the following code, which should perform exactly the same as <reference id="1-2"/> when run.</p>
 
