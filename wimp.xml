@@ -1,14 +1,14 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
 
 <!DOCTYPE xmlmanual [
-	<!ENTITY ldquo "ldquo">
-	<!ENTITY lsquo "lsquo">
-	<!ENTITY minus "minus">
-	<!ENTITY nbsp "nbsp">
-	<!ENTITY ndash "ndash">
-	<!ENTITY rdquo "rdquo">
-	<!ENTITY rsquo "rsquo">
-	<!ENTITY times "times">
+	<!ENTITY ldquo "&amp;ldquo;">
+	<!ENTITY lsquo "&amp;lsquo;">
+	<!ENTITY minus "&amp;minus;">
+	<!ENTITY nbsp "&amp;nbsp;">
+	<!ENTITY ndash "&amp;ndash;">
+	<!ENTITY rdquo "&amp;rdquo;">
+	<!ENTITY rsquo "&amp;rsquo;">
+	<!ENTITY times "&amp;times;">
 ]>
 
 <manual xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="xmldoc.xsd" version="1.8.6">
@@ -50,9 +50,9 @@
 <section>
 <title>Starting in BASIC</title>
 
-<p>It doesn&rsquo;t take many lines of code to get a very simple application running under the RISC&nbsp;OS Wimp. The example here will run quietly in the background until quit via the Task Manager, and should be familiar to anyone who has ever written a Wimp application in BASIC.</p>
+<p>It doesn&rsquo;t take many lines of code to get a very simple application running under the RISC&nbsp;OS Wimp. The example in <reference id="list1-1"/> will run quietly in the background until quit via the Task Manager, and should be familiar to anyone who has ever written a Wimp application in BASIC.</p>
 
-<code id="1-1" lang="bbcbasic">REM >Example 1.1
+<code id="list1-1" lang="bbcbasic" title="A simple Wimp application in BASIC">REM >Example 1.1
 REM
 REM (c) Stephen Fryatt, 2015
 
@@ -75,7 +75,11 @@ END</code>
 
 <p>After initialising itself via <swi>Wimp_Initialise</swi>, the program sets the <variable>quit%</variable> flag to <const>FALSE</const> and then polls the Wimp via <swi>Wimp_Poll</swi> until a <message>Message_Quit</message> is received. At this stage, it exits.</p>
 
-<p><swi>Wimp_Initialise</swi> specifies 310 as the required Window Manager version, and passes zero in R3 to indicate that the <em>only</em> messgae that should be reported is <message>Message_Quit</message>. In this example, it&rsquo;s all we need.</p>
+<p><swi>Wimp_Initialise</swi> specifies 310 as the required Window Manager version, and passes zero in R3 to indicate that the <em>only</em> message that should be reported is <message>Message_Quit</message>. In this example, it&rsquo;s all we need.</p>
+
+<p>When run, the application creates an entry in the Task Manager as shown in <reference id="img1-1"/> and waits to be asked to quit via the menu.</p>
+
+<image id="img1-1" file="example1-1.png" title="Our application in the Task Manager&rsquo;s display"/>
 
 <p>It&rsquo;s not exactly a <em>useful</em> application, it does show the main structure required to interact with the Wimp.</p>
 
@@ -84,12 +88,14 @@ END</code>
 <section>
 <title>Moving to C</title>
 
-<p>We can do something very similar in C, and while not a great example of why the language is more suited to large-scale Wimp application development than BASIC, it has the same structure as its BASIC sibling &ndash; allowing the two to be compared easily.</p>
+<p>We can do something very similar in C, and while not a great example of why the language is more suited to large-scale Wimp application development than BASIC, <reference id="list1-2"/> has the same structure as its BASIC sibling from <reference id="list1-1"/> &ndash; allowing the two to be compared easily.</p>
 
-<code id="1-2" lang="c">/**
+<code id="list1-2" lang="c" file="main.c" title="The application converted to C">/**
  * Example 1.2
  *
  * (c) Stephen Fryatt, 2015
+ *
+ * File: main.c
  */
 
 #include "oslib/wimp.h"
@@ -149,9 +155,9 @@ int main(int argc, char *argv[])
 <section>
 <title>Routing Events</title>
 
-<p>In BASIC, it&rsquo;s common to use a <keyword>CASE</keyword> statement after <swi>Wimp_Poll</swi>, to split the returned events up by reason code and pass them on to appropriate handlers. The code in <reference id="2-1"/> should be familiar to anyone who has ever written an application in BASIC.</p>
+<p>In BASIC, it&rsquo;s common to use a <keyword>CASE</keyword> statement after <swi>Wimp_Poll</swi>, to split the returned events up by reason code and pass them on to appropriate handlers. The code in <reference id="list2-1"/> should be familiar to anyone who has ever written an application in BASIC.</p>
 
-<code id="2-1" lang="bbcbasic">DEF PROCpoll
+<code id="list2-1" lang="bbcbasic" title="A BASIC Wimp_Poll loop">DEF PROCpoll
 LOCAL reason%
 
 SYS &quot;Wimp_Poll&quot;, &amp;3831, b%, TO reason%
@@ -168,9 +174,9 @@ CASE reason% OF
 ENDCASE
 ENDPROC</code>
 
-<p>Events are split up by reason code, and passed on to mode dedicated blocks of code which can then look at the contents of the poll block and pass the information on its way to the intended recipient. For example, the code in <reference id="2-2"/> might be used to interpret <name>Mouse_Click</name> events.</p>
+<p>Events are split up by reason code, and passed on to mode dedicated blocks of code which can then look at the contents of the poll block and pass the information on its way to the intended recipient. For example, the code in <reference id="list2-2"/> might be used to interpret <name>Mouse_Click</name> events.</p>
 
-<code id="2-2" lang="bbcbasic">DEF PROCmouse_click_handler(block%)
+<code id="list2-2" lang="bbcbasic" title="Dispatching mouse click events in BASIC">DEF PROCmouse_click_handler(block%)
 
 REM Pass the event details around any code modules that might be interested.
 
@@ -213,12 +219,14 @@ ENDPROC</code>
 
 <p>Over the years, several libraries have been written which include a Wimp event dispatcher, and I&rsquo;m afraid to say that SFLib is no exception. Which library to use is a matter of personal preference; this guide will be sticking to SFLib (and in turn OSLib) throughout.</p>
 
-<p>The first thing to do is to take the code from <reference id="1-2"/> and re-write it in a slightly more modular form. This isn&rsquo;t essential, but will help to keep things clear as we go on.</p>
+<p>The first thing to do is to take the code from <reference id="list1-2"/> and re-write it in a slightly more modular form. This isn&rsquo;t essential, but will help to keep things clear as we go on.</p>
 
-<code lang="c">/**
+<code id="list2-3" lang="c" file="main.c" title="Restructuring the code to use functions">/**
  * Example 2.1
  *
  * (c) Stephen Fryatt, 2015.
+ *
+ * File: main.c
  */
 
 #include &quot;oslib/wimp.h&quot;
@@ -335,12 +343,14 @@ case wimp_USER_MESSAGE_RECORDED:
 
 <p>Now, instead of passing incoming reason codes to a <code>switch</code> statement, they&rsquo;re passed directly to the event library. Internally this will use a similar approach to determine where events should end up &ndash; but it does this without us having to worry about it. The code here isn&rsquo;t quite the full story &ndash; we&rsquo;ll add the additional bits when they&rsquo;re required in a later example.</p>
 
-<p>Putting this all together results in the following code, which should perform exactly the same as <reference id="1-2"/> when run.</p>
+<p>Putting this all together results in the following code, which should perform exactly the same as <reference id="list1-2"/> when run.</p>
 
-<code lang="c">/**
+<code id="list2-4" lang="c" file="main.c" title="Using the event dispatcher">/**
  * Example 2.2
  *
  * (c) Stephen Fryatt, 2015.
+ *
+ * File: main.c
  */
 
 #include &quot;oslib/wimp.h&quot;
@@ -408,14 +418,17 @@ static osbool main_message_quit(wimp_message *message)
 	return TRUE;
 }</code>
 
+<p>We&rsquo;ve now got the basic structure of a multitasking application: while it doesn&rsquo;t do much as yet, we can now start to more familiar features areound it.</p>
 </section>
 </chapter>
 
 <!-- Chapter 2 -->
 
 <chapter>
-<filename>chapter2.html</filename>
-<!-- title>Chapter 2 And A Bit</title -->
+<filename>iconbar.html</filename>
+<title>Onto the Iconbar</title>
+
+<summary>Giving an application its own icon on the iconbar isn&rsquo;t too hard to do.</summary>
 
 <section>
 <p>This is some text!</p>
