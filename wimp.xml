@@ -71,6 +71,8 @@ REPEAT
 	ENDCASE
 UNTIL quit%
 
+SYS &quot;Wimp_CloseDown&quot;
+
 END</code>
 
 <p>After initialising itself via <swi>Wimp_Initialise</swi>, the program sets the <variable>quit%</variable> flag to <const>FALSE</const> and then polls the Wimp via <swi>Wimp_Poll</swi> until a <message>Message_Quit</message> is received. At this stage, it exits.</p>
