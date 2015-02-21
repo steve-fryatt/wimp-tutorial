@@ -33,24 +33,94 @@
 </index>
 
 
-<!-- Chapter 1 -->
+<!-- Chapter 1
+   -
+   - Starting out in BASIC
+  -->
 
 <chapter>
 <filename>introduction.html</filename>
-<title>From BASIC to C</title>
+<title>Starting in BASIC</title>
 
-<summary>An introduction to using C for Wimp programming, with a look at converting a very simple program in a like-for-like way.</summary>
+<summary>For those familiar with BBC&nbsp;BASIC, we start by getting a simple application up and running using this language.</summary>
 
 <section>
-<p>Making the move from BASIC to C can be confusing at first, not least because the way that code is structured in the two languages varies significantly. Trying to write C code &ldquo;in a BASIC style&rdquo; will be doomed to failure: the strengths of C come in part from the different ways in which it allows applications &ndash; especially larger ones &ndash; to be developed.</p>
+<p>If you&rsquo;re familiar with writing single-tasking software &ndash; on any platform &ndash; then writing an application to work under the RISC&nbsp;OS Wimp can be a confusing experience. Conventional software is linear: execution starts at the top and runs through to the end. The code will follow any functions, subroutines or &ndash; perhaps &ndash; gotos that it meets, but this is all under the control of the software developer.</p>
 
-<p>That said, there are some advantages to starting by comparing the two methods using a direct translation. We&rsquo;ll start with that approach here, creating a simple &lsquo;application&rsquo; in BASIC and then converting it into C &ndash; before looking at how C will allow us to restructure the code to make it easier to work with.</p>
+<p>Writing for the Wimp &ndash; or, indeed, any other windowing system &ndash; isn&rsquo;t like that. The user can interact with an application via its windows and dialogue boxes in a host of different ways: clicking on buttons, scrolling the contents, opening menus, dragging other windows over the top and requiring things to be redrawn. Other software running on the system might also want to interact and exchange information.</p>
+
+<p>The way that software interacts with the Wimp hasn&rsquo;t really changed since the days of Arthur &ndash; although there have been some small changes to accommodate the system of cooperative multitasking, they don&rsquo;t alter anything in a fundamental way. All access to the Wimp is via SWI calls: using the <code>SYS</code> command in BASIC or &ndash; in the case of this tutorial &ndash; OSLib when working in C.</p>
 </section>
 
 <section>
-<title>Starting in BASIC</title>
+<title>Registering with the Wimp</title>
 
-<p>It doesn&rsquo;t take many lines of code to get a very simple application running under the RISC&nbsp;OS Wimp. The example in <reference id="list1-1"/> will run quietly in the background until quit via the Task Manager, and should be familiar to anyone who has ever written a Wimp application in BASIC.</p>
+<p>When an application starts, it must initialise itself: loading any data it needs from disc, setting up any data structures and registering itself with the Wimp. This last point, done with the <swi>Wimp_Initialise</swi> SWI, is the first thing that differentiates multitasking applications from single-tasking ones. If we were working in BASIC, the initialisation for a very simple application might look like this.</p>
+
+<code lang="bbcbasic">DIM b% 255
+
+quit% = FALSE
+
+SYS &quot;Wimp_Initialise&quot;, 310, &amp;4B534154, &quot;Wimp Task&quot;, 0</code>
+
+<p>The code claims 256 bytes of memory and points a variable <variable>b%</variable> to it: a lot of Wimp SWI calls need a block of memory to work, and <variable>b%</variable> is a comon feature of Wimp software written in BASIC. It then sets a variable <variable>quit%</variable> to <name>FALSE</name>, to keep track of when the code should exit.</p>
+
+<p>With its own initialisation complete, the final thing it does is call <swi>Wimp_Initialise</swi> to register itself as a Wimp task. This call has a number of important parameters, which will affect how the Wimp treats the application.</p>
+
+<p><name>R0</name> contains <code>310</code>, which is the minimum version of the Wimp that the software is able to accept. There are a number of specific values which can be passed here to turn on different functionality: while 310 is the lowest which should be used in modern software, an application might pass 380 in if it required support for nested windows, for example (more of which later).</p>
+
+<p><code>&amp;4B534154</code> is a &ldquo;magic number&rdquo; &ndash; its four bytes actually spell out the word &ldquo;TASK&rdquo; in ASCII. It&rsquo;s sufficiently unlikely to end up in <name>R1</name> by accident that the Wimp uses its presence to turn off legacy support for Arthur: before RISC&nbsp;OS, no parameter was passed in this register. <name>R2</name> contains a pointer to the name that we&rsquo;re giving the task: it will appear in the Task Manager&rsquo;s listing, amongst other places. <name>R3</name> controls the behaviour of User Messages &ndash; for the time being, passing zero in here will be fine.</p>
+</section>
+
+<section>
+<title>Doing what we&rsquo;re told</title>
+
+<p>With the initialisation complete, the application can move on to the business of multitasking. RISC&nbsp;OS uses a system of &lsquo;cooperative multitasking&rsquo;: that is, each application must yield control back to the Wimp as soon as it&rsquo;s finished its current activity. If an application doesn&rsquo;t yield for more than a few fractions of a second at a time, the desktop can very quickly become extremely sluggish.</p>
+
+<p>This yielding is done via the <swi>Wimp_Poll</swi> SWI. When an application calls <swi>Wimp_Poll</swi>, it yields control back to the Wimp and the Wimp, in turn, goes off and services all of the other applications running on the system. When <swi>Wimp_Poll</swi> returns, it brings with it details of an &lsquo;event&rsquo; that the application must deal with. This is enough to make the whole system multitask.</p>
+
+<p>The events returned by <swi>Wimp_Poll</swi> can report actions from the user: keypresses, mouse clicks or menu selections. They can report the opening, moving, scrolling and closing of windows; they might also be requests to redraw part of the contents of a window. So-called &lsquo;user messages&rsquo; &ndash; messages arriving from the system or from other applications &ndash; can also arrive as events.</p>
+
+<p>To make an application multitask, therefore, is simply a case of calling the <swi>Wimp_Poll</swi> SWI repeatedly, and quickly processing the events that it returns.</p>
+
+<code lang="bbcbasic">REPEAT
+	SYS &quot;Wimp_Poll&quot;, &amp;3C31, b% TO reason%
+
+	CASE reason% OF
+	WHEN 17, 18
+		IF b%!16 = 0 THEN quit% = TRUE
+	ENDCASE
+UNTIL quit%</code>
+
+<p>When working in BASIC, the <swi>Wimp_Poll</swi> SWI is usually enclosed in a <code>REPEAT</code> <code>UNTIL</code> loop. In this example, the loop exits when the variable <variable>quit%</variable> &ndash; which was set to <name>FALSE</name> in the initialisation &ndash; becomes <name>TRUE</name>.</p>
+
+<p>The call to <swi>Wimp_Poll</swi> takes two parameters and returns &ndash; for now &ndash; one value. The <code>&amp;3C31</code> passed in <name>R0</name> is an &lsquo;event mask&rsquo; individual bits are set to tell the Wimp that we don&rsquo;t wish to receive particular events &ndash; we&rsquo;ll explain this when we return to look at <swi>Wimp_Poll</swi> in more detail.</p>
+
+<p><name>R1</name> contains a pointer to the 256 bytes of memory that we claimed in the initialisation; before returning from <swi>Wimp_Poll</swi>, the Wimp will fill this block with information about the event that&rsquo;s being given to the application. The event is identified by a value returned in <name>R0</name> and stored in <variable>reason%</variable> &ndash; the so-called &lsquo;reason code&rsquo;.</p>
+
+<p>It&rsquo;s fairly common to take the reason code returned by <swi>Wimp_Poll</swi> and use it in a <code>CASE</code> statement, to allow the program to jump to an appropriate piece of code for the event in question. There&rsquo;s only one event that <em>every</em> Wimp application must handle, and that&rsquo;s something called a <name>Message_Quit</name> &ndash; as its name suggests, it&rsquo;s an instruction to terminate immediately.</p>
+
+<p>We&rsquo;ll look into the details of what&rsquo;s going in in a later chapter, but for now it&rsquo;s enough to know that <name>Message_Quit</name> will always arrive with an event reason code of 17 or 18 and with the word at offset 16 in the parameter block set to zero. If both these requirements are satisfied, the application simply sets <variable>quit%</variable> to <name>TRUE</name> and the <code>REPEAT</code> <code>UNTIL</code> loop exits without calling <swi>Wimp_Poll</swi> again.</p>
+</section>
+
+<section>
+<title>Tidying up</title>
+
+<p>Ending a Wimp application is the reverse of starting one up: it must free any resources it has claimed, and de-register itself from the Wimp. The latter is done with the <swi>Wimp_CloseDown</swi> SWI.</p>
+
+<code lang="bbcbasic">SYS &quot;Wimp_CloseDown&quot;
+
+END</code>
+
+<p>Compared to <swi>Wimp_Initialise</swi>, <swi>Wimp_CloseDown</swi> is extremely simple: in the case of an application written in BASIC, it takes no parameters (it does take one parameter, but for a &lsquo;simple&rsquo; application it&rsquo;s zero so BASIC&rsquo;s <code>SYS</code> command fills it in for us).</p>
+
+<p>In the case of our example application, that&rsquo;s is: there&rsquo;s no resources to release. We can therefore just call <code>END</code> and let the program terminate.</p>
+</section>
+
+<section>
+<title>Putting it all together</title>
+
+<p>Putting the pieces together, we end up with the program in <reference id="list1-1"/>.</p>
 
 <code id="list1-1" lang="bbcbasic" title="A simple Wimp application in BASIC">REM >Example 1.1
 REM
@@ -58,9 +128,9 @@ REM (c) Stephen Fryatt, 2015
 
 DIM b% 255
 
-SYS &quot;Wimp_Initialise&quot;, 310, &amp;4B534154, &quot;Wimp Task&quot;, 0
-
 quit% = FALSE
+
+SYS &quot;Wimp_Initialise&quot;, 310, &amp;4B534154, &quot;Wimp Task&quot;, 0
 
 REPEAT
 	SYS &quot;Wimp_Poll&quot;, &amp;1A73, b% TO reason%
@@ -75,15 +145,39 @@ SYS &quot;Wimp_CloseDown&quot;
 
 END</code>
 
-<p>After initialising itself via <swi>Wimp_Initialise</swi>, the program sets the <variable>quit%</variable> flag to <const>FALSE</const> and then polls the Wimp via <swi>Wimp_Poll</swi> until a <message>Message_Quit</message> is received. At this stage, it exits.</p>
-
-<p><swi>Wimp_Initialise</swi> specifies 310 as the required Window Manager version, and passes zero in R3 to indicate that the <em>only</em> message that should be reported is <message>Message_Quit</message>. In this example, it&rsquo;s all we need.</p>
-
-<p>When run, the application creates an entry in the Task Manager as shown in <reference id="img1-1"/> and waits to be asked to quit via the menu.</p>
+<p>When run, the application creates an entry in the Task Manager as shown in <reference id="img1-1"/> and waits to be asked to quit via the menu (selecting <menu>Quit</menu> from the Task Manager will send a <message>Message_Quit</message> to the application).</p>
 
 <image id="img1-1" file="example1-1.png" title="Our application in the Task Manager&rsquo;s display"/>
 
-<p>It&rsquo;s not exactly a <em>useful</em> application, it does show the main structure required to interact with the Wimp.</p>
+<p>It&rsquo;s not exactly a <em>useful</em> application, but it does show the main structure required to interact with the Wimp.</p>
+</section>
+</chapter>
+
+
+<!-- Chapter 2
+   -
+   - Moving from BASIC to C
+  -->
+
+<chapter>
+<filename>usingc.html</filename>
+<title>Moving to C</title>
+
+<summary>We can write a very similar application in C, which should help show the parallels with &ndash; and differences from &ndash; BASIC.</summary>
+
+<section>
+<p>Making the move from BASIC to C can be confusing at first, not least because the way that code is structured in the two languages varies significantly. Trying to write C code &ldquo;in a BASIC style&rdquo; will be doomed to failure: the strengths of C come in part from the different ways in which it allows applications &ndash; especially larger ones &ndash; to be developed.</p>
+
+<p>That said, there are some advantages to starting by comparing the two methods using a direct translation. We&rsquo;ll start with that approach here, creating a simple &lsquo;application&rsquo; in BASIC and then converting it into C &ndash; before looking at how C will allow us to restructure the code to make it easier to work with.</p>
+</section>
+
+<section>
+<title>Starting in BASIC</title>
+
+
+<p>After initialising itself via <swi>Wimp_Initialise</swi>, the program sets the <variable>quit%</variable> flag to <const>FALSE</const> and then polls the Wimp via <swi>Wimp_Poll</swi> until a <message>Message_Quit</message> is received. At this stage, it exits.</p>
+
+<p><swi>Wimp_Initialise</swi> specifies 310 as the required Window Manager version, and passes zero in R3 to indicate that the <em>only</em> message that should be reported is <message>Message_Quit</message>. In this example, it&rsquo;s all we need.</p>
 
 </section>
 

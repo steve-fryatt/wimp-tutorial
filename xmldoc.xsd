@@ -66,6 +66,7 @@
       <xsd:element name="em" type="xsd:string"/>
       <xsd:element name="event" type="xsd:string"/>
       <xsd:element name="function" type="xsd:string"/>
+      <xsd:element name="menu" type="xsd:string"/>
       <xsd:element name="name" type="xsd:string"/>
       <xsd:element name="reference" type="ReferenceType"/>
       <xsd:element name="swi" type="xsd:string"/>
