@@ -38,7 +38,7 @@
    - Starting out in BASIC
   -->
 
-<chapter>
+<chapter id="chap-start-basic">
 <filename>introduction.html</filename>
 <title>Starting in BASIC</title>
 
@@ -166,6 +166,49 @@ END</code>
 <summary>We can write a very similar application in C, which should help show the parallels with &ndash; and differences from &ndash; BASIC.</summary>
 
 <section>
+<p>In <reference id="chap-start-basic"/> we constructed a very simple Wimp application in BASIC. It did&rsquo;t do very much &ndash; simply registering itself with the Wimp and then waiting quietly in the background until it was asked to quit &ndash; but it contained all the core elements required to make software multitask under RISC&nbsp;OS.</p>
+
+<p>We&rsquo;re now going to convert that simple application into C, using OSLib to provide access to the Wimp SWIs. While perhaps not the best way to go about the task in C, it will allow comparisons to be drawn more easily between the two. The core parts will still be useful when we come to look at restructuring the code around event handlers in the next chapter.</p>
+</section>
+
+<section>
+<title>Getting started</title>
+
+<p>Unlike BASIC, in C all variables must be declared before they can be used. We&rsquo;ll start, therefore, by registering the three variables that will be required in our short piece of code.</p>
+
+<code lang="c">osbool		quit = FALSE;
+wimp_block	block;
+wimp_event_no	reason;</code>
+
+<p>Just as in BASIC, we&rsquo;re setting a <variable>quit</variable> flag variable to track when the application must exit; because C can be more typed, and we have access to OSLib, we&rsquo;re giving it a type of <type>osbool</type> to make it clear that the contents is a boolean value.</p>
+
+<p>The other two variables also have very specific types. The more obvious one is <variable>reason</variable>;</p>
+
+<code lang="c">typedef int wimp_event_no;</code>
+
+
+<code lang="c">union wimp_block {
+	wimp_draw	redraw;
+	wimp_open	open;
+	wimp_close	close;
+	wimp_leaving	leaving;
+	wimp_entering	entering;
+	wimp_pointer	pointer;
+	wimp_dragged	dragged;
+	wimp_key	key;
+	wimp_selection	selection;
+	wimp_scroll	scroll;
+	wimp_caret	caret;
+	wimp_pollword	pollword;
+	wimp_message	message;
+	byte		reserved[256];
+};</code>
+
+
+
+<p>Just as in BASIC, the application written in C must register itself with the Wimp using <swi>Wimp_Initialise</swi>.</p>
+
+
 <p>Making the move from BASIC to C can be confusing at first, not least because the way that code is structured in the two languages varies significantly. Trying to write C code &ldquo;in a BASIC style&rdquo; will be doomed to failure: the strengths of C come in part from the different ways in which it allows applications &ndash; especially larger ones &ndash; to be developed.</p>
 
 <p>That said, there are some advantages to starting by comparing the two methods using a direct translation. We&rsquo;ll start with that approach here, creating a simple &lsquo;application&rsquo; in BASIC and then converting it into C &ndash; before looking at how C will allow us to restructure the code to make it easier to work with.</p>
