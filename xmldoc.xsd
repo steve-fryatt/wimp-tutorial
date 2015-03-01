@@ -66,6 +66,7 @@
       <xsd:element name="em" type="xsd:string"/>
       <xsd:element name="event" type="xsd:string"/>
       <xsd:element name="function" type="xsd:string"/>
+      <xsd:element name="link" type="LinkType"/>
       <xsd:element name="menu" type="xsd:string"/>
       <xsd:element name="name" type="xsd:string"/>
       <xsd:element name="reference" type="ReferenceType"/>
@@ -76,6 +77,10 @@
 
   <xsd:complexType name="ReferenceType">
     <xsd:attribute name="id" type="xsd:string" use="required"/>
+  </xsd:complexType>
+
+  <xsd:complexType name="LinkType">
+    <xsd:attribute name="href" type="xsd:string" use="required"/>
   </xsd:complexType>
   
 
