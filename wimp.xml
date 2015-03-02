@@ -23,7 +23,7 @@
 
 <p>After learning C on Unix systems, I began to investigate how it could be used on RISC&nbsp;OS. My first efforts directly copied the techniques used in BASIC, and quickly became just as unweildy as their predecessors.</p>
 
-<p>Eventually I settled on using a combination of OSLib and my own libraries &ndash; imaginatively called SFLib &ndash; based on it. Together, these have formed the basis of all of my software which has been started since 2000.</p>
+<p>Eventually I settled on using a combination of <link href="http://ro-oslib.sourceforge.net/">OSLib</link> and my own libraries &ndash; imaginatively called SFLib &ndash; based on it. Together, these have formed the basis of all of my software which has been started since 2000.</p>
 
 <p>The aim of this guide is to give some help to those who are competent in C but have not used it when writing for the RISC&nbsp;OS desktop. It will also introduce the use of SFLib, which may be of interest to those writing Wimp software using OSLib.</p>
 </section>
