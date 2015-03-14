@@ -65,6 +65,7 @@
       <xsd:element name="const" type="xsd:string"/>
       <xsd:element name="em" type="xsd:string"/>
       <xsd:element name="event" type="xsd:string"/>
+      <xsd:element name="file" type="xsd:string"/>
       <xsd:element name="function" type="xsd:string"/>
       <xsd:element name="link" type="LinkType"/>
       <xsd:element name="menu" type="xsd:string"/>
