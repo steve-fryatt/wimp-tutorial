@@ -84,7 +84,7 @@ SYS &quot;Wimp_Initialise&quot;, 310, &amp;4B534154, &quot;Wimp Task&quot;, 0</c
 <p>To make an application multitask, therefore, is simply a case of calling the <swi>Wimp_Poll</swi> SWI repeatedly, and quickly processing the events that it returns.</p>
 
 <code lang="bbcbasic">REPEAT
-	SYS &quot;Wimp_Poll&quot;, &amp;3C31, b% TO reason%
+	SYS &quot;Wimp_Poll&quot;, &amp;3831, b% TO reason%
 
 	CASE reason% OF
 	WHEN 17, 18
@@ -133,7 +133,7 @@ quit% = FALSE
 SYS &quot;Wimp_Initialise&quot;, 310, &amp;4B534154, &quot;Wimp Task&quot;, 0
 
 REPEAT
-	SYS &quot;Wimp_Poll&quot;, &amp;1A73, b% TO reason%
+	SYS &quot;Wimp_Poll&quot;, &amp;3831, b% TO reason%
 
 	CASE reason% OF
 	WHEN 17, 18
@@ -242,6 +242,12 @@ IF (flags% AND 1) = 0 THEN error% = 0</code>
 wimp_initialise(wimp_VERSION_RO3, &quot;Wimp Task&quot;, NULL, NULL);</code>
 
 <p>Which to use depends on the circumstances, but generally if there&rsquo;s a risk of an error occurring the X form of the SWI is better: it allows us to trap the error, tidy up, and exit gracefully.</p>
+
+<p>OSLib&rsquo;s StrongHelp manual is more-or-less essential reading for developers, and we can see in <reference id="img2-1"/> that it contains full details of how to use <function>wimp_initialise()</function> amongst its many pages.</p>
+
+<image id="img2-1" file="c2-oslib-wimpinitman.png" title="OSLib&rsquo;s manual showing the use of wimp_initialise()"/>
+
+<p>Although we&rsquo;ll start by documenting the various parts of OSLib that we use in the opening examples, being able to navigate the supplied information will soon become essential.</p>
 </section>
 
 <section>
@@ -344,9 +350,33 @@ typedef union wimp_block wimp_block;</code>
 	wimp_t			*task_out
 );</code>
 
-<p>OSLib&rsquo;s StrongHelp manual is more-or-less essential reading for developers, and we can see in <reference id="img2-1"/> that it contains full details of how to use <function>wimp_initialise()</function> amongst its pages.</p>
+<p>We&rsquo;ll be seeing more of both forms of the OSLib API as we progress.</p>
+</section>
 
-<image id="img2-1" file="c2-oslib-wimpinit.png" title="OSLib&rsquo;s manual showing the use of wimp_initialise()"/>
+<section>
+<title>Polling the Wimp</title>
+
+<p>It&rsquo;s still necessary to call <swi>Wimp_Poll</swi> repeatedly to make our small application multitask, and that&rsquo;s done in a very similar way in C:</p>
+
+<code lang="c">while (!quit) {
+	reason = wimp_poll(wimp_MASK_NULL | wimp_MASK_ENTERING | wimp_MASK_LEAVING |
+			 wimp_MASK_GAIN | wimp_MASK_LOSE | wimp_MASK_POLLWORD,
+			 &amp;block, NULL);
+
+	switch (reason) {
+	case wimp_USER_MESSAGE:
+	case wimp_USER_MESSAGE_RECORDED:
+		if (block.message.action == message_QUIT)
+			quit = TRUE;
+		break;
+	}
+}</code>
+
+<p>There&rsquo;s a similarity between the <code>while ()</code> loop here and the <code>REPEAT UNTIL</code> loop in the BASIC version: both just call <swi>Wimp_Poll</swi> until instructed to stop.</p>
+
+<!-- \TODO -->
+
+
 
 
 
@@ -358,6 +388,33 @@ typedef union wimp_block wimp_block;</code>
 
 <p>That said, there are some advantages to starting by comparing the two methods using a direct translation. We&rsquo;ll start with that approach here, creating a simple &lsquo;application&rsquo; in BASIC and then converting it into C &ndash; before looking at how C will allow us to restructure the code to make it easier to work with.</p>
 </section>
+
+<!-- \TODO -->
+
+
+
+
+
+
+
+<section>
+<title>Quitting the software</title>
+
+<p>As with the BASIC, it&rsquo;s necessary to call <swi>Wimp_CloseDown</swi> at the end, before the program exits. With OSLib, that&rsquo;s done using <function>wimp_close_down()</code> which has the following prototype:</p>
+
+<code lang="c">extern void wimp_close_down(
+	wimp_t	t
+);</code>
+
+<code lang="c">wimp_close_down(0);</code>
+
+<p>There are no parameters required apart from the 
+
+</section>
+
+
+<!-- \TODO -->
+
 
 <section>
 <title>Starting in BASIC</title>
@@ -393,7 +450,9 @@ int main(int argc, char *argv[])
 	wimp_initialise(wimp_VERSION_RO3, &quot;Wimp Task&quot;, NULL, NULL);
 
 	while (!quit) {
-		reason = wimp_poll((wimp_poll_flags) 0x1a73, &amp;block, NULL);
+		reason = wimp_poll(wimp_MASK_NULL |  wimp_MASK_ENTERING | wimp_MASK_LEAVING |
+			 wimp_MASK_GAIN | wimp_MASK_LOSE | wimp_MASK_POLLWORD,
+			 &amp;block, NULL);
 
 		switch (reason) {
 		case wimp_USER_MESSAGE:
@@ -559,7 +618,10 @@ static void main_poll(void)
 	wimp_event_no	reason;
 
 	while (!main_quit_flag) {
-		reason = wimp_poll((wimp_poll_flags) 0x1a73, &amp;block, NULL);
+		reason = wimp_poll(wimp_MASK_NULL |
+			 wimp_MASK_ENTERING | wimp_MASK_LEAVING |
+			 wimp_MASK_GAIN | wimp_MASK_LOSE |
+			 wimp_MASK_POLLWORD, &amp;block, NULL);
 
 		switch (reason) {
 		case wimp_USER_MESSAGE:
