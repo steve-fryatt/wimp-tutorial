@@ -94,7 +94,7 @@ UNTIL quit%</code>
 
 <p>When working in BASIC, the <swi>Wimp_Poll</swi> SWI is usually enclosed in a <code>REPEAT</code> <code>UNTIL</code> loop. In this example, the loop exits when the variable <variable>quit%</variable> &ndash; which was set to <name>FALSE</name> in the initialisation &ndash; becomes <name>TRUE</name>.</p>
 
-<p>The call to <swi>Wimp_Poll</swi> takes two parameters and returns &ndash; for now &ndash; one value. The <code>&amp;3C31</code> passed in <name>R0</name> is an &lsquo;event mask&rsquo; in which individual bits are set to tell the Wimp that we don&rsquo;t wish to receive particular events &ndash; we&rsquo;ll explain this when we return to look at <swi>Wimp_Poll</swi> in more detail.</p>
+<p>The call to <swi>Wimp_Poll</swi> takes two parameters and returns &ndash; for now &ndash; one value. The <code>&amp;3831</code> passed in <name>R0</name> is an &lsquo;event mask&rsquo; in which individual bits are set to tell the Wimp that we don&rsquo;t wish to receive particular events &ndash; we&rsquo;ll explain this when we return to look at <swi>Wimp_Poll</swi> in more detail.</p>
 
 <p><name>R1</name> contains a pointer to the 256 bytes of memory that we claimed in the initialisation; before returning from <swi>Wimp_Poll</swi>, the Wimp will fill this block with information about the event that&rsquo;s being given to the application. The event is identified by a value returned in <name>R0</name> and stored in <variable>reason%</variable> &ndash; the so-called &lsquo;reason code&rsquo;.</p>
 
@@ -359,9 +359,10 @@ typedef union wimp_block wimp_block;</code>
 <p>It&rsquo;s still necessary to call <swi>Wimp_Poll</swi> repeatedly to make our small application multitask, and that&rsquo;s done in a very similar way in C:</p>
 
 <code lang="c">while (!quit) {
-	reason = wimp_poll(wimp_MASK_NULL | wimp_MASK_ENTERING | wimp_MASK_LEAVING |
-			 wimp_MASK_GAIN | wimp_MASK_LOSE | wimp_MASK_POLLWORD,
-			 &amp;block, NULL);
+	reason = wimp_poll(wimp_MASK_NULL | wimp_MASK_ENTERING |
+			wimp_MASK_LEAVING | wimp_MASK_GAIN |
+			wimp_MASK_LOSE | wimp_MASK_POLLWORD,
+			&amp;block, NULL);
 
 	switch (reason) {
 	case wimp_USER_MESSAGE:
@@ -374,65 +375,119 @@ typedef union wimp_block wimp_block;</code>
 
 <p>There&rsquo;s a similarity between the <code>while ()</code> loop here and the <code>REPEAT UNTIL</code> loop in the BASIC version: both just call <swi>Wimp_Poll</swi> until instructed to stop.</p>
 
-<!-- \TODO -->
+<p>The call to <swi>Wimp_Poll</swi> is similar, although again it shows some of the differences in approach between BASIC and C. Its prototype in OSLib looks like this:</p>
 
+<code lang="c">extern wimp_event_no wimp_poll(
+	wimp_poll_flags	mask,
+	wimp_block	*block,
+	int		*pollword
+);</code>
 
+<p>As with the native SWI, the call takes both an event mask (passed in <name>R0</name>) and a pointer to a block of memory to return details of any event that has occurred (passed in <name>R1</name>). As noted in the previous chapter, the mask is a 32-bit integer in which bits are set to inform that Wimp that we don&rsquo;t wish to receive certain types of event. In BASIC, we passed in the &ldquo;magic number&rdquo; of <code>&amp;3831</code>; as might be expected, OSLib makes things a bit more self-documenting by defining some constants:</p>
 
+<code lang="c">#define wimp_MASK_NULL		((wimp_poll_flags) 0x1u)
+#define wimp_QUEUE_REDRAW	((wimp_poll_flags) 0x2u)
+#define wimp_MASK_LEAVING	((wimp_poll_flags) 0x10u)
+#define wimp_MASK_ENTERING	((wimp_poll_flags) 0x20u)
+#define wimp_QUEUE_MOUSE	((wimp_poll_flags) 0x40u)
+#define wimp_QUEUE_KEY		((wimp_poll_flags) 0x100u)
+#define wimp_MASK_LOSE		((wimp_poll_flags) 0x800u)
+#define wimp_MASK_GAIN		((wimp_poll_flags) 0x1000u)
+#define wimp_MASK_POLLWORD	((wimp_poll_flags) 0x2000u)
+#define wimp_MASK_ICON_LEAVING	((wimp_poll_flags) 0x4000u)
+#define wimp_MASK_ICON_ENTERING	((wimp_poll_flags) 0x8000u)
+#define wimp_MASK_MESSAGE	((wimp_poll_flags) 0x20000u)
+#define wimp_MASK_RECORDED	((wimp_poll_flags) 0x40000u)
+#define wimp_MASK_ACKNOWLEDGE	((wimp_poll_flags) 0x80000u)
+#define wimp_GIVEN_POLLWORD	((wimp_poll_flags) 0x400000u)
+#define wimp_POLL_HIGH_PRIORITY	((wimp_poll_flags) 0x800000u)
+#define wimp_SAVE_FP		((wimp_poll_flags) 0x1000000u)
+#define wimp_ISSUE_POLL14_AND15	((wimp_poll_flags) 0x2000000u)</code>
 
+<p>Adding together the individual bits defined by the constants <name>wimp_MASK_NULL</name>, <name>wimp_MASK_ENTERING</name>, <name>wimp_MASK_LEAVING</name>, <name>wimp_MASK_GAIN</name>, <name>wimp_MASK_LOSE</name> and <name>wimp_MASK_POLLWORD</name> should give the result <code>0x3831</code> &ndash; it is, however, clearer what&rsquo;s going on and where the value came from. Or it would be, if we knew what the flags all mean: we&rsquo;ll introduce them properly in the following chapters.</p>
 
+<p>The address of the poll block that we initialised at the top of the function is passed in with the help of the &lsquo;address of&rsquo; operator; as we&rsquo;re not interested in the pollword for now, <name>NULL</name> is passed in for the final parameter to prevent a value being returned. The reason code is returned by the function when it returns.</p>
 
-<p>Just as in BASIC, the application written in C must register itself with the Wimp using <swi>Wimp_Initialise</swi>.</p>
+<p>Just as in BASIC, the returned reason code (in <variable>reason</variable>) is tested against a list of known codes. Previously we looked for the values 17 and 18; this time &ndash; as we&rsquo;re coming to expect &ndash; OSLib provides some more meaningful constants to use instead of &ldquo;magic numbers&rdquo;:</p>
 
+<code lang="c">#define wimp_NULL_REASON_CODE		((wimp_event_no) 0x0u)	/* 0	*/
+#define wimp_REDRAW_WINDOW_REQUEST	((wimp_event_no) 0x1u)	/* 1	*/
+#define wimp_OPEN_WINDOW_REQUEST	((wimp_event_no) 0x2u)	/* 2	*/
+#define wimp_CLOSE_WINDOW_REQUEST	((wimp_event_no) 0x3u)	/* 3	*/
+#define wimp_POINTER_LEAVING_WINDOW	((wimp_event_no) 0x4u)	/* 4	*/
+#define wimp_POINTER_ENTERING_WINDOW	((wimp_event_no) 0x5u)	/* 5	*/
+#define wimp_MOUSE_CLICK		((wimp_event_no) 0x6u)	/* 6	*/
+#define wimp_USER_DRAG_BOX		((wimp_event_no) 0x7u)	/* 7	*/
+#define wimp_KEY_PRESSED		((wimp_event_no) 0x8u)	/* 8	*/
+#define wimp_MENU_SELECTION		((wimp_event_no) 0x9u)	/* 9	*/
+#define wimp_SCROLL_REQUEST		((wimp_event_no) 0xAu)	/* 10	*/
+#define wimp_LOSE_CARET			((wimp_event_no) 0xBu)	/* 11	*/
+#define wimp_GAIN_CARET			((wimp_event_no) 0xCu)	/* 12	*/
+#define wimp_POLLWORD_NON_ZERO		((wimp_event_no) 0xDu)	/* 13	*/
+#define wimp_USER_MESSAGE		((wimp_event_no) 0x11u)	/* 17	*/
+#define wimp_USER_MESSAGE_RECORDED	((wimp_event_no) 0x12u)	/* 18	*/
+#define wimp_USER_MESSAGE_ACKNOWLEDGE	((wimp_event_no) 0x13u)	/* 19	*/</code>
 
-<p>Making the move from BASIC to C can be confusing at first, not least because the way that code is structured in the two languages varies significantly. Trying to write C code &ldquo;in a BASIC style&rdquo; will be doomed to failure: the strengths of C come in part from the different ways in which it allows applications &ndash; especially larger ones &ndash; to be developed.</p>
+<p>It turns out that 17 and 18 are in fact the numbers that the Wimp gives to the <name>User Message</name> and <name>User Message Recorded</name> events &ndash; we&rsquo;ll return to what these actually are later on, but as we saw in the BASIC version, we&rsquo;re looking for the word at offset 16 in the poll block returned by the Wimp to be zero.</p>
 
-<p>That said, there are some advantages to starting by comparing the two methods using a direct translation. We&rsquo;ll start with that approach here, creating a simple &lsquo;application&rsquo; in BASIC and then converting it into C &ndash; before looking at how C will allow us to restructure the code to make it easier to work with.</p>
+<p>The block is a variable of type <type>wimp_block</type>, which as we saw above is a union of several different types &ndash; one of which is <type>wimp_message</type>. Although not quite true, OSLib &lsquo;almost&rsquo; defines it as follows:</p>
+
+<code lang="c">struct wimp_message {
+	int	size;		/* Offset 0	*/
+	wimp_t	sender;		/* Offset 4	*/
+	int	my_ref;		/* Offset 8	*/
+	int	your_ref;	/* Offset 12	*/
+	bits	action;		/* Offset 16	*/
+	byte	reserved[236];	/* Offset 20	*/
+};</code>
+
+<p>That is, there are five word-sized variables at the start (<type>int</type> on RISC&nbsp;OS is 32-bits long, and both <type>wimp_t</type> and <type>bits</type> are also 32-bits in length) taking up 20 bytes, followed by 236 bytes of reserved space starting at the byte offset of 20. Altogether that gives 256 bytes, which luckily matches the <code>byte reserved[256];</code> that was also included in the <type>wimp_block</type> union.</p>
+
+<p>The reason for the &lsquo;almost&rsquo; above is that there&rsquo;s some more jiggery-pokery in the OSLib definition to give access to the additional data which arrives with most messages. <message>Message_Quit</message> doesn&rsquo;t have any more data (the application is expected to quit without asking any questions), so for now we can safely ignore the extra complexity &ndash; it will make more sense when we meet user messages properly in a later section.</p>
+
+<p>At offset 16 in the structure, we find <code>bits action</code>, which means that</p>
+
+<code lang="c">if (block.message.action == message_QUIT)
+	quit = TRUE;</code>
+
+<p>is testing the word at offset 16 to see if it is equal to <name>message_QUIT</name>. That&rsquo;s also defined by OSLib, to be</p>
+
+<code lang="c">#define message_QUIT	0x0u</code>
+
+<p>which makes the whole construct have the same effect as the BASIC</p>
+
+<code lang="bbcbasic">IF b%!16 = 0 THEN quit% = TRUE</code>
+
+<p>Hopefully it should be fair to say that the version in OSLib is clearer: there&rsquo;s no need to remember offsets into blocks of data, or the &ldquo;magic numbers&rdquo; which correspond to events and messages (clearly one could define constant variables in BASIC, but there&rsquo;s soon a speed penalty).</p>
+
+<p>As soon as <message>Message_Quit</message> is detected, the <variable>quit</variable> is set to <name>TRUE</name> &ndash; which will cause the <code>while&nbsp;()</code> loop to terminate.</p>
 </section>
-
-<!-- \TODO -->
-
-
-
-
-
 
 
 <section>
-<title>Quitting the software</title>
+<title>A clean exit</title>
 
-<p>As with the BASIC, it&rsquo;s necessary to call <swi>Wimp_CloseDown</swi> at the end, before the program exits. With OSLib, that&rsquo;s done using <function>wimp_close_down()</code> which has the following prototype:</p>
+<p>As with the BASIC, once <message>Message_Quit</message> has been received, it&rsquo;s necessary to call <swi>Wimp_CloseDown</swi> before the program exits. With OSLib, that&rsquo;s done using <function>wimp_close_down()</function> which has the following prototype:</p>
 
 <code lang="c">extern void wimp_close_down(
 	wimp_t	t
 );</code>
 
+<p>There&rsquo;s one parameter, which is the handle of the task that&rsquo;s exiting. For most &lsquo;normal&rsquo; applications this can safely be left as zero since the Wimp knows which application is quitting from context.</p>
+
 <code lang="c">wimp_close_down(0);</code>
 
-<p>There are no parameters required apart from the 
-
+<p>There&rsquo;s no harm in passing in the task&rsquo;s handle if we know it, however &ndash; it&rsquo;s returned by <swi>Wimp_Initialise</swi>, and often an application will need to know it for other reasons.</p>
 </section>
 
 
-<!-- \TODO -->
-
-
 <section>
-<title>Starting in BASIC</title>
+<title>Putting it all together</title>
 
+<p>Assembling all of the snippets of code above will result in <reference id="list2-1"/>. Although its structure doesn&rsquo;t follow the way in which a Wimp application would normally be written in C, it has the same structure as its BASIC sibling from <reference id="list1-1"/> &ndash; allowing the two to be compared easily.</p>
 
-<p>After initialising itself via <swi>Wimp_Initialise</swi>, the program sets the <variable>quit%</variable> flag to <const>FALSE</const> and then polls the Wimp via <swi>Wimp_Poll</swi> until a <message>Message_Quit</message> is received. At this stage, it exits.</p>
-
-<p><swi>Wimp_Initialise</swi> specifies 310 as the required Window Manager version, and passes zero in R3 to indicate that the <em>only</em> message that should be reported is <message>Message_Quit</message>. In this example, it&rsquo;s all we need.</p>
-
-</section>
-
-<section>
-<title>Moving to C</title>
-
-<p>We can do something very similar in C, and while not a great example of why the language is more suited to large-scale Wimp application development than BASIC, <reference id="list1-2"/> has the same structure as its BASIC sibling from <reference id="list1-1"/> &ndash; allowing the two to be compared easily.</p>
-
-<code id="list1-2" lang="c" file="main.c" title="The application converted to C">/**
- * Example 1.2
+<code id="list2-1" lang="c" file="main.c" title="The application converted to C">/**
+ * Example 2.1
  *
  * (c) Stephen Fryatt, 2015
  *
@@ -450,9 +505,10 @@ int main(int argc, char *argv[])
 	wimp_initialise(wimp_VERSION_RO3, &quot;Wimp Task&quot;, NULL, NULL);
 
 	while (!quit) {
-		reason = wimp_poll(wimp_MASK_NULL |  wimp_MASK_ENTERING | wimp_MASK_LEAVING |
-			 wimp_MASK_GAIN | wimp_MASK_LOSE | wimp_MASK_POLLWORD,
-			 &amp;block, NULL);
+		reason = wimp_poll(wimp_MASK_NULL | wimp_MASK_ENTERING |
+			wimp_MASK_LEAVING | wimp_MASK_GAIN |
+			wimp_MASK_LOSE | wimp_MASK_POLLWORD,
+			&amp;block, NULL);
 
 		switch (reason) {
 		case wimp_USER_MESSAGE:
@@ -468,23 +524,99 @@ int main(int argc, char *argv[])
 	return 0;
 }</code>
 
-<p>Just as in BASIC, the code initialises with the wimp via <swi>Wimp_Initialise</swi> and then calls <swi>Wimp_Poll</swi> until a <message>Message_Quit</message> is received.</p>
-
-<p>There&rsquo;s little sign here of why we might want to move to C. One thing that <em>is</em> noticable immediately is the reduction in &ldquo;magic numbers&rsquo;. Whereas the BASIC version contained comparisons like <code>IF b%!16 = 0</code>, the C makes use of OSLib to present it as <code>if (block.message.action == message_QUIT)</code>. It&rsquo;s not much, but it does make the code a lot more self-documenting and easier to follow without a copy of the PRM to hand.</p>
-
-
-
-
-<p>Throughout this tutorial, OSLib will be used to access RISC&nbsp;OS functionality.</p>
-
-
-
-<p>Unlike BASIC, in C all variables must be declared before they can be used. We&rsquo;ll start, therefore, by registering the three variables that will be required in our short piece of code.</p>
+<p>This time, however, we will need to compile the code before we can see it in action. In the next chapter, we&rsquo;ll look at how to do that.</p>
 </section>
 </chapter>
 
 
-<!-- Chapter 2
+<!-- Chapter 3
+   -
+   - Compiling in the DDE
+  -->
+
+<chapter>
+<filename>compiling.html</filename>
+<title>Compiling the Application</title>
+
+<summary>How to get the code using OSLib to compile in the DDE.</summary>
+
+<section>
+<p>In the previous chapter, we put together a very simple application in C using OSLib to access the parts of the Wimp that we required. Before it can be tried out, we&rsquo;ll need to compile it &ndash; we&rsquo;ll look at how to do that now.</p>
+
+<p>There are two choices of compiler when it comes to using C on RISC&nbsp;OS: the port of GCC, and CC which comes as part of the <link href="https://www.riscosopen.org/content/sales/dde">Desktop Development Environment</link> (or DDE) from RISC&nbsp;OS Open Ltd (which is more usually refered to as &ldquo;Norcroft&rdquo; after its original authors). In this tutorial we&rsquo;re going to concentrate on the DDE, since that&rsquo;s the &lsquo;native&rsquo; compiler and that one that&rsquo;s still used for all OS development.</p>
+
+<p>Once installed, the DDE consists of two main folders on the hard disc: <file>AcornC/C++</file> in the root directory, and <file>DDE</file> within <file>Apps</file> &ndash; both are shown in <reference id="img3-1"/>. Other folders are also included in the install: the most important is probably the <file>DDE</file> manuals folder which is placed in <file>Documents</file>.</p>
+
+<image id="img3-1" file="c3-dde-files.png" title="The main contents of the DDE"/>
+</section>
+
+<section>
+<title>Installing OSLib</title>
+<p>To be able to compile our application, we&rsquo;ll also require the OSLib library to be available: this doesn&rsquo;t come as standard with the DDE, but is easily obtained from the <link href="http://ro-oslib.sourceforge.net/">OSLib website</link>. Follow the link to the <link href="http://ro-oslib.sourceforge.net/archives.html">Zip Archives</link> and then on to the latest release &ndash; at the time of writing, this was <link href="http://ro-oslib.sourceforge.net/release-7.00.html">Version&nbsp;7.00</link>. From the &ldquo;Library downloads&rdquo; section, fetch the version of OSLib for &ldquo;Acorn/Norcroft and GCCSDK GCC&nbsp;3.4.x&rdquo;; for this tutorial, there&rsquo;s no need to download OSLibSupport. It&rsquo;s a good idea to also download the StrongHelp manual from the &ldquo;Other downloads&rdquo; section: this documents all of the functions, types and constants defined by the library.</p>
+
+<p>With the two zip files downloaded from the OSLib site, the files shown in <reference id="img3-2"/> should now be available. Note that the screenshot shows version 7.00: the filenames &ndash; and contents &ndash; of the archives may vary in future releases.</p>
+
+<image id="img3-2" file="c3-oslib-files.png" title="The OSLib library (version 7.00 here) comes in two separate archives"/>
+
+<p>There&rsquo;s no set way to install OSLib, so it&rsquo;s very much a matter of personal preference. In this case, we&rsquo;ll copy the contents of the main OSLib archive into a folder called <file>OSLib</file> which has been created in the <file>AcornC/C++</file> folder as shown in <reference id="img3-3"/>. This keeps the library together with the other DDE resources. The StrongHelp manual can be put wherever we like: storing it with the documentation, or with other StrongHelp manuals, might be a good idea.</p>
+
+<image id="img3-3" file="c3-oslib-install.png" title="The OSLib files installed ready for use"/>
+
+<p>In the <file>OSLib</file> folder that we&rsquo;ve just created is an Obey file called <file>SetVars</file>;. In a similar way to the DDE&rsquo;s <file>!SetPaths</file> application, <file>SetVars</file> must be run (or double-clicked) before attempting to use OSLib in a compilation.</p>
+</section>
+
+<section>
+<title>Creating a project</title>
+
+<p>To get our new project started, we&rsquo;ll begin by launching the DDE and setting up OSLib. Open the <file>AcornC/C++</file> folder and double-click on <file>!SetPaths</file> to set up the DDE environment (as shown in <reference id="img3-3"/>); next open the <file>OSLib</file> folder and double-click on <file>SetVars</file> to do the same for OSLib. These actions set up system variables which will allow all the necessary files and resources to be found until the machine is shut down or reset.</p>
+
+<p>The next thing to do is to create a home for the files that form our new application: for now, that&rsquo;s just a single text file containing the C source code introduced as <reference id="list2-1"/> in the previous chapter. Using Zap, the result will look something like that shown in <reference id="img3-4"/>.</p>
+
+<image id="img3-4" file="c3-ex1-zap.png" title="The listing typed into Zap"/>
+
+<p>Next, we need to set some folders up on disc to take the project and all its files. Create a folder somewhere to house the project &ndash; here we&rsquo;ve called it <file>Example2-1</file> &ndash; and inside it create three more folders called <file>c</file>, <file>h</file> and <file>o</file>. Save the text file as <file>main</file> inside the <file>c</file> folder, as shown in <reference id="img3-5"/>.</p>
+
+<image id="img3-5" file="c3-ex1-folders.png" title="The project folders on disc"/>
+
+<p>The three folders are used to get around the lack of filename extensions in RISC&nbsp;OS: while compilers on other systems would tend to put a &lsquo;.c&rsquo; extenstion on the end of C source files (<file>main.c</file> in our case), the DDC stores them without extensions inside folders. Thus the &lsquo;.c&rsquo; files live in the <file>c</file> folder, &lsquo;.h&rsquo; files in the <file>h</file> folder, and so on.</p>
+
+<p>At present our project is simple enough not to need any header files, but we&rsquo;ve created a folder for them ready for when we do need it. The <file>o</file> folder will take any object files (whose names would end with &lsquo;.o&rsquo; on other systems) created during the compilation.</p>
+</section>
+
+<section>
+<title>Compiling the code</title>
+
+<p>To compile the code, we&rsquo;re going to use the CC compiler that comes with the DDE. Assuming that the environment has been installed in its default state (as described above), go to the <file>Apps</file> folder on the hard disc, then into <file>DDE</file>, and double-click on <file>!CC</file> to install it on the iconbar.</p>
+
+<p>Drag the <file>main</file> file from our project on to the iconbar icon to open the CC window: the <icon>Source</icon> field should show the full filename. As standard, the compiler is set up to use just the libraries shipped with the DDE; as we&rsquo;re also using OSLib, we&rsquo;ll need to find the header file referred to by the</p>
+
+<code lang="c">#include &quot;oslib/wimp.h&quot;</code>
+
+<p>at the top of the file.</p>
+
+<p>When run, the <file>SetVars</file> obey file in the OSLib folder sets up a couple of system variables to point to the library: <variable>OSLib$Path</variable> and <variable>OSLib$Dir</variable>. For the instalation shown in <reference id="img3-3"/>, these are set as shown in <reference id="img3-6"/>.</p>
+
+<image id="img3-6" file="c3-oslib-paths.png" title="OSLib&rsquo;s SetVars creates two system variable to point to the library"/>
+
+<p>Since the <file>OSLib</file> folder pointed to by these variables contains another folder called <file>oslib</file> which in turn holds all of the library&rsquo;s header files, telling the compiler to &lsquo;include&rsquo; <file>OSLib:</file> will ensure that the <code>#include</code> works as intended (since <file>wimp.h</file> can be found at <file>OSLib:oslib.h.wimp</file>). We therefore need to add <code>OSLib:</code> to the comma-separated list in the <icon>Include</icon> field as shown in <reference id="img3-7"/>.</p>
+
+<image id="img3-7" file="c3-cc-include.png" title="OSLib needs to be added to the list of include paths known to CC"/>
+
+<p>It&rsquo;s also necessary to tell CC where to find the OSLib library itself: click <mouse>Menu</mouse> over the CC window, slide over <menu>Libraries</menu> and add <code>OSLib:o.OSLib32</code> to the <em>start</em> of the comma-separated list as shown in <reference id="img3-8"/>.</p>
+
+<image id="img3-8" file="c3-cc-libraries.png" title="The OSLib file itself must also be added to the list of libraries"/>
+
+<p>With the OSLib library set up, click on <icon>Run</icon> to start the compilation. A throwback window will open and, if there are no errors, a save dialogue will appear as shown in <reference id="img3-9"/>. Clicking <icon>OK</icon> will by default save the file in the project folder.</p>
+
+<image id="img3-9" file="c3-cc-run.png" title="Compiling and saving the code"/>
+
+<p>The <file>main</file> application can now be run by double-clicking on it: if all goes well, it should perform exactly the same as the original BASIC application shown in <reference id="img1-1"/>.</p>
+
+</section>
+</chapter>
+
+
+<!-- Chapter X
    -
    - Event Driven Programming
   -->
@@ -506,9 +638,9 @@ int main(int argc, char *argv[])
 <section>
 <title>Routing Events</title>
 
-<p>In BASIC, it&rsquo;s common to use a <keyword>CASE</keyword> statement after <swi>Wimp_Poll</swi>, to split the returned events up by reason code and pass them on to appropriate handlers. The code in <reference id="list2-1"/> should be familiar to anyone who has ever written an application in BASIC.</p>
+<p>In BASIC, it&rsquo;s common to use a <keyword>CASE</keyword> statement after <swi>Wimp_Poll</swi>, to split the returned events up by reason code and pass them on to appropriate handlers. The code in <reference id="list3-1"/> should be familiar to anyone who has ever written an application in BASIC.</p>
 
-<code id="list2-1" lang="bbcbasic" title="A BASIC Wimp_Poll loop">DEF PROCpoll
+<code id="list3-1" lang="bbcbasic" title="A BASIC Wimp_Poll loop">DEF PROCpoll
 LOCAL reason%
 
 SYS &quot;Wimp_Poll&quot;, &amp;3831, b%, TO reason%
@@ -570,7 +702,7 @@ ENDPROC</code>
 
 <p>Over the years, several libraries have been written which include a Wimp event dispatcher, and I&rsquo;m afraid to say that SFLib is no exception. Which library to use is a matter of personal preference; this guide will be sticking to SFLib (and in turn OSLib) throughout.</p>
 
-<p>The first thing to do is to take the code from <reference id="list1-2"/> and re-write it in a slightly more modular form. This isn&rsquo;t essential, but will help to keep things clear as we go on.</p>
+<p>The first thing to do is to take the code from <reference id="list2-1"/> and re-write it in a slightly more modular form. This isn&rsquo;t essential, but will help to keep things clear as we go on.</p>
 
 <code id="list2-3" lang="c" file="main.c" title="Restructuring the code to use functions">/**
  * Example 2.1
@@ -697,7 +829,7 @@ case wimp_USER_MESSAGE_RECORDED:
 
 <p>Now, instead of passing incoming reason codes to a <code>switch</code> statement, they&rsquo;re passed directly to the event library. Internally this will use a similar approach to determine where events should end up &ndash; but it does this without us having to worry about it. The code here isn&rsquo;t quite the full story &ndash; we&rsquo;ll add the additional bits when they&rsquo;re required in a later example.</p>
 
-<p>Putting this all together results in the following code, which should perform exactly the same as <reference id="list1-2"/> when run.</p>
+<p>Putting this all together results in the following code, which should perform exactly the same as <reference id="list2-1"/> when run.</p>
 
 <code id="list2-4" lang="c" file="main.c" title="Using the event dispatcher">/**
  * Example 2.2
