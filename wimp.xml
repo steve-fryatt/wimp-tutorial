@@ -317,7 +317,7 @@ typedef union wimp_block wimp_block;</code>
 	wimp_version_no		*version_out
 );</code>
 
-<p>In <swi>Wimp_Initialise</swi>, we saw before that <name>R0</name> takes the minimum version of the Wimp that the application can accept: OSLib gives its <variable>version</variable> parameter a type of <type>wimp_version_no</type>, which is defined as <code>typedef int wimp_version_no</code>. It turns out that there are a small number of &lsquo;significant&rsquo; values that the Wimp recognises for the version number, OSLib defines constants for these:</p>
+<p>In <swi>Wimp_Initialise</swi>, we saw before that <name>R0</name> takes the minimum version of the Wimp that the application can accept: OSLib gives its <variable>version</variable> parameter a type of <type>wimp_version_no</type>, which is defined as <code>typedef int wimp_version_no</code>. It turns out that there are a small number of &lsquo;significant&rsquo; values that the Wimp recognises for the version number, and OSLib defines constants for these:</p>
 
 <code lang="c">#define wimp_VERSION_RO2	((wimp_version_no) 0xC8u)	/* 200 */
 #define wimp_VERSION_RO30	((wimp_version_no) 0x12Cu)	/* 300 */
@@ -330,7 +330,7 @@ typedef union wimp_block wimp_block;</code>
 
 <p>Although the constants are defined in terms of hexadecimal (which can be confusing, although their values aren&rsquo;t really meant to be human-readable), we can see that <code>wimp_VERSION_RO3</code> is set to be <code>(wimp_version_no) 0x136u</code> &ndash; which is 310 in decimal with an appropriate cast from <type>uint</type> to <type>wimp_version_number</type> included.</p>
 
-<p><name>R1</name> takes the &ldquo;magic&rdquo; constant <code>&amp;4B534154</code> &ndash; or &ldquo;TASK&rdquo; &ndash; to switch off Arthur compatibility. Although we have to pass this manually in BASIC, it never changes and so OSLib&rsquo;s <function>wimp_initialise()</function> doesn&rsquo;t even offer a parameter for it.</p>
+<p><name>R1</name> takes the &ldquo;magic&rdquo; constant <code>&amp;4B534154</code> &ndash; or &ldquo;TASK&rdquo; &ndash; to switch off Arthur compatibility. Although we have to pass this manually in BASIC, it never changes in modern software and so OSLib&rsquo;s <function>wimp_initialise()</function> doesn&rsquo;t even offer a parameter to give us control.</p>
 
 <p>The next parameter to <swi>Wimp_Initialise</swi>, in <name>R2</name>, was a pointer to a string containing the name of the application. OSLib&rsquo;s <function>wimp_initialise()</function> is no exception, and the next parameter is <variable>*name</variable> &ndash; a pointer to a string.</p>
 
@@ -631,34 +631,47 @@ int main(int argc, char *argv[])
 <summary>The RISC&nbsp;OS Wimp is essentially an event-driven environment, so why don&rsquo;t we take advantage of that?</summary>
 
 <section>
-<p>Anyone who has ever written software for other windowing systems &ndash; especially those that use so-called &lsquo;visual&rsquo; development environments &ndash; will be familiar with the concept of event-driven programming. An action button can have a function associated with it, which gets called whenever the user clicks on the button; windows can have functions which are called whenever they are moved or require redrawing.</p>
+<p>Our first foray into programming the Wimp in C (see <reference id="list2-1"/>) followed the very BASIC-like approach of repeatedly polling the Wimp inside a <code>while&nbsp;()</code> loop and processing the resulting reason codes in a <code>switch&nbsp;()</code> statement. While it worked, there's a problem which will become more obvious as the application develops: the <code>switch&nbsp;()</code> statement will need to know about every single piece of the application in order to pass control on to the correct parts.</p>
 
-<p>While it&rsquo;s relatively simple for beginners &ndash; and open to abuse &ndash; the approach does have advantages. These &lsquo;event handlers&rsquo; can be self-contained, and often don&rsquo;t need to be known about outside of the code that they relate to; this makes it possible to write extremely modular code, which can be much easier to update and maintain.</p>
+<p>This is a common problem in BASIC, and many applications will be centred around a <code>CASE</code> statement similar to the one in <reference id="list4-1"/> (don&rsquo;t worry about what the different <code>WHEN</code> clauses actually do).</p>
 
-<p>The RISC&nbsp;OS Wimp is also event-driven, although to a casual observer &ndash; especially one working in BASIC &ndash; it&rsquo;s quite well hidden. With the exception, perhaps, of <name>Null_Reason</name>, the information returned by <swi>Wimp_Poll</swi> is a series of events: a <name>Mouse_Click</name> could be an event destined for an action button in a window somewhere, while <name>Redraw_Window_Request</name> is an indication that a window wishes to be redrawn.</p>
-</section>
-
-<section>
-<title>Routing Events</title>
-
-<p>In BASIC, it&rsquo;s common to use a <keyword>CASE</keyword> statement after <swi>Wimp_Poll</swi>, to split the returned events up by reason code and pass them on to appropriate handlers. The code in <reference id="list3-1"/> should be familiar to anyone who has ever written an application in BASIC.</p>
-
-<code id="list3-1" lang="bbcbasic" title="A BASIC Wimp_Poll loop">DEF PROCpoll
+<code id="list4-1" lang="bbcbasic" title="A BASIC Wimp_Poll loop">DEF PROCpoll
 LOCAL reason%
 
 SYS &quot;Wimp_Poll&quot;, &amp;3831, b%, TO reason%
 
 CASE reason% OF
-        WHEN 1          : PROCredraw_handler(b%)
-        WHEN 2          : SYS &quot;Wimp_OpenWindow&quot;,,b%
-        WHEN 3          : SYS &quot;Wimp_CloseWindow&quot;,,b%
-        WHEN 6          : PROCmouse_click_handler(b%)
-        WHEN 8          : PROCkeypress_handler(b%)
-        WHEN 9          : PROCmenu_selection_handler(b%)
-        WHEN 17, 18     : PROCwimp_message_handler(b%)
-        WHEN 19         : PROCbounced_message_handler(b%)
+	WHEN 1		: PROCredraw_handler(b%)
+	WHEN 2		: SYS &quot;Wimp_OpenWindow&quot;,,b%
+	WHEN 3		: SYS &quot;Wimp_CloseWindow&quot;,,b%
+	WHEN 6		: PROCmouse_click_handler(b%)
+	WHEN 8		: PROCkeypress_handler(b%)
+	WHEN 9		: PROCmenu_selection_handler(b%)
+	WHEN 17, 18	: PROCwimp_message_handler(b%)
+	WHEN 19		: PROCbounced_message_handler(b%)
 ENDCASE
 ENDPROC</code>
+
+<p>Each of those procedures will very likely contain another <code>CASE</code> statement, which in turn will have calls to procedures in every part of the program. While this is fine for the un-modular BBC&nbsp;BASIC, it makes it difficult to break the code up into self-contained chunks &ndash; one of the advantages of moving to C.</p>
+</section>
+
+<section>
+<title>Routing Events</title>
+
+<p>Anyone who has ever written software for other windowing systems &ndash; especially those that use so-called &lsquo;visual&rsquo; development environments &ndash; will be familiar with the concept of event-driven programming. An action button can have a function associated with it, which gets called whenever the user clicks on the button; windows can have functions which are called whenever they are moved or require redrawing.</p>
+
+<p>While it&rsquo;s relatively simple for beginners &ndash; and open to abuse &ndash; the approach does have advantages. These &lsquo;event handlers&rsquo; can be self-contained, and often don&rsquo;t need to be known about outside of the code that they relate to; this makes it possible to write extremely modular code, which can be much easier to update and maintain.</p>
+
+<p>The RISC&nbsp;OS Wimp is also event-driven, although to a casual observer &ndash; especially one working in BASIC &ndash; it&rsquo;s quite well hidden. With the exception, perhaps, of <name>Null_Reason</name>, the information returned by <swi>Wimp_Poll</swi> is a series of events: a <name>Mouse_Click</name> could be an event destined for an action button in a window somewhere, while <name>Redraw_Window_Request</name> is an indication that a window wishes to be redrawn.</p>
+
+
+
+
+
+
+
+<p>In BASIC, it&rsquo;s common to use a <keyword>CASE</keyword> statement after <swi>Wimp_Poll</swi>, to split the returned events up by reason code and pass them on to appropriate handlers. The code in <reference id="list4-1"/> should be familiar to anyone who has ever written an application in BASIC.</p>
+
 
 <p>Events are split up by reason code, and passed on to mode dedicated blocks of code which can then look at the contents of the poll block and pass the information on its way to the intended recipient. For example, the code in <reference id="list2-2"/> might be used to interpret <name>Mouse_Click</name> events.</p>
 
