@@ -64,6 +64,7 @@
     <xsd:attribute name="file" type="xsd:string" use="required"/>
     <xsd:attribute name="id" type="xsd:string"/>
     <xsd:attribute name="title" type="xsd:string"/>
+    <xsd:attribute name="compatibility" type="xsd:string"/>
   </xsd:complexType>
  
   <xsd:complexType name="ParagraphType">

@@ -574,13 +574,16 @@ int main(int argc, char *argv[])
 
 <image id="img3-4" file="c3-ex1-zap.png" title="The listing typed into Zap"/>
 
-<p>Next, we need to set some folders up on disc to take the project and all its files. Create a folder somewhere to house the project &ndash; here we&rsquo;ve called it <file>Example2-1</file> &ndash; and inside it create three more folders called <file>c</file>, <file>h</file> and <file>o</file>. Save the text file as <file>main</file> inside the <file>c</file> folder, as shown in <reference id="img3-5"/>.</p>
+<p>Next, we need to set some folders up on disc to take the project and all its files. Create a folder somewhere to house the project &ndash; here we&rsquo;ve called it <file>SimpleCApp</file> &ndash; and inside it create three more folders called <file>c</file>, <file>h</file> and <file>o</file>. Save the text file as <file>main</file> inside the <file>c</file> folder, as shown in <reference id="img3-5"/>.</p>
 
 <image id="img3-5" file="c3-ex1-folders.png" title="The project folders on disc"/>
 
 <p>The three folders are used to get around the lack of filename extensions in RISC&nbsp;OS: while compilers on other systems would tend to put a &lsquo;.c&rsquo; extenstion on the end of C source files (<file>main.c</file> in our case), the DDC stores them without extensions inside folders. Thus the &lsquo;.c&rsquo; files live in the <file>c</file> folder, &lsquo;.h&rsquo; files in the <file>h</file> folder, and so on.</p>
 
-<p>At present our project is simple enough not to need any header files, but we&rsquo;ve created a folder for them ready for when we do need it. The <file>o</file> folder will take any object files (whose names would end with &lsquo;.o&rsquo; on other systems) created during the compilation.</p>
+<p>At present our project is simple enough not to need any header files, but we&rsquo;ve created an <file>h</file> folder for them ready for when we do need it. The <file>o</file> folder will take any object files (whose names would end with &lsquo;.o&rsquo; on other systems) created during the compilation. A complete set of the project&rsquo;s files can be found in <reference id="dl2-1"/>.</p>
+
+<download id="dl2-1" file="SimpleCApp.zip" title="A Simple C Application" compatibility="armv7"/>
+
 </section>
 
 <section>
