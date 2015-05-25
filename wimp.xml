@@ -536,7 +536,7 @@ int main(int argc, char *argv[])
 
 <chapter>
 <filename>compiling.html</filename>
-<title>Compiling the Application</title>
+<title>Compiling the application</title>
 
 <summary>How to get the code using OSLib to compile in the DDE.</summary>
 
@@ -631,97 +631,16 @@ int main(int argc, char *argv[])
 <summary>The RISC&nbsp;OS Wimp is essentially an event-driven environment, so why don&rsquo;t we take advantage of that?</summary>
 
 <section>
-<p>Our first foray into programming the Wimp in C (see <reference id="list2-1"/>) followed the very BASIC-like approach of repeatedly polling the Wimp inside a <code>while&nbsp;()</code> loop and processing the resulting reason codes in a <code>switch&nbsp;()</code> statement. While it worked, there's a problem which will become more obvious as the application develops: the <code>switch&nbsp;()</code> statement will need to know about every single piece of the application in order to pass control on to the correct parts.</p>
-
-<p>This is a common problem in BASIC, and many applications will be centred around a <code>CASE</code> statement similar to the one in <reference id="list4-1"/> (don&rsquo;t worry about what the different <code>WHEN</code> clauses actually do).</p>
-
-<code id="list4-1" lang="bbcbasic" title="A BASIC Wimp_Poll loop">DEF PROCpoll
-LOCAL reason%
-
-SYS &quot;Wimp_Poll&quot;, &amp;3831, b%, TO reason%
-
-CASE reason% OF
-	WHEN 1		: PROCredraw_handler(b%)
-	WHEN 2		: SYS &quot;Wimp_OpenWindow&quot;,,b%
-	WHEN 3		: SYS &quot;Wimp_CloseWindow&quot;,,b%
-	WHEN 6		: PROCmouse_click_handler(b%)
-	WHEN 8		: PROCkeypress_handler(b%)
-	WHEN 9		: PROCmenu_selection_handler(b%)
-	WHEN 17, 18	: PROCwimp_message_handler(b%)
-	WHEN 19		: PROCbounced_message_handler(b%)
-ENDCASE
-ENDPROC</code>
-
-<p>Each of those procedures will very likely contain another <code>CASE</code> statement, which in turn will have calls to procedures in every part of the program. While this is fine for the un-modular BBC&nbsp;BASIC, it makes it difficult to break the code up into self-contained chunks &ndash; one of the advantages of moving to C.</p>
+<p>Our first foray into programming the Wimp in C (see <reference id="list2-1"/>) followed the very BASIC-like approach of repeatedly polling the Wimp inside a <code>while&nbsp;()</code> loop and processing the resulting reason codes in a <code>switch&nbsp;()</code> statement. While it worked, it&rsquo;s not very well structured: apart from anything else, the entire application is contained inside the single <function>main()</function> function!</p>
 </section>
 
 <section>
-<title>Routing Events</title>
+<title>Modular code</title>
 
-<p>Anyone who has ever written software for other windowing systems &ndash; especially those that use so-called &lsquo;visual&rsquo; development environments &ndash; will be familiar with the concept of event-driven programming. An action button can have a function associated with it, which gets called whenever the user clicks on the button; windows can have functions which are called whenever they are moved or require redrawing.</p>
+<p>The first thing to do is to take the code from <reference id="list2-1"/> and re-write it in a slightly more modular form. This isn&rsquo;t essential at this stage, but it will help to keep things clear as we go on and add more features. It results in the code seen in <reference id="list4-1"/>.</p>
 
-<p>While it&rsquo;s relatively simple for beginners &ndash; and open to abuse &ndash; the approach does have advantages. These &lsquo;event handlers&rsquo; can be self-contained, and often don&rsquo;t need to be known about outside of the code that they relate to; this makes it possible to write extremely modular code, which can be much easier to update and maintain.</p>
-
-<p>The RISC&nbsp;OS Wimp is also event-driven, although to a casual observer &ndash; especially one working in BASIC &ndash; it&rsquo;s quite well hidden. With the exception, perhaps, of <name>Null_Reason</name>, the information returned by <swi>Wimp_Poll</swi> is a series of events: a <name>Mouse_Click</name> could be an event destined for an action button in a window somewhere, while <name>Redraw_Window_Request</name> is an indication that a window wishes to be redrawn.</p>
-
-
-
-
-
-
-
-<p>In BASIC, it&rsquo;s common to use a <keyword>CASE</keyword> statement after <swi>Wimp_Poll</swi>, to split the returned events up by reason code and pass them on to appropriate handlers. The code in <reference id="list4-1"/> should be familiar to anyone who has ever written an application in BASIC.</p>
-
-
-<p>Events are split up by reason code, and passed on to mode dedicated blocks of code which can then look at the contents of the poll block and pass the information on its way to the intended recipient. For example, the code in <reference id="list2-2"/> might be used to interpret <name>Mouse_Click</name> events.</p>
-
-<code id="list2-2" lang="bbcbasic" title="Dispatching mouse click events in BASIC">DEF PROCmouse_click_handler(block%)
-
-REM Pass the event details around any code modules that might be interested.
-
-IF FNchoices_process_mouse(block%) THEN ENDPROC
-IF FNignore_process_mouse(block%) THEN ENDPROC
-
-REM If we're still here, try to handle the event directly.
-
-CASE block%!12 OF
-WHEN -2
-        CASE block%!8 OF
-        WHEN 4
-                PROCset_help_state(NOT ChoicesDisplayBubbles%)
-        WHEN 2
-                PROCmenu_set_state(IconbarMenu%, 3, ShowAllHelp%, FALSE)
-                PROCmenu_create_iconbar(IconbarMenu%, !block%)
-        WHEN 1
-                PROCchoices_open_window(!block%, block%!4)
-        ENDCASE
-
-WHEN ColoursWindow%
-        IF block%!16 >= 1 THEN PROCchoices_colour_selection(block%!16 - 1)
-        PROCwindow_close(ColoursWindow%)
-
-WHEN InfoWindow%
-        IF block%!16 = 8 THEN
-                PROCurl_launch(FNmessage_lookup(&quot;SupportURL&quot;))
-                PROCmenu_create(-1, 0, 0)
-        ENDIF
-ENDCASE
-ENDPROC</code>
-
-<p>The problem here is that, even when code simply passes the events on to a separate subroutine (such as <function>FNchoices_process_mouse()</function>), the handler still needs to know about all the possible claimants of <name>Mouse_Click</name> events and their interfaces to <swi>Wimp_Poll</swi>. They&rsquo;re not self-contained.</p>
-</section>
-
-<section>
-<title>Event Dispatch</title>
-
-<p>Unlike BASIC, C has a concept of pointers to functions: it&rsquo;s possible to take a pointer to a function, and then call it via that pointer. Using this facility, it&rsquo;s fairly straightforward to create code to dispatch the events from <swi>Wimp_Poll</swi> in a manner that&rsquo;s much more familiar to anyone who has written code for other platforms.</p>
-
-<p>Over the years, several libraries have been written which include a Wimp event dispatcher, and I&rsquo;m afraid to say that SFLib is no exception. Which library to use is a matter of personal preference; this guide will be sticking to SFLib (and in turn OSLib) throughout.</p>
-
-<p>The first thing to do is to take the code from <reference id="list2-1"/> and re-write it in a slightly more modular form. This isn&rsquo;t essential, but will help to keep things clear as we go on.</p>
-
-<code id="list2-3" lang="c" file="main.c" title="Restructuring the code to use functions">/**
- * Example 2.1
+<code id="list4-1" lang="c" file="main.c" title="Restructuring the code to use functions">/**
+ * Example 4.1
  *
  * (c) Stephen Fryatt, 2015.
  *
@@ -788,14 +707,42 @@ static void main_terminate(void)
 	wimp_close_down(0);
 }</code>
 
-<p>There&rsquo;s now an initialisation, poll and termination routine, which breaks the code up into logical chunks. Each has a name starting with <code>main_</code> &ndash; this isn&rsquo;t important at the moment, but will again become relevant when the code grows.</p>
+<p>While very similar to its predecessor, there&rsquo;s now an initialisation, poll and termination routine, which breaks the code up into logical chunks. Each has a name starting with <code>main_</code> &ndash; this isn&rsquo;t essential, but will help us to keep track of where things are when the code grows. The <function>main()</function> itself simply calls these routines.</p>
+</section>
 
-<p>The next step is to add a reference to SFLib&rsquo;s event library: we do this by adding a suitable <code>#include</code> to the top of the file to make the functions available to us.</p>
+<section>
+<title>Routing events</title>
 
-<code lang="c">#include "oslib/wimp.h"
-#include "sflib/event.h"</code>
+<p>There was another problem with <reference id="list2-1"/>, however, which is still present in <reference id="list4-1"/> and will become more obvious as the application develops: the <code>switch&nbsp;()</code> statement following <function>wimp_poll()</function> will need to know about every single piece of the application in order to pass control on to the correct parts. For now that&rsquo;s not much of an issue, but as more features are added to our application it will soon become one.</p>
 
-<p>The only Wimp events that the code currently responds to are <name>User_Message</name> and <name>User_Message_Recorded</name>: when either is received, a check is made to see if the message is <message>Message_Quit</message> and, if it is, <variable>main_quit_flag</variable> is set to <name>TRUE</name> so that the poll loop exits. This was done using an entry in the reason code <code>switch</code> statement.</p>
+<p>This is a common problem in BASIC, and many applications will be centred around a <code>CASE</code> statement similar to the one in below (don&rsquo;t worry about what the different <code>WHEN</code> clauses actually do).</p>
+
+<code lang="bbcbasic" title="A BASIC Wimp_Poll loop">DEF PROCpoll
+LOCAL reason%
+
+SYS &quot;Wimp_Poll&quot;, &amp;3831, b%, TO reason%
+
+CASE reason% OF
+	WHEN 1		: PROCredraw_handler(b%)
+	WHEN 2		: SYS &quot;Wimp_OpenWindow&quot;,,b%
+	WHEN 3		: SYS &quot;Wimp_CloseWindow&quot;,,b%
+	WHEN 6		: PROCmouse_click_handler(b%)
+	WHEN 8		: PROCkeypress_handler(b%)
+	WHEN 9		: PROCmenu_selection_handler(b%)
+	WHEN 17, 18	: PROCwimp_message_handler(b%)
+	WHEN 19		: PROCbounced_message_handler(b%)
+ENDCASE
+ENDPROC</code>
+
+<p>Each of those procedures will very likely contain another <code>CASE</code> statement, which in turn will have calls to procedures in every part of the program. While this is fine for the un-modular BBC&nbsp;BASIC, it makes it difficult to break the code up into self-contained chunks &ndash; one of the advantages of moving to C.</p>
+
+<p>Anyone who has ever written software for other windowing systems &ndash; especially those that use so-called &lsquo;visual&rsquo; development environments &ndash; will be familiar with the concept of event-driven programming. An action button can have a function associated with it, which gets called whenever the user clicks on the button; windows can have functions which are called whenever they are moved or require redrawing.</p>
+
+<p>While it&rsquo;s relatively simple for beginners &ndash; and open to abuse &ndash; the approach does have advantages. These &lsquo;event handlers&rsquo; can be self-contained, and often don&rsquo;t need to be known about outside of the code that they relate to; this makes it possible to write extremely modular code, which can be much easier to update and maintain.</p>
+
+<p>The RISC&nbsp;OS Wimp is also event-driven, although to a casual observer &ndash; especially one working in BASIC &ndash; it&rsquo;s quite well hidden. With the exception, perhaps, of <name>Null_Reason</name>, the information returned by <swi>Wimp_Poll</swi> is a series of events: a <name>Mouse_Click</name> could be an event destined for an action button in a window somewhere, while <name>Redraw_Window_Request</name> is an indication that a window wishes to be redrawn.</p>
+
+<p>The <code>while&nbsp;()</code> loop contained in <function>main_poll()</function> in <reference id="list4-1"/> does in fact contain an event handler &ndash; in the <code>switch&nbsp;()</code> statement here.</p>
 
 <code lang="c">switch (reason) {
 case wimp_USER_MESSAGE:
@@ -805,7 +752,15 @@ case wimp_USER_MESSAGE_RECORDED:
 	break;
 }</code>
 
-<p>To move the code over to use a system of event handlers, we need to add a handler to respond when a <message>Message_Quit</message> is received. Ignoring the checks to see if this really is a <message>Message_Quit</message> (which will be handled for us by the event library), this boils down to the following.</p>
+<p>The handler processes events coming in with reason codes of <name>User_Message</name> and <name>User_Message_Recorded</name>, when the action is <name>Message_Quit</name>. If these conditions are all met, the code <code>main_quit_flag = TRUE</code> is executed &ndash; making this an event handler for <name>Message_Quit</name> when it arrives as one of the two forms of user message.</p>
+</section>
+
+
+<section>
+<title>Event Dispatch</title>
+<p>It&rsquo;s not a great leap to go from here to full event handlers, but it will require assistance from a third-party library. Over the years, several libraries have been written which include a Wimp event dispatcher &ndash; which to use is a matter of personal preference and this guide will be sticking to SFLib (and in turn OSLib) throughout.</p>
+
+<p>Once all of the test for reason and message action codes have been removed, the routine above can be re-packaged as an event handler function.</p>
 
 <code lang="c">static osbool main_message_quit(wimp_message *message)
 {
@@ -814,21 +769,17 @@ case wimp_USER_MESSAGE_RECORDED:
 	return TRUE;
 }</code>
 
-<p>This function shows the standard form of a message event handler for use with SFLib: it takes a single parameter <code>wimp_message *message</code>, which is a pointer to the message block that arrived from <swi>Wimp_Poll</swi>, and will be called whenever a <message>Message_Quit</message> is received by the application.</p>
-
-<p>The function returns <name>TRUE</name> or <name>FALSE</name> to indicate whether or not the handler wishes to claim the message for itself or pass it on to other claimants <em>within the application</em>. This is not related to the act of claiming the message with the Wimp, to prevent other applications from seeing it (although the message handler could do that as one of the actions that it carries out).</p>
-
-<p>This handler returns <name>TRUE</name>, so SFLib won&rsquo;t bother passing details of the <message>Message_Quit</message> on to any other hander functions which have been registered with it. If it returned <name>FALSE</name>, SFLib would try passing the message to any other handers that it knows of &ndash; until one returns <name>TRUE</name> or it runs out of handers to try.</p>
+<p>This shows the standard form of a message event handler for use with SFLib: it takes a single parameter <code>wimp_message *message</code>, which is a pointer to the message block that arrived from <swi>Wimp_Poll</swi>, and will be called whenever a <message>Message_Quit</message> is received by the application. The function returns <name>TRUE</name> to let SFLib know that the message has been handled: we&rsquo;ll see why when we look at messages in more detail later on.</p>
 
 <p>To let SFLib&rsquo;s event library know that this hander exists, we can add a line to <function>main_initialise()</function> to register it.</p>
 
 <code lang="c">event_add_message_handler(message_QUIT, EVENT_MESSAGE_INCOMING, main_message_quit);</code>
 
-<p>This call to <function>event_add_message_handler()</function> lets the event dispatcher know that <function>main_message_quit()</function> is interested in receiving details of <message>Message_Quit</message> &ndash; it&rsquo;s only possible to specify one message, but the same handler can be registered multiple times (with different messages in each) if required. <name>EVENT_MESSAGE_INCOMING</name> indicates that the handler is interested in messages arriving by both the <name>User_Message</name> and <name>User_Message_Recorded</name> events &ndash; to request only one or the other, <name>EVENT_MESSAGE</name> or <name>EVENT_MESSAGE_RECORDED</name> could be specified instead.</p>
+<p>This call to <function>event_add_message_handler()</function> lets the event dispatcher know that <function>main_message_quit()</function> is interested in receiving details of <message>Message_Quit</message> &ndash; it&rsquo;s only possible to specify one message, but the same handler can be registered multiple times (with different messages in each) if required. <name>EVENT_MESSAGE_INCOMING</name> indicates that the handler is interested in messages arriving by both the <name>User_Message</name> and <name>User_Message_Recorded</name> events &ndash; again, we&rsquo;ll explain this properly later on.</p>
 
-<p>On registering a handler for a message which the application is not currently receiving, the event library calls <swi>Wimp_AddMessages</swi> to ensure that it is sent by the Wimp; it also does this automatically for events that the library itself requires. This means that it&rsquo;s recommended to pass a <name>NULL</name> pointer to <name>R3</name> of <swi>Wimp_Initialise</swi> to specify &ldquo;no messages&rdquo;, and let the library add the messages as required.</p>
+<p>It&rsquo;s this call to <function>event_add_message_handler()</function> which replaces the tests in the original <code>switch&nbsp;()</code> statement: the event dispatcher won&rsquo;t pass the event to <function>main_message_quit()</function> unless the exact requirements are met.</p>
 
-<p>The final thing that we need to do it make the event dispatcher aware of events arriving from <swi>Wimp_Poll</swi>. We do this by changing the main polling loop to pass details of the incoming events on to the dispatcher.</p>
+<p>The other thing that we need to do is to make the event dispatcher aware of events arriving from <swi>Wimp_Poll</swi>, so that it can pass them on. We do this by changing the main polling loop to pass details of the incoming events on to the dispatcher.</p>
 
 <code lang="c">static void main_poll(void)
 {
@@ -845,10 +796,15 @@ case wimp_USER_MESSAGE_RECORDED:
 
 <p>Now, instead of passing incoming reason codes to a <code>switch</code> statement, they&rsquo;re passed directly to the event library. Internally this will use a similar approach to determine where events should end up &ndash; but it does this without us having to worry about it. The code here isn&rsquo;t quite the full story &ndash; we&rsquo;ll add the additional bits when they&rsquo;re required in a later example.</p>
 
-<p>Putting this all together results in the following code, which should perform exactly the same as <reference id="list2-1"/> when run.</p>
+<p>Finally, we need to add a reference to SFLib&rsquo;s event library: we do this by adding a suitable <code>#include</code> to the top of the file to make the functions available to us.</p>
 
-<code id="list2-4" lang="c" file="main.c" title="Using the event dispatcher">/**
- * Example 2.2
+<code lang="c">#include "oslib/wimp.h"
+#include "sflib/event.h"</code>
+
+<p>Putting this all together results in the following code, which should perform exactly the same as <reference id="list4-1"/> when run.</p>
+
+<code id="list4-2" lang="c" file="main.c" title="Using the event dispatcher">/**
+ * Example 4.2
  *
  * (c) Stephen Fryatt, 2015.
  *
@@ -920,7 +876,7 @@ static osbool main_message_quit(wimp_message *message)
 	return TRUE;
 }</code>
 
-<p>We&rsquo;ve now got the basic structure of a multitasking application: while it doesn&rsquo;t do much as yet, we can now start to more familiar features areound it.</p>
+<p>We&rsquo;ve now got the basic structure of a multitasking application: while it still doesn&rsquo;t do much as yet, we can now start to more familiar features around it. However, before doing that, we need to tidy up and simplify the build process.</p>
 </section>
 </chapter>
 
