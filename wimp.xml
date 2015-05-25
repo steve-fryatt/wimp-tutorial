@@ -460,7 +460,7 @@ typedef union wimp_block wimp_block;</code>
 
 <p>Hopefully it should be fair to say that the version in OSLib is clearer: there&rsquo;s no need to remember offsets into blocks of data, or the &ldquo;magic numbers&rdquo; which correspond to events and messages (clearly one could define constant variables in BASIC, but there&rsquo;s soon a speed penalty).</p>
 
-<p>As soon as <message>Message_Quit</message> is detected, the <variable>quit</variable> is set to <name>TRUE</name> &ndash; which will cause the <code>while&nbsp;()</code> loop to terminate.</p>
+<p>As soon as <message>Message_Quit</message> is detected, the <variable>quit</variable> is set to <name>TRUE</name> &ndash; which will cause the <code>while</code> loop to terminate.</p>
 </section>
 
 
@@ -580,9 +580,9 @@ int main(int argc, char *argv[])
 
 <p>The three folders are used to get around the lack of filename extensions in RISC&nbsp;OS: while compilers on other systems would tend to put a &lsquo;.c&rsquo; extenstion on the end of C source files (<file>main.c</file> in our case), the DDC stores them without extensions inside folders. Thus the &lsquo;.c&rsquo; files live in the <file>c</file> folder, &lsquo;.h&rsquo; files in the <file>h</file> folder, and so on.</p>
 
-<p>At present our project is simple enough not to need any header files, but we&rsquo;ve created an <file>h</file> folder for them ready for when we do need it. The <file>o</file> folder will take any object files (whose names would end with &lsquo;.o&rsquo; on other systems) created during the compilation. A complete set of the project&rsquo;s files can be found in <reference id="dl2-1"/>.</p>
+<p>At present our project is simple enough not to need any header files, but we&rsquo;ve created an <file>h</file> folder for them ready for when we do need it. The <file>o</file> folder will take any object files (whose names would end with &lsquo;.o&rsquo; on other systems) created during the compilation. A complete set of the project&rsquo;s files can be found in <reference id="dl3-1"/>.</p>
 
-<download id="dl2-1" file="SimpleCApp.zip" title="A Simple C Application" compatibility="armv7"/>
+<download id="dl3-1" file="SimpleCApp.zip" title="A Simple C Application" compatibility="none"/>
 
 </section>
 
@@ -619,7 +619,7 @@ int main(int argc, char *argv[])
 </chapter>
 
 
-<!-- Chapter X
+<!-- Chapter 4
    -
    - Event Driven Programming
   -->
@@ -631,7 +631,7 @@ int main(int argc, char *argv[])
 <summary>The RISC&nbsp;OS Wimp is essentially an event-driven environment, so why don&rsquo;t we take advantage of that?</summary>
 
 <section>
-<p>Our first foray into programming the Wimp in C (see <reference id="list2-1"/>) followed the very BASIC-like approach of repeatedly polling the Wimp inside a <code>while&nbsp;()</code> loop and processing the resulting reason codes in a <code>switch&nbsp;()</code> statement. While it worked, it&rsquo;s not very well structured: apart from anything else, the entire application is contained inside the single <function>main()</function> function!</p>
+<p>Our first foray into programming the Wimp in C (see <reference id="list2-1"/>) followed the very BASIC-like approach of repeatedly polling the Wimp inside a <code>while</code> loop and processing the resulting reason codes in a <code>switch</code> statement. While it worked, it&rsquo;s not very well structured: apart from anything else, the entire application is contained inside the single <function>main()</function> function!</p>
 </section>
 
 <section>
@@ -708,12 +708,16 @@ static void main_terminate(void)
 }</code>
 
 <p>While very similar to its predecessor, there&rsquo;s now an initialisation, poll and termination routine, which breaks the code up into logical chunks. Each has a name starting with <code>main_</code> &ndash; this isn&rsquo;t essential, but will help us to keep track of where things are when the code grows. The <function>main()</function> itself simply calls these routines.</p>
+
+<p>A copy of the modified code can be found in <reference id="dl4-1"/>. It should compile in exactly the same way as <reference id="dl3-1"/>.</p>
+
+<download id="dl4-1" file="SimpleCApp2.zip" title="A Simple C Application Version 2" compatibility="none"/>
 </section>
 
 <section>
 <title>Routing events</title>
 
-<p>There was another problem with <reference id="list2-1"/>, however, which is still present in <reference id="list4-1"/> and will become more obvious as the application develops: the <code>switch&nbsp;()</code> statement following <function>wimp_poll()</function> will need to know about every single piece of the application in order to pass control on to the correct parts. For now that&rsquo;s not much of an issue, but as more features are added to our application it will soon become one.</p>
+<p>There was another problem with <reference id="list2-1"/>, however, which is still present in <reference id="list4-1"/> and will become more obvious as the application develops: the <code>switch</code> statement following <function>wimp_poll()</function> will need to know about every single piece of the application in order to pass control on to the correct parts. For now that&rsquo;s not much of an issue, but as more features are added to our application it will soon become one.</p>
 
 <p>This is a common problem in BASIC, and many applications will be centred around a <code>CASE</code> statement similar to the one in below (don&rsquo;t worry about what the different <code>WHEN</code> clauses actually do).</p>
 
@@ -742,7 +746,7 @@ ENDPROC</code>
 
 <p>The RISC&nbsp;OS Wimp is also event-driven, although to a casual observer &ndash; especially one working in BASIC &ndash; it&rsquo;s quite well hidden. With the exception, perhaps, of <name>Null_Reason</name>, the information returned by <swi>Wimp_Poll</swi> is a series of events: a <name>Mouse_Click</name> could be an event destined for an action button in a window somewhere, while <name>Redraw_Window_Request</name> is an indication that a window wishes to be redrawn.</p>
 
-<p>The <code>while&nbsp;()</code> loop contained in <function>main_poll()</function> in <reference id="list4-1"/> does in fact contain an event handler &ndash; in the <code>switch&nbsp;()</code> statement here.</p>
+<p>The <code>while</code> loop contained in <function>main_poll()</function> in <reference id="list4-1"/> does in fact contain an event handler &ndash; in the <code>switch</code> statement here.</p>
 
 <code lang="c">switch (reason) {
 case wimp_USER_MESSAGE:
@@ -777,7 +781,7 @@ case wimp_USER_MESSAGE_RECORDED:
 
 <p>This call to <function>event_add_message_handler()</function> lets the event dispatcher know that <function>main_message_quit()</function> is interested in receiving details of <message>Message_Quit</message> &ndash; it&rsquo;s only possible to specify one message, but the same handler can be registered multiple times (with different messages in each) if required. <name>EVENT_MESSAGE_INCOMING</name> indicates that the handler is interested in messages arriving by both the <name>User_Message</name> and <name>User_Message_Recorded</name> events &ndash; again, we&rsquo;ll explain this properly later on.</p>
 
-<p>It&rsquo;s this call to <function>event_add_message_handler()</function> which replaces the tests in the original <code>switch&nbsp;()</code> statement: the event dispatcher won&rsquo;t pass the event to <function>main_message_quit()</function> unless the exact requirements are met.</p>
+<p>It&rsquo;s this call to <function>event_add_message_handler()</function> which replaces the tests in the original <code>switch</code> statement: the event dispatcher won&rsquo;t pass the event to <function>main_message_quit()</function> unless the exact requirements are met.</p>
 
 <p>The other thing that we need to do is to make the event dispatcher aware of events arriving from <swi>Wimp_Poll</swi>, so that it can pass them on. We do this by changing the main polling loop to pass details of the incoming events on to the dispatcher.</p>
 
@@ -801,7 +805,7 @@ case wimp_USER_MESSAGE_RECORDED:
 <code lang="c">#include "oslib/wimp.h"
 #include "sflib/event.h"</code>
 
-<p>Putting this all together results in the following code, which should perform exactly the same as <reference id="list4-1"/> when run.</p>
+<p>Putting this all together results in the code found in <reference id="list4-2"/>, which should perform exactly the same as <reference id="list4-1"/> when run.</p>
 
 <code id="list4-2" lang="c" file="main.c" title="Using the event dispatcher">/**
  * Example 4.2
@@ -876,7 +880,7 @@ static osbool main_message_quit(wimp_message *message)
 	return TRUE;
 }</code>
 
-<p>We&rsquo;ve now got the basic structure of a multitasking application: while it still doesn&rsquo;t do much as yet, we can now start to more familiar features around it. However, before doing that, we need to tidy up and simplify the build process.</p>
+<p>We&rsquo;ve now got the basic structure of a multitasking application: while it still doesn&rsquo;t do much as yet, we can now start to build some more familiar features around it. However, before doing that, we need to tidy up and simplify the build process.</p>
 </section>
 </chapter>
 
