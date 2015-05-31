@@ -28,6 +28,7 @@
   </xsd:complexType>
 
   <xsd:complexType name="IconType">
+    <xsd:attribute name="alt" type="xsd:string" minOccurs="1" maxOccurs="1"/>
     <xsd:attribute name="width" type="xsd:integer" minOccurs="1" maxOccurs="1"/>
     <xsd:attribute name="height" type="xsd:integer" minOccurs="1" maxOccurs="1"/>
   </xsd:complexType>

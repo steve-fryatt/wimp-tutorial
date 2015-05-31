@@ -16,8 +16,8 @@
 <breadcrumb><dir>Home</dir><dir>Documentation</dir></breadcrumb>
 <icons>
 <zip width="34" height="34">../../software/images/zip.png</zip>
-<armv7 width="34" height="39">../../software/images/armv7.png</armv7>
-<iyonix width="34" height="39">../../software/images/iyonix.gif</iyonix>
+<armv7 alt="ARMV7 OK" width="34" height="39">../../software/images/armv7.png</armv7>
+<iyonix alt="Iyonix OK" width="34" height="39">../../software/images/iyonix.gif</iyonix>
 </icons>
 
 <!-- Index -->
