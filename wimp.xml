@@ -14,10 +14,16 @@
 <manual xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="xmldoc.xsd" version="1.8.6">
 <title>Wimp Programming In C</title>
 <breadcrumb><dir>Home</dir><dir>Documentation</dir></breadcrumb>
+<icons>
+<zip width="34" height="34">../../software/images/zip.png</zip>
+<armv7 width="34" height="39">../../software/images/armv7.png</armv7>
+<iyonix width="34" height="39">../../software/images/iyonix.gif</iyonix>
+</icons>
 
 <!-- Index -->
 
 <index>
+<filename>index.html</filename>
 <section>
 <p>Like many other RISC&nbsp;OS users, I started programming in BBC&nbsp;BASIC. Although it served me well, I began to find that it didn&rsquo;t always scale well &ndash; especially when software had to handle large, variable amounts of data or multiple documents.</p>
 
