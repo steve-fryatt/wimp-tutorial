@@ -19,6 +19,10 @@
 <armv7 alt="ARMV7 OK" width="34" height="39">../../software/images/armv7.png</armv7>
 <iyonix alt="Iyonix OK" width="34" height="39">../../software/images/iyonix.gif</iyonix>
 </icons>
+<resources>
+<images>Images</images>
+<downloads>Downloads</downloads>
+</resources>
 
 <!-- Index -->
 
@@ -45,6 +49,10 @@
   -->
 
 <chapter id="chap-start-basic">
+<resources>
+<images>Chapter1</images>
+<downloads>Chapter1</downloads>
+</resources>
 <filename>introduction.html</filename>
 <title>Starting in BASIC</title>
 
@@ -166,6 +174,10 @@ END</code>
   -->
 
 <chapter>
+<resources>
+<images>Chapter2</images>
+<downloads>Chapter2</downloads>
+</resources>
 <filename>usingc.html</filename>
 <title>Moving to C</title>
 
@@ -541,6 +553,10 @@ int main(int argc, char *argv[])
   -->
 
 <chapter>
+<resources>
+<images>Chapter3</images>
+<downloads>Chapter3</downloads>
+</resources>
 <filename>compiling.html</filename>
 <title>Compiling the application</title>
 
@@ -631,6 +647,10 @@ int main(int argc, char *argv[])
   -->
 
 <chapter>
+<resources>
+<images>Chapter4</images>
+<downloads>Chapter4</downloads>
+</resources>
 <filename>events.html</filename>
 <title>Event Driven Programming</title>
 
