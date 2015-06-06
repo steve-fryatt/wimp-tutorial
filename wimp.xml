@@ -613,7 +613,9 @@ int main(int argc, char *argv[])
 
 <p>To compile the code, we&rsquo;re going to use the CC compiler that comes with the DDE. Assuming that the environment has been installed in its default state (as described above), go to the <file>Apps</file> folder on the hard disc, then into <file>DDE</file>, and double-click on <file>!CC</file> to install it on the iconbar.</p>
 
-<p>Drag the <file>main</file> file from our project on to the iconbar icon to open the <window>CC</window> window: the <icon>Source</icon> field should show the full filename. As standard, the compiler is set up to use just the libraries shipped with the DDE; as we&rsquo;re also using OSLib, we&rsquo;ll need to find the header file referred to by the</p>
+<p>Drag the <file>main</file> file from our project on to the iconbar icon to open the <window>CC</window> window: the <icon>Source</icon> field should show the full filename. As standard, the compiler is set up to use just the libraries shipped with the DDE &ndash; those which form &lsquo;standard&rsquo; C, along with those forming the standard RISC&nbsp;OS development enviroenment.</p>
+
+<p>As it&rsquo;s a third-party library &ndash; albeit a commonly used one &ndash; ; as we&rsquo;re also using OSLib, we&rsquo;ll need to find the header file referred to by the</p>
 
 <code lang="c">#include &quot;oslib/wimp.h&quot;</code>
 
@@ -995,7 +997,7 @@ static osbool main_message_quit(wimp_message *message)
 <summary>Giving an application its own icon on the iconbar isn&rsquo;t too hard to do.</summary>
 
 <section>
-<p>This is some text!</p>
+<p>Now that we&rsquo;ve got an application which can multitask in the background, we need to make it do something more visibly useful. Many RISC&nbsp;OS applications install themselves on to the iconbar, so that&rsquo;s a </p>
 
 </section>
 </chapter>
