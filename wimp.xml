@@ -77,7 +77,7 @@ quit% = FALSE
 
 SYS &quot;Wimp_Initialise&quot;, 310, &amp;4B534154, &quot;Wimp Task&quot;, 0</code>
 
-<p>The code claims 256 bytes of memory and points a variable <variable>b%</variable> to it: a lot of Wimp SWI calls need a block of memory to work, and <variable>b%</variable> is a comon feature of Wimp software written in BASIC. It then sets a variable <variable>quit%</variable> to <name>FALSE</name>, to keep track of when the code should exit.</p>
+<p>The code claims 256 bytes of memory and points a variable <variable>b%</variable> to it: a lot of Wimp SWI calls need a block of memory to work, and <variable>b%</variable> is a common feature of Wimp software written in BASIC. It then sets a variable <variable>quit%</variable> to <name>FALSE</name>, to keep track of when the code should exit.</p>
 
 <p>With its own initialisation complete, the final thing it does is call <swi>Wimp_Initialise</swi> to register itself as a Wimp task. This call has a number of important parameters, which will affect how the Wimp treats the application.</p>
 
@@ -94,6 +94,8 @@ SYS &quot;Wimp_Initialise&quot;, 310, &amp;4B534154, &quot;Wimp Task&quot;, 0</c
 <p>This yielding is done via the <swi>Wimp_Poll</swi> SWI. When an application calls <swi>Wimp_Poll</swi>, it yields control back to the Wimp and the Wimp, in turn, goes off and services all of the other applications running on the system. When <swi>Wimp_Poll</swi> returns, it brings with it details of an &lsquo;event&rsquo; that the application must deal with. This is enough to make the whole system multitask.</p>
 
 <p>The events returned by <swi>Wimp_Poll</swi> can report actions from the user: keypresses, mouse clicks or menu selections. They can report the opening, moving, scrolling and closing of windows; they might also be requests to redraw part of the contents of a window. So-called &lsquo;user messages&rsquo; &ndash; messages arriving from the system or from other applications &ndash; can also arrive as events.</p>
+
+<p>This is an important point which separates Wimp applications from single-tasking software: <em>all</em> user input must come via <swi>Wimp_Poll</swi> or some other route approved by the Wimp. BASIC keywords like <code>INPUT</code> or <code>MOUSE</code>, C functions such as <function>scanf()</function>, or SWIs like <swi>OS_ReadLine</swi> and <swi>OS_Mouse</swi> must <em>never</em> be used &ndash; if they are, they will affect other applications running on the system.</p>
 
 <p>To make an application multitask, therefore, is simply a case of calling the <swi>Wimp_Poll</swi> SWI repeatedly, and quickly processing the events that it returns.</p>
 
@@ -184,17 +186,17 @@ END</code>
 <summary>We can write a very similar application in C, which should help show the parallels with &ndash; and differences from &ndash; BASIC.</summary>
 
 <section>
-<p>In <reference id="chap-start-basic"/> we constructed a very simple Wimp application in BASIC. It did&rsquo;t do very much &ndash; simply registering itself with the Wimp and then waiting quietly in the background until it was asked to quit &ndash; but it contained all the core elements required to make software multitask under RISC&nbsp;OS.</p>
+<p>In <reference id="chap-start-basic"/> we constructed a very simple Wimp application in BASIC. It didn&rsquo;t do very much &ndash; simply registering itself with the Wimp and then waiting quietly in the background until it was asked to quit &ndash; but it contained all the core elements required to make software multitask under RISC&nbsp;OS.</p>
 
-<p>We&rsquo;re now going to convert that simple application into C, to allow the two languages to be compared. For now we&rsquo;ll copy the structure of the BASIC version directly &ndash; this isn&rsquo;t the best way to go about things, but it will make it easier to compare the two.</p>
+<p>We&rsquo;re now going to convert that simple application into C, to allow the two languages to be compared. For now we&rsquo;ll copy the structure of the BASIC version directly &ndash; this isn&rsquo;t the best way to go about things, but it will make it easier to compare the two without introducing too many new concepts in one go.</p>
 
-<p>The core parts of this simple application will still be useful when we come to look at restructuring the code around event handlers &ndash; a much better way to write applications in C &ndash;  in the next chapter.</p>
+<p>The core parts of this simple application will still be useful when we come to look at restructuring the code around event handlers &ndash; a much better way to write applications in C &ndash;  in <reference id="chap-compiling">the next chapter</reference>.</p>
 </section>
 
 <section>
 <title>Accessing RISC&nbsp;OS</title>
 
-<p>The first thing that might not be obvious to anyone familiar with C who has never written software for RISC&nbsp;OS is how to access the SWI calls which are central to the system. In BASIC we&rsquo;ve already seen that it&rsquo;s possible to write something like</p>
+<p>The first thing, which might not be obvious to anyone who is familiar with C but has never written software for RISC&nbsp;OS, is how to access the SWI calls which are central to the system. In BASIC we&rsquo;ve already seen that it&rsquo;s possible to write something like</p>
 
 <code lang="bbcbasic">SYS &quot;Wimp_Initialise&quot;, 310, &amp;4B534154, &quot;Wimp Task&quot;, 0</code>
 
@@ -222,7 +224,7 @@ error = _swix(Wimp_Initialise, _INR(0,3), (int) 310, (int) 0x4b534154, (int) &qu
 
 <p>This is better, but is still a little ungainly.</p>
 
-<p>The DDE does offer some other options. The WimpLib, which comes as part of TBoxLib, supplies veneers for all of the wimp SWIs &ndash; this would allow us to write</p>
+<p>The DDE does offer some other options. The WimpLib, which comes as part of TBoxLib, supplies veneers for all of the Wimp SWIs &ndash; this would allow us to write</p>
 
 <code lang="c">#include &quot;wimplib.h&quot;
 
@@ -235,7 +237,7 @@ error = wimp_initialise(310, &quot;Wimp Task&quot;, 0, 0, 0);</code>
 <section>
 <title>Introducing OSLib</title>
 
-<p>Originally developed by Jonathan Coxhead while he worked at Acorn, <link href="http://ro-oslib.sourceforge.net/">OSLib</link> is a library that covers the whole of the RISC&nbsp;OS API with dedicated veneer functions for each individual SWI call (and even individual reason codes for SWIs like <swi>OS_SpriteOp</swi> which provide multiple actions).</p>
+<p>Originally developed by Jonathan Coxhead while he worked at Acorn, <link href="http://ro-oslib.sourceforge.net/">OSLib</link> is a library that covers the whole of the RISC&nbsp;OS API with dedicated veneer functions for each individual SWI call (and even functions for individual reason codes when SWIs like <swi>OS_SpriteOp</swi> provide multiple actions).</p>
 
 <p>Unlike the <function>_kernel_swi()</function>, <function>_swi()</function> and <function>_swix()</function> interfaces provided by the DDE, OSLib makes use of defined types so that SWI parameters require little casting and can be type-checked by the compiler. In addition, C structures are provided to represent all of the data structures used by supported SWIs, making it much easier to extract data from them.</p>
 
@@ -251,7 +253,7 @@ error = xwimp_initialise(wimp_VERSION_RO3, &quot;Wimp Task&quot;, NULL, NULL, NU
 <code lang="bbcbasic">SYS &quot;XWimp_Initialise&quot;, 310, &amp;4B534154, &quot;Wimp Task&quot;, 0 TO error% ;flags%
 IF (flags% AND 1) = 0 THEN error% = 0</code>
 
-<p>That is, the X form of the SWI is called and <variable>error%</variable> is zero on return if no error occurred; if something went wrong, it points to the error block.</p>
+<p>That is, the X form of the SWI is called: this means that in the event of an error the processor&rsquo;s V flag is set and <name>R0</name> contains a pointer to an error block. If the V flag is set, <code>SYS</code> sets bit&nbsp;0 of <variable>flags%</variable>, so the second line of code results in <variable>error%</variable> being set to zero on return if no error occurred; if something went wrong, <variable>error%</variable> points to the error block. The C convention is similar: SWI functions which return an error block pointer return <name>NULL</name> if no error occurred.</p>
 
 <p>In most of the C examples above, we&rsquo;ve explicitly called the X form of the SWI  &ndash; in the case of <function>_kernal_swi()</function> and WimpLib&rsquo;s <function>wimp_initialise()</function>, the X form was called for us. That&rsquo;s usually a good idea when working in C: without BASIC&rsquo;s error handler to look after us, it&rsquo;s often better to test for errors and handle them immediately. However, OSLib gives us the choice and the following would also work:</p>
 
@@ -285,7 +287,7 @@ wimp_event_no	reason;</code>
 
 <code lang="c">typedef int wimp_event_no;</code>
 
-<p>to provide a special type of <type>wimp_event_no</type> to hold the reason code &ndash; this is what we need to define the <variable>reason</variable> variable.</p>
+<p>to provide a special type of <type>wimp_event_no</type> to hold the reason code &ndash; this is exactly what we need to define the <variable>reason</variable> variable.</p>
 
 <p>Finally, the BASIC contained the line</p>
 
@@ -312,7 +314,7 @@ wimp_event_no	reason;</code>
 
 typedef union wimp_block wimp_block;</code>
 
-<p>Each of the <code>wimp_</code> types contained in the union are defined by OSLib to match the data structures returned by the Wimp for the different reason codes &ndash; we&rsquo;ll look into these when we meet them. The final <code>byte reserved[256]</code> is simply a block of 256 bytes to reserve the space (similar to BASIC&rsquo;s <code>DIM b% 255</code>), which means that the act of declaring a variable of type <type>wimp_block</type> (as we do with <code>wimp_block block</code> above) will make the compiler reserve 256 bytes for it on the stack.</p>
+<p>Each of the <code>wimp_</code> types contained in the union are defined by OSLib to match the data structures returned by the Wimp for the different reason codes &ndash; we&rsquo;ll look into these when we meet them. The final <code>byte reserved[256]</code> is simply a block of 256 bytes to reserve the space (similar to BASIC&rsquo;s <code>DIM b% 255</code>), which means that the act of declaring a variable of type <type>wimp_block</type> (as we do with <code>wimp_block block</code> above) will make the compiler reserve 256 bytes of space for it on the stack.</p>
 </section>
 
 <section>
@@ -346,15 +348,15 @@ typedef union wimp_block wimp_block;</code>
 #define wimp_VERSION_RO38	((wimp_version_no) 0x17Cu)	/* 380 */
 #define wimp_VERSION_RO40	((wimp_version_no) 0x190u)	/* 400 */</code>
 
-<p>Although the constants are defined in terms of hexadecimal (which can be confusing, although their values aren&rsquo;t really meant to be human-readable), we can see that <code>wimp_VERSION_RO3</code> is set to be <code>(wimp_version_no) 0x136u</code> &ndash; which is 310 in decimal with an appropriate cast from <type>uint</type> to <type>wimp_version_number</type> included.</p>
+<p>Although the constants are defined in terms of hexadecimal (which can be confusing, despite their values not really being meant to be human-readable), we can see that <code>wimp_VERSION_RO3</code> is set to be <code>(wimp_version_no) 0x136u</code> &ndash; which is 310 in decimal with an appropriate cast from <type>uint</type> to <type>wimp_version_number</type> included.</p>
 
-<p><name>R1</name> takes the &ldquo;magic&rdquo; constant <code>&amp;4B534154</code> &ndash; or &ldquo;TASK&rdquo; &ndash; to switch off Arthur compatibility. Although we have to pass this manually in BASIC, it never changes in modern software and so OSLib&rsquo;s <function>wimp_initialise()</function> doesn&rsquo;t even offer a parameter to give us control.</p>
+<p><name>R1</name> takes the &ldquo;magic&rdquo; constant <code>&amp;4B534154</code> &ndash; or &ldquo;TASK&rdquo; &ndash; to switch off Arthur compatibility. Although we have to pass this manually in BASIC, it never changes in modern software and so OSLib&rsquo;s <function>wimp_initialise()</function> doesn&rsquo;t even offer a parameter to give us control. If you <em>really</em> need to write for Arthur, you&rsquo;ll need to use OSLib&rsquo;s alternative <function>wimp_init()</function> function which allows the value of <name>R1</name> to be specified.</p>
 
 <p>The next parameter to <swi>Wimp_Initialise</swi>, in <name>R2</name>, was a pointer to a string containing the name of the application. OSLib&rsquo;s <function>wimp_initialise()</function> is no exception, and the next parameter is <variable>*name</variable> &ndash; a pointer to a string.</p>
 
 <p>In the BASIC version, we said that we could safely pass zero in to <name>R3</name>, and that&rsquo;s not changed now. The only difference is that as the Wimp treated that zero as a pointer, we pass <name>NULL</name> here to make that more obvious. We&rsquo;ll come back and look at what <name>R3</name> is doing later on.</p>
 
-<p>One thing that we didn&rsquo;t consider in BASIC was the fact that <swi>Wimp_Initialise</swi> also returns a couple of values in <name>R0</name> and <name>R1</name>. <name>R0</name> contains the current Wimp version number (to compare to the &ldquo;ideal&rdquo; one that we supplied in <name>R0</name> on entry), while <name>R1</name> contains a task handle: a number that uniquely identifies an application from all of the others running on the system. We don&rsquo;t actually need either of these yet &ndash; but while it was OK to just ignore them in BASIC, we now need to at least acknowledge their existence.</p>
+<p>One thing that we didn&rsquo;t consider in BASIC was the fact that <swi>Wimp_Initialise</swi> also returns a couple of values in <name>R0</name> and <name>R1</name>. <name>R0</name> contains the version of the Wimp that is currently active (to compare to the &ldquo;ideal&rdquo; one that we supplied in <name>R0</name> on entry), while <name>R1</name> contains a task handle: a number that uniquely identifies our application from all of the others running on the system. We don&rsquo;t actually need either of these yet &ndash; but while it was OK to just ignore them in BASIC, we now need to at least acknowledge their existence.</p>
 
 <p>OSLib&rsquo;s convention is that for non-X SWIs the most useful return value is returned by the function, while the others are returned via additional parameters passed as pointers. In the case of <function>wimp_initialise()</function>, the task handle from <name>R1</name> is returned and we can supply a pointer to a variable of type <type>wimp_version_no</type> if we want the actual version number of the Wimp from <name>R0</name>. Since we don&rsquo;t care about either at present, we just pass <name>NULL</name> for the final parameter instead of a pointer to a suitable variable &ndash; OSLib won&rsquo;t then return the value.</p> 
 
@@ -446,7 +448,7 @@ typedef union wimp_block wimp_block;</code>
 #define wimp_USER_MESSAGE_RECORDED	((wimp_event_no) 0x12u)	/* 18	*/
 #define wimp_USER_MESSAGE_ACKNOWLEDGE	((wimp_event_no) 0x13u)	/* 19	*/</code>
 
-<p>It turns out that 17 and 18 are in fact the numbers that the Wimp gives to the <name>User Message</name> and <name>User Message Recorded</name> events &ndash; we&rsquo;ll return to what these actually are later on, but as we saw in the BASIC version, we&rsquo;re looking for the word at offset 16 in the poll block returned by the Wimp to be zero.</p>
+<p>It turns out that 17 and 18 are in fact the numbers that the Wimp gives to the <name>User Message</name> and <name>User Message Recorded</name> events &ndash; we&rsquo;ll return to what these actually are later on, but as we saw in the BASIC version, we&rsquo;re looking for the word at offset 16 in the poll block returned by the Wimp to be zero for either of these reason codes.</p>
 
 <p>The block is a variable of type <type>wimp_block</type>, which as we saw above is a union of several different types &ndash; one of which is <type>wimp_message</type>. Although not quite true, OSLib &lsquo;almost&rsquo; defines it as follows:</p>
 
@@ -552,7 +554,7 @@ int main(int argc, char *argv[])
    - Compiling in the DDE
   -->
 
-<chapter id="chap-compiling-1">
+<chapter id="chap-compiling">
 <resources>
 <images>Chapter3</images>
 <downloads>Chapter3</downloads>
@@ -565,9 +567,9 @@ int main(int argc, char *argv[])
 <section>
 <p>In the <reference id="chap-moving-to-c">previous chapter</reference>, we put together a very simple application in C using OSLib to access the parts of the Wimp that we required. Before it can be tried out, we&rsquo;ll need to compile it &ndash; we&rsquo;ll look at how to do that now.</p>
 
-<p>There are two choices of compiler when it comes to using C on RISC&nbsp;OS: the port of GCC, and CC which comes as part of the <link href="https://www.riscosopen.org/content/sales/dde">Desktop Development Environment</link> (or DDE) from RISC&nbsp;OS Open Ltd (which is more usually refered to as &ldquo;Norcroft&rdquo; after its original authors). In this tutorial we&rsquo;re going to concentrate on the DDE, since that&rsquo;s the &lsquo;native&rsquo; compiler and that one that&rsquo;s still used for all OS development.</p>
+<p>There are two choices of compiler when it comes to using C on RISC&nbsp;OS: the port of GCC, and CC which comes as part of the <link href="https://www.riscosopen.org/content/sales/dde">Desktop Development Environment</link> (or DDE) from RISC&nbsp;OS Open Ltd (which is more usually refered to as &ldquo;Norcroft&rdquo; after its original authors: Arthur Norman and Alan Mycroft). In this tutorial we&rsquo;re going to concentrate on the DDE, since that&rsquo;s the &lsquo;native&rsquo; compiler and that one that&rsquo;s still used for all OS development.</p>
 
-<p>Once installed, the DDE consists of two main folders on the hard disc: <file>AcornC/C++</file> in the root directory, and <file>DDE</file> within <file>Apps</file> &ndash; both are shown in <reference id="img3-1"/>. Other folders are also included in the install: the most important is probably the <file>DDE</file> manuals folder which is placed in <file>Documents</file>.</p>
+<p>Once installed, the DDE consists of two main folders on the hard disc: <file>AcornC/C++</file> in the root directory, and <file>DDE</file> within <file>Apps</file> &ndash; both are shown in <reference id="img3-1"/>. Other folders are also included in the install: the most important are probably the <file>DDE</file> manuals folder which is placed in <file>Documents</file> and <file>Sources</file> which is placed in the root directory of the disc.</p>
 
 <image id="img3-1" file="c3-dde-files.png" title="The main contents of the DDE"/>
 </section>
@@ -927,7 +929,7 @@ static osbool main_message_quit(wimp_message *message)
 <summary>Compiling the code &lsquo;by hand&rsquo; soon becomes very tedious.</summary>
 
 <section>
-<p>The updated application created in <reference id="chap-event-driven">the previous chapter</reference> can, in theory, be compiled in the same way as outlined in <reference id="chap-compiling-1"/> &ndash; except that we&rsquo;re now using a second library besides OSLib. On disc, the source code is very similar to what we&rsquo;ve used before, as can be seen in <reference id="fig-sflib-app"/>; a copy can be downloaded from <reference id="dl5-1"/>.</p>
+<p>The updated application created in <reference id="chap-event-driven">the previous chapter</reference> can, in theory, be compiled in the same way as outlined in <reference id="chap-compiling"/> &ndash; except that we&rsquo;re now using a second library besides OSLib. On disc, the source code is very similar to what we&rsquo;ve used before, as can be seen in <reference id="fig-sflib-app"/>; a copy can be downloaded from <reference id="dl5-1"/>.</p>
 
 <image id="fig-sflib-app" file="sflib-app.png" title="The updated application source on disc"/>
 
@@ -978,7 +980,7 @@ static osbool main_message_quit(wimp_message *message)
 <section id="sect-makefile">
 <title>Automating the build</title>
 
-<p>While this largely manual build process works OK for a simple application such as the current examples, it soon becomes impractical &ndash; especially if it&rsquo;s necessary to move between different projects. Having to set CC up differently each time is a nuisance and, even if we stick with just the one project, it will soon become hard to manage as it grows bigger.</p>
+<p>While this largely manual build process works OK for a simple application such as the current examples, it soon becomes impractical &ndash; especially if it&rsquo;s necessary to move between different projects. Having to set CC up differently each time is a nuisance and, even if we stick with just the one project, it will soon become hard to manage as our application grows bigger.</p>
 
 <p>Fortunately this isn&rsquo;t an unusual problem, and there&rsquo;s a tool out there to solve it for us. Having originated on Unix, Make is available on many computer platforms these days &ndash; including RISC&nbsp;OS. The tool works with <intro>Makefiles</intro>, which completely define a project and tell the compiler (and any other tools) how to build it. Writing makefiles has sometimes been seen as a difficult subject, but fortunately current versions of the DDE come with some useful extras to help us.</p>
 
@@ -1004,13 +1006,13 @@ include CApp
 
 <p>Lines starting with <code>#</code> are comments; we can change the first to something more appropriate for our project. The <code>#&nbsp;Dynamic dependencies:</code> line is a little different, as it&rsquo;s what Amu calls an <intro>active comment</intro>: we need to leave it intact for now, as its meaning will become apparent later on.</p>
 
-<p>The <code>include CApp</code> line includes another makefile into this one: one called <file>CApp</file> that&rsquo;s located in <file>$.AcornC/C++.Makefiles</file>. This is all handled transparently by the DDE, and is what makes Shared Makefiles work: the CApp makefile knows how to build a standard RISC&nbsp;OS application, so long as our file gives it the necessary information first. This means that it&rsquo;s rarely necessary to write the standard &lsquo;low level&rsquo; parts of a makefile when using Shared Makefiles.</p>
+<p>The <code>include CApp</code> line includes another makefile into this one: one called <file>CApp</file> that&rsquo;s located in <file>$.AcornC/C++.Makefiles</file>. This is all handled transparently by the DDE, and is what makes Shared Makefiles work: the CApp makefile knows how to build a standard RISC&nbsp;OS application, so long as our file gives it the necessary information first. This means that it&rsquo;s rarely necessary to write the &lsquo;low level&rsquo; parts of a makefile when using Shared Makefiles.</p>
 
 <p>This leaves <code>COMPONENT = exampleabs</code> as the only line which does anything specifically for our project. It sets a value for the <variable>COMPONENT</variable> variable, which the Standard Makefiles take to be the name of the project and &ndash; in the absence of any other information &ndash; the name of the single source file and the resulting output file. As supplied, the ExampleABS makefile would take the <file>c.exampleabs</file> source file (the one that we did not copy from the skeleton) and compile it to produce an executable file called <file>exampleabs</file>. Our source lives in the <file>c.main</file> file, so if we change the line to read <code>COMPONENT = main</code> Amu will find this and produce an absolute file called <file>main</file>.</p>
 
 <p>There are a couple of other things that we need to do before our new Makefile will work, however. In CC, we were updating the <icon>Include</icon> field to read <code>C:,OSLib:,SFLib:</code>, and we need to do the same now. We do this by setting another variable called <variable>CINCLUDES</variable>, which the Standard Makefiles treat in the same way as CC treats the contents of the <icon>Include</icon> field. When called on the command line, CC takes these include values on the <code>-I</code> parameter, so with that at the start the full line reads <code>CINCLUDES = -IC:,OSLib:,SFLib:</code>.</p>
 
-<p>The other thing that we had to manually configure in CC was to add SFLib and OSLib to the list of libraries to link against. Standard Makefiles use the <variable>LIBS</variable> variable to indicate these, so we need to add a line which reads <code>LIBS = SFLib:o.SFLib OSLib:o.OSLib32</code> (note that while <variable>CINCLUDES</variable> uses commas to separate the list items, <variable>LIBS</variable> uses spaces). As with the CC front-end, the order in which the libraries are listed is important: SFLib uses OSLib, so it <em>must</em> appear before OSLib in the list.</p>
+<p>The other thing that we had to manually configure in CC was to add SFLib and OSLib to the list of libraries to link against. Standard Makefiles use the <variable>LIBS</variable> variable to indicate these, so we need to add a line which reads <code>LIBS = SFLib:o.SFLib OSLib:o.OSLib32</code> (note that while <variable>CINCLUDES</variable> uses commas to separate the list items, <variable>LIBS</variable> uses spaces). As in the CC front-end, the order in which the libraries are listed is important: SFLib uses OSLib, so it <em>must</em> appear before OSLib in the list.</p>
 
 <p>With all the bits in place, the makefile should appear as shown in <reference id="list-shared-make"/>.</p>
 
@@ -1033,11 +1035,11 @@ include CApp
 
 <download id="dl-simple-make" file="SimpleCMake.zip" title="A Simple C Application using Shared Make Files" compatibility="none"/>
 
-<p>Compiling the project is simply a case of double-clicking on the <file>Mk</file> TaskObey file in the source folder. This should open a Task Window and, if all goes to plan, an absolute file called <file>main</file> should appear in the folder when the process is complete &ndash; along with the new <file>o</file> and <file>od</file> directories as shown in <reference id="fig-shared-files"/>.</p>
+<p>Compiling the project is simply a case of double-clicking on the <file>Mk</file> TaskObey file in the source folder. This should open a Task Window and, if all goes to plan, an absolute file called <file>main</file> should appear in the folder when the process is complete &ndash; along with the new <file>o</file> and <file>od</file> directories as shown in <reference id="fig-shared-files"/>. Double-clicking on <file>main</file> should cause our application to run, with exactly the same results <reference id="img1-1">as before</reference>.</p>
 
 <image id="fig-shared-files" file="shared-files.png" title="The project folder after compilation"/>
 
-<p>Unlike the output window used by CC in previous compilations, the Task Window that opened will contain all of the commands used to build the project. We can see commands to create the <file>o</file> and <file>od</file> folders, followed by a call to <command>cc</command> to compile <file>c.main</file> which throws up three warnings. As none of these were fatal, <command>link</command> is then called to link the resulting code with OSLib, SFLib and the standard C libraries before <command>squeeze</command> is used to squeeze the absolute file and reduce its size in a way that&rsquo;s transparent to the user. The warnings themselves are reported in a throwback window, and the whole thing can be seen in <reference id="fig-shared-output"/>.</p>
+<p>Unlike the output window used by CC in previous compilations, the Task Window that opened will contain all of the commands used to build the project. We can see commands to create the <file>o</file> and <file>od</file> folders, followed by a call to <command>cc</command> to compile <file>c.main</file> which throws up three warnings. As none of these were fatal, <command>link</command> is then called to link the resulting code with OSLib, SFLib and the standard C libraries before <command>squeeze</command> is used to squeeze the absolute file and reduce its size in a way that&rsquo;s transparent to the user. The warnings are also reported in a throwback window, and the whole thing can be seen in <reference id="fig-shared-output"/>.</p>
 
 <image id="fig-shared-output" file="shared-output.png" title="The completed Task Window, and Throwback output"/>
 
