@@ -1079,17 +1079,19 @@ include CApp
 <image id="fig-shared-clean" file="shared-clean.png" title="Amu can also be used to clean a project folder"/>
 
 <p>After double-clicking on <file>MkClean</file>, a double-click of <file>Mk</file> should result in a full build of the project as seen in <reference id="fig-shared-output"/>. Cleaning a project can be useful before sending the files to another developer (as there&rsquo;s no need to waste space or bandwidth sending them files that their own compiler will generate for them), and can also be a good way to force a re-compile of <em>everything</em>. The latter can be very important when updating shared tools or libraries, such as OSLib, SFLib or even tools in the DDE itself.</p>
-
 </section>
 </chapter>
 
 
-<!-- Chapter 2 -->
+<!-- Chapter 6
+   -
+   - On To The Iconbar
+  -->
 
 <chapter id="chap-iconbar">
 <resources>
-<images>Chapter5</images>
-<downloads>Chapter5</downloads>
+<images>Chapter6</images>
+<downloads>Chapter6</downloads>
 </resources>
 <filename>iconbar.html</filename>
 <title>Onto the Iconbar</title>
@@ -1097,7 +1099,44 @@ include CApp
 <summary>Giving an application its own icon on the iconbar isn&rsquo;t too hard to do.</summary>
 
 <section>
-<p>Now that we&rsquo;ve got an application which can multitask in the background, we need to make it do something more visibly useful. Many RISC&nbsp;OS applications install themselves on to the iconbar, so that&rsquo;s a </p>
+<p>Now that we&rsquo;ve got an application which can multitask in the background, and sorted out out build system so that we can quickly compile new versions of the code, we need to make it do something more visibly useful. Many RISC&nbsp;OS applications make their presence known by placing an icon on the iconbar, so that seems like a good place to start.</p>
+</section>
+
+<section>
+<title>Getting iconic</title>
+
+<p>Although they have a fairly specific meaning in user-facing documentation, as far as the Wimp and the applications which run on it are concerned, icons are simply objects which sit within windows. While some of these &ndash; such as file icons &ndash; might fit a user&rsquo;s idea of an icon, many probably won&rsquo;t. <reference id="fig-ibar-icons"/> shows a number of different icons within a window.</p>
+
+<image id="fig-ibar-icons" file="ibar-icons.png" title="Icons in RISC&nbsp;OS can take a whole range of forms"/>
+
+<p>To create an icon in a window, we use the <swi>Wimp_CreateIcon</swi> SWI: the iconbar is just a special window as far as our application is concerned.</p>
+
+<code lang="c">extern wimp_i wimp_create_icon(
+	wimp_icon_create const	*icon
+);</code>
+
+
+
+
+<code lang="c">struct wimp_icon_create {
+	wimp_w		w;
+	wimp_icon	icon;
+};
+   
+struct wimp_icon {
+	os_box		extent;
+	wimp_icon_flags	flags;
+	wimp_icon_data	data;
+	};
+
+struct os_box {
+	int		x0;
+	int		y0;
+	int		x1;
+	int		y1;
+};</code>
+
+
 
 </section>
 </chapter>
