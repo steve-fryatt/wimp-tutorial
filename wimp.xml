@@ -613,9 +613,7 @@ int main(int argc, char *argv[])
 
 <p>To compile the code, we&rsquo;re going to use the CC compiler that comes with the DDE. Assuming that the environment has been installed in its default state (as described above), go to the <file>Apps</file> folder on the hard disc, then into <file>DDE</file>, and double-click on <file>!CC</file> to install it on the iconbar.</p>
 
-<p>Drag the <file>main</file> file from our project on to the iconbar icon to open the <window>CC</window> window: the <icon>Source</icon> field should show the full filename. As standard, the compiler is set up to use just the libraries shipped with the DDE &ndash; those which form &lsquo;standard&rsquo; C, along with those forming the standard RISC&nbsp;OS development enviroenment.</p>
-
-<p>As it&rsquo;s a third-party library &ndash; albeit a commonly used one &ndash; ; as we&rsquo;re also using OSLib, we&rsquo;ll need to find the header file referred to by the</p>
+<p>Drag the <file>main</file> file from our project on to the iconbar icon to open the <window>CC</window> window: the <icon>Source</icon> field should show the full filename. As standard, the compiler is set up to use just the libraries shipped with the DDE &ndash; those which form &lsquo;standard&rsquo; C, along with those forming the standard RISC&nbsp;OS development environment. Our application also uses OSLib, and as it&rsquo;s a third-party library &ndash; albeit a commonly used one &ndash; we&rsquo;ll need to tell CC how to find it. The first step is to locate the header file referred to by the</p>
 
 <code lang="c">#include &quot;oslib/wimp.h&quot;</code>
 
@@ -923,17 +921,19 @@ static osbool main_message_quit(wimp_message *message)
 <images>Chapter5</images>
 <downloads>Chapter5</downloads>
 </resources>
-<filename>compiling2.html</filename>
+<filename>makefiles.html</filename>
 <title>A Better Way to Compile</title>
 
 <summary>Compiling the code &lsquo;by hand&rsquo; soon becomes very tedious.</summary>
 
 <section>
-<p>The updated application created in <reference id="chap-event-driven">the previous chapter</reference> can, in theory, be compiled in the same way as outlined in <reference id="chap-compiling-1"/> &ndash; except that we&rsquo;re now using a second library besides OSLib.</p>
+<p>The updated application created in <reference id="chap-event-driven">the previous chapter</reference> can, in theory, be compiled in the same way as outlined in <reference id="chap-compiling-1"/> &ndash; except that we&rsquo;re now using a second library besides OSLib. On disc, the source code is very similar to what we&rsquo;ve used before, as can be seen in <reference id="fig-sflib-app"/>; a copy can be downloaded from <reference id="dl5-1"/>.</p>
+
+<image id="fig-sflib-app" file="sflib-app.png" title="The updated application source on disc"/>
 
 <download id="dl5-1" file="SimpleCEvents.zip" title="A Simple C Application With Events" compatibility="none"/>
 
-<p>Downloading the source code from <reference id="dl5-1"/> and repeating the process from <reference id="compile-dde-1"/> will result in failure as shown in <reference id="fig-sflib-fail"/>. Firstly, the included file <file>sflib/event.h</file> can&rsquo;t be found; second, and as a direct consequence, several of the newly-introduced items in the example are being reported as &ldquo;undeclared&rdquo;.</p>
+<p>However, repeating the process from <reference id="compile-dde-1"/> with the new source code will result in failure as shown in <reference id="fig-sflib-fail"/>. Firstly, the included file <file>sflib/event.h</file> can&rsquo;t be found; second, and as a direct consequence, several of the newly-introduced items in the example are being reported as &ldquo;undeclared&rdquo;.</p>
 
 <image id="fig-sflib-fail" file="sflib-fail.png" title="The C Compiler complains about a number of missing items"/>
 </section>
@@ -975,10 +975,108 @@ static osbool main_message_quit(wimp_message *message)
 <p>With the library links in place, clicking on <icon>Run</icon> should compile the code and open a save dialogue box from which an absolute file can be saved. When run, this should perform in the same way as the <reference id="img1-1">original BASIC application</reference>.</p> 
 </section>
 
-<section>
+<section id="sect-makefile">
 <title>Automating the build</title>
 
-<p>While this largely manual build process works OK for a simple application such as the current examples, it soon becomes impractical &ndash; especially if it&rsquo;s necessary to move between different projects.</p>
+<p>While this largely manual build process works OK for a simple application such as the current examples, it soon becomes impractical &ndash; especially if it&rsquo;s necessary to move between different projects. Having to set CC up differently each time is a nuisance and, even if we stick with just the one project, it will soon become hard to manage as it grows bigger.</p>
+
+<p>Fortunately this isn&rsquo;t an unusual problem, and there&rsquo;s a tool out there to solve it for us. Having originated on Unix, Make is available on many computer platforms these days &ndash; including RISC&nbsp;OS. The tool works with <intro>Makefiles</intro>, which completely define a project and tell the compiler (and any other tools) how to build it. Writing makefiles has sometimes been seen as a difficult subject, but fortunately current versions of the DDE come with some useful extras to help us.</p>
+
+<p>First, let&rsquo;s clear up some terminology. Whilst the tool that processes makefiles is usually known as Make (including the one that ships with the RISC&nbsp;OS port of GCC), Acorn had to be different. Confusingly the DDE does contain a Make application, but it&rsquo;s concerned with automatically creating makefiles &ndash; and these days its use is deprecated. Instead, Acorn called their version of Make the Acorn Make Utility, or Amu for short. It&rsquo;s supplied with the other applications that form the DDE, although it&rsquo;s very rare to actually run it directly.</p>
+
+<p>Instead of using the Make application to assemble a makefile, current versions of the DDE recommend the use of <intro>Shared Makefiles</intro>. These have evolved from the tools used to build RISC&nbsp;OS itself, and provide an easy way to configure a project without much effort. To make things easier for beginners, a range of &lsquo;skeleton projects&rsquo; are provided in <file>$.Sources.DDE-Examples.Skeletons</file>. Since we&rsquo;re currently creating a simple Absolute file from our project, the one we need is <file>exampleabs</file> as shown in <reference id="fig-shared-skeletons"/>.</p>
+
+<image id="fig-shared-skeletons" file="shared-skeletons.png" title="A range of skeleton projects are supplied with the DDE"/>
+
+<p>We&rsquo;ve got our own source code in the form of <file>c.main</file>, so we don&rsquo;t need to copy across <file>c.exampleabs</file>, but we do need the remaining files in the skeleton: <file>Makefile</file>, <file>Mk</file>, <file>MkClean</file> and <file>MkDebug</file>. If we copy these across to our application&rsquo;s source folder (shown in <reference id="fig-sflib-app"/>), we end up with the files shown in <reference id="fig-shared-app"/>.</p>
+
+<image id="fig-shared-app" file="shared-app.png" title="The shared makefile components added to our application&rsquo;s source"/>
+
+<p>The makefile supplied with SkeletonABS is extremely simple:</p>
+
+<code lang="makefile"># Makefile for exampleabs
+
+COMPONENT = exampleabs
+
+include CApp
+
+# Dynamic dependencies:</code>
+
+<p>Lines starting with <code>#</code> are comments; we can change the first to something more appropriate for our project. The <code>#&nbsp;Dynamic dependencies:</code> line is a little different, as it&rsquo;s what Amu calls an <intro>active comment</intro>: we need to leave it intact for now, as its meaning will become apparent later on.</p>
+
+<p>The <code>include CApp</code> line includes another makefile into this one: one called <file>CApp</file> that&rsquo;s located in <file>$.AcornC/C++.Makefiles</file>. This is all handled transparently by the DDE, and is what makes Shared Makefiles work: the CApp makefile knows how to build a standard RISC&nbsp;OS application, so long as our file gives it the necessary information first. This means that it&rsquo;s rarely necessary to write the standard &lsquo;low level&rsquo; parts of a makefile when using Shared Makefiles.</p>
+
+<p>This leaves <code>COMPONENT = exampleabs</code> as the only line which does anything specifically for our project. It sets a value for the <variable>COMPONENT</variable> variable, which the Standard Makefiles take to be the name of the project and &ndash; in the absence of any other information &ndash; the name of the single source file and the resulting output file. As supplied, the ExampleABS makefile would take the <file>c.exampleabs</file> source file (the one that we did not copy from the skeleton) and compile it to produce an executable file called <file>exampleabs</file>. Our source lives in the <file>c.main</file> file, so if we change the line to read <code>COMPONENT = main</code> Amu will find this and produce an absolute file called <file>main</file>.</p>
+
+<p>There are a couple of other things that we need to do before our new Makefile will work, however. In CC, we were updating the <icon>Include</icon> field to read <code>C:,OSLib:,SFLib:</code>, and we need to do the same now. We do this by setting another variable called <variable>CINCLUDES</variable>, which the Standard Makefiles treat in the same way as CC treats the contents of the <icon>Include</icon> field. When called on the command line, CC takes these include values on the <code>-I</code> parameter, so with that at the start the full line reads <code>CINCLUDES = -IC:,OSLib:,SFLib:</code>.</p>
+
+<p>The other thing that we had to manually configure in CC was to add SFLib and OSLib to the list of libraries to link against. Standard Makefiles use the <variable>LIBS</variable> variable to indicate these, so we need to add a line which reads <code>LIBS = SFLib:o.SFLib OSLib:o.OSLib32</code> (note that while <variable>CINCLUDES</variable> uses commas to separate the list items, <variable>LIBS</variable> uses spaces). As with the CC front-end, the order in which the libraries are listed is important: SFLib uses OSLib, so it <em>must</em> appear before OSLib in the list.</p>
+
+<p>With all the bits in place, the makefile should appear as shown in <reference id="list-shared-make"/>.</p>
+
+<code id="list-shared-make" lang="makefile" file="Makefile" title="The project&rsquo;s Makefile, ready to go"># Makefile for Example App
+
+COMPONENT = main
+
+CINCLUDES = -IC:,OSLib:,SFLib:
+LIBS = SFLib:o.SFLib OSLib:o.OSLib32
+
+include CApp
+
+# Dynamic dependencies:</code>
+</section>
+
+<section>
+<title>Compiling with a makefile</title>
+
+<p>With the changes in place as described above, the project is ready to be compiled using Amu. A full set of files can be downloaded in <reference id="dl-simple-make"/> &ndash; the archive no longer contains the empty <file>o</file> folder, as unlike CC the Shared Makefiles are able to create this on demand.</p>
+
+<download id="dl-simple-make" file="SimpleCMake.zip" title="A Simple C Application using Shared Make Files" compatibility="none"/>
+
+<p>Compiling the project is simply a case of double-clicking on the <file>Mk</file> TaskObey file in the source folder. This should open a Task Window and, if all goes to plan, an absolute file called <file>main</file> should appear in the folder when the process is complete &ndash; along with the new <file>o</file> and <file>od</file> directories as shown in <reference id="fig-shared-files"/>.</p>
+
+<image id="fig-shared-files" file="shared-files.png" title="The project folder after compilation"/>
+
+<p>Unlike the output window used by CC in previous compilations, the Task Window that opened will contain all of the commands used to build the project. We can see commands to create the <file>o</file> and <file>od</file> folders, followed by a call to <command>cc</command> to compile <file>c.main</file> which throws up three warnings. As none of these were fatal, <command>link</command> is then called to link the resulting code with OSLib, SFLib and the standard C libraries before <command>squeeze</command> is used to squeeze the absolute file and reduce its size in a way that&rsquo;s transparent to the user. The warnings themselves are reported in a throwback window, and the whole thing can be seen in <reference id="fig-shared-output"/>.</p>
+
+<image id="fig-shared-output" file="shared-output.png" title="The completed Task Window, and Throwback output"/>
+
+<p>The warnings themselves are not important: they are simply identifying three variables which are defined but not used by the code. If we check <file>c.main</file>, we will find that all three are arguments to functions which are required by the code that calls them: the C Runtime system in the case of the <variable>argv</variable> and <variable>argv</variable> parameters to <function>main()</function>, and SFLib&rsquo;s Event library in the case of the <variable>message</variable> parameter to <function>main_message_quit()</function>. For now we&rsquo;ll ignore these, as warnings of unused variables are often useful for spotting silly mistakes.</p>
+
+<p>While we&rsquo;re here, the <file>MkDebug</file> TaskObey file needs a mention. Its action is similar to <file>Mk</file>, in that it &lsquo;makes&rsquo; the project &ndash; but it does so in a form ready to be used by the Desktop Debugging Tool, or DDT. While the use of <file>MkDebug</file> is outside the scope of these tutorials, it has been included to allow independent investigation with the help of the DDE documentation.</p>
+</section>
+
+<section>
+<title>Cleaning up</title>
+
+<p>Double-clicking on <file>Mk</file> created a number of new files in the project folder: the <file>main</file> executable file which is the application itself, and the <file>o</file> and <file>od</file> folders which are used to store intermediate <intro>object files</intro> containing compiled code which has yet to be linked. None of these are actually essential parts of the source code: Amu will ensure that they are all re-created as part of the build process.</p>
+
+<p>In addition, although it might not be immediately obvious, Amu has also updated <file>Makefile</file>. We <reference id="sect-makefile">noted above</reference> that <code>#&nbsp;Dynamic dependencies:</code> line in the makefile was an <intro>active comment</intro>: if we load <file>Makefile</file> back into a text editor after double-clicking <file>Mk</file>, we&rsquo;ll see that extra content has been added after this line as shown in <reference id="fig-shared-dependencies"/>.</p>
+
+<image id="fig-shared-dependencies" file="shared-dependencies.png" title="Dynamic dependencies created by Amu"/>
+
+<p>The new lines are all <intro>dependencies</intro> in Amu terminology: that is, they describe in detail how the components that the compiler produces in the <file>o</file> folder &lsquo;depend&rsquo; on each other. The key point of Amu is that it always tries to do as little work as possible: while our simple example only takes a few seconds to build from scratch, bigger RISC&nbsp;OS applications can take many minutes &ndash; or even hours, in some cases. As a result, Amu will compile each file in a project separately and store the results in <file>o</file>; when it is called to build the project again, it will attempt to only compile those files which have actually changed.</p>
+
+<p>We can see this in action by double-clicking on <file>Mk</file> again. Assuming that nothing has been touched since the last time that it was run, we won&rsquo;t see the result shown in <reference id="fig-shared-output"/> this time around: Amu knows that there&rsquo;s no point doing all of the work again as <file>main</file> already exists and is newer (in terms of its timestamp) than <file>c.main</file>. Instead, we simply get the output shown in <reference id="fig-shared-make-again"/>.</p>
+
+<image id="fig-shared-make-again" file="shared-make-again.png" title="Amu won&rsquo;t do anything that it doesn&rsquo;t have to!"/>
+
+<p>It&rsquo;s not actually necessary to be able to read Amu&rsquo;s dependencies in order to use them, as Amu sorts it all out for us. As long as we don&rsquo;t change it, we can safely ignore anything after the <code>#&nbsp;Dynamic dependencies:</code> line in <file>Makefile</file> and leave Amu to re-create it each time we double-click on <file>Mk</file>. That said, the information added to the file is potentially useful to help understand what&rsquo;s going on.</p>
+
+<p>In our simple application we currently only have a single source file <file>c.main</file>, which Amu asks CC to compile into <file>o.main</file>. It should be fairly obvious, then, that if <file>c.main</file> changes, <file>o.main</file> needs to be rebuilt &ndash; the <code>o.main: c.main</code> at the top of the dependencies in <reference id="fig-shared-dependencies"/> simply says that <file>o.main</file> (before the colon) <em>depends on</em> <file>c.main</file> (after the colon).</p>
+
+<p>The remaining lines are very similar, but are where the cleverness of dynamic dependencies really comes in to its own. Amu will ask CC to scan through <file>c.main</file> and look for any <code>#include</code> lines referencing other source files. In the case of <file>c.main</file>, it includes two additional files:</p>
+
+<code lang="c">#include "oslib/wimp.h"
+#include "sflib/event.h"</code>
+
+<p>We can see that both of these are included in the dependencies: <code>o.main: OSLib:oslib.h.wimp</code> and <code>o.main: SFLib:sflib.h.event</code>. Both of these header files <code>#include</code> other files from OSLib, and that&rsquo;s where the other entries to OSLib which follow them come from. If our project contained more source files than just <file>c.main</file> (as it will from <reference id="chap-iconbar">the next chapter</reference>), Amu would sort out all those dependencies for us as well. The important thing is that we don&rsquo;t have to worry about it!</p>
+
+<p>With all of this automatically generated output (both in <file>Makefile</file>, and as files and folders in the project folder), it would useful to be able to reset everything back to its starting point. Once again the Standard Makefiles can do that, and the <file>MkClean</file> TaskObey file is provided for the purpose. Double-clicking on it will produce a Task Window similar to that shown in <reference id="fig-shared-clean"/>; at the same time, the <file>main</file> application should disappear, along with the <file>o</file> and <file>od</file> folders. Loading <file>Makefile</file> back into a text editor should reveal that the dependencies shown in <reference id="fig-shared-dependencies"/> have gone.</p>
+
+<image id="fig-shared-clean" file="shared-clean.png" title="Amu can also be used to clean a project folder"/>
+
+<p>After double-clicking on <file>MkClean</file>, a double-click of <file>Mk</file> should result in a full build of the project as seen in <reference id="fig-shared-output"/>. Cleaning a project can be useful before sending the files to another developer (as there&rsquo;s no need to waste space or bandwidth sending them files that their own compiler will generate for them), and can also be a good way to force a re-compile of <em>everything</em>. The latter can be very important when updating shared tools or libraries, such as OSLib, SFLib or even tools in the DDE itself.</p>
 
 </section>
 </chapter>
@@ -986,7 +1084,7 @@ static osbool main_message_quit(wimp_message *message)
 
 <!-- Chapter 2 -->
 
-<chapter>
+<chapter id="chap-iconbar">
 <resources>
 <images>Chapter5</images>
 <downloads>Chapter5</downloads>
