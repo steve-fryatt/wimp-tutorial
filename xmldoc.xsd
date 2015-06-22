@@ -110,6 +110,7 @@
       <xsd:element name="function" type="xsd:string"/>
       <xsd:element name="intro" type="xsd:string"/>
       <xsd:element name="link" type="LinkType"/>
+      <xsd:element name="maths" type="xsd:string"/>
       <xsd:element name="menu" type="xsd:string"/>
       <xsd:element name="name" type="xsd:string"/>
       <xsd:element name="reference" type="ReferenceType"/>

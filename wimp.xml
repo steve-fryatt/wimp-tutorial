@@ -1105,38 +1105,78 @@ include CApp
 <section>
 <title>Getting iconic</title>
 
-<p>Although they have a fairly specific meaning in user-facing documentation, as far as the Wimp and the applications which run on it are concerned, icons are simply objects which sit within windows. While some of these &ndash; such as file icons &ndash; might fit a user&rsquo;s idea of an icon, many probably won&rsquo;t. <reference id="fig-ibar-icons"/> shows a number of different icons within a window.</p>
+<p>Although they have a fairly specific meaning in user-facing documentation, as far as the Wimp and the applications which run on it are concerned, icons are simply objects which sit within windows. While some of these &ndash; such as file icons &ndash; might fit a user&rsquo;s idea of an icon, many probably won&rsquo;t. <reference id="fig-ibar-icons"/> shows a number of different icons within a window; it&rsquo;s far from an exhaustive set!</p>
 
 <image id="fig-ibar-icons" file="ibar-icons.png" title="Icons in RISC&nbsp;OS can take a whole range of forms"/>
 
-<p>To create an icon in a window, we use the <swi>Wimp_CreateIcon</swi> SWI: the iconbar is just a special window as far as our application is concerned.</p>
+<p>To create an icon in a window, we use the <swi>Wimp_CreateIcon</swi> SWI which has the following prototype in OSLib:</p>
 
 <code lang="c">extern wimp_i wimp_create_icon(
 	wimp_icon_create const	*icon
 );</code>
 
-
-
+<p>It takes a single parameter, which is a pointer to a block of memory. As with SWIs like <swi>Wimp_Poll</swi> which we&rsquo;ve already met, this memory is a block of parameters which tell the Wimp what we want it to do.</p>
 
 <code lang="c">struct wimp_icon_create {
 	wimp_w		w;
 	wimp_icon	icon;
 };
-   
-struct wimp_icon {
+
+typedef struct wimp_icon_create wimp_icon_create;</code>
+
+<p>The block contains two items: the first is the variable <variable>w</variable>, which has the type of <type>wimp_w</type>. This is something known as a <intro>window handle</intro>, and every window on the RISC&nbsp;OS desktop has one which uniquely identifies it &ndash; we&rsquo;ll meet properly later on, when we come to look at windows. For now, we don&rsquo;t need to worry about it too much: the Wimp treats the iconbar as a special window with a unique handle of its own, and OSLib provides some helpful constants to descibe it.</p>
+
+<code lang="c">#define wimp_ICON_BAR_RIGHT	((wimp_w) 0xFFFFFFFFu)	/* -1	*/
+#define wimp_ICON_BAR_LEFT	((wimp_w) 0xFFFFFFFEu)	/* -2	*/</code>
+
+<p>If we give the window handle as <name>wimp_ICON_BAR_RIGHT</name>, our icon will appear on the right-hand side of the iconbar &ndash; the correct place for a normal application.</p>
+
+<p>The other item in the block is the variable <variable>icon</variable>, of type <type>wimp_icon</type> &ndash; the definition of the icon itself. OSLib defines <type>wimp_icon</type> as follows:</p>
+
+<code lang="c">struct wimp_icon {
 	os_box		extent;
 	wimp_icon_flags	flags;
 	wimp_icon_data	data;
-	};
+};
 
-struct os_box {
+typedef struct wimp_icon wimp_icon;</code>
+
+<p>The structure that underlies the type contains three items: the <variable>extent</variable> or position of the icon in the window, <variable>flags</variable> which define the icon&rsquo;s appearance and behaviour, and <variable>data</variable> to help the Wimp render the icon in its window.</p>
+
+<p>The icon&rsquo;s extent is the first that we need to consider: <type>os_box</type> is a struct which gives the size and position of something in terms of maximum and minimum <maths>x</maths> and <maths>y</maths> coordinates. It&rsquo;s a common construct in the RISC&nbsp;OS API, with the dimensions given in standard OS&nbsp;units.</p>
+
+<code lang="c">struct os_box {
 	int		x0;
 	int		y0;
 	int		x1;
 	int		y1;
-};</code>
+};
 
+typedef struct os_box os_box;</code>
 
+<p>If this were an icon in a normal window, we would need to worry about its position in the window; as the iconbar is shared between applications, the Wimp does a lot of the work for us. The minimum <maths>x</maths> and <maths>y</maths> coordinates <variable>x0</variable> and <variable>y0</variable> will often be 0: icons should all be at the same vertical position, and the Wimp will sort out the horizontal location based on the number of other applications which are already installed there. Standard &lsquo;picture-only&rsquo; icons are usually 68 &times; 68 OS&nbsp;units, so both <variable>x1</variable> and <variable>y1</variable> will be 68.</p>
+
+<p>The icon&rsquo;s flags determine how it looks and behaves. We&rsquo;ll cover the options properly when we take a full look at icons, but our iconbar icon is fairly simple: it consists of a sprite, and we need to be told when the user clicks on it. In OSLib&rsquo;s terms, this means that it will need the <name>wimp_ICON_SPRITE</name> flag set, and must have the <intro>button type</intro> of <name>wimp_BUTTON_CLICK</name>.</p>
+
+<p>The final piece of the icon definition is its data, which in the case of a <name>wimp_ICON_SPRITE</name> icon is the name of a sprite from the <intro>Wimp pool</intro> which should be used. The <type>wimp_icon_data</type> type is actually a union which contains &ndash; amongst other items related to different icon configurations &ndash; a <code>char sprite[12]</code> to hold the name of the sprite. We can copy a sprite name into this string when initialising the icon data, and leave the Wimp to do the rest of the work for us.</p>
+
+<p>Putting all of this together results in a piece of code like this:</p>
+
+<code lang="c">wimp_icon_create icon_bar;
+
+icon_bar.w = wimp_ICON_BAR_RIGHT;
+icon_bar.icon.extent.x0 = 0;
+icon_bar.icon.extent.x1 = 68;
+icon_bar.icon.extent.y0 = 0;
+icon_bar.icon.extent.y1 = 68;
+icon_bar.icon.flags = wimp_ICON_SPRITE | (wimp_BUTTON_CLICK &lt;&lt; wimp_ICON_BUTTON_TYPE_SHIFT);
+strncpy(icon_bar.icon.data.sprite, &quot;application&quot;, osspriteop_NAME_LIMIT);
+
+wimp_create_icon(&amp;icon_bar);</code>
+
+<p>As described, the code sets the handle of the window in which the icon is to be created to be the right-hand side of the iconbar, then sets the dimensions to be 68 OS&nbsp;units in both the <math>x</math> and <math>y</math> directions. The flags are set to make the icon a sprite which responds to mouse clicks, and finally <code>&quot;application&quot;</code> is copied in to the space provided for the sprite name so that we use the default &ldquo;application&rdquo; sprite provided by the OS.</p>
+
+<p>Like a lot of OSLib, declaring a variable of the <type>wimp_icon_create</type> type automatically reserves the required space on the stack for the parameter block, meaning that we just need to set the contents up before passing its address to <function>wimp_create_icon()</function>.</p>
 
 </section>
 </chapter>
