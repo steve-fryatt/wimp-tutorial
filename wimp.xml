@@ -1105,23 +1105,42 @@ include CApp
 <section>
 <title>Getting iconic</title>
 
-<p>Although they have a fairly specific meaning in user-facing documentation, as far as the Wimp and the applications which run on it are concerned, icons are simply objects which sit within windows. While some of these &ndash; such as file icons &ndash; might fit a user&rsquo;s idea of an icon, many probably won&rsquo;t. <reference id="fig-ibar-icons"/> shows a number of different icons within a window; it&rsquo;s far from an exhaustive set!</p>
+<p>Although they have a fairly specific meaning in user-facing documentation, as far as the Wimp and the applications which run on it are concerned, icons are simply objects which sit within windows. While some of these &ndash; such as file icons &ndash; might fit a user&rsquo;s idea of an icon, many probably won&rsquo;t. In fact, icons can contain text (in either the desktop font or any other), sprites, filled areas or any combination of these. <reference id="fig-ibar-icons"/> shows a number of different icons within a window; it&rsquo;s far from an exhaustive set!</p>
 
 <image id="fig-ibar-icons" file="ibar-icons.png" title="Icons in RISC&nbsp;OS can take a whole range of forms"/>
 
-<p>There&rsquo;s scope for variation, but the icons that applications place on the iconbar are often simple images created from sprites. A number of common applications can be seen in <reference id="fig-ibar-example-apps"/>, and we can also see that it&rsquo;s common to use the same sprite both on the iconbar and for the application&rsquo;s directory in the Filer. The screenshot also contains Alarm, which is a good example of an application which uses a very different iconbar icon &ndash; but that&rsquo;s something to worry about another time!</p>
+<p>There&rsquo;s scope for variation, but the icons that applications place on the iconbar are often simple images created from sprites. A number of common applications can be seen in <reference id="fig-ibar-example-apps"/>, and we can also see that it&rsquo;s not unusal to use the same sprite both on the iconbar and for the application&rsquo;s directory in the Filer. That said, the screenshot also contains Alarm, which is a good example of an application which uses a very different iconbar icon &ndash; but that&rsquo;s something to worry about another time!</p>
 
 <image id="fig-ibar-example-apps" file="ibar-example-apps.png" title="Applications often use the same icons in the Filer and on the iconbar"/>
 
-<p>This duplication is useful, because it helps us solve the question of where to get the sprite from. The sprites shown in icons must be held in <intro>sprite areas</intro>: blocks of memory which effectively represent the contents of sprite files. We could create our own area and load a suitable image into it, but that requires details which we won&rsquo;t meet until a later chapter. The other option &ndash; which also happens to be the default for simple icons &ndash; is to take the sprite from the <intro>Wimp sprite pool</intro>.</p>
+<p>As is the case throughout RISC&nbsp;OS, the sprites used in icons must be held in <intro>sprite areas</intro>: blocks of memory which effectively represent the contents of sprite files. There are two options offered by the Wimp: an application can create its own area, or it can use a shared area known as the <intro>Wimp sprite pool</intro>. It&rsquo;s possible to mix and match the two options within an application, and most will use both as appropriate.</p>
 
-<p>The Wimp sprite pool is a sprite area which is shared between all applications: any application (as well as other code) can add images to it or read them from it. Its communal nature means that it&rsquo;s bad practice to add images which are only required by one application: once added, sprites can&rsquo;t be removed without a reboot, and without care, conflicts are all too easy. Fortunately, the sprites used in the Filer&rsquo;s directory displays must all be in the pool: when an application uses the same sprite for its application directory <em>and</em> iconbar presence, that sprite must be put into the pool. We&rsquo;ll see how to create our own sprite areas for application-specific sprites later.</p>
-
-<p>We don&rsquo;t yet have a sprite for our application &ndash; while we could design one, the Wimp provides one for application directories which don&rsquo;t have a dedicated image and for now it will be quicker to use that for our purposes. It&rsquo;s called &lsquo;application&rsquo;, and is contained in the set of sprites that are loaded into the wimp sprite pool when the desktop starts up: it can be seen, along with some of the other default icon srpites, in <reference id="fig-ibar-pool-sprites"/>.</p>
+<p>The Wimp sprite pool is a sprite area which is shared between all applications: any application can add images to it, and make use of those that are stored there. Its communal nature means that it&rsquo;s bad practice to add images which are only required by one application: once added, sprites can&rsquo;t be removed without a reboot, and without care, conflicts are all too easy. RISC&nbsp;OS pre-loads the area with a range of useful icons, including the familiar parts of dialogue boxes seen in <reference id="fig-ibar-icons"/>. A small selection of the icons added by the Wimp can be seen in <reference id="fig-ibar-pool-sprites"/>.</p>
 
 <image id="fig-ibar-pool-sprites" file="ibar-pool-sprites.png" title="A selection of sprites which are pre-loaded into the Wimp sprite pool"/>
 
-<p>To create an icon in a window, we use the <swi>Wimp_CreateIcon</swi> SWI which has the following prototype in OSLib:</p>
+<p>The duplication between the icons used for application directories and iconbar icons &ndash; seen in <reference id="fig-ibar-example-apps"/> &ndash; is useful, because the Filer requires that application directory sprites <em>must</em> be stored in the Wimp sprite pool. If the same sprite is to be used in an iconbar icon, it makes sense to use the copy that&rsquo;s already in memory to save using up space with a second copy. Conveniently, sprite icons default to using the Wimp sprite pool for their image &ndash; which makes things a lot easier!</p>
+
+<p>We don&rsquo;t yet have a sprite for our application &ndash; although we don&rsquo;t really have the application itself yet, either! While we could design one, that&rsquo;s a bit of a side issue at present. Instead we&rsquo;ll take inspiration from the Filer which, when it can&rsquo;t find a suitable icon to use for an application directory, uses a default image &ndash; the familiar sprite, called &ldquo;application&rdquo;, can be seen in <reference id="fig-ibar-pool-sprites"/>. As it&rsquo;s always present in the Wimp sprite pool, we don&rsquo;t need to do anything special to make use of it.</p>
+</section>
+
+<section>
+<title>Getting in position</title>
+
+<p>With the sprite sorted out (at least in theory), the other thing we need to decide is where the icon will be placed. The Wimp uses the same coordinate system as the rest of RISC&nbsp;OS: what are usually termed <intro>OS&nbsp;units</intro>. They start at (0,0) in the bottom-left of the screen and increase towards the right and top; on a standard system (where the user hasn&rsquo;t changed the <intro>eigenvalues</intro>), there are two OS&nbsp;units for every pixel. This means that on an HD screen of 1920&nbsp;&times;&nbsp;1080, there will be 3840&nbsp;&times;&nbsp;2040 OS&nbsp;units on the screen: 0 to 3839 horizontally and 0 to 2039 vertically.</p>
+
+<p>Icons are components of windows, however: when a window (such as a dialogue box) is moved around the screen, the icons move with it. This means that their locations are specified in relative terms with reference to the window itself. The units are still OS&nbsp;units, but they are no longer counting from the bottom left corner of the screen. By default, a window&rsquo;s origin is at its <em>top</em> left &ndash; as we&rsquo;ll see when we look properly at windows, this means that the Y coordinates of icons are often negative. The position of an icon is given in terms of two coordinate pairs: the minimum X,Y (or bottom left, usually written &ldquo;x0,y0&rdquo;), and the maximum X,Y (or top-right, usually written &ldquo;x1,y1&rdquo;).</p>
+
+<p>As far as applications are concerned, the iconbar is just another window: only it&rsquo;s one that the Wimp owns and shares out between all the applications which have created an iconbar icon. The sharing makes things a little odd, as the horizontal position of an icon will depend on what else is already loaded (and it can change after the icon has been created, if another application removes its icon).</p>
+
+<p>This horizontal movement means that the minimum&nbsp;X coordinate of an iconbar icon is <em>always</em> zero: the Wimp will adjust it into its real position when the icon is actually created. The maximum&nbsp;X coordinate therefore gives the width of the icon. Vertical coordinates work normally, but the Wimp has moved the origin of the iconbar&rsquo;s coordinates so that zero is on the baseline of standard &lsquo;sprite only&rsquo; icons. This means that the minimum&nbsp;Y coordinate will be zero for the kind of icon we&rsquo;re planning; once again, the maximum&nbsp;Y coordinate gives the height of the icon.</p>
+
+<p>The standard application sprites used on RISC&nbsp;OS are defined to be 34&nbsp;&times;&nbsp;34 pixels, or 68&nbsp;&times;&nbsp;68 OS&nbsp;units. This means that our new icon must also be 64 OS&nbsp;units in each direction. Given the information above, this will make the minimum coordinate to be (0,0) and the maximum coordinate (68,68).</p>
+</section>
+
+<section>
+<title>Making the icon</title>
+<p>Icons are created using the <swi>Wimp_CreateIcon</swi> SWI, which has the following prototype in OSLib:</p>
 
 <code lang="c">extern wimp_i wimp_create_icon(
 	wimp_icon_create const	*icon
@@ -1136,7 +1155,7 @@ include CApp
 
 typedef struct wimp_icon_create wimp_icon_create;</code>
 
-<p>The block contains two items: the first is the variable <variable>w</variable>, which has the type of <type>wimp_w</type>. This is something known as a <intro>window handle</intro>, and every window on the RISC&nbsp;OS desktop has one which uniquely identifies it &ndash; we&rsquo;ll meet properly later on, when we come to look at windows. For now, we don&rsquo;t need to worry about it too much: the Wimp treats the iconbar as a special window with a unique handle of its own, and OSLib provides some helpful constants to descibe it.</p>
+<p>The block contains two items: the first is the variable <variable>w</variable>, which has the type of <type>wimp_w</type>. This is something known as a <intro>window handle</intro>, and every window on the RISC&nbsp;OS desktop has one which uniquely identifies it &ndash; we&rsquo;ll meet properly later on, when we come to look at windows. For now, we don&rsquo;t need to worry about it too much: we&rsquo;ve already said that the Wimp treats the iconbar as a special window, and OSLib provides some constants which can be used in place of a normal window handle.</p>
 
 <code lang="c">#define wimp_ICON_BAR_RIGHT	((wimp_w) 0xFFFFFFFFu)	/* -1	*/
 #define wimp_ICON_BAR_LEFT	((wimp_w) 0xFFFFFFFEu)	/* -2	*/</code>
