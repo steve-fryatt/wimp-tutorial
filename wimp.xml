@@ -1127,15 +1127,20 @@ include CApp
 <section>
 <title>Getting in position</title>
 
-<p>With the sprite sorted out (at least in theory), the other thing we need to decide is where the icon will be placed. The Wimp uses the same coordinate system as the rest of RISC&nbsp;OS: what are usually termed <intro>OS&nbsp;units</intro>. They start at (0,0) in the bottom-left of the screen and increase towards the right and top; on a standard system (where the user hasn&rsquo;t changed the <intro>eigenvalues</intro>), there are two OS&nbsp;units for every pixel. This means that on an HD screen of 1920&nbsp;&times;&nbsp;1080, there will be 3840&nbsp;&times;&nbsp;2040 OS&nbsp;units on the screen: 0 to 3839 horizontally and 0 to 2039 vertically.</p>
+<p>With the sprite sorted out (at least in theory), the other thing we need to decide is where the icon will be placed. The Wimp uses the same coordinate system as the rest of RISC&nbsp;OS: what are usually termed <intro>OS&nbsp;units</intro>. They start at (0,0) in the bottom-left of the screen and increase towards the right and top; on a standard system (where the user hasn&rsquo;t changed the <intro>eigenvalues</intro>), there are two OS&nbsp;units for every pixel. This means that on an HD screen of 1920&nbsp;&times;&nbsp;1080, there will be 3840&nbsp;&times;&nbsp;2160 OS&nbsp;units on the screen: 0 to 3839 horizontally and 0 to 2159 vertically, as shown in <reference id="fig-ibar-screen-dims"/>.</p>
 
-<p>Icons are components of windows, however: when a window (such as a dialogue box) is moved around the screen, the icons move with it. This means that their locations are specified in relative terms with reference to the window itself. The units are still OS&nbsp;units, but they are no longer counting from the bottom left corner of the screen. By default, a window&rsquo;s origin is at its <em>top</em> left &ndash; as we&rsquo;ll see when we look properly at windows, this means that the Y coordinates of icons are often negative. The position of an icon is given in terms of two coordinate pairs: the minimum X,Y (or bottom left, usually written &ldquo;x0,y0&rdquo;), and the maximum X,Y (or top-right, usually written &ldquo;x1,y1&rdquo;).</p>
+<image id="fig-ibar-screen-dims" file="ibar-screen-dims.png" title="By default, a 1920 &times; 1080 screen contains 3840 &times; 2160 OS units"/>
+
+<p>Icons are components of windows, however: when a window (such as a dialogue box) is moved around the screen, the icons move with it. This means that their locations are specified in relative terms with reference to the window itself. The units are still OS&nbsp;units, but they are no longer counting from the bottom left corner of the screen. A window&rsquo;s origin can be moved around, but by default it is at its <em>top</em> left &ndash; as we&rsquo;ll see when we look properly at windows, this means that the <maths>y</maths> coordinates of icons are often negative. The position of an icon is given in terms of two coordinate pairs: the minimum <maths>x</maths>,<maths>y</maths> (or bottom left, usually written &ldquo;<maths>x0</maths>,<maths>y0</maths>&rdquo;), and the maximum <maths>x</maths>,<maths>y</maths> (or top-right, usually written &ldquo;<maths>x1</maths>,<maths>y1</maths>&rdquo;). While <maths>x0</maths> and <maths>y0</maths> are <em>inclusive</em>, in that they point to the bottom-left pixel in the icon, <maths>x1</maths> and <maths>y1</maths> are <em>exclusive</em>: they indicate the pixel diagonally above to the right of the top-right pixel of the icon.</p>
 
 <p>As far as applications are concerned, the iconbar is just another window: only it&rsquo;s one that the Wimp owns and shares out between all the applications which have created an iconbar icon. The sharing makes things a little odd, as the horizontal position of an icon will depend on what else is already loaded (and it can change after the icon has been created, if another application removes its icon).</p>
 
-<p>This horizontal movement means that the minimum&nbsp;X coordinate of an iconbar icon is <em>always</em> zero: the Wimp will adjust it into its real position when the icon is actually created. The maximum&nbsp;X coordinate therefore gives the width of the icon. Vertical coordinates work normally, but the Wimp has moved the origin of the iconbar&rsquo;s coordinates so that zero is on the baseline of standard &lsquo;sprite only&rsquo; icons. This means that the minimum&nbsp;Y coordinate will be zero for the kind of icon we&rsquo;re planning; once again, the maximum&nbsp;Y coordinate gives the height of the icon.</p>
+<p>This horizontal movement means that the minimum&nbsp;<maths>x</maths> coordinate (<maths>x0</maths>) of an iconbar icon is <em>always</em> given as zero: the Wimp will adjust it into its real position when the icon is actually created. The maximum&nbsp;<maths>x</maths> coordinate (<maths>x1</maths>) therefore gives the width of the icon. Vertical coordinates work normally, but the Wimp has moved the origin of the iconbar&rsquo;s coordinates so that zero is on the baseline of standard &lsquo;sprite only&rsquo; icons. This means that the minimum&nbsp;<maths>y</maths> coordinate (<maths>y0</maths>) will also be zero for the kind of icon we&rsquo;re planning &ndash; so once again, the maximum&nbsp;<maths>y</maths> coordinate (<maths>y1</maths>) gives the height of the icon.</p>
 
-<p>The standard application sprites used on RISC&nbsp;OS are defined to be 34&nbsp;&times;&nbsp;34 pixels, or 68&nbsp;&times;&nbsp;68 OS&nbsp;units. This means that our new icon must also be 64 OS&nbsp;units in each direction. Given the information above, this will make the minimum coordinate to be (0,0) and the maximum coordinate (68,68).</p>
+<p>The standard application sprites used on RISC&nbsp;OS are defined to be 34&nbsp;&times;&nbsp;34 pixels, or 68&nbsp;&times;&nbsp;68 OS&nbsp;units. This means that our new icon must also be 68 OS&nbsp;units in each direction, making it occupy OS&nbsp;units 0 to 67. If the minimum, inclusive, <maths>x</maths> and <maths>y</maths> coordinates are (0,0), this means that the maximum, exclusive, coordinates will be (68,68). This is shown graphically in <reference id="fig-ibar-icon-dims"/></p>
+
+<image id="fig-ibar-icon-dims" file="ibar-icon-dims.png" title="Creating a 34 &times; 34 pixel icon on the iconbar"/>
+
 </section>
 
 <section>
@@ -1143,10 +1148,10 @@ include CApp
 <p>Icons are created using the <swi>Wimp_CreateIcon</swi> SWI, which has the following prototype in OSLib:</p>
 
 <code lang="c">extern wimp_i wimp_create_icon(
-	wimp_icon_create const	*icon
+	wimp_icon_create const *icon
 );</code>
 
-<p>It takes a single parameter, which is a pointer to a block of memory. As with SWIs like <swi>Wimp_Poll</swi> which we&rsquo;ve already met, this memory is a block of parameters which tell the Wimp what we want it to do.</p>
+<p>It takes a single parameter, which &ndash; as with SWIs like <swi>Wimp_Poll</swi> which we&rsquo;ve aleady met &ndash; is a pointer to a block of memory.</p>
 
 <code lang="c">struct wimp_icon_create {
 	wimp_w		w;
@@ -1155,12 +1160,12 @@ include CApp
 
 typedef struct wimp_icon_create wimp_icon_create;</code>
 
-<p>The block contains two items: the first is the variable <variable>w</variable>, which has the type of <type>wimp_w</type>. This is something known as a <intro>window handle</intro>, and every window on the RISC&nbsp;OS desktop has one which uniquely identifies it &ndash; we&rsquo;ll meet properly later on, when we come to look at windows. For now, we don&rsquo;t need to worry about it too much: we&rsquo;ve already said that the Wimp treats the iconbar as a special window, and OSLib provides some constants which can be used in place of a normal window handle.</p>
+<p>The block contains details of the icon that we wish to create, and consists of two items. The first is the variable <variable>w</variable>, which has the type of <type>wimp_w</type> and is known as a <intro>window handle</intro>: every window on the RISC&nbsp;OS desktop has a handle, which uniquely identifies it. We&rsquo;ll meet window handles properly later on, when we come to look at windows &ndash; for now, we don&rsquo;t need to worry about it too much. We&rsquo;ve already said that the Wimp treats the iconbar as a special window, and that extends to giving it some &lsquo;special&rsquo; window handles: it should come as no surprise that OSLib provides some constants for use with <swi>Wimp_CreateIcon</swi>.</p>
 
 <code lang="c">#define wimp_ICON_BAR_RIGHT	((wimp_w) 0xFFFFFFFFu)	/* -1	*/
 #define wimp_ICON_BAR_LEFT	((wimp_w) 0xFFFFFFFEu)	/* -2	*/</code>
 
-<p>If we give the window handle as <name>wimp_ICON_BAR_RIGHT</name>, our icon will appear on the right-hand side of the iconbar &ndash; the correct place for a normal application.</p>
+<p>If we give the window handle as <name>wimp_ICON_BAR_RIGHT</name>, our icon will be created on the right-hand side of the iconbar &ndash; the correct place for a normal application. Using <name>wimp_ICON_BAR_LEFT</name> would create the icon on the left-hand side, which is reserved for applications which correspond to hardware or storage and is not the right place for us.</p>
 
 <p>The other item in the block is the variable <variable>icon</variable>, of type <type>wimp_icon</type> &ndash; the definition of the icon itself. OSLib defines <type>wimp_icon</type> as follows:</p>
 
@@ -1172,9 +1177,9 @@ typedef struct wimp_icon_create wimp_icon_create;</code>
 
 typedef struct wimp_icon wimp_icon;</code>
 
-<p>The structure that underlies the type contains three items: the <variable>extent</variable> or position of the icon in the window, <variable>flags</variable> which define the icon&rsquo;s appearance and behaviour, and <variable>data</variable> to help the Wimp render the icon in its window.</p>
+<p>The structure that underlies the type contains three items: the <variable>extent</variable> or position of the icon in the window, <variable>flags</variable> which define the icon&rsquo;s appearance and behaviour, and <variable>data</variable> which holds details of the icon&rsquo;s contents.</p>
 
-<p>The icon&rsquo;s extent is the first that we need to consider: <type>os_box</type> is a struct which gives the size and position of something in terms of maximum and minimum <maths>x</maths> and <maths>y</maths> coordinates. It&rsquo;s a common construct in the RISC&nbsp;OS API, with the dimensions given in standard OS&nbsp;units.</p>
+<p>As we saw above, the icon&rsquo;s extent is from (0,0) inclusive to (68,68) exclusive: 68 OS&nbsp;units and 34 pixels in each direction. The RISC&nbsp;OS API has a fairly standard way to give the details of two-dimensional areas like this, which takes the form of four consecutive four-byte words holding the minimum&nbsp;<maths>x</maths>, minimum&nbsp;<maths>y</maths>, maximum&nbsp;<maths>x</maths> and maximum&nbsp;<maths>y</maths> coordinates in turn. OSLib provides us with the <type>os_box</type> type to give access to this:</p>
 
 <code lang="c">struct os_box {
 	int		x0;
@@ -1185,29 +1190,183 @@ typedef struct wimp_icon wimp_icon;</code>
 
 typedef struct os_box os_box;</code>
 
-<p>If this were an icon in a normal window, we would need to worry about its position in the window; as the iconbar is shared between applications, the Wimp does a lot of the work for us. The minimum <maths>x</maths> and <maths>y</maths> coordinates <variable>x0</variable> and <variable>y0</variable> will often be 0: icons should all be at the same vertical position, and the Wimp will sort out the horizontal location based on the number of other applications which are already installed there. Standard &lsquo;picture-only&rsquo; icons are usually 68 &times; 68 OS&nbsp;units, so both <variable>x1</variable> and <variable>y1</variable> will be 68.</p>
+<p>An icon&rsquo;s flags determine how it looks and behaves. We&rsquo;ll cover the options properly when we take a full look at icons, but our iconbar icon is fairly simple: it consists of a sprite, and if it&rsquo;s to be of any use, we need to be told when the user clicks on it. In OSLib&rsquo;s terms, this means that it will need the <name>wimp_ICON_SPRITE</name> flag set, and must have the <intro>button type</intro> of <name>wimp_BUTTON_CLICK</name>.</p>
 
-<p>The icon&rsquo;s flags determine how it looks and behaves. We&rsquo;ll cover the options properly when we take a full look at icons, but our iconbar icon is fairly simple: it consists of a sprite, and we need to be told when the user clicks on it. In OSLib&rsquo;s terms, this means that it will need the <name>wimp_ICON_SPRITE</name> flag set, and must have the <intro>button type</intro> of <name>wimp_BUTTON_CLICK</name>.</p>
+<p>The final piece of the icon definition is its data, which in the case of a <name>wimp_ICON_SPRITE</name> icon is the name of a sprite from the <intro>Wimp pool</intro> which should be used. The <type>wimp_icon_data</type> type is actually a union which contains &ndash; amongst other items related to different icon configurations &ndash; a <code>char sprite[12]</code> to hold the name of the sprite. We can copy a sprite name into this string when initialising the icon data, and leave the Wimp to do the rest of the work of finding the correct image from the Wimp sprite pool for us.</p>
+</section>
 
-<p>The final piece of the icon definition is its data, which in the case of a <name>wimp_ICON_SPRITE</name> icon is the name of a sprite from the <intro>Wimp pool</intro> which should be used. The <type>wimp_icon_data</type> type is actually a union which contains &ndash; amongst other items related to different icon configurations &ndash; a <code>char sprite[12]</code> to hold the name of the sprite. We can copy a sprite name into this string when initialising the icon data, and leave the Wimp to do the rest of the work for us.</p>
+<section>
+<title>Modular code</title>
 
-<p>Putting all of this together results in a piece of code like this:</p>
+<p>Getting our application to place its icon on the iconbar requires a few changes to the code, which will start to show the differences between BASIC and C. The iconbar icon is a self-contained part of the application, and therefore we want to keep it separate from other parts of the code. To this end, we&rsquo;ll put it into a separate source file, so that other sections of the application can only see it via interfaces that we define.</p>
 
-<code lang="c">wimp_icon_create icon_bar;
+<p>The first thing we need to do is create a new source file called <file>c.ibar</file>, as shown in <reference id="list-ibar-ibar-c"/>, containing the code we&rsquo;ve discussed so far.</p>
 
-icon_bar.w = wimp_ICON_BAR_RIGHT;
-icon_bar.icon.extent.x0 = 0;
-icon_bar.icon.extent.x1 = 68;
-icon_bar.icon.extent.y0 = 0;
-icon_bar.icon.extent.y1 = 68;
-icon_bar.icon.flags = wimp_ICON_SPRITE | (wimp_BUTTON_CLICK &lt;&lt; wimp_ICON_BUTTON_TYPE_SHIFT);
-strncpy(icon_bar.icon.data.sprite, &quot;application&quot;, osspriteop_NAME_LIMIT);
+<code id="list-ibar-ibar-c" lang="c" file="ibar.c" title="The code to create our iconbar icon">/**
+ * Example 6.1
+ *
+ * (c) Stephen Fryatt, 2015
+ *
+ * File: ibar.c
+ */
 
-wimp_create_icon(&amp;icon_bar);</code>
+#include &quot;oslib/wimp.h&quot;
+#include &lt;string.h&gt;
 
-<p>As described, the code sets the handle of the window in which the icon is to be created to be the right-hand side of the iconbar, then sets the dimensions to be 68 OS&nbsp;units in both the <math>x</math> and <math>y</math> directions. The flags are set to make the icon a sprite which responds to mouse clicks, and finally <code>&quot;application&quot;</code> is copied in to the space provided for the sprite name so that we use the default &ldquo;application&rdquo; sprite provided by the OS.</p>
+#include &quot;ibar.h&quot;
+
+/* Iconbar Initialisation. */
+
+void ibar_initialise(void)
+{
+	wimp_icon_create icon_bar;
+
+	icon_bar.w = wimp_ICON_BAR_RIGHT;
+	icon_bar.icon.extent.x0 = 0;
+	icon_bar.icon.extent.y0 = 0;
+	icon_bar.icon.extent.x1 = 68;
+	icon_bar.icon.extent.y1 = 68;
+	icon_bar.icon.flags = wimp_ICON_SPRITE | (wimp_BUTTON_CLICK &lt;&lt; wimp_ICON_BUTTON_TYPE_SHIFT);
+	strncpy(icon_bar.icon.data.sprite, &quot;application&quot;, osspriteop_NAME_LIMIT);
+
+	wimp_create_icon(&amp;icon_bar);
+}</code>
 
 <p>Like a lot of OSLib, declaring a variable of the <type>wimp_icon_create</type> type automatically reserves the required space on the stack for the parameter block, meaning that we just need to set the contents up before passing its address to <function>wimp_create_icon()</function>.</p>
+
+<p>As described, the code sets the handle of the window in which the icon is to be created to be the right-hand side of the iconbar, then sets up the <maths>x</maths> and <maths>y</maths> coordinates for the bottom-left and top-right corners. The flags are set to make the icon a sprite which responds to mouse clicks (we&rsquo;ll cover the detail of this when we look properly at icons), and finally <code>&quot;application&quot;</code> is copied in to the space provided for the sprite name so that we use the default &ldquo;application&rdquo; sprite provided by the OS. The call to <function>wimp_create_icon()</function> actually puts the icon on to the iconbar.</p>
+
+<p>The <function>ibar_initialise()</function> function needs to be called as the application starts up, which means adding a call to it from <function>main_initialise()</function> in <file>c.main</file>. To be able to do that, there needs to be a function prototype that&rsquo;s visible to <file>c.main</file> &ndash; we therefore need to create a <file>h.ibar</file> header file to go with our new code. The contents can be seen in <reference id="list-ibar-ibar-h"/>: it simply contains a function prototype for <function>ibar_initialise()</function>.</p>
+
+<code id="list-ibar-ibar-h" lang="c" file="ibar.h" title="The header file to define the ibar module&rsquo;s interface">/**
+ * Example 6.1
+ *
+ * (c) Stephen Fryatt, 2015
+ *
+ * File: ibar.h
+ */
+
+#ifndef SIMPLEAPP_IBAR
+#define SIMPLEAPP_IBAR
+
+/* Iconbar Initialisation. */
+
+void ibar_initialise(void);
+
+#endif</code>
+
+<p>With <file>c.ibar</file> and <file>h.ibar</file> in place, we can now update <file>c.main</file> to make the necessary call to the ibar module. First, we need to <code>#include</code> the <file>h.ibar</file> header file, so that the new function prototype is seen: this goes at the top of the file, along with the other <code>#include</code> lines.</p>
+
+<code lang="c">#include &quot;oslib/wimp.h&quot;
+#include &quot;sflib/event.h&quot;
+
+#include &quot;ibar.h&quot;</code>
+
+<p>Second, we need to update <function>main_initialise()</function>, so that it initialises the ibar module once everything else is set up.</p>
+
+<code lang="c">static void main_initialise(void)
+{
+	wimp_initialise(wimp_VERSION_RO3, &quot;Wimp Task&quot;, NULL, NULL);
+
+	event_add_message_handler(message_QUIT, EVENT_MESSAGE_INCOMING, main_message_quit);
+
+	ibar_initialise();
+}</code>
+
+<p>Putting these changes into the existing file results in the code seen in <reference id="list-ibar-main-c"/>.</p>
+
+<code id="list-ibar-main-c" lang="c" file="main.c" title="Using the event dispatcher">/**
+ * Example 6.1
+ *
+ * (c) Stephen Fryatt, 2015.
+ *
+ * File: main.c
+ */
+
+#include &quot;oslib/wimp.h&quot;
+#include &quot;sflib/event.h&quot;
+
+#include &quot;ibar.h&quot;
+
+/* Global Variables */
+
+static osbool main_quit_flag = FALSE;
+
+/* Function Prototypes */
+
+static void main_initialise(void);
+static void main_poll(void);
+static void main_terminate(void);
+static osbool main_message_quit(wimp_message *message);
+
+/* Main code entry point. */
+
+int main(int argc, char *argv[])
+{
+	main_initialise();
+	main_poll();
+	main_terminate();
+
+	return 0;
+}
+
+/* Global application initialisation. */
+
+static void main_initialise(void)
+{
+	wimp_initialise(wimp_VERSION_RO3, &quot;Wimp Task&quot;, NULL, NULL);
+
+	event_add_message_handler(message_QUIT, EVENT_MESSAGE_INCOMING, main_message_quit);
+
+	ibar_initialise();
+}
+
+/* Wimp_Poll loop. */
+
+static void main_poll(void)
+{
+	wimp_block	blk;
+	wimp_event_no	reason;
+	int		pollword;
+
+	while (!main_quit_flag) {
+		reason = wimp_poll(wimp_MASK_NULL, &amp;blk, &amp;pollword);
+
+		event_process_event(reason, &amp;blk, pollword);
+	}
+}
+
+/* Global application termination. */
+
+static void main_terminate(void)
+{
+	wimp_close_down(0);
+}
+
+/* Message_Quit event handler. */
+
+static osbool main_message_quit(wimp_message *message)
+{
+	main_quit_flag = TRUE;
+
+	return TRUE;
+}</code>
+
+<p>There&rsquo;s one other change that we need to make, </p>
+
+
+<code id="list-ibar-make" lang="makefile" title=""># Makefile for Example App
+
+COMPONENT = ExampleApp
+
+OBJS = main ibar
+
+CINCLUDES = -IC:,OSLib:,SFLib:
+LIBS = SFLib:o.SFLib OSLib:o.OSLib32
+
+include CApp
+
+# Dynamic dependencies:</code>
 
 </section>
 </chapter>
