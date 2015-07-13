@@ -1352,10 +1352,15 @@ static osbool main_message_quit(wimp_message *message)
 	return TRUE;
 }</code>
 
-<p>There&rsquo;s one other change that we need to make, </p>
+<p>There&rsquo;s one other change that we need to make, to help the compiler find the new files. The makefile that <reference id="list-shared-make">we have used up to now</reference> only allows for a single source file, called <file>main.c</file> &ndash; the same as the name of the absolute file that the compiler generates. With two source files, this is no longer sufficient for our needs.</p>
 
+<p>Fortunately, the Standard Makefile system allows more complex configurations to be described by using the <variable>OBJS</variable> variable to list the intermediate object files that the compiler should generate in the <file>o</file> folder &ndash; and hence the original source files contained in the <file>c</file> folder. Adding a line reading <code>OBJS = main ibar</code> tells Make that it should be compiling two source files &ndash; <file>c.main</file> and <file>c.ibar</file> &ndash; into two object files: <file>o.main</file> and <file>o.ibar</file>. The <file>h.ibar</file> header file is found via the <code>#include</code> lines in the source files.</p>
 
-<code id="list-ibar-make" lang="makefile" title=""># Makefile for Example App
+<p>As we&rsquo;re now specifying the source and object files directly via <variable>OBJS</variable>, there&rsquo;s no longer any need to limit the name of the project as set by the <variable>COMPONENT</variable> variable. We can therefore take the opportunity to change the name of the output file, created by linking the object files from the <file>o</file> folder with the libraries we&rsquo;re using, by changing the line that sets the variable to read <code>COMPONENT = ExampleApp</code>.</p>
+
+<p>Putting this together results in the makefile shown in <reference id="list-ibar-make"/>. Having separated the details of the input and output files, it&rsquo;s clearer what&rsquo;s going on &ndash; this file will form the basis of our project going forward.</p>
+
+<code id="list-ibar-make" lang="makefile" file="Makefile" title="The updated Makefile, including the new source file"># Makefile for Example App
 
 COMPONENT = ExampleApp
 
@@ -1367,6 +1372,18 @@ LIBS = SFLib:o.SFLib OSLib:o.OSLib32
 include CApp
 
 # Dynamic dependencies:</code>
+</section>
+
+<section>
+<title>Testing it out</title>
+
+<p>With the updates described above, the project folder should look as shown in <reference id="fig-ibar-app"/> &ndash; after <file>MkClean</file> has been run, if necessary. If there&rsquo;s a copy of the Absolute <file>main</file> file left from a previous compilation, it can safely be deleted: now that we&rsquo;ve altered the Makefile to change <variable>COMPONENT</variable> from &lsquo;main&rsquo; to &lsquo;ExampleApp&rsquo;, it won&rsquo;t be removed automatically.</p>
+
+<image id="fig-ibar-app" file="ibar-app.png" title="The project folder before compilation"/>
+
+<p>Running <file>Mk</file> should now create a new Absolute file named <file>ExampleApp</file> which, when double-clicked, should install itself on the iconbar as seen in <reference id="fig-ibar-running"/>. At present the iconbar icon won&rsquo;t interact with the user at all, so the application will need to be quit via the Task Manager in the same way as previous examples &ndash; we&rsquo;ll deal with that soon.</p>
+
+<image id="fig-ibar-running" file="ibar-running.png" title="Our simple example application creates an unresponive iconbar icon"/>
 
 </section>
 </chapter>
