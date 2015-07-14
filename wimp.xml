@@ -1072,7 +1072,7 @@ include CApp
 <code lang="c">#include "oslib/wimp.h"
 #include "sflib/event.h"</code>
 
-<p>We can see that both of these are included in the dependencies: <code>o.main: OSLib:oslib.h.wimp</code> and <code>o.main: SFLib:sflib.h.event</code>. Both of these header files <code>#include</code> other files from OSLib, and that&rsquo;s where the other entries to OSLib which follow them come from. If our project contained more source files than just <file>c.main</file> (as it will from <reference id="chap-iconbar">the next chapter</reference>), Amu would sort out all those dependencies for us as well. The important thing is that we don&rsquo;t have to worry about it!</p>
+<p>We can see that both of these are included in the dependencies: <code>o.main: OSLib:oslib.h.wimp</code> and <code>o.main: SFLib:sflib.h.event</code>. Both of these header files <code>#include</code> other files from OSLib, and that&rsquo;s where the other entries to OSLib which follow them come from. If our project contained more source files than just <file>c.main</file> (as it will from <reference id="chap-ibar">the next chapter</reference>), Amu would sort out all those dependencies for us as well. The important thing is that we don&rsquo;t have to worry about it!</p>
 
 <p>With all of this automatically generated output (both in <file>Makefile</file>, and as files and folders in the project folder), it would useful to be able to reset everything back to its starting point. Once again the Standard Makefiles can do that, and the <file>MkClean</file> TaskObey file is provided for the purpose. Double-clicking on it will produce a Task Window similar to that shown in <reference id="fig-shared-clean"/>; at the same time, the <file>main</file> application should disappear, along with the <file>o</file> and <file>od</file> folders. Loading <file>Makefile</file> back into a text editor should reveal that the dependencies shown in <reference id="fig-shared-dependencies"/> have gone.</p>
 
@@ -1088,7 +1088,7 @@ include CApp
    - On To The Iconbar
   -->
 
-<chapter id="chap-iconbar">
+<chapter id="chap-ibar">
 <resources>
 <images>Chapter6</images>
 <downloads>Chapter6</downloads>
@@ -1381,11 +1381,38 @@ include CApp
 
 <image id="fig-ibar-app" file="ibar-app.png" title="The project folder before compilation"/>
 
-<p>Running <file>Mk</file> should now create a new Absolute file named <file>ExampleApp</file> which, when double-clicked, should install itself on the iconbar as seen in <reference id="fig-ibar-running"/>. At present the iconbar icon won&rsquo;t interact with the user at all, so the application will need to be quit via the Task Manager in the same way as previous examples &ndash; we&rsquo;ll deal with that soon.</p>
+<p>Running <file>Mk</file> should now create a new Absolute file named <file>ExampleApp</file> which, when double-clicked, should install itself on the iconbar as seen in <reference id="fig-ibar-running"/>. At present the iconbar icon won&rsquo;t interact with the user at all, so the application will need to be quit via the Task Manager in the same way as previous examples &ndash; we&rsquo;ll start to deal with that <reference id="chap-click">in the next chapter</reference>.</p>
 
 <image id="fig-ibar-running" file="ibar-running.png" title="Our simple example application creates an unresponive iconbar icon"/>
 
 </section>
 </chapter>
 
+
+<!-- Chapter 7
+   -
+   - Iconbar Clicks
+  -->
+
+<chapter id="chap-click">
+<resources>
+<images>Chapter7</images>
+<downloads>Chapter7</downloads>
+</resources>
+<filename>clicks.html</filename>
+<title>Clicks on the Iconbar</title>
+
+<summary>There&rsquo;s not much point having an iconbar icon if it doesn&rsquo;t respond to the user!</summary>
+
+<section>
+<p>In the <reference id="chap-ibar">last chapter</reference> we got our application to place an icon on to the iconbar, but it didn&rsquo;t do very much. The icon completely ignored user interaction, which prevented it from being much use.</p>
+</section>
+
+<section>
+<title>Mouse clicks</title>
+
+<p>We&rsquo;ve already seen that <name>Mouse Click</name>.</p>
+
+</section>
+</chapter>
 </manual>
