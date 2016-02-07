@@ -943,7 +943,7 @@ static osbool main_message_quit(wimp_message *message)
 <section>
 <title>Introducing SFLib</title>
 
-<p>The solution to this problem is to install the SFLib library, in a similar way as to what we <reference id="sect-install-oslib">did for OSLib</reference>. Copies of the library can be downloaded in a form suitable for use with the DDE from <link href="../../software/build/">my website</link>. The library is licensed with the <link href="../../software/licences.html">EUPL</link>, meaning that it&rsquo;s OK to use it in a range of open-source projects.</p>
+<p>The solution to this problem is to install the SFLib library, in a similar way as to what we <reference id="sect-install-oslib">did for OSLib</reference>. Copies of the library can be downloaded in a form suitable for use with the DDE from <link href="../../software/build/">my website</link> &ndash; you need the AOF version. The library is licensed with the <link href="../../software/licences.html">EUPL</link>, meaning that it&rsquo;s OK to use it in a range of open-source projects.</p>
 
 <p>With the zip file downloaded, the files shown in <reference id="fig-sflib-archive"/> should be available. Note that the screenshot shows the files at the time of writing; future releases may contain different items.</p>
 
@@ -1131,7 +1131,7 @@ include CApp
 
 <image id="fig-ibar-screen-dims" file="ibar-screen-dims.png" title="By default, a 1920 &times; 1080 screen contains 3840 &times; 2160 OS units"/>
 
-<p>Icons are components of windows, however: when a window (such as a dialogue box) is moved around the screen, the icons move with it. This means that their locations are specified in relative terms with reference to the window itself. The units are still OS&nbsp;units, but they are no longer counting from the bottom left corner of the screen. A window&rsquo;s origin can be moved around, but by default it is at its <em>top</em> left &ndash; as we&rsquo;ll see when we look properly at windows, this means that the <maths>y</maths> coordinates of icons are often negative. The position of an icon is given in terms of two coordinate pairs: the minimum <maths>x</maths>,<maths>y</maths> (or bottom left, usually written &ldquo;<maths>x0</maths>,<maths>y0</maths>&rdquo;), and the maximum <maths>x</maths>,<maths>y</maths> (or top-right, usually written &ldquo;<maths>x1</maths>,<maths>y1</maths>&rdquo;). While <maths>x0</maths> and <maths>y0</maths> are <em>inclusive</em>, in that they point to the bottom-left pixel in the icon, <maths>x1</maths> and <maths>y1</maths> are <em>exclusive</em>: they indicate the pixel diagonally above to the right of the top-right pixel of the icon.</p>
+<p>Icons are components of windows, however: when a window (such as a dialogue box) is moved around the screen, the icons move with it. This means that their locations are specified in relative terms with reference to the window itself. The units are still OS&nbsp;units, but they are no longer counting from the bottom left corner of the screen. A window&rsquo;s origin can be moved around, but by default it is at its <em>top</em> left &ndash; as we&rsquo;ll see when we look properly at windows, this means that the <maths>y</maths> coordinates of icons are often negative. The position of an icon is given in terms of two coordinate pairs: the minimum <maths>x</maths>,<maths>y</maths> (or bottom left, usually written &ldquo;<maths>x0</maths>,<maths>y0</maths>&rdquo;), and the maximum <maths>x</maths>,<maths>y</maths> (or top-right, usually written &ldquo;<maths>x1</maths>,<maths>y1</maths>&rdquo;). While <maths>x0</maths> and <maths>y0</maths> are <em>inclusive</em>, in that they point to the bottom-left pixel in the icon, <maths>x1</maths> and <maths>y1</maths> are <em>exclusive</em>: they indicate the pixel diagonally above and to the right of the top-right pixel of the icon.</p>
 
 <p>As far as applications are concerned, the iconbar is just another window: only it&rsquo;s one that the Wimp owns and shares out between all the applications which have created an iconbar icon. The sharing makes things a little odd, as the horizontal position of an icon will depend on what else is already loaded (and it can change after the icon has been created, if another application removes its icon).</p>
 
@@ -1384,6 +1384,10 @@ include CApp
 <p>Running <file>Mk</file> should now create a new Absolute file named <file>ExampleApp</file> which, when double-clicked, should install itself on the iconbar as seen in <reference id="fig-ibar-running"/>. At present the iconbar icon won&rsquo;t interact with the user at all, so the application will need to be quit via the Task Manager in the same way as previous examples &ndash; we&rsquo;ll start to deal with that <reference id="chap-click">in the next chapter</reference>.</p>
 
 <image id="fig-ibar-running" file="ibar-running.png" title="Our simple example application creates an unresponive iconbar icon"/>
+
+<p>A full set of files for the iconbar changes can be downloaded in <reference id="dl-simple-ibar"/>.</p>
+
+<download id="dl-simple-ibar" file="SimpleCIBar.zip" title="Placing an icon on to the Iconbar" compatibility="none"/>
 
 </section>
 </chapter>
