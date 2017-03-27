@@ -1165,7 +1165,7 @@ typedef struct wimp_icon_create wimp_icon_create;</code>
 <code lang="c">#define wimp_ICON_BAR_RIGHT	((wimp_w) 0xFFFFFFFFu)	/* -1	*/
 #define wimp_ICON_BAR_LEFT	((wimp_w) 0xFFFFFFFEu)	/* -2	*/</code>
 
-<p>If we give the window handle as <name>wimp_ICON_BAR_RIGHT</name>, our icon will be created on the right-hand side of the iconbar &ndash; the correct place for a normal application. Using <name>wimp_ICON_BAR_LEFT</name> would create the icon on the left-hand side, which is reserved for applications which correspond to hardware or storage and is not the right place for us.</p>
+<p>If we give the window handle as <name>wimp_ICON_BAR_RIGHT</name>, our icon will be created on the right-hand side of the iconbar &ndash; the correct place for a normal application. Using <name>wimp_ICON_BAR_LEFT</name> would create the icon on the left-hand side, which is reserved for applications corresponding to hardware or storage and is not the right place for us.</p>
 
 <p>The other item in the block is the variable <variable>icon</variable>, of type <type>wimp_icon</type> &ndash; the definition of the icon itself. OSLib defines <type>wimp_icon</type> as follows:</p>
 
@@ -1414,6 +1414,28 @@ include CApp
 
 <section>
 <title>Mouse clicks</title>
+
+<p>So far, all of our communication with the Wimp has been through the results of calling <swi>Wimp_Poll</swi>, so it shouldn&rsquo;t be too much of a surprise to learn that information about mouse clicks comes via this route as well. In fact, virtually everything that our application needs to know about what the user is up to arrives this way.</p>
+
+<p>Back in <reference id="list4-1"/>, our call to <swi>Wimp_Poll</swi> looked like this:</p>
+
+<code lang="c">wimp_block	block;
+wimp_event_no	reason;
+
+while (!main_quit_flag) {
+	reason = wimp_poll(wimp_MASK_NULL |
+		wimp_MASK_ENTERING | wimp_MASK_LEAVING |
+		wimp_MASK_GAIN | wimp_MASK_LOSE |
+		wimp_MASK_POLLWORD, &amp;block, NULL);
+
+	switch (reason) {
+	case wimp_USER_MESSAGE:
+	case wimp_USER_MESSAGE_RECORDED:
+		if (block.message.action == message_QUIT)
+			main_quit_flag = TRUE;
+		break;
+	}
+}</code>
 
 <p>We&rsquo;ve already seen that <name>Mouse Click</name>.</p>
 
