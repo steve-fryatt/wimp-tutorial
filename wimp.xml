@@ -1529,7 +1529,7 @@ case wimp_USER_MESSAGE_RECORDED:
 
 <p>Instead of handling the events directly, we&rsquo;re now passing them on to <function>event_process_event()</function> from SFLib&rsquo;s event library and letting this route them to interested parties.</p>
 
-<p>Fortunately, just as <name>wimp_pointer</name> contains the <variable>w</variable> variable, many of the structs which form <name>wimp_block</name> have an associated window handle &ndash; as we&rsquo;ll see, much of the user&rsquo;s interaction with out application is based around windows. Using this, the event library can route these events by testing the window handle that is contained within them.</p>
+<p>Fortunately, just as <name>wimp_pointer</name> contains the <variable>w</variable> variable, many of the structs which form <name>wimp_block</name> have an associated window handle &ndash; as we&rsquo;ll see, much of the user&rsquo;s interaction with our application is based around windows. Using this, the event library can route these events by testing the window handle that is contained within them.</p>
 
 <p>Since we&rsquo;re dealing with clicks on the iconbar icon, the correct place to put its <name>Mouse Click</name> event handler is into the <file>c.ibar</file> file. Just as in <reference id="list4-2"/>, the first thing to do is to package up the code from the <code>switch</code> statement above into an event handler.</p>
 
