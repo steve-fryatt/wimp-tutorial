@@ -112,6 +112,7 @@
       <xsd:element name="link" type="LinkType"/>
       <xsd:element name="maths" type="xsd:string"/>
       <xsd:element name="menu" type="xsd:string"/>
+      <xsd:element name="mouse" type="xsd:string"/>
       <xsd:element name="name" type="xsd:string"/>
       <xsd:element name="reference" type="ReferenceType"/>
       <xsd:element name="swi" type="xsd:string"/>

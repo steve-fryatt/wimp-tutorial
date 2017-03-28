@@ -1529,7 +1529,7 @@ case wimp_USER_MESSAGE_RECORDED:
 
 <p>Instead of handling the events directly, we&rsquo;re now passing them on to <function>event_process_event()</function> from SFLib&rsquo;s event library and letting this route them to interested parties.</p>
 
-<p>Fortunately, just as <name>wimp_pointer</name> contains the <variable>w</variable> variable, many of the structs which form <name>wimp_block</name> have an associated window handle &ndash; as we&rsquo;ll see, much of the user&rsquo;s interaction with our application is based around windows. Using this, the event library can route these events by testing the window handle that is contained within them.</p>
+<p>Fortunately, just as <name>wimp_pointer</name> contains the <variable>w</variable> variable, many of the structures which form <name>wimp_block</name> have an associated window handle &ndash; as we&rsquo;ll see, much of the user&rsquo;s interaction with our application is based around windows. Using this, the event library can route these events by testing the window handle that is contained within them.</p>
 
 <p>Since we&rsquo;re dealing with clicks on the iconbar icon, the correct place to put its <name>Mouse Click</name> event handler is into the <file>c.ibar</file> file. Just as in <reference id="list4-2"/>, the first thing to do is to package up the code from the <code>switch</code> statement above into an event handler.</p>
 
@@ -1739,12 +1739,103 @@ void ibar_initialise(void);
 <images>Chapter8</images>
 <downloads>Chapter8</downloads>
 </resources>
-<filename>identifying-clicks.html</filename>
-<title>Clicks on the Iconbar</title>
+<filename>clicks-two.html</filename>
+<title>Identifying Mouse Activity</title>
 
-<summary>There&rsquo;s not much point having an iconbar icon if it doesn&rsquo;t respond to the user!</summary>
+<summary>Identifying clicks is all very well, but it might be useful if we could tell what the user was doing!</summary>
 
 <section>
+<p>We&rsquo;ve now managed to recognise when the user clicks on our iconbar icon, but in <reference id="chap-click">the last chapter</reference> we weren&rsquo;t able to identify <em>which</em> button was used. Instead, our application would exit when <em>any</em> button was clicked.</p>
+</section>
+
+<section>
+<title>Being choosy</title>
+
+<p>We don&rsquo;t yet have an iconbar menu, but for now it would be good if our application was to only quit if the click on its icon came from one of the buttons &ndash; let&rsquo;s say <mouse>Adjust</mouse>. At present, clicks on the iconbar are handled by the <function>ibar_mouse_click()</function> function in <file>c.ibar</file>.</p>
+
+<code lang="c">static void ibar_mouse_click(wimp_pointer *pointer)
+{
+	main_quit_flag = TRUE;
+}</code>
+
+<p>The <variable>*pointer</variable> parameter passed to the function is a pointer to the <name>wimp_pointer</name> structure returned from the call to <swi>Wimp_Poll</swi>. This means that it&rsquo;s actually a pointer to the <variable>blk</variable> variable defined in the <function>main_poll()</function> function. It doesn&rsquo;s need to concern us in normal use, however: as far as the click handler function is concerned, the pointer supplied is simply a pointer to data returned by the Wimp.</p>
+
+<p>As we&rsquo;ve already seen, the <name>wimp_pointer</name> structure is defined as</p>
+
+<code lang="c">struct wimp_pointer {
+	os_coord		pos;
+	wimp_mouse_state	buttons;
+	wimp_w			w;
+	wimp_i			i;
+};
+
+typedef struct wimp_pointer wimp_pointer;</code>
+
+<p>To allow us to identify which button was used for a click, we need to look at the <variable>buttons</variable> variable within it: this contains a value which uniquely identifies the button &ndash; or combination of buttons &ndash; being used. The codes used by the Wimp are more than a little confusing, but for now OSLib defines three useful values for us:</p>
+
+<code lang="c">#define wimp_CLICK_SELECT	((wimp_mouse_state) 0x4u)
+#define wimp_CLICK_MENU		((wimp_mouse_state) 0x2u)
+#define wimp_CLICK_ADJUST	((wimp_mouse_state) 0x1u)</code>
+
+<p>Armed with this, we can update our mouse click event handler to test the button before it acts.</p>
+
+<code lang="c">static void ibar_mouse_click(wimp_pointer *pointer)
+{
+	switch (pointer->buttons) {
+	case wimp_CLICK_ADJUST:
+		main_quit_flag = TRUE;
+		break;
+	}
+}</code>
+
+<p>With this modification in place, it is now necessary to click <mouse>Adjust</mouse> on the iconbar icon in order to make the application exit.</p>
+</section>
+
+<section>
+<title>Giving feedback</title>
+
+<p>In a normal application, interaction with the user would be through windows and menus. We&rsquo;ve not encountered those yet, but what we can do is give some feedback using the somewhat simpler <intro>Wimp Report Error Box</intro>. These familiar objects are created using the <function>wimp_report_error()</function> function.</p>
+
+<code lang="c">extern wimp_error_box_selection wimp_report_error(
+	os_error const		*error,
+	wimp_error_box_flags	flags,
+	char const		*name
+);</code>
+
+<p>This needs to be passed a pointer to an <intro>error block</intro> in <variable>*error</variable>, some flags in <variable>flags</variable> and &ndash; optionally &ndash; a pointer to an application name or title in <variable>*name</variable>. The error block, which OSLib calls <name>os_error</name>, is defined as follows.</p>
+
+<code lang="c">struct os_error {
+	bits	errnum;
+	char	errmess[252];
+};
+
+typedef struct os_error os_error;</code>
+
+<p>This contains an <intro>error number</intro> in <variable>errnum</variable> &ndash; which is a RISC&nbsp;OS error number &ndash; and a message in <variable>errmess</variable>. The flags control the appearance of the box, and some of the values defined by OSLib are:</p>
+
+<code lang="c">#define wimp_ERROR_BOX_OK_ICON		((wimp_error_box_flags) 0x1u)
+#define wimp_ERROR_BOX_CANCEL_ICON	((wimp_error_box_flags) 0x2u)
+#define wimp_ERROR_BOX_HIGHLIGHT_CANCEL	((wimp_error_box_flags) 0x4u)
+#define wimp_ERROR_BOX_NO_PROMPT	(((wimp_error_box_flags) 0x8u)
+#define wimp_ERROR_BOX_SHORT_TITLE	((wimp_error_box_flags) 0x10u)
+#define wimp_ERROR_BOX_LEAVE_OPEN	((wimp_error_box_flags) 0x20u)
+#define wimp_ERROR_BOX_CLOSE		((wimp_error_box_flags) 0x40u)
+#define wimp_ERROR_BOX_NO_BEEP		((wimp_error_box_flags) 0x80u)
+#define wimp_ERROR_BOX_GIVEN_CATEGORY	((wimp_error_box_flags) 0x100u)
+#define wimp_ERROR_BOX_CATEGORY		((wimp_error_box_flags) 0xE00u)</code>
+
+<p>...</p>
+
+<code lang="c">static void report_message(char *message) {
+	os_error error;
+
+	error.errnum = 255;
+	strncpy(error.errmess, message, os_ERROR_LIMIT);
+	error.errmess[os_ERROR_LIMIT - 1] = '\0';
+
+	wimp_report_error(&amp;error, wimp_ERROR_BOX_OK_ICON, NULL);
+}</code>
+
 
 </section>
 </chapter>
