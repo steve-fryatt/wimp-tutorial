@@ -22,6 +22,7 @@
 <resources>
 <images>Images</images>
 <downloads>Downloads</downloads>
+<common>Common</common>
 </resources>
 
 <!-- Index -->
@@ -606,7 +607,7 @@ int main(int argc, char *argv[])
 
 <p>At present our project is simple enough not to need any header files, but we&rsquo;ve created an <file>h</file> folder for them ready for when we do need it. The <file>o</file> folder will take any object files (whose names would end with &lsquo;.o&rsquo; on other systems) created during the compilation. A complete set of the project&rsquo;s files can be found in <reference id="dl3-1"/>.</p>
 
-<download id="dl3-1" file="SimpleCApp.zip" title="A Simple C Application" compatibility="none"/>
+<download id="dl3-1" file="SimpleCApp" title="A Simple C Application" compatibility="none"/>
 
 </section>
 
@@ -739,7 +740,7 @@ static void main_terminate(void)
 
 <p>A copy of the modified code can be found in <reference id="dl4-1"/>. It should compile in exactly the same way as <reference id="dl3-1"/>.</p>
 
-<download id="dl4-1" file="SimpleCApp2.zip" title="A Simple C Application Version 2" compatibility="none"/>
+<download id="dl4-1" file="SimpleCApp2" title="A Simple C Application Version 2" compatibility="none"/>
 </section>
 
 <section>
@@ -933,7 +934,7 @@ static osbool main_message_quit(wimp_message *message)
 
 <image id="fig-sflib-app" file="sflib-app.png" title="The updated application source on disc"/>
 
-<download id="dl5-1" file="SimpleCEvents.zip" title="A Simple C Application With Events" compatibility="none"/>
+<download id="dl5-1" file="SimpleCEvents" title="A Simple C Application With Events" compatibility="none"/>
 
 <p>However, repeating the process from <reference id="compile-dde-1"/> with the new source code will result in failure as shown in <reference id="fig-sflib-fail"/>. Firstly, the included file <file>sflib/event.h</file> can&rsquo;t be found; second, and as a direct consequence, several of the newly-introduced items in the example are being reported as &ldquo;undeclared&rdquo;.</p>
 
@@ -1033,7 +1034,7 @@ include CApp
 
 <p>With the changes in place as described above, the project is ready to be compiled using Amu. A full set of files can be downloaded in <reference id="dl-simple-make"/> &ndash; the archive no longer contains the empty <file>o</file> folder, as unlike CC the Shared Makefiles are able to create this on demand.</p>
 
-<download id="dl-simple-make" file="SimpleCMake.zip" title="A Simple C Application using Shared Make Files" compatibility="none"/>
+<download id="dl-simple-make" file="SimpleCMake" title="A Simple C Application using Shared Make Files" compatibility="none"/>
 
 <p>Compiling the project is simply a case of double-clicking on the <file>Mk</file> TaskObey file in the source folder. This should open a Task Window and, if all goes to plan, an absolute file called <file>main</file> should appear in the folder when the process is complete &ndash; along with the new <file>o</file> and <file>od</file> directories as shown in <reference id="fig-shared-files"/>. Double-clicking on <file>main</file> should cause our application to run, with exactly the same results <reference id="img1-1">as before</reference>.</p>
 
@@ -1387,7 +1388,7 @@ include CApp
 
 <p>A full set of files for the iconbar changes can be found in <reference id="dl-simple-ibar"/>.</p>
 
-<download id="dl-simple-ibar" file="SimpleCIBar.zip" title="Placing an icon on to the Iconbar" compatibility="none"/>
+<download id="dl-simple-ibar" file="SimpleCIBar" title="Placing an icon on to the Iconbar" compatibility="none"/>
 
 </section>
 </chapter>
@@ -1719,12 +1720,38 @@ void ibar_initialise(void);
 
 #endif</code>
 
-<p>Running <file>Mk</file> should generate a new build of the application which installs on the iconbar as before. Crucially, however, clicking the mouse over its icon causes it to quit: there&rsquo;s no longer any need to go via the Task Manager. It&rsquo;s still not useful, but at least it can respond to the user &ndash; even if only in a small way!</p>
+<p>Running <file>Mk</file> should generate a new build of the application which installs on the iconbar as before. Crucially, however, clicking the mouse over its icon causes it to quit: there&rsquo;s no longer any need to go via the Task Manager.</p>
 
 <p>A full set of files with the changes for handling mouse clicks can be found in <reference id="dl-ibar-click"/>.</p>
 
-<download id="dl-ibar-click" file="SimpleCIBarClick.zip" title="Responding to clicks on the Iconbar" compatibility="none"/>
+<download id="dl-ibar-click" file="SimpleCIBarClick" title="Responding to clicks on the Iconbar" compatibility="none"/>
+</section>
 
+<section>
+<title>Being more choosy</title>
+
+<p>Normally the &lsquo;quit&rsquo; option would be in an iconbar menu, but we don&rsquo;t yet have one of these. None the less, it would be good if our application was to only quit if the click on its icon came from one of the buttons &ndash; let&rsquo;s say <mouse>Adjust</mouse>. That way, we could use the other clicks for something else.</p>
+
+<p>The <variable>*pointer</variable> parameter passed to the <function>ibar_mouse_click()</function> function that we&rsquo;ve just added is a pointer to the <name>wimp_pointer</name> structure returned from the call to <swi>Wimp_Poll</swi>. This means that it&rsquo;s actually a pointer to the <variable>blk</variable> variable defined in the <function>main_poll()</function> function, although this doesn&rsquo;t need to concern us in normal use. As far as the click handler function is concerned, the pointer supplied is simply a pointer to some data returned by the Wimp.</p>
+
+<p>As we&rsquo;ve already seen, the <name>wimp_pointer</name> structure contains a variable called <variable>buttons</variable> within it, which uniquely identifies the button &ndash; or combination of buttons &ndash; used for the click. The codes used by the Wimp are more than a little confusing, but for now OSLib defines three useful values for us:</p>
+
+<code lang="c">#define wimp_CLICK_SELECT	((wimp_mouse_state) 0x4u)
+#define wimp_CLICK_MENU		((wimp_mouse_state) 0x2u)
+#define wimp_CLICK_ADJUST	((wimp_mouse_state) 0x1u)</code>
+
+<p>Armed with this, we can update our mouse click event handler to test the button before it acts.</p>
+
+<code lang="c">static void ibar_mouse_click(wimp_pointer *pointer)
+{
+	switch (pointer->buttons) {
+	case wimp_CLICK_ADJUST:
+		main_quit_flag = TRUE;
+		break;
+	}
+}</code>
+
+<p>With this modification in place, it is now necessary to click <mouse>Adjust</mouse> on the iconbar icon in order to make the application exit.</p>
 </section>
 </chapter>
 
@@ -1748,48 +1775,7 @@ void ibar_initialise(void);
 <p>We&rsquo;ve now managed to recognise when the user clicks on our iconbar icon, but in <reference id="chap-click">the last chapter</reference> we weren&rsquo;t able to identify <em>which</em> button was used. Instead, our application would exit when <em>any</em> button was clicked.</p>
 </section>
 
-<section>
-<title>Being choosy</title>
 
-<p>We don&rsquo;t yet have an iconbar menu, but for now it would be good if our application was to only quit if the click on its icon came from one of the buttons &ndash; let&rsquo;s say <mouse>Adjust</mouse>. At present, clicks on the iconbar are handled by the <function>ibar_mouse_click()</function> function in <file>c.ibar</file>.</p>
-
-<code lang="c">static void ibar_mouse_click(wimp_pointer *pointer)
-{
-	main_quit_flag = TRUE;
-}</code>
-
-<p>The <variable>*pointer</variable> parameter passed to the function is a pointer to the <name>wimp_pointer</name> structure returned from the call to <swi>Wimp_Poll</swi>. This means that it&rsquo;s actually a pointer to the <variable>blk</variable> variable defined in the <function>main_poll()</function> function. It doesn&rsquo;s need to concern us in normal use, however: as far as the click handler function is concerned, the pointer supplied is simply a pointer to data returned by the Wimp.</p>
-
-<p>As we&rsquo;ve already seen, the <name>wimp_pointer</name> structure is defined as</p>
-
-<code lang="c">struct wimp_pointer {
-	os_coord		pos;
-	wimp_mouse_state	buttons;
-	wimp_w			w;
-	wimp_i			i;
-};
-
-typedef struct wimp_pointer wimp_pointer;</code>
-
-<p>To allow us to identify which button was used for a click, we need to look at the <variable>buttons</variable> variable within it: this contains a value which uniquely identifies the button &ndash; or combination of buttons &ndash; being used. The codes used by the Wimp are more than a little confusing, but for now OSLib defines three useful values for us:</p>
-
-<code lang="c">#define wimp_CLICK_SELECT	((wimp_mouse_state) 0x4u)
-#define wimp_CLICK_MENU		((wimp_mouse_state) 0x2u)
-#define wimp_CLICK_ADJUST	((wimp_mouse_state) 0x1u)</code>
-
-<p>Armed with this, we can update our mouse click event handler to test the button before it acts.</p>
-
-<code lang="c">static void ibar_mouse_click(wimp_pointer *pointer)
-{
-	switch (pointer->buttons) {
-	case wimp_CLICK_ADJUST:
-		main_quit_flag = TRUE;
-		break;
-	}
-}</code>
-
-<p>With this modification in place, it is now necessary to click <mouse>Adjust</mouse> on the iconbar icon in order to make the application exit.</p>
-</section>
 
 <section>
 <title>Giving feedback</title>

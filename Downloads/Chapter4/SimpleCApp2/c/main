@@ -1,0 +1,87 @@
+/* Copyright 2015, Stephen Fryatt (info@stevefryatt.org.uk)
+ *
+ * This file is part of Wimp Programming In C:
+ *
+ *   http://www.stevefryatt.org.uk/software/
+ *
+ * Licensed under the EUPL, Version 1.1 only (the "Licence");
+ * You may not use this work except in compliance with the
+ * Licence.
+ *
+ * You may obtain a copy of the Licence at:
+ *
+ *   http://joinup.ec.europa.eu/software/page/eupl
+ *
+ * Unless required by applicable law or agreed to in
+ * writing, software distributed under the Licence is
+ * distributed on an "AS IS" basis, WITHOUT WARRANTIES
+ * OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ * See the Licence for the specific language governing
+ * permissions and limitations under the Licence.
+ */
+
+/**
+ * File: main.c
+ */
+
+#include "oslib/wimp.h"
+
+/* Global Variables */
+
+static osbool main_quit_flag = FALSE;
+
+/* Function Prototypes */
+
+static void main_initialise(void);
+static void main_poll(void);
+static void main_terminate(void);
+
+/* Main code entry point. */
+
+int main(int argc, char *argv[])
+{
+	main_initialise();
+	main_poll();
+	main_terminate();
+
+	return 0;
+}
+
+/* Global application initialisation. */
+
+static void main_initialise(void)
+{
+	wimp_initialise(wimp_VERSION_RO3, "Wimp Task", NULL, NULL);
+}
+
+/* Wimp_Poll loop. */
+
+static void main_poll(void)
+{
+	wimp_block	block;
+	wimp_event_no	reason;
+
+	while (!main_quit_flag) {
+		reason = wimp_poll(wimp_MASK_NULL |
+				wimp_MASK_ENTERING | wimp_MASK_LEAVING |
+				wimp_MASK_GAIN | wimp_MASK_LOSE |
+				wimp_MASK_POLLWORD, &block, NULL);
+
+		switch (reason) {
+		case wimp_USER_MESSAGE:
+		case wimp_USER_MESSAGE_RECORDED:
+			if (block.message.action == message_QUIT)
+				main_quit_flag = TRUE;
+			break;
+		}
+	}
+}
+
+/* Global application termination. */
+
+static void main_terminate(void)
+{
+	wimp_close_down(0);
+}
+
