@@ -110,6 +110,7 @@
       <xsd:element name="file" type="xsd:string"/>
       <xsd:element name="function" type="xsd:string"/>
       <xsd:element name="intro" type="xsd:string"/>
+      <xsd:element name="key" type="xsd:string"/>
       <xsd:element name="link" type="LinkType"/>
       <xsd:element name="maths" type="xsd:string"/>
       <xsd:element name="menu" type="xsd:string"/>

@@ -1774,22 +1774,22 @@ void ibar_initialise(void);
 <summary>It&rsquo;s time to start communicating with the user...</summary>
 
 <section>
-<p>Now that we have an icon on the iconbar and are responding when the user clicks on it, it&rsquo;s time to start looking at communicating back. In a normal application, interaction with the user would be through windows and menus. We&rsquo;ve not encountered those yet, but what we can do is give some feedback using the somewhat simpler <intro>report box</intro>.</p>
+<p>Now that we have an icon on the iconbar and are responding when the user clicks on it, it&rsquo;s time to start looking at communicating back. In a normal application, interaction with the user would be through windows and menus. We&rsquo;ve not encountered those yet, but what we can do is give some feedback using the somewhat simpler report provided by the Wimp&rsquo;s <intro>error system</intro>.</p>
 </section>
 
 
 <section>
 <title>Giving feedback</title>
 
-<p>Alongside windows and menus, the Wimp provides report boxes which enable applications to ask questions and report information to the user without having to go through the relatively cumbersome process of opening a window on the screen. Their simplicty comes from the fact that they don&rsquo;t multitask at all &ndash; this can make things significantly easier to handle when things are going wrong, but it&rsquo;s also a feature that is often held against them.</p>
+<p>Alongside windows and menus, the Wimp provides <intro>reports</intro> which enable applications to inform the user about things that have gone wrong. They have grown in capability over the years, and now provide the facility to report information and ask questions without having to go through the relatively cumbersome process of opening a window on the screen. Their simplicity comes from the fact that they don&rsquo;t multitask at all &ndash; this can make them significantly easier to handle when things are going wrong, but it&rsquo;s also a feature that is frequently held against them.</p>
 
-<p>The appearance of the boxes has evolved over the years, and an example from a recent version of the OS can be seen in <reference id="fig-report-example-box"/>.</p>
+<p>The appearance of the report boxes has evolved over the years; an example from Draw running on a recent version of the OS can be seen in <reference id="fig-report-example-draw"/>.</p>
 
-<image id="fig-report-example-box" file="example-box.png" title="A simple example of a Wimp Report box"/>
+<image id="fig-report-example-draw" file="example-draw.png" title="A simple example of a Wimp Report box"/>
 
-<p>These familiar objects are created using the <function>wimp_report_error()</function> and <function>wimp_report_error_by_category()</function> functions, and are &ndash; aside from anything else &ndash; a neat example of how OSLib handles SWIs which present significantly different options in the parameters that they require.</p>
+<p>Error reports are made using the <swi>Wimp_ReportError</swi>, which maps to <em>two</em> functions in OSLib: <function>wimp_report_error()</function> and <function>wimp_report_error_by_category()</function>. Aside from anything else, this provides a neat example of how OSLib handles SWIs which present two or more significantly different options in the sets of parameters that they require. In this case, the reason is that error reporting changed significantly when RISC&nbsp;OS&nbsp;3.5 was released with the RiscPC. Although modern applications should probably be using the new interface, the old one is still more or less supported and &ndash; as it requires less setting up, we&rsquo;ll start there before upgrading to the new system.</p>
 
-<p>Back in the days of RISC&nbsp;OS&nbsp;3.1, report boxes were fairly simple and could be created using just three pieces of information.</p>
+<p>Creating an &lsquo;old&rsquo; report is done using the <function>wimp_report_error()</function> function, and requires just three pieces of information. The function&rsquo;s prototype is defined as follows:</p>
 
 <code lang="c">extern wimp_error_box_selection wimp_report_error(
 	os_error const		*error,
@@ -1797,7 +1797,7 @@ void ibar_initialise(void);
 	char const		*name
 );</code>
 
-<p>The first item is <variable>*error</variable>, which is a pointer to a standard OS <intro>error block</intro>. These are used throughout RISC&nbsp;OS, and not just the Wimp; as can be seen by the fact that <name>os_error</name> begins with &ldquo;os_&rdquo; and not &ldquo;wimp_&rdquo;, OSLib defines them in <file>oslib/os.h</file> and not <file>oslib/wimp.h</file>. The definition is as follows:</p>
+<p>The first item is <variable>*error</variable>, which is a pointer to a standard OS <intro>error block</intro>. These blocks are used throughout RISC&nbsp;OS, and not just by the Wimp: they're returned by the &lsquo;X&rsquo; form of SWIs when things go wrong, and the idea is that in an application, they can be passed straight on to <swi>Wimp_ReportError</swi> if required. As we can tell from the fact that <name>os_error</name> begins with &ldquo;os_&rdquo; and not &ldquo;wimp_&rdquo;, OSLib defines the structure in <file>oslib/os.h</file> and not <file>oslib/wimp.h</file>. The definition is as follows:</p>
 
 <code lang="c">struct os_error {
 	bits	errnum;
@@ -1806,9 +1806,7 @@ void ibar_initialise(void);
 
 typedef struct os_error os_error;</code>
 
-<p>The 256 byte block contains an <intro>error number</intro> in <variable>errnum</variable>, followed by an arbitrary message in <variable>errmess</variable>. The number is a RISC&nbsp;OS error number and &ndash; at least if the error comes from calling a SWI &ndash; should actually define what the problem was.</p>
-
-<p>In the case that we wish to use <swi>Wimp_ReportError</swi> to present a message to the user, then the actual error number is somewhat arbitrary. Setting it to 255 &ndash; which is unused by the OS &ndash; seems to be a common compromise. We could, therefore, set up an error block to pass a message to the user using code similar to the following:</p>
+<p>The 256 byte block contains an <intro>error number</intro> in <variable>errnum</variable>, followed by an arbitrary message in <variable>errmess</variable>. The number is a RISC&nbsp;OS error number and will often define precisely what the problem was. In the case that we wish to use <swi>Wimp_ReportError</swi> to present a message to the user, then the actual error number is somewhat arbitrary. Setting it to 255 &ndash; which is unused by the OS &ndash; seems to be a common compromise. We could, therefore, set up an error block to pass a message to the user using code similar to the following:</p>
 
 <code lang="c">os_error error;
 
@@ -1816,37 +1814,239 @@ error.errnum = 255;
 strncpy(error.errmess, &quot;Hello World!&quot;, os_ERROR_LIMIT);
 error.errmess[os_ERROR_LIMIT - 1] = '\0';</code>
 
-<p>OSLib defines <name>os_ERROR_LIMIT</name> for us to be 252. It&rsquo;s good practice to use <function>strncpy()</function> instead of the older <function>strcpy()</function> to copy strings into buffers, in order to ensure that it doesn&rsquo;t over-run; also to terminate the copied string in the event that it would have over-run, since <function>strncpy()</function> won&rsquo;t do this for us.</p>
+<p>It&rsquo;s generally good practice to use <function>strncpy()</function> instead of the older <function>strcpy()</function> function to copy strings into buffers, in order to ensure that we don&rsquo;t over-run the allocated space. The function is available in the 32-bit Shared C Library, so there&rsquo;s no reason for avoiding it. It&rsquo;s also important to terminate the copied string at the end of the buffer, since <function>strncpy()</function> won&rsquo;t do this for us if it did run out of space. OSLib defines <name>os_ERROR_LIMIT</name> for us to be 252, to reflect the size of the buffer defined by RISC&nbsp;OS.</p>
 
+<p>The <variable>flags</variable> passed in parameter 2 control the appearance of the box, and for now we&rsquo;ll set them to <name>wimp_ERROR_BOX_OK_ICON</name> to request that an &lsquo;OK&rsquo; button is provided. The final parameter, <variable>*name</variable>, should point to a string containing the name of our application.</p>
+</section>
 
-<p>The flags control the appearance of the box, and some of the values defined by OSLib are:</p>
+<section>
+<title>A generic function</title>
 
-<p>This needs to be passed a pointer to an <intro>error block</intro> in <variable>*error</variable>, some flags in <variable>flags</variable> and &ndash; optionally &ndash; a pointer to an application name or title in <variable>*name</variable>. The error block, which OSLib calls <name>os_error</name>, is defined as follows.</p>
+<p>Since this is all a little cumbersome when we simply wish to present a message to the user, it would make sense to package <swi>Wimp_ReportError</swi> up into a separate chunk of code. To that end, we&rsquo;ll create a new file called <file>c.report</file>, as shown in <reference id="list-report-report-h"/> which defines a <function>report_message(char *message)</function>.</p>
 
-<code lang="c">#define wimp_ERROR_BOX_OK_ICON		((wimp_error_box_flags) 0x1u)
-#define wimp_ERROR_BOX_CANCEL_ICON	((wimp_error_box_flags) 0x2u)
-#define wimp_ERROR_BOX_HIGHLIGHT_CANCEL	((wimp_error_box_flags) 0x4u)
-#define wimp_ERROR_BOX_NO_PROMPT	((wimp_error_box_flags) 0x8u)
-#define wimp_ERROR_BOX_SHORT_TITLE	((wimp_error_box_flags) 0x10u)
-#define wimp_ERROR_BOX_LEAVE_OPEN	((wimp_error_box_flags) 0x20u)
-#define wimp_ERROR_BOX_CLOSE		((wimp_error_box_flags) 0x40u)
-#define wimp_ERROR_BOX_NO_BEEP		((wimp_error_box_flags) 0x80u)
-#define wimp_ERROR_BOX_GIVEN_CATEGORY	((wimp_error_box_flags) 0x100u)
-#define wimp_ERROR_BOX_CATEGORY		((wimp_error_box_flags) 0xE00u)</code>
+<code id="list-report-report-h" lang="c" file="c.report" title="The new report file">/**
+ * Example 8.1
+ *
+ * (c) Stephen Fryatt, 2017
+ *
+ * File: report.c
+ */
 
-<p>...</p>
+#include &quot;oslib/os.h&quot;
+#include &quot;oslib/wimp.h&quot;
 
-<code lang="c">static void report_message(char *message) {
+#include &lt;string.h&gt;
+
+#include &quot;report.h&quot;
+
+/* Report a message */
+
+void report_message(char *message)
+{
 	os_error error;
 
 	error.errnum = 255;
 	strncpy(error.errmess, message, os_ERROR_LIMIT);
 	error.errmess[os_ERROR_LIMIT - 1] = '\0';
 
-	wimp_report_error(&amp;error, wimp_ERROR_BOX_OK_ICON, NULL);
+	wimp_report_error(&amp;error, wimp_ERROR_BOX_OK_ICON, &quot;ExampleApp&quot;);
+}</code> 
+
+<p>This is more or less the code that we outlined above, except that the message being copied into the error block is the one pointed to by the <variable>*message</variable> parameter. Note that we&rsquo;re including both <file>oslib/wimp.h</file> <em>and</em> <file>oslib/os.h</file> in order to be able to use <name>os_error</name>.</p>
+
+<p>The file also includes the <file>h.report</file> file, which is as shown in <reference id="list-report-report-c"/>. It merely provides a function prototype for <function>report_message()</function>, so that we can access it from elsewhere in the application.</p>
+
+<code id="list-report-report-c" lang="c" file="h.report" title="The header for the new report file">/**
+ * Example 8.1
+ *
+ * (c) Stephen Fryatt, 2017
+ *
+ * File: report.h
+ */
+
+#ifndef SIMPLEAPP_REPORT
+#define SIMPLEAPP_REPORT
+
+/* Report a message */
+
+void report_message(char *message);
+
+#endif</code>
+
+<p>Armed with this new code, we can now <code>#include &quot;report.h&quot;</code> in <file>c.ibar</file> before using the new reporting function to respond to the user clicking on the iconbar icon. If we wished to greet the user when they click <mouse>Select</mouse> on the icon, we could amend the <code>switch</code> statement as follows:</p>
+
+<code lang="c">static void ibar_mouse_click(wimp_pointer *pointer)
+{
+	switch (pointer->buttons) {
+	case wimp_CLICK_SELECT:
+		report_message("Hello World!");
+		break;
+	case wimp_CLICK_ADJUST:
+		main_quit_flag = TRUE;
+		break;
+	}
 }</code>
+
+<p>If we now amend the <file>Makefile</file> so that the <code>OBJS</code> line reads</p>
+
+<code lang="makefile">OBJS = main ibar report</code>
+
+<p>we can double-click on <file>Mk</file> to build a new version of our application. After running it, click <mouse>Select</mouse> on its iconbar icon and the report shown in <reference id="fig-report-box-old-ok"/> should appear. The full code can be found in <reference id="dl-report-old"/>.</p>
+
+<image id="fig-report-box-old-ok" file="report-1-ok.png" title="Our first feedback from the application"/>
+
+<download id="dl-report-old" file="OldReportBox" title="Respond to Select clicks with a simple report" compatibility="none"/>
+</section>
+
+<section>
+<title>Different options</title>
+
+<p>The <variable>flags</variable> passed to <function>wimp_report_error()</function> allow us to tailor the report to a certain extent. OSLib defines a number of constants for <name>wimp_error_box_flags</name>, of which the following are applicable to the &lsquo;old&rsquo; reports.</p>
+
+<code lang="c">#define wimp_ERROR_BOX_OK_ICON			((wimp_error_box_flags) 0x1u)
+#define wimp_ERROR_BOX_CANCEL_ICON		((wimp_error_box_flags) 0x2u)
+#define wimp_ERROR_BOX_HIGHLIGHT_CANCEL		((wimp_error_box_flags) 0x4u)
+#define wimp_ERROR_BOX_NO_PROMPT		((wimp_error_box_flags) 0x8u)
+#define wimp_ERROR_BOX_SHORT_TITLE		((wimp_error_box_flags) 0x10u)
+#define wimp_ERROR_BOX_LEAVE_OPEN		((wimp_error_box_flags) 0x20u)
+#define wimp_ERROR_BOX_CLOSE			((wimp_error_box_flags) 0x40u)
+#define wimp_ERROR_BOX_NO_BEEP			((wimp_error_box_flags) 0x80u)</code>
+
+<p>The report currently produced by the application and shown in <reference id="fig-report-box-old-ok"/> had the <name>wimp_ERROR_BOX_OK_ICON</name> flag set, which resulted in an &lsquo;OK&rsquo; button &ndash; in fact, this is the default state, which the Wimp will fall back to if <em>no</em> flags are set at all. We could, however, have specified <name>wimp_ERROR_BOX_CANCEL_ICON</name> instead:</p>
+
+<code lang="c">wimp_report_error(&amp;error, wimp_ERROR_BOX_CANCEL_ICON, &quot;ExampleApp&quot;);</code>
+
+<p>As might be expected, the report now has a &lsquo;Cancel&rsquo; button instead of &lsquo;OK&rsquo; &ndash; as shown in <reference id="fig-report-box-old-cancel"/>.</p>
+
+<image id="fig-report-box-old-cancel" file="report-1-cancel.png" title="Using the wimp_ERROR_BOX_CANCEL_ICON flag"/>
+
+<p>Similarly, we could request the inclusion of <em>both</em> buttons by setting both flags: this is done by bitwise-oring them together using the <code>|</code> operator:</p>
+
+<code lang="c">wimp_report_error(&amp;error,
+		wimp_ERROR_BOX_OK_ICON | wimp_ERROR_BOX_CANCEL_ICON, &quot;ExampleApp&quot;);</code>
+
+<p>The result can be seen in <reference id="fig-report-box-old-ok-cancel"/>.</p>
+
+<image id="fig-report-box-old-ok-cancel" file="report-1-ok-cancel.png" title="Using the OK and Cancel flags together"/>
+
+<p>In each case, the highlighted button is the <intro>default</intro>, and will be selected if <key>Return</key> is pressed. In the <reference id="fig-report-box-old-ok-cancel">last example</reference> the &lsquo;OK&rsquo; button was highlighted, but we might prefer &lsquo;Cancel&rsquo; to be highlighted instead &ndash; perhaps if we were asking whether the user <em>really</em> wished to delete their unsaved document. To achieve this, we simply include <name>wimp_ERROR_BOX_HIGHLIGHT_CANCEL</name> in the flags:</p>
+
+<code lang="c">wimp_report_error(&amp;error,
+		wimp_ERROR_BOX_OK_ICON | wimp_ERROR_BOX_CANCEL_ICON | wimp_ERROR_BOX_HIGHLIGHT_CANCEL,
+		&quot;ExampleApp&quot;);</code>
+
+<p>The effect is to swap the two buttons over, such that &lsquo;Cancel&rsquo; is now the default. This can be seen in <reference id="fig-report-box-old-cancel-ok"/>.</p>
+
+<image id="fig-report-box-old-cancel-ok" file="report-1-cancel-ok.png" title="Making Cancel the default action"/>
+
+<p>The title of the report in <reference id="fig-report-box-old-ok"/> above was &ldquo;Message from ExampleApp&rdquo;: this came from the Wimp prefixing the application name pointed to by  <variable>*name</variable> with &ldquo;Message from &rdquo;. In older versions of RISC&nbsp;OS, this could be the slightly more worrying &ldquo;Error from &rdquo; instead. It&rsquo; possible to ask the Wimp not to do this by including <name>wimp_ERROR_BOX_SHORT_TITLE</name> in <variable>flags</variable> &ndash; meaning that the title will be the exact string pointed to by <variable>*name</variable>;. Either way, the supplied text had to be less than 20 characters long.</p>
+
+<p>The other flags are all fairly esoteric, and are of little use to a multi-tasking Wimp application. It&rsquo;s worth highlighting <name>wimp_ERROR_BOX_NO_BEEP</name>, however: it does exactly what its name suggests, and prevents the &lsquo;beep&rsquo; when the report opens. Setting this flag prevents the user from making their own choice on a system-wide basis, and is the first of many examples where the Wimp offers us options that we shouldn&rsquo;t take up if we wish to be &lsquo;sociable&rsquo;.</p>
+</section>
+
+<section>
+<title>Upgrading our report</title>
+
+<p>As noted above, <function>wimp_report_error()</function> accesses a usage of <swi>Wimp_ReportError</swi> which was deprecated in 1994 &ndash; although there are still a number of applications using it, including the example from Draw seen in <reference id="fig-report-example-draw"/>! The new interface offers a number of useful improvements, however &ndash; it would be daft not to make use of them.</p>
+
+<p>The newer <function>wimp_report_error_by_category()</function> function is defined by OSLib as:</p>
+
+<code lang="c">extern wimp_error_box_selection wimp_report_error_by_category(
+	os_error const		*error,
+	wimp_error_box_flags	flags,
+	char const		*name,
+	char const		*sprite_name,
+	osspriteop_area const	*area,
+	char const		*buttons
+);</code>
+
+<p>The first three parameters are exactly the same as for <function>wimp_report_error()</function>, except that <variable>flags</variable> now has a few more options to set:</p>
+
+<code lang="c">#define wimp_ERROR_BOX_GIVEN_CATEGORY		((wimp_error_box_flags) 0x100u)
+#define wimp_ERROR_BOX_CATEGORY			((wimp_error_box_flags) 0xE00u)</code>
+
+<p>It&rsquo;s necessary to set <name>wimp_ERROR_BOX_GIVEN_CATEGORY</name> in order to use the new API, so this flag is actually mandatory when calling <function>wimp_report_error_by_category()</function>. This then enables the <intro>bit-field</intro> over the range covered by <name>wimp_ERROR_BOX_CATEGORY</name>, which allows us to set a &lsquo;category&rsquo; for the report.</p>
+
+<p>These bit-fields are a common feature of flag words used by Wimp SWIs, and are something that we&rsquo;ll encounter again and again. By defining <name>wimp_ERROR_BOX_CATEGORY</name> to be <code>((wimp_error_box_flags) 0xE00u)</code>, OSLib is saying that the error box category fills the range of bits which make up 0xE00u &ndash; that&rsquo;s bits 9, 10 and 11 of the word. The Wimp treats these bits as a 3-bit number in the range from 0 to 7, instead of viewing them as three separate flags.</p>
+
+<p>OSlib goes on to define a few more useful constants, the first of which are the values that the Wimp will accept in this field:</p>
+
+<code lang="c">#define wimp_ERROR_BOX_CATEGORY_INFO		((wimp_error_box_flags) 0x1u)
+#define wimp_ERROR_BOX_CATEGORY_ERROR		((wimp_error_box_flags) 0x2u)
+#define wimp_ERROR_BOX_CATEGORY_PROGRAM		((wimp_error_box_flags) 0x3u)
+#define wimp_ERROR_BOX_CATEGORY_QUESTION	((wimp_error_box_flags) 0x4u)</code>
+
+<p>A value of 0 is the &lsquo;default&lsquo; (or &lsquo;non-classified&rsquo;, as the PRM refers to it) report, with values 1 to 4 being &lsquo;Information&rsquo;, &lsquo;Error&rsquo;, &lsquo;Program Error&rsquo; and &lsquo;Question&rsquo; respectively. Finally, a shift value is defined, to tell us how far those four constants need to be shifted in order to locate them correctly in the value passed to <variable>flags</variable>:</p>
+
+<code lang="c">#define wimp_ERROR_BOX_CATEGORY_SHIFT		(9)</code>
+
+<p>The four categories are more or less what their names suggest. Information reports are intended to be informational: that is, telling the user something that&rsquo;s normal and not of concern. Similarly, Questions are for asking the user things when the situation is normal. Errors are for when things have gone wrong but the application remains in control &ndash; running out of memory or disc space, perhaps; a corrupt file; bad user input. Program Errors are for when things have gone seriously wrong in a way that the application can&rsquo;t handle: usually the result of bugs or incompatibilities with unexpected hardware or OS versions, and almost always resulting in the application exiting immediately afterwards.</p>
+
+<p>Each type of report has a different symbol displayed to the user at the left-hand side of the box: the ones used on RISC&nbsp;OS&nbsp;5 can be seen in <reference id="fig-report-sprites"/> The symbols are in order, with category &lsquo;warning&rsquo; (category 0) on the left through to &lsquo;question&rsquo; (category 4) on the right.</p>
+
+<image id="fig-report-sprites" file="report-sprites.png" title="Wimp report symbols for categories 0 to 4"/>
+
+<p>We can update our <function>report_message()</function> in <file>c.report</file> to make use of the new report by changing it as follows:</p>
+
+<code lang="c">void report_message(char *message)
+{
+	os_error error;
+
+	error.errnum = 255;
+	strncpy(error.errmess, message, os_ERROR_LIMIT);
+	error.errmess[os_ERROR_LIMIT - 1] = '\0';
+
+	wimp_report_error_by_category(&amp;error, wimp_ERROR_BOX_GIVEN_CATEGORY  |
+			(wimp_ERROR_BOX_CATEGORY_INFO &lt;&lt; wimp_ERROR_BOX_CATEGORY_SHIFT |
+			wimp_ERROR_BOX_OK_ICON,
+			&quot;ExampleApp&quot;, &quot;application&quot;, wimpspriteop_AREA, NULL);
+}</code> 
+
+<p>The <variable>*sprite_name</variable> parameter should point to the name of a sprite to show in the top-left of the report &ndash; this would usually be the application sprite, but as we don&rsquo;t have one of them yet, we will stick with the application sprite from the Wimp&rsquo;s collection. To ensure that the sprite is taken from the Wimp Sprite Area, <variable>*area</variable> is set to <name>wimpspriteop_AREA</name> &ndash; this requires us to <code>#include &quot;oslib/wimpspriteop.h&quot;</code>. For now, we&rsquo;ll set <variable>*buttons</variable> to <name>NULL</name>.</p>
+
+<p>A full set of the changes can be found in <reference id="dl-report-new"/>. When the application is re-compiled and run, a <mouse>Select</mouse> click on its iconbar icon will produce the information report seen in <reference id="fig-report-box-new"/>.</p>
+
+<image id="fig-report-box-new" file="report-2.png" title="Using an Information report to say &ldquo;hello&rdquo;"/>
+
+<download id="dl-report-new" file="NewReportBox" title="Respond to Select clicks with a simple report" compatibility="none"/>
+
+<p>Aside from the new graphics, the other change that has resulted from setting the <name>wimp_ERROR_BOX_GIVEN_CATEGORY</name> flag is that the &lsquo;OK&rsquo; has changed to read &lsquo;Continue&rsquo;.</p>
+
+</section>
+</chapter>
+
+
+<!-- Chapter 9
+   -
+   - A Look at Debugging
+  -->
+
+<chapter id="chap-debug">
+<resources>
+<images>Chapter9</images>
+<downloads>Chapter9</downloads>
+</resources>
+<filename>debug.html</filename>
+<title>A Look at Debugging</title>
+
+<summary>Before moving on to the &lsquo;serious stuff&rsquo;, it might help to take a look at a tool to help us see what&rsquo;s going on.</summary>
+
+<section>
+<p>We&rsquo;re almost ready to start looking at creating our own windows, but before we do, it might be useful to take a look at a tool to help us debug the application as it begins to grow.</p>
+
+<p>Unlike other platforms, RISC&nbsp;OS is somewhat short of tools to help developers figure out why their software isn&rsquo;t working as they expect. We&rsquo;ve got the DDE, which comes as part of the Desktop Development Environment, but it&rsquo;s dated and somewhat clunky to use. There are some other alternatives &ndash; and one, which is surprisingly useful, is actually free.</p>
+</section>
+
+<section>
+<title>Getting a report</title>
+
+<p>Reporter was orignally developed by Chris Morison of Organizer fame, and &ndash; just as with that piece of software &ndash; development was picked up by Martin Avison when Chris moved on from the platform. These days it&rsquo;s freely available from the <link href="http://www.avisoft.force9.co.uk/Reporter.htm">Avisoft Website.</link>.</p>
+
+
 
 
 </section>
+
+
 </chapter>
 </manual>
