@@ -2142,8 +2142,10 @@ void report_message(char *message);
 <p>There&rsquo;s also another problem. It would be useful to be able to include the values of variables in the reported text, in a similar manner to what we can do with <function>printf()</function>, but that isn&rsquo;t possible unless we build the string up first using code similar to this:</p>
 
 <code lang="c">char buffer[256];
+
 snprintf(buffer, 256, "The value of buttons=%s", buttons);
 buffer[255] = '\0';
+
 report_text0(buffer);</code>
 
 <p>Clearly it would be cumbersome to have to do this every time that we wished to output some information about the way that our application is working. For this reason, SFLib offers a debug library &ndash; which we can access by removing <code>#include &quot;oslib/report.h&quot;</code> and adding <code>#include &quot;sflib/debug.h&quot;</code> to the top of <file>c.ibar</file>. We can then change the call to <function>report_text0()</function> so that we instead use SFLib&rsquo;s <function>debug_printf()</function>.</p>
@@ -2191,6 +2193,106 @@ report_text0(buffer);</code>
 <p>This screenshot also shows that Reporter picks up on report boxes being opened: their details are shown in its window, highlighted in red to make them stand out.</p>
 </section>
 
+<!-- \TODO - Report return values and SFLib error.h -->
 
+<section>
+<title>Crashes and postmortems</title>
+
+<p>Before moving on, let&rsquo;s return briefly to the problem that we had with <swi>Report_Text0</swi> when Reporter wasn&rsquo;t loaded. When the application crashed, we saw a different error report: shown in <reference id="fig-debug-program-error"/>. Some errors &ndash; which are identified by their error number in the OS error block &ndash; are treated as &lsquo;serious errors&rsquo; and given special treatment by the Wimp. The original error message is hidden from the user at first, and is instead replaced by the text shown.</p>
+
+<image id="fig-debug-program-error" file="program-error.png" title="Some error numbers are trapped by the Wimp and reported differently"/>
+
+<p>The &lsquo;Continue&rsquo; and &lsquo;Quit&rsquo; buttons correspond to &lsquo;Continue&rsquo; and &lsquo;Cancel&rsquo; &ndash; the only difference is that if the application didn&rsquo;t request a Cancel button, selecting Quit will forcibly terminate the application. Clicking on &lsquo;Describe&rsquo; will take the user to a second report box, as seen in <reference id="fig-debug-description-error"/>, where the <em>original</em> error message is shown.</p>
+
+<image id="fig-debug-description-error" file="description-error.png" title="Interested parties can still see the original error message if they wish"/>
+
+<p>At this stage, it&rsquo;s often possible to request a <intro>postmortem</intro> by clicking on &lsquo;Postmortem&rsquo;. This will be presented in a single-tasking text window on the desktop, ending with the familiar &ldquo;Press SPACE or click mouse to continue&rdquo; message. The postmortem <em>should</em> show us where in the program the error occurred, but &ndash; as shown in <reference id="fig-debug-postmortem-1"/> &ndash; all it tells us is &ldquo;anonymous function&rdquo;.</p>
+
+<image id="fig-debug-postmortem-1" file="postmortem-1.png" title="The postmortem should show us where the error occurred"/>
+
+<!-- \TODO - Finish this off!!! -->
+
+</section>
 </chapter>
+
+
+<!-- Chapter 9
+   -
+   - A Look at Debugging
+  -->
+
+<chapter id="chap-windows">
+<resources>
+<images>Chapter10</images>
+<downloads>Chapter10</downloads>
+</resources>
+<filename>windows.html</filename>
+<title>Creating our First Window</title>
+
+<summary>We&rsquo;re finally ready to create our first window!</summary>
+
+<section>
+<p>With the initial legwork complete, we&rsquo;re now ready to add the first window to our application. Unfortunately there&rsquo;s quite a lot of theory to get through before we can start doing any practical coding &ndash; so here goes!</p>
+</section>
+
+<section>
+<title>Window definitions</title>
+
+<p>There are several stages to getting a window on to the screen with the RISC&nbsp;OS Wimp: first a window is <intro>created</intro>, based on data that the application supplies to the <swi>Wimp_CreateWindow</swi> SWI. Once created, it can be <intro>opened</intro> with <swi>Wimp_OpenWindow</swi> and &ndash; if required &ndash; <intro>closed</intro> with <swi>Wimp_CloseWindow</swi>. A window can be opened and closed any number of times before it is finally <intro>deleted</intro> with <swi>Wimp_DeleteWindow</swi>. The deleting stage is optional, as any windows which still exist when <swi>Wimp_CloseDown</swi> is called will be deleted automatically.</p>
+
+<p>To allow both the Wimp and the application to keep track of windows throughout this process, <swi>Wimp_CreateWindow</swi> allocates a <intro>window handle</intro> to each window that it creates. This window handle can then be used to identify the window when other Wimp SWIs need to operate on it. As we saw when we looked at the iconbar in <reference id="chap-ibar"/> and <reference id="chap-click"/>, the Wimp treats it as a &lsquo;special&rsquo; window and identifies it with handles such as <name>wimp_ICON_BAR</name>. For windows more generally, the handles are just numbers which can he held in a variable for future reference.</p>
+
+
+
+
+
+
+<code lang="c">
+struct wimp_window {
+	os_box			visible;
+	int			xscroll;
+	int			yscroll;
+	wimp_w			next;
+	wimp_window_flags	flags;
+	wimp_colour		title_fg;
+	wimp_colour		title_bg;
+	wimp_colour		work_fg;
+	wimp_colour		work_bg;
+	wimp_colour		scroll_outer;
+	wimp_colour		scroll_inner;
+	wimp_colour		highlight_bg;
+	wimp_extra_window_flags	extra_flags;
+	os_box			extent;
+	wimp_icon_flags		title_flags;
+	wimp_icon_flags		work_flags;
+	osspriteop_area		*sprite_area;
+	short			xmin;
+	short			ymin;
+	wimp_icon_data		title_data;
+	int			icon_count;
+	wimp_icon		icons[UNKNOWN];
+};</code>
+
+
+
+
+
+
+
+
+
+
+
+
+</section>
+</chapter>
+
+
+
+
+
+
+
+
+
 </manual>
