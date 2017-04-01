@@ -76,7 +76,7 @@
 
 quit% = FALSE
 
-SYS &quot;Wimp_Initialise&quot;, 310, &amp;4B534154, &quot;Wimp Task&quot;, 0</code>
+SYS &quot;Wimp_Initialise&quot;, 310, &amp;4B534154, &quot;Example App&quot;, 0</code>
 
 <p>The code claims 256 bytes of memory and points a variable <variable>b%</variable> to it: a lot of Wimp SWI calls need a block of memory to work, and <variable>b%</variable> is a common feature of Wimp software written in BASIC. It then sets a variable <variable>quit%</variable> to <name>FALSE</name>, to keep track of when the code should exit.</p>
 
@@ -147,7 +147,7 @@ DIM b% 255
 
 quit% = FALSE
 
-SYS &quot;Wimp_Initialise&quot;, 310, &amp;4B534154, &quot;Wimp Task&quot;, 0
+SYS &quot;Wimp_Initialise&quot;, 310, &amp;4B534154, &quot;Example App&quot;, 0
 
 REPEAT
 	SYS &quot;Wimp_Poll&quot;, &amp;3831, b% TO reason%
@@ -199,7 +199,7 @@ END</code>
 
 <p>The first thing, which might not be obvious to anyone who is familiar with C but has never written software for RISC&nbsp;OS, is how to access the SWI calls which are central to the system. In BASIC we&rsquo;ve already seen that it&rsquo;s possible to write something like</p>
 
-<code lang="bbcbasic">SYS &quot;Wimp_Initialise&quot;, 310, &amp;4B534154, &quot;Wimp Task&quot;, 0</code>
+<code lang="bbcbasic">SYS &quot;Wimp_Initialise&quot;, 310, &amp;4B534154, &quot;Example App&quot;, 0</code>
 
 <p>and the interpreter will do the rest. Natively C doesn&rsquo;t have any equivalent to the BASIC <code>SYS</code> call, and so with the DDE we need to turn to the <file>kernel.h</file> and <file>swis.h</file> headers to find a way to achieve the same effect.</p>
 
@@ -212,7 +212,7 @@ _kernel_oserror *error;
 _kernel_swi_regs regs;
 regs.r[0] = (int) 310;
 regs.r[1] = (int) 0x4b534154;
-regs.r[2] = (int) &quot;Wimp Task&quot;;
+regs.r[2] = (int) &quot;Example App&quot;;
 regs.r[3] = (int) 0;
 error = _kernel_swi(Wimp_Initialise, &amp;regs, &amp;regs);</code>
 
@@ -221,7 +221,7 @@ error = _kernel_swi(Wimp_Initialise, &amp;regs, &amp;regs);</code>
 <code lang="c">#include &quot;swis.h&quot;
 
 _kernel_oserror *error;
-error = _swix(Wimp_Initialise, _INR(0,3), (int) 310, (int) 0x4b534154, (int) &quot;Wimp Task&quot;, (int) 0);</code>
+error = _swix(Wimp_Initialise, _INR(0,3), (int) 310, (int) 0x4b534154, (int) &quot;Example App&quot;, (int) 0);</code>
 
 <p>This is better, but is still a little ungainly.</p>
 
@@ -230,7 +230,7 @@ error = _swix(Wimp_Initialise, _INR(0,3), (int) 310, (int) 0x4b534154, (int) &qu
 <code lang="c">#include &quot;wimplib.h&quot;
 
 _kernel_oserror *error;
-error = wimp_initialise(310, &quot;Wimp Task&quot;, 0, 0, 0);</code>
+error = wimp_initialise(310, &quot;Example App&quot;, 0, 0, 0);</code>
 
 <p>This is starting to look a lot better, but the supplied header files concentrate on sections of the OS such as the Wimp and the Toolbox &ndash; plenty of areas still need the likes of <function>_swi()</function> to access them. Fortunately, there&rsquo;s a better option still.</p>
 </section>
@@ -247,11 +247,11 @@ error = wimp_initialise(310, &quot;Wimp Task&quot;, 0, 0, 0);</code>
 <code lang="c">#include &quot;oslib/wimp.h&quot;
 
 os_error *error;
-error = xwimp_initialise(wimp_VERSION_RO3, &quot;Wimp Task&quot;, NULL, NULL, NULL);</code>
+error = xwimp_initialise(wimp_VERSION_RO3, &quot;Example App&quot;, NULL, NULL, NULL);</code>
 
 <p>Notice that in all the C examples so far, we've used a variable <variable>error</variable>, which we&rsquo;ve assigned from the function. This is loosely equivalent to the following code in BASIC.</p>
 
-<code lang="bbcbasic">SYS &quot;XWimp_Initialise&quot;, 310, &amp;4B534154, &quot;Wimp Task&quot;, 0 TO error% ;flags%
+<code lang="bbcbasic">SYS &quot;XWimp_Initialise&quot;, 310, &amp;4B534154, &quot;Example App&quot;, 0 TO error% ;flags%
 IF (flags% AND 1) = 0 THEN error% = 0</code>
 
 <p>That is, the X form of the SWI is called: this means that in the event of an error the processor&rsquo;s V flag is set and <name>R0</name> contains a pointer to an error block. If the V flag is set, <code>SYS</code> sets bit&nbsp;0 of <variable>flags%</variable>, so the second line of code results in <variable>error%</variable> being set to zero on return if no error occurred; if something went wrong, <variable>error%</variable> points to the error block. The C convention is similar: SWI functions which return an error block pointer return <name>NULL</name> if no error occurred.</p>
@@ -260,7 +260,7 @@ IF (flags% AND 1) = 0 THEN error% = 0</code>
 
 <code lang="c">#include &quot;oslib/wimp.h&quot;
 
-wimp_initialise(wimp_VERSION_RO3, &quot;Wimp Task&quot;, NULL, NULL);</code>
+wimp_initialise(wimp_VERSION_RO3, &quot;Example App&quot;, NULL, NULL);</code>
 
 <p>Which to use depends on the circumstances, but generally if there&rsquo;s a risk of an error occurring the X form of the SWI is better: it allows us to trap the error, tidy up, and exit gracefully.</p>
 
@@ -323,11 +323,11 @@ typedef union wimp_block wimp_block;</code>
 
 <p>As with the BASIC version of our program, the next thing to do is to call <swi>Wimp_Initialise</swi> to register as a multitasking application. In BASIC, doing that looked like this:</p>
 
-<code lang="bbcbasic">SYS &quot;Wimp_Initialise&quot;, 310, &amp;4B534154, &quot;Wimp Task&quot;, 0</code>
+<code lang="bbcbasic">SYS &quot;Wimp_Initialise&quot;, 310, &amp;4B534154, &quot;Example App&quot;, 0</code>
 
 <p>OSLib provides function veneers for all the OS SWIs, and as we saw above, one of those is <function>wimp_initialise()</function>:</p>
 
-<code lang="c">wimp_initialise(wimp_VERSION_RO3, &quot;Wimp Task&quot;, NULL, NULL);</code>
+<code lang="c">wimp_initialise(wimp_VERSION_RO3, &quot;Example App&quot;, NULL, NULL);</code>
 
 <p>OSLib&rsquo;s implementations of SWIs take their parameters in the same order as BASIC&rsquo;s <code>SWI</code> instruction, but unnecessary or invariant parameters are often omitted. The function prototype for <function>wimp_initialise()</function> is as follows:</p>
 
@@ -523,7 +523,7 @@ int main(int argc, char *argv[])
 	wimp_block	block;
 	wimp_event_no	reason;
 
-	wimp_initialise(wimp_VERSION_RO3, &quot;Wimp Task&quot;, NULL, NULL);
+	wimp_initialise(wimp_VERSION_RO3, &quot;Example App&quot;, NULL, NULL);
 
 	while (!quit) {
 		reason = wimp_poll(wimp_MASK_NULL | wimp_MASK_ENTERING |
@@ -703,7 +703,7 @@ int main(int argc, char *argv[])
 
 static void main_initialise(void)
 {
-	wimp_initialise(wimp_VERSION_RO3, &quot;Wimp Task&quot;, NULL, NULL);
+	wimp_initialise(wimp_VERSION_RO3, &quot;Example App&quot;, NULL, NULL);
 }
 
 /* Wimp_Poll loop. */
@@ -873,7 +873,7 @@ int main(int argc, char *argv[])
 
 static void main_initialise(void)
 {
-	wimp_initialise(wimp_VERSION_RO3, &quot;Wimp Task&quot;, NULL, NULL);
+	wimp_initialise(wimp_VERSION_RO3, &quot;Example App&quot;, NULL, NULL);
 
 	event_add_message_handler(message_QUIT, EVENT_MESSAGE_INCOMING, main_message_quit);
 }
@@ -1267,7 +1267,7 @@ void ibar_initialise(void);
 
 <code lang="c">static void main_initialise(void)
 {
-	wimp_initialise(wimp_VERSION_RO3, &quot;Wimp Task&quot;, NULL, NULL);
+	wimp_initialise(wimp_VERSION_RO3, &quot;Example App&quot;, NULL, NULL);
 
 	event_add_message_handler(message_QUIT, EVENT_MESSAGE_INCOMING, main_message_quit);
 
@@ -1315,7 +1315,7 @@ int main(int argc, char *argv[])
 
 static void main_initialise(void)
 {
-	wimp_initialise(wimp_VERSION_RO3, &quot;Wimp Task&quot;, NULL, NULL);
+	wimp_initialise(wimp_VERSION_RO3, &quot;Example App&quot;, NULL, NULL);
 
 	event_add_message_handler(message_QUIT, EVENT_MESSAGE_INCOMING, main_message_quit);
 
@@ -1615,7 +1615,7 @@ int main(int argc, char *argv[])
 
 static void main_initialise(void)
 {
-	wimp_initialise(wimp_VERSION_RO3, &quot;Wimp Task&quot;, NULL, NULL);
+	wimp_initialise(wimp_VERSION_RO3, &quot;Example App&quot;, NULL, NULL);
 
 	event_add_message_handler(message_QUIT, EVENT_MESSAGE_INCOMING, main_message_quit);
 
@@ -1816,7 +1816,7 @@ error.errmess[os_ERROR_LIMIT - 1] = '\0';</code>
 
 <p>It&rsquo;s generally good practice to use <function>strncpy()</function> instead of the older <function>strcpy()</function> function to copy strings into buffers, in order to ensure that we don&rsquo;t over-run the allocated space. The function is available in the 32-bit Shared C Library, so there&rsquo;s no reason for avoiding it. It&rsquo;s also important to terminate the copied string at the end of the buffer, since <function>strncpy()</function> won&rsquo;t do this for us if it did run out of space. OSLib defines <name>os_ERROR_LIMIT</name> for us to be 252, to reflect the size of the buffer defined by RISC&nbsp;OS.</p>
 
-<p>The <variable>flags</variable> passed in parameter 2 control the appearance of the box, and for now we&rsquo;ll set them to <name>wimp_ERROR_BOX_OK_ICON</name> to request that an &lsquo;OK&rsquo; button is provided. The final parameter, <variable>*name</variable>, should point to a string containing the name of our application.</p>
+<p>The <variable>flags</variable> passed in parameter 2 control the appearance of the box, and for now we&rsquo;ll set them to <name>wimp_ERROR_BOX_OK_ICON</name> to request that an &lsquo;OK&rsquo; button is provided. The final parameter, <variable>*name</variable>, should point to a string containing the name of our application &ndash; in <file>c.main</file> we tell <swi>Wimp_Initialise</swi> that the application is called &lsquo;Example App&rsquo;, so we&rsquo;ll stick with that here.</p>
 </section>
 
 <section>
@@ -1849,7 +1849,7 @@ void report_message(char *message)
 	strncpy(error.errmess, message, os_ERROR_LIMIT);
 	error.errmess[os_ERROR_LIMIT - 1] = '\0';
 
-	wimp_report_error(&amp;error, wimp_ERROR_BOX_OK_ICON, &quot;ExampleApp&quot;);
+	wimp_report_error(&amp;error, wimp_ERROR_BOX_OK_ICON, &quot;Example App&quot;);
 }</code> 
 
 <p>This is more or less the code that we outlined above, except that the message being copied into the error block is the one pointed to by the <variable>*message</variable> parameter. Note that we&rsquo;re including both <file>oslib/wimp.h</file> <em>and</em> <file>oslib/os.h</file> in order to be able to use <name>os_error</name>.</p>
@@ -1879,7 +1879,7 @@ void report_message(char *message);
 {
 	switch (pointer->buttons) {
 	case wimp_CLICK_SELECT:
-		report_message("Hello World!");
+		report_message(&quot;Hello World!&quot;);
 		break;
 	case wimp_CLICK_ADJUST:
 		main_quit_flag = TRUE;
@@ -1914,7 +1914,7 @@ void report_message(char *message);
 
 <p>The report currently produced by the application and shown in <reference id="fig-report-box-old-ok"/> had the <name>wimp_ERROR_BOX_OK_ICON</name> flag set, which resulted in an &lsquo;OK&rsquo; button &ndash; in fact, this is the default state, which the Wimp will fall back to if <em>no</em> flags are set at all. We could, however, have specified <name>wimp_ERROR_BOX_CANCEL_ICON</name> instead:</p>
 
-<code lang="c">wimp_report_error(&amp;error, wimp_ERROR_BOX_CANCEL_ICON, &quot;ExampleApp&quot;);</code>
+<code lang="c">wimp_report_error(&amp;error, wimp_ERROR_BOX_CANCEL_ICON, &quot;Example App&quot;);</code>
 
 <p>As might be expected, the report now has a &lsquo;Cancel&rsquo; button instead of &lsquo;OK&rsquo; &ndash; as shown in <reference id="fig-report-box-old-cancel"/>.</p>
 
@@ -1923,7 +1923,7 @@ void report_message(char *message);
 <p>Similarly, we could request the inclusion of <em>both</em> buttons by setting both flags: this is done by bitwise-oring them together using the <code>|</code> operator:</p>
 
 <code lang="c">wimp_report_error(&amp;error,
-		wimp_ERROR_BOX_OK_ICON | wimp_ERROR_BOX_CANCEL_ICON, &quot;ExampleApp&quot;);</code>
+		wimp_ERROR_BOX_OK_ICON | wimp_ERROR_BOX_CANCEL_ICON, &quot;Example App&quot;);</code>
 
 <p>The result can be seen in <reference id="fig-report-box-old-ok-cancel"/>.</p>
 
@@ -1933,13 +1933,13 @@ void report_message(char *message);
 
 <code lang="c">wimp_report_error(&amp;error,
 		wimp_ERROR_BOX_OK_ICON | wimp_ERROR_BOX_CANCEL_ICON | wimp_ERROR_BOX_HIGHLIGHT_CANCEL,
-		&quot;ExampleApp&quot;);</code>
+		&quot;Example App&quot;);</code>
 
 <p>The effect is to swap the two buttons over, such that &lsquo;Cancel&rsquo; is now the default. This can be seen in <reference id="fig-report-box-old-cancel-ok"/>.</p>
 
 <image id="fig-report-box-old-cancel-ok" file="report-1-cancel-ok.png" title="Making Cancel the default action"/>
 
-<p>The title of the report in <reference id="fig-report-box-old-ok"/> above was &ldquo;Message from ExampleApp&rdquo;: this came from the Wimp prefixing the application name pointed to by  <variable>*name</variable> with &ldquo;Message from &rdquo;. In older versions of RISC&nbsp;OS, this could be the slightly more worrying &ldquo;Error from &rdquo; instead. It&rsquo; possible to ask the Wimp not to do this by including <name>wimp_ERROR_BOX_SHORT_TITLE</name> in <variable>flags</variable> &ndash; meaning that the title will be the exact string pointed to by <variable>*name</variable>;. Either way, the supplied text had to be less than 20 characters long.</p>
+<p>The title of the report in <reference id="fig-report-box-old-ok"/> above was &ldquo;Message from Example App&rdquo;: this came from the Wimp prefixing the application name pointed to by  <variable>*name</variable> with &ldquo;Message from &rdquo;. In older versions of RISC&nbsp;OS, this could be the slightly more worrying &ldquo;Error from &rdquo; instead. It&rsquo;s possible to ask the Wimp not to do this by including <name>wimp_ERROR_BOX_SHORT_TITLE</name> in <variable>flags</variable> &ndash; meaning that the title will be the exact string pointed to by <variable>*name</variable>;. Either way, the supplied text must be less than 20 characters long.</p>
 
 <p>The other flags are all fairly esoteric, and are of little use to a multi-tasking Wimp application. It&rsquo;s worth highlighting <name>wimp_ERROR_BOX_NO_BEEP</name>, however: it does exactly what its name suggests, and prevents the &lsquo;beep&rsquo; when the report opens. Setting this flag prevents the user from making their own choice on a system-wide basis, and is the first of many examples where the Wimp offers us options that we shouldn&rsquo;t take up if we wish to be &lsquo;sociable&rsquo;.</p>
 </section>
@@ -1999,7 +1999,7 @@ void report_message(char *message);
 	wimp_report_error_by_category(&amp;error, wimp_ERROR_BOX_GIVEN_CATEGORY  |
 			(wimp_ERROR_BOX_CATEGORY_INFO &lt;&lt; wimp_ERROR_BOX_CATEGORY_SHIFT |
 			wimp_ERROR_BOX_OK_ICON,
-			&quot;ExampleApp&quot;, &quot;application&quot;, wimpspriteop_AREA, NULL);
+			&quot;Example App&quot;, &quot;application&quot;, wimpspriteop_AREA, NULL);
 }</code> 
 
 <p>The <variable>*sprite_name</variable> parameter should point to the name of a sprite to show in the top-left of the report &ndash; this would usually be the application sprite, but as we don&rsquo;t have one of them yet, we will stick with the application sprite from the Wimp&rsquo;s collection. To ensure that the sprite is taken from the Wimp Sprite Area, <variable>*area</variable> is set to <name>wimpspriteop_AREA</name> &ndash; this requires us to <code>#include &quot;oslib/wimpspriteop.h&quot;</code>. For now, we&rsquo;ll set <variable>*buttons</variable> to <name>NULL</name>.</p>
@@ -2008,10 +2008,56 @@ void report_message(char *message);
 
 <image id="fig-report-box-new" file="report-2.png" title="Using an Information report to say &ldquo;hello&rdquo;"/>
 
-<download id="dl-report-new" file="NewReportBox" title="Respond to Select clicks with a simple report" compatibility="none"/>
+<download id="dl-report-new" file="NewReportBox" title="Using the &lsquo;new&rsquo; report facilities" compatibility="none"/>
 
-<p>Aside from the new graphics, the other change that has resulted from setting the <name>wimp_ERROR_BOX_GIVEN_CATEGORY</name> flag is that the &lsquo;OK&rsquo; has changed to read &lsquo;Continue&rsquo;.</p>
+<p>Aside from the new graphics, the other change that has resulted from setting the <name>wimp_ERROR_BOX_GIVEN_CATEGORY</name> flag is that the &lsquo;OK&rsquo; has changed to read &lsquo;Continue&rsquo;. Presumably Acorn considered this to be more positive than &lsquo;OK&rsquo; when things might have been going wrong!</p>
+</section>
 
+<section>
+<title>Clearer options</title>
+
+<p>There&rsquo;s one more thing that we can change using the new report API: we can add to &ndash; or even completely replace &ndash; the &lsquo;OK&rsquo; and &lsquo;Cancel&rsquo; buttons in the box. This is done by setting <variable>*buttons</variable> to point to a string containing a set of one or more button labels in a comma separated list.</p>
+
+<p>To implement this, we&rsquo;ll update <function>report_message()</function> again to allow a set of button labels to be supplied by the caller:</p>
+
+<code lang="c">void report_message(char *message, char *buttons)
+{
+	os_error error;
+
+	error.errnum = 255;
+	strncpy(error.errmess, message, os_ERROR_LIMIT);
+	error.errmess[os_ERROR_LIMIT - 1] = '\0';
+
+	wimp_report_error_by_category(&amp;error, wimp_ERROR_BOX_GIVEN_CATEGORY  |
+			(wimp_ERROR_BOX_CATEGORY_INFO &lt;&lt; wimp_ERROR_BOX_CATEGORY_SHIFT |
+			wimp_ERROR_BOX_OK_ICON,
+			&quot;Example App&quot;, &quot;application&quot;, wimpspriteop_AREA, buttons);
+}</code> 
+
+<p>Remember to change the prototype in <file>h.report</file> as well as the function itself in <file>c.report</file>! We can now change the call made to <function>report_message()</function> in <file>c.ibar</file> to include this additional <variable>*buttons</variable> parameter. It could be set to <name>NULL</name> to retain the existing behaviour, or we could add some new buttons which respond to our application&rsquo;s greeting:</p>
+
+<code lang="c">report_message("Hello World!", "Howdy!,Go Away!");</code>
+
+<p>If these changes are compiled and run, clicking <mouse>Select</mouse> on our iconbar icon should result in the report shown in <reference id="fig-report-box-new-buttons"/>.</p>
+
+<image id="fig-report-box-new-buttons" file="report-3.png" title="It&rsquo;s possible to add custom buttons to reports"/>
+
+<p>The &lsquo;Continue&rsquo; button is still there on the left, because <name>wimp_ERROR_BOX_OK_ICON</name> is still being set in <variable>flags</variable>. If we remove it, so that the call to <function>wimp_report_error_by_category()</function> looks like this:</p>
+
+<code lang="c">wimp_report_error_by_category(&amp;error, wimp_ERROR_BOX_GIVEN_CATEGORY  |
+		(wimp_ERROR_BOX_CATEGORY_INFO &lt;&lt; wimp_ERROR_BOX_CATEGORY_SHIFT,
+		&quot;Example App&quot;, &quot;application&quot;, wimpspriteop_AREA, buttons);</code> 
+
+<p>then only our &lsquo;custom&rsquo; buttons will be shown to the user &ndash; as can be seen in <reference id="fig-report-box-new-buttons-custom"/>. A complete set of code can be found in <reference id="dl-report-buttons"/> below.</p>
+
+<image id="fig-report-box-new-buttons-custom" file="report-3-custom.png" title="We don&rsquo;t even need to include the default buttons"/>
+
+<p>It should be clear that the report system is fairly flexible, and the fact that the Wimp sorts out all of the formatting for us makes it easy to use. There are some limitations to the additional buttons, though: although the Wimp will extend the report box horizontally to accommodate a large number of buttons, this can quickly fill a small screen and should be used with caution. That said, if you need to ask a question with more than a &ldquo;Yes, No or Cancel&rdquo; kind of answer, then a report box probably isn&rsquo;t going to be the correct way to do it &ndash; you should be thinking about a proper dialogue box, once you know how to do that!</p>
+
+<p>Something that we&rsquo;ve not considered yet is the question of which button was chosen by the user if there was more than one? If we&rsquo;re going to the length of asking the user a question, being able to identify how they responded would be useful. We'll look at that in the <reference id="chap-debug">next chapter</reference>, after we&rsquo;ve added another debug tool to our armoury.</p>
+
+
+<download id="dl-report-buttons" file="ReportButtons" title="Setting custom buttons in a report" compatibility="none"/>
 </section>
 </chapter>
 
@@ -2032,19 +2078,117 @@ void report_message(char *message);
 <summary>Before moving on to the &lsquo;serious stuff&rsquo;, it might help to take a look at a tool to help us see what&rsquo;s going on.</summary>
 
 <section>
-<p>We&rsquo;re almost ready to start looking at creating our own windows, but before we do, it might be useful to take a look at a tool to help us debug the application as it begins to grow.</p>
-
-<p>Unlike other platforms, RISC&nbsp;OS is somewhat short of tools to help developers figure out why their software isn&rsquo;t working as they expect. We&rsquo;ve got the DDE, which comes as part of the Desktop Development Environment, but it&rsquo;s dated and somewhat clunky to use. There are some other alternatives &ndash; and one, which is surprisingly useful, is actually free.</p>
+<p>We&rsquo;re almost ready to start creating our own windows, but before we do, it might be useful to take a look at a tool to help us debug the application as it begins to grow. There&rsquo;s also that question about responses from reports left over from the <reference id="chap-report">last chapter</reference>, too!</p>
 </section>
 
 <section>
 <title>Getting a report</title>
 
-<p>Reporter was orignally developed by Chris Morison of Organizer fame, and &ndash; just as with that piece of software &ndash; development was picked up by Martin Avison when Chris moved on from the platform. These days it&rsquo;s freely available from the <link href="http://www.avisoft.force9.co.uk/Reporter.htm">Avisoft Website.</link>.</p>
+<p>Unlike other platforms, RISC&nbsp;OS is somewhat short of tools to help developers figure out why their software isn&rsquo;t working as they expect. We&rsquo;ve got the DDE, which comes as part of the Desktop Development Environment, but it&rsquo;s dated and somewhat clunky to use. There are some other alternatives &ndash; and one, which is surprisingly useful, is actually free.</p>
 
+<p>Reporter was originally developed by Chris Morison of Organizer fame; it was later picked up by Martin Avison has been developed (and still <em>is</em> being developed) much further. A cursory read of Reporter&rsquo;s manual might leave the impression that it&rsquo;s a tool for Basic programmers, but that&rsquo;s far from the truth: while there are a lot of built-in facilities for those using that language, it&rsquo;s just as useful for those of us working in C.</p>
 
+<p>The first thing to do is to download a copy of <link href="http://www.avisoft.force9.co.uk/Reporter.htm">Reporter</link>, and install it somewhere on your hard disc. You will also require a copy of <link href="http://www.xat.nl/riscos/sw/confix/">Confix</link> to configure Reporter, and <link href="http://www.stronged.iconbar.com/fjg/">StrongHelp</link> (if you don&rsquo;t already have it) to read its manual.</p>
 
+<p>Reporter can be installed wherever you like, while according it its manual, Confix is best placed inside <file>!Boot.Resources</file> so that it&rsquo;s seen when the machine starts up. Things should look something like <reference id="fig-debug-install"/> afterwards.</p>
 
+<image id="fig-debug-install" file="installing-reporter.png" title="Reporter and Confix should be installed on your machine"/>
+
+<p>Once installed, Reporter can be started by double-clicking on it in the usual way, and it will open a small window in the bottom-left of the screen as shown in . By default, Reporter is set to log operating system commands which are going on in the background, and as a result it will very quickly start to fill the window with lines of black text on a pale blue background.</p>
+
+<image id="fig-debug-start-reporter" file="starting-reporter.png" title="Reporter&rsquo;s initial appearance on the desktop"/>
+
+<p>Whilst such a level of detail can be useful when tracking down problems, it can also very easily swamp us with data in normal use &ndash; as soon as you start to interact with the desktop, you&rsquo;ll quickly see more lines appear. For this reason, I would suggest opening Reporter&rsquo;s Configuration dialogue (click <mouse>Menu</mouse> over its window and choose Config...) and adjusting its settings a bit. Go to the Options tab and make sure that &lsquo;Report OS Commands executed&rsquo; is unticked as shown in <reference id="fig-debug-configure-reporter"/>. You can then save the settings, and restart Reporter to make them take effect &ndash; you can do this automatically through the Restart tab before clicking on &lsquo;Save&rsquo;.</p>
+
+<p>Note that Reporter uses Confix for its configuration, so you might need to have restarted the machine after installing the latter (or at least run Confix in its new home) before these changes can be made.</p>
+
+<image id="fig-debug-configure-reporter" file="configure-reporter.png" title="Configuring Reporter&rsquo;s logging options in Confix"/>
+
+<p>With this change made, Reporter should be a lot &lsquo;quieter&rsquo; in normal use. Once you&rsquo;re familiar with it you might wish to change the settings again &ndash; for now, however, we&rsquo;re ready to start using it.</p>
+</section>
+
+<section>
+<title>Writing messages</title>
+
+<p>From the point of view of an application written in C, Reporter can be accessed via a number of SWI calls which largely replicate the *commands used in BASIC. Helpfully, OSLib gives us access to these through the <file>oslib/report.h</file> header file. For our purposes, the <swi>Report_Text0</swi> SWI is probably the most useful: OSLib makes this available through the <function>report_text0()</function> function:</p>
+
+<code lang="c">extern void report_text0(
+	char const *text
+);</code>
+
+<p>We can make use of this immediately by adding <code>#include &quot;oslib/report.h&quot;</code> to the top of <file>c.ibar</file> and then amending <function>ibar_mouse_click()</function> as follows:</p>
+
+<code lang="c">static void ibar_mouse_click(wimp_pointer *pointer)
+{
+	switch (pointer->buttons) {
+	case wimp_CLICK_SELECT:
+		report_message(&quot;Hello World!&quot;);
+		break;
+	case wimp_CLICK_ADJUST:
+		report_text0(&quot;This was an Adjust click - Goodbye!&quot;);
+		main_quit_flag = TRUE;
+		break;
+	}
+}</code>
+
+<p>If this is compiled and run then when <mouse>Adjust</mouse> is clicked on the application&rsquo;s iconbar icon, a message will be left in Reporter&rsquo;s window before the application exits &ndash; as seen in <reference id="fig-debug-log-adjust"/>. This could be extremely useful, as we can now output messages from anywhere in our code and have them appear in another multitasking window on the desktop.</p>
+
+<image id="fig-debug-log-adjust" file="log-adjust.png" title="Logging Adjust clicks in Reporter"/>
+
+<p>This isn&rsquo;t quite the whole story, however, because there&rsquo;s a potential problem. If we quit Reporter and try the same thing again, what we get is an error report (which, thanks to the <reference id="chap-report">last chapter</reference>, we can at least now identify as being a program report) telling us that &ldquo;Example App may have gone wrong&rdquo; and offering us the chance to Continue, Quit or Describe. The first two options will both cause the application to exit, while Describe takes us on to another report which contains the message &ldquo;SWI&nbsp;&amp;54C80 not known&rdquo;.</p>
+
+<p>The reason for this is simply that SWI&nbsp;&amp;54C80 &ndash; more easily recognised as <swi>Report_Text0</swi> &ndash; is provided by Reporter. If Reporter isn&rsquo;t running, the SWI isn&rsquo;t available. This means that once we start to include Reporter&rsquo;s SWIs in our application, Reporter must <em>always</em> be running when the application is. This clearly isn&rsquo;t ideal!</p> 
+
+<p>There&rsquo;s also another problem. It would be useful to be able to include the values of variables in the reported text, in a similar manner to what we can do with <function>printf()</function>, but that isn&rsquo;t possible unless we build the string up first using code similar to this:</p>
+
+<code lang="c">char buffer[256];
+snprintf(buffer, 256, "The value of buttons=%s", buttons);
+buffer[255] = '\0';
+report_text0(buffer);</code>
+
+<p>Clearly it would be cumbersome to have to do this every time that we wished to output some information about the way that our application is working. For this reason, SFLib offers a debug library &ndash; which we can access by removing <code>#include &quot;oslib/report.h&quot;</code> and adding <code>#include &quot;sflib/debug.h&quot;</code> to the top of <file>c.ibar</file>. We can then change the call to <function>report_text0()</function> so that we instead use SFLib&rsquo;s <function>debug_printf()</function>.</p>
+
+<code lang="c">static void ibar_mouse_click(wimp_pointer *pointer)
+{
+	switch (pointer->buttons) {
+	case wimp_CLICK_SELECT:
+		report_message(&quot;Hello World!&quot;);
+		break;
+	case wimp_CLICK_ADJUST:
+		debug_printf(&quot;This was an Adjust click - Goodbye!&quot;);
+		main_quit_flag = TRUE;
+		break;
+	}
+}</code>
+
+<p>If this is compiled, it should become clear that the application will exit cleanly when <mouse>Adjust</mouse> is clicked, whether or not Reporter is currently loaded. In fact, <function>debug_printf()</function> checks to see if <swi>Report_Text0</swi> exists before trying to call it, so it&rsquo;s even safe to load or quit Reporter while our application is running.</p>
+</section>
+
+<section>
+<title>Getting more deatail</title>
+
+<p>The other advantage of <function>debug_printf()</function>, which should be apparent from its name, is that it provides the functionality of <function>printf()</function> while sending its output to Reporter via <swi>Report_Text0</swi>. We can now add another line to <function>ibar_mouse_click()</function> which reports the value of <variable>pointer->buttons</variable>:</p>
+
+<code lang="c">static void ibar_mouse_click(wimp_pointer *pointer)
+{
+	debug_printf(&quot;The value of buttons=%d&quot;, pointer->buttons);
+
+	switch (pointer->buttons) {
+	case wimp_CLICK_SELECT:
+		report_message(&quot;Hello World!&quot;);
+		break;
+	case wimp_CLICK_ADJUST:
+		debug_printf(&quot;This was an Adjust click - Goodbye!&quot;);
+		main_quit_flag = TRUE;
+		break;
+	}
+}</code>
+
+<p>The result of this change can be seen in <reference id="fig-debug-printf"/>. It&rsquo;s a useful level of flexibility to have when developing and testing software, and one that we will be making use of as we progress.</p>
+
+<image id="fig-debug-printf" file="debug-printf.png" title="Outputting a variable&rsquo;s value with debug_printf"/>
+
+<p>This screenshot also shows that Reporter picks up on report boxes being opened: their details are shown in its window, highlighted in red to make them stand out.</p>
 </section>
 
 

@@ -1,4 +1,4 @@
-/* Copyright 2015, Stephen Fryatt (info@stevefryatt.org.uk)
+/* Copyright 2015-2017, Stephen Fryatt (info@stevefryatt.org.uk)
  *
  * This file is part of Wimp Programming In C:
  *
@@ -22,36 +22,15 @@
  */
 
 /**
- * File: main.c
+ * File: report.h
  */
 
-#include "oslib/wimp.h"
+#ifndef SIMPLEAPP_REPORT
+#define SIMPLEAPP_REPORT
 
-int main(int argc, char *argv[])
-{
-	osbool		quit = FALSE;
-	wimp_block	block;
-	wimp_event_no	reason;
+/* Report a message */
 
-	wimp_initialise(wimp_VERSION_RO3, "Example App", NULL, NULL);
+void report_message(char *message, char *buttons);
 
-	while (!quit) {
-		reason = wimp_poll(wimp_MASK_NULL | wimp_MASK_ENTERING |
-				wimp_MASK_LEAVING | wimp_MASK_GAIN |
-				wimp_MASK_LOSE | wimp_MASK_POLLWORD,
-				&block, NULL);
-
-		switch (reason) {
-		case wimp_USER_MESSAGE:
-		case wimp_USER_MESSAGE_RECORDED:
-			if (block.message.action == message_QUIT)
-				quit = TRUE;
-			break;
-		}
-	}
-
-	wimp_close_down(0);
-
-	return 0;
-}
+#endif
 

@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 
 static void main_initialise(void)
 {
-	wimp_initialise(wimp_VERSION_RO3, "Wimp Task", NULL, NULL);
+	wimp_initialise(wimp_VERSION_RO3, "Example App", NULL, NULL);
 }
 
 /* Wimp_Poll loop. */

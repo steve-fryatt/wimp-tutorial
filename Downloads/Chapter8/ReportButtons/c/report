@@ -1,4 +1,4 @@
-/* Copyright 2015, Stephen Fryatt (info@stevefryatt.org.uk)
+/* Copyright 2015-2017, Stephen Fryatt (info@stevefryatt.org.uk)
  *
  * This file is part of Wimp Programming In C:
  *
@@ -22,36 +22,29 @@
  */
 
 /**
- * File: main.c
+ * File: report.c
  */
 
+#include "oslib/os.h"
 #include "oslib/wimp.h"
+#include "oslib/wimpspriteop.h"
 
-int main(int argc, char *argv[])
+#include <string.h>
+
+#include "report.h"
+
+/* Report a message */
+
+void report_message(char *message, char *buttons)
 {
-	osbool		quit = FALSE;
-	wimp_block	block;
-	wimp_event_no	reason;
+	os_error error;
 
-	wimp_initialise(wimp_VERSION_RO3, "Example App", NULL, NULL);
+	error.errnum = 255;
+	strncpy(error.errmess, message, os_ERROR_LIMIT);
+	error.errmess[os_ERROR_LIMIT - 1] = '\0';
 
-	while (!quit) {
-		reason = wimp_poll(wimp_MASK_NULL | wimp_MASK_ENTERING |
-				wimp_MASK_LEAVING | wimp_MASK_GAIN |
-				wimp_MASK_LOSE | wimp_MASK_POLLWORD,
-				&block, NULL);
-
-		switch (reason) {
-		case wimp_USER_MESSAGE:
-		case wimp_USER_MESSAGE_RECORDED:
-			if (block.message.action == message_QUIT)
-				quit = TRUE;
-			break;
-		}
-	}
-
-	wimp_close_down(0);
-
-	return 0;
+	wimp_report_error_by_category(&error, wimp_ERROR_BOX_GIVEN_CATEGORY |
+		(wimp_ERROR_BOX_CATEGORY_INFO << wimp_ERROR_BOX_CATEGORY_SHIFT),
+		"Example App", "application", wimpspriteop_AREA, buttons);
 }
 

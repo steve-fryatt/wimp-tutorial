@@ -46,6 +46,6 @@ void report_message(char *message)
 	wimp_report_error_by_category(&error, wimp_ERROR_BOX_GIVEN_CATEGORY |
 		(wimp_ERROR_BOX_CATEGORY_INFO << wimp_ERROR_BOX_CATEGORY_SHIFT) |
 		wimp_ERROR_BOX_OK_ICON,
-		"ExampleApp", "application", wimpspriteop_AREA, NULL);
+		"Example App", "application", wimpspriteop_AREA, NULL);
 }
 
