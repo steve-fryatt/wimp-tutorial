@@ -1753,7 +1753,7 @@ void ibar_initialise(void);
 	}
 }</code>
 
-<p>With this modification in place, it is now necessary to click <mouse>Adjust</mouse> on the iconbar icon in order to make the application exit: <mouse>Select</mouse> and <mouse>Menu</mouse> will be ignored. A full set of the updated files can be found in <reference id="dl-ibar-click2"/>.</p>
+<p>A full set of the updated files can be found in <reference id="dl-ibar-click2"/>. With this modification in place, it is now necessary to click <mouse>Adjust</mouse> on the iconbar icon in order to make the application exit: <mouse>Select</mouse> and <mouse>Menu</mouse> will be ignored.</p>
 
 <download id="dl-ibar-click2" file="SimpleCIBarClick2" title="Check for Adjust clicks before Exiting" compatibility="none"/>
 </section>
@@ -1824,14 +1824,14 @@ error.errmess[os_ERROR_LIMIT - 1] = '\0';</code>
 <section>
 <title>A generic function</title>
 
-<p>Since this is all a little cumbersome when we simply wish to present a message to the user, it would make sense to package <swi>Wimp_ReportError</swi> up into a separate chunk of code. To that end, we&rsquo;ll create a new file called <file>c.report</file>, as shown in <reference id="list-report-report-h"/> which defines a <function>report_message(char *message)</function>.</p>
+<p>Since this is all a little cumbersome when we simply wish to present a message to the user, it would make sense to package <swi>Wimp_ReportError</swi> up into a separate chunk of code. To that end, we&rsquo;ll create a new file called <file>c.repbox</file>, as shown in <reference id="list-report-repbox-h"/> which defines a <function>repbox_message(char *message)</function>.</p>
 
-<code id="list-report-report-h" lang="c" file="c.report" title="The new report file">/**
+<code id="list-report-repbox-h" lang="c" file="c.repbox" title="The new report file">/**
  * Example 8.1
  *
  * (c) Stephen Fryatt, 2017
  *
- * File: report.c
+ * File: repbox.c
  */
 
 #include &quot;oslib/os.h&quot;
@@ -1839,11 +1839,11 @@ error.errmess[os_ERROR_LIMIT - 1] = '\0';</code>
 
 #include &lt;string.h&gt;
 
-#include &quot;report.h&quot;
+#include &quot;repbox.h&quot;
 
 /* Report a message */
 
-void report_message(char *message)
+void repbox_message(char *message)
 {
 	os_error error;
 
@@ -1856,14 +1856,14 @@ void report_message(char *message)
 
 <p>This is more or less the code that we outlined above, except that the message being copied into the error block is the one pointed to by the <variable>*message</variable> parameter. Note that we&rsquo;re including both <file>oslib/wimp.h</file> <em>and</em> <file>oslib/os.h</file> in order to be able to use <name>os_error</name>.</p>
 
-<p>The file also includes the <file>h.report</file> file, which is as shown in <reference id="list-report-report-c"/>. It merely provides a function prototype for <function>report_message()</function>, so that we can access it from elsewhere in the application.</p>
+<p>The file also includes the <file>h.repbox</file> file, which is as shown in <reference id="list-report-repbox-c"/>. It merely provides a function prototype for <function>repbox_message()</function>, so that we can access it from elsewhere in the application.</p>
 
-<code id="list-report-report-c" lang="c" file="h.report" title="The header for the new report file">/**
+<code id="list-report-repbox-c" lang="c" file="h.report" title="The header for the new report file">/**
  * Example 8.1
  *
  * (c) Stephen Fryatt, 2017
  *
- * File: report.h
+ * File: repbox.h
  */
 
 #ifndef EXAMPLEAPP_REPORT
@@ -1871,17 +1871,17 @@ void report_message(char *message)
 
 /* Report a message */
 
-void report_message(char *message);
+void repbox_message(char *message);
 
 #endif</code>
 
-<p>Armed with this new code, we can now <code>#include &quot;report.h&quot;</code> in <file>c.ibar</file> before using the new reporting function to respond to the user clicking on the iconbar icon. If we wished to greet the user when they click <mouse>Select</mouse> on the icon, we could amend the <code>switch</code> statement as follows:</p>
+<p>Armed with this new code, we can now <code>#include &quot;repbox.h&quot;</code> in <file>c.ibar</file> before using the new reporting function to respond to the user clicking on the iconbar icon. If we wished to greet the user when they click <mouse>Select</mouse> on the icon, we could amend the <code>switch</code> statement as follows:</p>
 
 <code lang="c">static void ibar_mouse_click(wimp_pointer *pointer)
 {
 	switch (pointer->buttons) {
 	case wimp_CLICK_SELECT:
-		report_message(&quot;Hello World!&quot;);
+		repbox_message(&quot;Hello World!&quot;);
 		break;
 	case wimp_CLICK_ADJUST:
 		main_quit_flag = TRUE;
@@ -1891,7 +1891,7 @@ void report_message(char *message);
 
 <p>If we now amend the <file>Makefile</file> so that the <code>OBJS</code> line reads</p>
 
-<code lang="makefile">OBJS = main ibar report</code>
+<code lang="makefile">OBJS = main ibar repbox</code>
 
 <p>we can double-click on <file>Mk</file> to build a new version of our application. After running it, click <mouse>Select</mouse> on its iconbar icon and the report shown in <reference id="fig-report-box-old-ok"/> should appear. The full code can be found in <reference id="dl-report-old"/>.</p>
 
@@ -1988,9 +1988,9 @@ void report_message(char *message);
 
 <image id="fig-report-sprites" file="report-sprites.png" title="Wimp report symbols for categories 0 to 4"/>
 
-<p>We can update our <function>report_message()</function> in <file>c.report</file> to make use of the new report by changing it as follows:</p>
+<p>We can update our <function>repbox_message()</function> in <file>c.report</file> to make use of the new report by changing it as follows:</p>
 
-<code lang="c">void report_message(char *message)
+<code lang="c">void repbox_message(char *message)
 {
 	os_error error;
 
@@ -2020,9 +2020,9 @@ void report_message(char *message);
 
 <p>There&rsquo;s one more thing that we can change using the new report API: we can add to &ndash; or even completely replace &ndash; the &lsquo;OK&rsquo; and &lsquo;Cancel&rsquo; buttons in the box. This is done by setting <variable>*buttons</variable> to point to a string containing a set of one or more button labels in a comma separated list.</p>
 
-<p>To implement this, we&rsquo;ll update <function>report_message()</function> again to allow a set of button labels to be supplied by the caller:</p>
+<p>To implement this, we&rsquo;ll update <function>repbox_message()</function> again to allow a set of button labels to be supplied by the caller:</p>
 
-<code lang="c">void report_message(char *message, char *buttons)
+<code lang="c">void repbox_message(char *message, char *buttons)
 {
 	os_error error;
 
@@ -2036,9 +2036,9 @@ void report_message(char *message);
 			&quot;Example App&quot;, &quot;application&quot;, wimpspriteop_AREA, buttons);
 }</code> 
 
-<p>Remember to change the prototype in <file>h.report</file> as well as the function itself in <file>c.report</file>! We can now change the call made to <function>report_message()</function> in <file>c.ibar</file> to include this additional <variable>*buttons</variable> parameter. It could be set to <name>NULL</name> to retain the existing behaviour, or we could add some new buttons which respond to our application&rsquo;s greeting:</p>
+<p>Remember to change the prototype in <file>h.repbox</file> as well as the function itself in <file>c.repbox</file>! We can now change the call made to <function>repbox_message()</function> in <file>c.ibar</file> to include this additional <variable>*buttons</variable> parameter. It could be set to <name>NULL</name> to retain the existing behaviour, or we could add some new buttons which respond to our application&rsquo;s greeting:</p>
 
-<code lang="c">report_message("Hello World!", "Howdy!,Go Away!");</code>
+<code lang="c">repbox_message("Hello World!", "Howdy!,Go Away!");</code>
 
 <p>If these changes are compiled and run, clicking <mouse>Select</mouse> on our iconbar icon should result in the report shown in <reference id="fig-report-box-new-buttons"/>.</p>
 
@@ -2124,7 +2124,7 @@ void report_message(char *message);
 {
 	switch (pointer->buttons) {
 	case wimp_CLICK_SELECT:
-		report_message(&quot;Hello World!&quot;);
+		repbox_message(&quot;Hello World!&quot;, "Howdy!,Go Away!");
 		break;
 	case wimp_CLICK_ADJUST:
 		report_text0(&quot;This was an Adjust click - Goodbye!&quot;);
@@ -2156,7 +2156,7 @@ report_text0(buffer);</code>
 {
 	switch (pointer->buttons) {
 	case wimp_CLICK_SELECT:
-		report_message(&quot;Hello World!&quot;);
+		repbox_message(&quot;Hello World!&quot;, "Howdy!,Go Away!");
 		break;
 	case wimp_CLICK_ADJUST:
 		debug_printf(&quot;This was an Adjust click - Goodbye!&quot;);
@@ -2179,7 +2179,7 @@ report_text0(buffer);</code>
 
 	switch (pointer->buttons) {
 	case wimp_CLICK_SELECT:
-		report_message(&quot;Hello World!&quot;);
+		repbox_message(&quot;Hello World!&quot;);
 		break;
 	case wimp_CLICK_ADJUST:
 		debug_printf(&quot;This was an Adjust click - Goodbye!&quot;);

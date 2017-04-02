@@ -22,15 +22,15 @@
  */
 
 /**
- * File: report.h
+ * File: repbox.h
  */
 
-#ifndef EXAMPLEAPP_REPORT
-#define EXAMPLEAPP_REPORT
+#ifndef EXAMPLEAPP_REPBOX
+#define EXAMPLEAPP_REPBOX
 
 /* Report a message */
 
-void report_message(char *message);
+void repbox_message(char *message, char *buttons);
 
 #endif
 

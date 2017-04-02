@@ -24,7 +24,7 @@
 
 COMPONENT = ExampleApp
 
-OBJS = main ibar report
+OBJS = main ibar repbox
 
 CINCLUDES = -IC:,OSLib:,SFLib:
 LIBS = SFLib:o.SFLib OSLib:o.OSLib32

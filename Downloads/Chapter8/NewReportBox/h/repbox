@@ -22,30 +22,15 @@
  */
 
 /**
- * File: report.c
+ * File: repbox.h
  */
 
-#include "oslib/os.h"
-#include "oslib/wimp.h"
-#include "oslib/wimpspriteop.h"
-
-#include <string.h>
-
-#include "report.h"
+#ifndef EXAMPLEAPP_REPBOX
+#define EXAMPLEAPP_REPBOX
 
 /* Report a message */
 
-void report_message(char *message)
-{
-	os_error error;
+void repbox_message(char *message);
 
-	error.errnum = 255;
-	strncpy(error.errmess, message, os_ERROR_LIMIT);
-	error.errmess[os_ERROR_LIMIT - 1] = '\0';
-
-	wimp_report_error_by_category(&error, wimp_ERROR_BOX_GIVEN_CATEGORY |
-		(wimp_ERROR_BOX_CATEGORY_INFO << wimp_ERROR_BOX_CATEGORY_SHIFT) |
-		wimp_ERROR_BOX_OK_ICON,
-		"Example App", "application", wimpspriteop_AREA, NULL);
-}
+#endif
 

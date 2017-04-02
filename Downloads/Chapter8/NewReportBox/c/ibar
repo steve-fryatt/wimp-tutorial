@@ -32,7 +32,7 @@
 #include "ibar.h"
 
 #include "main.h"
-#include "report.h"
+#include "repbox.h"
 
 /* Function Prototypes. */
 
@@ -63,7 +63,7 @@ static void ibar_mouse_click(wimp_pointer *pointer)
 {
 	switch (pointer->buttons) {
 	case wimp_CLICK_SELECT:
-		report_message("Hello World!");
+		repbox_message("Hello World!");
 		break;
 	case wimp_CLICK_ADJUST:
 		main_quit_flag = TRUE;
