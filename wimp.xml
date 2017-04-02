@@ -37,6 +37,8 @@
 <p>Eventually I settled on using a combination of <link href="http://ro-oslib.sourceforge.net/">OSLib</link> and my own libraries &ndash; imaginatively called SFLib &ndash; based on it. Together, these have formed the basis of all of my software which has been started since 2000.</p>
 
 <p>The aim of this guide is to give some help to those who are competent in C but have not used it when writing for the RISC&nbsp;OS desktop. It will also introduce the use of SFLib, which may be of interest to those writing Wimp software using OSLib.</p>
+
+<p>Many thanks to all those on the <link href="https://www.riscosopen.org/forum/">ROOL Forums</link> who have answered my questions about the DDE and offered suggestions while I&rsquo;ve worked on this guide.</p>
 </section>
 
 <chapterlist/>
@@ -216,7 +218,7 @@ regs.r[2] = (int) &quot;Example App&quot;;
 regs.r[3] = (int) 0;
 error = _kernel_swi(Wimp_Initialise, &amp;regs, &amp;regs);</code>
 
-<p>This is clearly quite complex for a single SWI call, and includes a fair bit of casting to get the various types of parameter into integers, so the libraries supplied with the DDE offrer an alternative in the form of the <function>_swi()</function> and <function>_swix()</function> functions in <file>swis.h</file>. Using these, we could re-write the call to <swi>Wimp_Initialise</swi> like this:</p>
+<p>This is clearly quite complex for a single SWI call, and includes a fair bit of casting to get the various types of parameter into integers, so the libraries supplied with the DDE offer an alternative in the form of the <function>_swi()</function> and <function>_swix()</function> functions in <file>swis.h</file>. Using these, we could re-write the call to <swi>Wimp_Initialise</swi> like this:</p>
 
 <code lang="c">#include &quot;swis.h&quot;
 
@@ -249,7 +251,7 @@ error = wimp_initialise(310, &quot;Example App&quot;, 0, 0, 0);</code>
 os_error *error;
 error = xwimp_initialise(wimp_VERSION_RO3, &quot;Example App&quot;, NULL, NULL, NULL);</code>
 
-<p>Notice that in all the C examples so far, we've used a variable <variable>error</variable>, which we&rsquo;ve assigned from the function. This is loosely equivalent to the following code in BASIC.</p>
+<p>Notice that in all the C examples so far, we&rsquo;ve used a variable <variable>error</variable>, which we&rsquo;ve assigned from the function. This is loosely equivalent to the following code in BASIC.</p>
 
 <code lang="bbcbasic">SYS &quot;XWimp_Initialise&quot;, 310, &amp;4B534154, &quot;Example App&quot;, 0 TO error% ;flags%
 IF (flags% AND 1) = 0 THEN error% = 0</code>
@@ -1787,7 +1789,7 @@ void ibar_initialise(void);
 
 <image id="fig-report-example-draw" file="example-draw.png" title="A simple example of a Wimp Report box"/>
 
-<p>Error reports are made using the <swi>Wimp_ReportError</swi>, which maps to <em>two</em> functions in OSLib: <function>wimp_report_error()</function> and <function>wimp_report_error_by_category()</function>. Aside from anything else, this provides a neat example of how OSLib handles SWIs which present two or more significantly different options in the sets of parameters that they require. In this case, the reason is that error reporting changed significantly when RISC&nbsp;OS&nbsp;3.5 was released with the RiscPC. Although modern applications should probably be using the new interface, the old one is still more or less supported and &ndash; as it requires less setting up, we&rsquo;ll start there before upgrading to the new system.</p>
+<p>Error reports are made using <swi>Wimp_ReportError</swi>, which maps to <em>two</em> functions in OSLib: <function>wimp_report_error()</function> and <function>wimp_report_error_by_category()</function>. Aside from anything else, this provides a neat example of how OSLib handles SWIs which present two or more significantly different options in the sets of parameters that they require. In this case, the reason is that error reporting changed significantly when RISC&nbsp;OS&nbsp;3.5 was released with the RiscPC. Although modern applications should probably be using the new interface, the old one is still more or less supported and &ndash; as it requires less setting up, we&rsquo;ll start there before upgrading to the new system.</p>
 
 <p>Creating an &lsquo;old&rsquo; report is done using the <function>wimp_report_error()</function> function, and requires just three pieces of information. The function&rsquo;s prototype is defined as follows:</p>
 
@@ -1797,7 +1799,7 @@ void ibar_initialise(void);
 	char const		*name
 );</code>
 
-<p>The first item is <variable>*error</variable>, which is a pointer to a standard OS <intro>error block</intro>. These blocks are used throughout RISC&nbsp;OS, and not just by the Wimp: they're returned by the &lsquo;X&rsquo; form of SWIs when things go wrong, and the idea is that in an application, they can be passed straight on to <swi>Wimp_ReportError</swi> if required. As we can tell from the fact that <name>os_error</name> begins with &ldquo;os_&rdquo; and not &ldquo;wimp_&rdquo;, OSLib defines the structure in <file>oslib/os.h</file> and not <file>oslib/wimp.h</file>. The definition is as follows:</p>
+<p>The first item is <variable>*error</variable>, which is a pointer to a standard OS <intro>error block</intro>. These blocks are used throughout RISC&nbsp;OS, and not just by the Wimp: they&rsquo;re returned by the &lsquo;X&rsquo; form of SWIs when things go wrong, and the idea is that in an application, they can be passed straight on to <swi>Wimp_ReportError</swi> if required. As we can tell from the fact that <name>os_error</name> begins with &ldquo;os_&rdquo; and not &ldquo;wimp_&rdquo;, OSLib defines the structure in <file>oslib/os.h</file> and not <file>oslib/wimp.h</file>. The definition is as follows:</p>
 
 <code lang="c">struct os_error {
 	bits	errnum;
@@ -2054,7 +2056,7 @@ void report_message(char *message);
 
 <p>It should be clear that the report system is fairly flexible, and the fact that the Wimp sorts out all of the formatting for us makes it easy to use. There are some limitations to the additional buttons, though: although the Wimp will extend the report box horizontally to accommodate a large number of buttons, this can quickly fill a small screen and should be used with caution. That said, if you need to ask a question with more than a &ldquo;Yes, No or Cancel&rdquo; kind of answer, then a report box probably isn&rsquo;t going to be the correct way to do it &ndash; you should be thinking about a proper dialogue box, once you know how to do that!</p>
 
-<p>Something that we&rsquo;ve not considered yet is the question of which button was chosen by the user if there was more than one? If we&rsquo;re going to the length of asking the user a question, being able to identify how they responded would be useful. We'll look at that in the <reference id="chap-debug">next chapter</reference>, after we&rsquo;ve added another debug tool to our armoury.</p>
+<p>Something that we&rsquo;ve not considered yet is the question of which button was chosen by the user if there was more than one available: if we&rsquo;re going to the length of asking the user a question, being able to identify how they responded would be useful. We&rsquo;ll look at that soon, after we&rsquo;ve added another debug tool to our armoury in the <reference id="chap-debug">next chapter</reference>.</p>
 
 
 <download id="dl-report-buttons" file="ReportButtons" title="Setting custom buttons in a report" compatibility="none"/>
@@ -2084,7 +2086,7 @@ void report_message(char *message);
 <section>
 <title>Getting a report</title>
 
-<p>Unlike other platforms, RISC&nbsp;OS is somewhat short of tools to help developers figure out why their software isn&rsquo;t working as they expect. We&rsquo;ve got the DDE, which comes as part of the Desktop Development Environment, but it&rsquo;s dated and somewhat clunky to use. There are some other alternatives &ndash; and one, which is surprisingly useful, is actually free.</p>
+<p>Unlike other platforms, RISC&nbsp;OS is somewhat short of tools to help developers figure out why their software isn&rsquo;t working as they expect. We&rsquo;ve got the Desktop Debugging Tool (or DDT), which comes as part of the DDE, but it&rsquo;s dated and somewhat clunky to use. There are some other alternatives &ndash; and one, which is surprisingly useful, is actually free.</p>
 
 <p>Reporter was originally developed by Chris Morison of Organizer fame; it was later picked up by Martin Avison has been developed (and still <em>is</em> being developed) much further. A cursory read of Reporter&rsquo;s manual might leave the impression that it&rsquo;s a tool for Basic programmers, but that&rsquo;s far from the truth: while there are a lot of built-in facilities for those using that language, it&rsquo;s just as useful for those of us working in C.</p>
 
@@ -2194,7 +2196,7 @@ report_text0(buffer);</code>
 </section>
 
 <!-- \TODO - Report return values and SFLib error.h -->
-
+<!--
 <section>
 <title>Crashes and postmortems</title>
 
@@ -2210,9 +2212,10 @@ report_text0(buffer);</code>
 
 <image id="fig-debug-postmortem-1" file="postmortem-1.png" title="The postmortem should show us where the error occurred"/>
 
-<!-- \TODO - Finish this off!!! -->
+\TODO - Finish this off!!!
 
 </section>
+-->
 </chapter>
 
 
@@ -2220,7 +2223,7 @@ report_text0(buffer);</code>
    -
    - A Look at Debugging
   -->
-
+<!--
 <chapter id="chap-windows">
 <resources>
 <images>Chapter10</images>
@@ -2288,7 +2291,7 @@ struct wimp_window {
 </chapter>
 
 
-
+-->
 
 
 
