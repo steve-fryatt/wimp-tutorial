@@ -1249,8 +1249,8 @@ void ibar_initialise(void)
  * File: ibar.h
  */
 
-#ifndef SIMPLEAPP_IBAR
-#define SIMPLEAPP_IBAR
+#ifndef EXAMPLEAPP_IBAR
+#define EXAMPLEAPP_IBAR
 
 /* Iconbar Initialisation. */
 
@@ -1565,8 +1565,8 @@ case wimp_USER_MESSAGE_RECORDED:
  * File: main.h
  */
 
-#ifndef SIMPLEAPP_MAIN
-#define SIMPLEAPP_MAIN
+#ifndef EXAMPLEAPP_MAIN
+#define EXAMPLEAPP_MAIN
 
 /* Aplication Quit Request Flag. */
 
@@ -1713,8 +1713,8 @@ static void ibar_mouse_click(wimp_pointer *pointer)
  * File: ibar.h
  */
 
-#ifndef SIMPLEAPP_IBAR
-#define SIMPLEAPP_IBAR
+#ifndef EXAMPLEAPP_IBAR
+#define EXAMPLEAPP_IBAR
 
 /* Iconbar Initialisation. */
 
@@ -1866,8 +1866,8 @@ void report_message(char *message)
  * File: report.h
  */
 
-#ifndef SIMPLEAPP_REPORT
-#define SIMPLEAPP_REPORT
+#ifndef EXAMPLEAPP_REPORT
+#define EXAMPLEAPP_REPORT
 
 /* Report a message */
 

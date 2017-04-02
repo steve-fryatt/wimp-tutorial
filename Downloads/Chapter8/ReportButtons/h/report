@@ -25,8 +25,8 @@
  * File: report.h
  */
 
-#ifndef SIMPLEAPP_REPORT
-#define SIMPLEAPP_REPORT
+#ifndef EXAMPLEAPP_REPORT
+#define EXAMPLEAPP_REPORT
 
 /* Report a message */
 

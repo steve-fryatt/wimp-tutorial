@@ -25,8 +25,8 @@
  * File: ibar.h
  */
 
-#ifndef SIMPLEAPP_IBAR
-#define SIMPLEAPP_IBAR
+#ifndef EXAMPLEAPP_IBAR
+#define EXAMPLEAPP_IBAR
 
 /* Iconbar Initialisation. */
 
