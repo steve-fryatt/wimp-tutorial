@@ -1858,7 +1858,7 @@ void repbox_message(char *message)
 
 <p>The file also includes the <file>h.repbox</file> file, which is as shown in <reference id="list-report-repbox-c"/>. It merely provides a function prototype for <function>repbox_message()</function>, so that we can access it from elsewhere in the application.</p>
 
-<code id="list-report-repbox-c" lang="c" file="h.report" title="The header for the new report file">/**
+<code id="list-report-repbox-c" lang="c" file="h.repbox" title="The header for the new report file">/**
  * Example 8.1
  *
  * (c) Stephen Fryatt, 2017
@@ -1866,8 +1866,8 @@ void repbox_message(char *message)
  * File: repbox.h
  */
 
-#ifndef EXAMPLEAPP_REPORT
-#define EXAMPLEAPP_REPORT
+#ifndef EXAMPLEAPP_REPBOX
+#define EXAMPLEAPP_REPBOX
 
 /* Report a message */
 
