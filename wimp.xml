@@ -2058,7 +2058,6 @@ void repbox_message(char *message);
 
 <p>Something that we&rsquo;ve not considered yet is the question of which button was chosen by the user if there was more than one available: if we&rsquo;re going to the length of asking the user a question, being able to identify how they responded would be useful. We&rsquo;ll look at that soon, after we&rsquo;ve added another debug tool to our armoury in the <reference id="chap-debug">next chapter</reference>.</p>
 
-
 <download id="dl-report-buttons" file="ReportButtons" title="Setting custom buttons in a report" compatibility="none"/>
 </section>
 </chapter>
@@ -2080,7 +2079,7 @@ void repbox_message(char *message);
 <summary>Before moving on to the &lsquo;serious stuff&rsquo;, it might help to take a look at a tool to help us see what&rsquo;s going on.</summary>
 
 <section>
-<p>We&rsquo;re almost ready to start creating our own windows, but before we do, it might be useful to take a look at a tool to help us debug the application as it begins to grow. There&rsquo;s also that question about responses from reports left over from the <reference id="chap-report">last chapter</reference>, too!</p>
+<p>Before we deal with the unfinished business from the <reference id="chap-report">last chapter</reference> and get on to the more recognisable parts of the Wimp, we&rsquo;re going to take a small diversion to look at a tool to help us debug the application as it begins to grow.</p>
 </section>
 
 <section>
@@ -2133,9 +2132,11 @@ void repbox_message(char *message);
 	}
 }</code>
 
-<p>If this is compiled and run then when <mouse>Adjust</mouse> is clicked on the application&rsquo;s iconbar icon, a message will be left in Reporter&rsquo;s window before the application exits &ndash; as seen in <reference id="fig-debug-log-adjust"/>. This could be extremely useful, as we can now output messages from anywhere in our code and have them appear in another multitasking window on the desktop.</p>
+<p>A full set of code can be found in <reference id="dl-debug-oslib"/>. If this is compiled and run then when <mouse>Adjust</mouse> is clicked on the application&rsquo;s iconbar icon, a message will be left in Reporter&rsquo;s window before the application exits &ndash; as seen in <reference id="fig-debug-log-adjust"/>. This could be extremely useful, as we can now output messages from anywhere in our code and have them appear in another multitasking window on the desktop.</p>
 
 <image id="fig-debug-log-adjust" file="log-adjust.png" title="Logging Adjust clicks in Reporter"/>
+
+<download id="dl-debug-oslib" file="ReporterOSLib" title="Outputting Debug via Reporter" compatibility="none"/>
 
 <p>This isn&rsquo;t quite the whole story, however, because there&rsquo;s a potential problem. If we quit Reporter and try the same thing again, what we get is an error report (which, thanks to the <reference id="chap-report">last chapter</reference>, we can at least now identify as being a program report) telling us that &ldquo;Example App may have gone wrong&rdquo; and offering us the chance to Continue, Quit or Describe. The first two options will both cause the application to exit, while Describe takes us on to another report which contains the message &ldquo;SWI&nbsp;&amp;54C80 not known&rdquo;.</p>
 
@@ -2169,7 +2170,7 @@ report_text0(buffer);</code>
 </section>
 
 <section>
-<title>Getting more deatail</title>
+<title>Getting more detail</title>
 
 <p>The other advantage of <function>debug_printf()</function>, which should be apparent from its name, is that it provides the functionality of <function>printf()</function> while sending its output to Reporter via <swi>Report_Text0</swi>. We can now add another line to <function>ibar_mouse_click()</function> which reports the value of <variable>pointer->buttons</variable>:</p>
 
@@ -2192,30 +2193,52 @@ report_text0(buffer);</code>
 
 <image id="fig-debug-printf" file="debug-printf.png" title="Outputting a variable&rsquo;s value with debug_printf"/>
 
-<p>This screenshot also shows that Reporter picks up on report boxes being opened: their details are shown in its window, highlighted in red to make them stand out.</p>
+<p>This screenshot also shows that Reporter picks up on report boxes being opened: their details are shown in its window, highlighted in red to make them stand out. <reference id="dl-debug-sflib"/> contains the full set of changes.</p>
+
+<download id="dl-debug-sflib" file="ReporterSFLib" title="Using SFLib&rsquo;s Debug for Output" compatibility="none"/>
 </section>
 
-<!-- \TODO - Report return values and SFLib error.h -->
-<!--
 <section>
 <title>Crashes and postmortems</title>
 
-<p>Before moving on, let&rsquo;s return briefly to the problem that we had with <swi>Report_Text0</swi> when Reporter wasn&rsquo;t loaded. When the application crashed, we saw a different error report: shown in <reference id="fig-debug-program-error"/>. Some errors &ndash; which are identified by their error number in the OS error block &ndash; are treated as &lsquo;serious errors&rsquo; and given special treatment by the Wimp. The original error message is hidden from the user at first, and is instead replaced by the text shown.</p>
+<p>Before moving on, let&rsquo;s return briefly to the problem that we had with <swi>Report_Text0</swi> when Reporter wasn&rsquo;t loaded. When the application crashed, we saw a different error report: shown in <reference id="fig-debug-program-error"/>. Some errors &ndash; which the Wimp identifies by checking the error number in the OS error block against a list that it holds &ndash; are considered to be &lsquo;serious&rsquo; and given special treatment. The original error message is hidden from the user at first, and is replaced by the text shown.</p>
 
 <image id="fig-debug-program-error" file="program-error.png" title="Some error numbers are trapped by the Wimp and reported differently"/>
 
-<p>The &lsquo;Continue&rsquo; and &lsquo;Quit&rsquo; buttons correspond to &lsquo;Continue&rsquo; and &lsquo;Cancel&rsquo; &ndash; the only difference is that if the application didn&rsquo;t request a Cancel button, selecting Quit will forcibly terminate the application. Clicking on &lsquo;Describe&rsquo; will take the user to a second report box, as seen in <reference id="fig-debug-description-error"/>, where the <em>original</em> error message is shown.</p>
+<p>The &lsquo;Continue&rsquo; and &lsquo;Quit&rsquo; buttons correspond to &lsquo;Continue&rsquo; and &lsquo;Cancel&rsquo; in a &lsquo;non-serious&rsquo; report &ndash; the only difference is that if the application didn&rsquo;t request a Cancel button, then it will be forcibly terminated if Quit is chosen. Clicking on &lsquo;Describe&rsquo; will take the user to a second report box, as seen in <reference id="fig-debug-description-error"/>, where the <em>original</em> error message is finally revealed.</p>
 
 <image id="fig-debug-description-error" file="description-error.png" title="Interested parties can still see the original error message if they wish"/>
 
 <p>At this stage, it&rsquo;s often possible to request a <intro>postmortem</intro> by clicking on &lsquo;Postmortem&rsquo;. This will be presented in a single-tasking text window on the desktop, ending with the familiar &ldquo;Press SPACE or click mouse to continue&rdquo; message. The postmortem <em>should</em> show us where in the program the error occurred, but &ndash; as shown in <reference id="fig-debug-postmortem-1"/> &ndash; all it tells us is &ldquo;anonymous function&rdquo;.</p>
 
-<image id="fig-debug-postmortem-1" file="postmortem-1.png" title="The postmortem should show us where the error occurred"/>
+<image id="fig-debug-postmortem-1" file="postmortem-1.png" title="The postmortem doesn&rsquo;t tell us very much"/>
 
-\TODO - Finish this off!!!
+<p>The reason for the unhelpful postmortem information is that as things stand, the <file>Mk</file> shared makefile defaults to passing the <command>-ff</command> parameter to the C&nbsp;Compiler. This instructs the compiler not to embed function names in the code that it generates: there&rsquo;s around a 5% reduction in code size as a result, but the downside is that identifying the location of crashes can be a lot more difficult.</p>
 
+<p>To overcome this we can instruct the makefile to remove this flag, and the easiest way to achieve this is to clear Make&rsquo;s <variable>C_NO_FNAMES</variable> variable <em>after</em> the line to <code>include CApp</code>. As standard, <variable>C_NO_FNAMES</variable> is set to &lsquo;-ff&rsquo; &ndash; this in turn sets the parameter in the call to the compiler. The modified makefile should look as shown in <reference id="list-debug-make"/>.</p>
+
+<code lang="makefile" id="list-debug-make" file="Makefile"># Makefile for Example App
+
+COMPONENT = ExampleApp
+
+OBJS = main ibar repbox
+
+CINCLUDES = -IC:,OSLib:,SFLib:
+LIBS = SFLib:o.SFLib OSLib:o.OSLib32
+
+include CApp
+
+C_NO_FNAMES =
+
+# Dynamic dependencies:</code>
+
+<p>After running <file>MkClean</file> and then <file>Mk</file>, triggering the crash again should result in a slightly more useful postmortem screen as seen in <reference id="fig-debug-postmortem-2"/>. The updated makefile can be found in <reference id="dl-debug-functions"/>.</p>
+
+<image id="fig-debug-postmortem-2" file="postmortem-2.png" title="With function names embedded, the postmortem is more useful"/>
+
+<download id="dl-debug-functions" file="EmbedFunctions" title="Request the Compiler Embed Function Names" compatibility="none"/>
 </section>
--->
+
 </chapter>
 
 

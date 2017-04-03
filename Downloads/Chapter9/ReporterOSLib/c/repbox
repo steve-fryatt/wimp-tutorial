@@ -1,0 +1,50 @@
+/* Copyright 2015-2017, Stephen Fryatt (info@stevefryatt.org.uk)
+ *
+ * This file is part of Wimp Programming In C:
+ *
+ *   http://www.stevefryatt.org.uk/software/
+ *
+ * Licensed under the EUPL, Version 1.1 only (the "Licence");
+ * You may not use this work except in compliance with the
+ * Licence.
+ *
+ * You may obtain a copy of the Licence at:
+ *
+ *   http://joinup.ec.europa.eu/software/page/eupl
+ *
+ * Unless required by applicable law or agreed to in
+ * writing, software distributed under the Licence is
+ * distributed on an "AS IS" basis, WITHOUT WARRANTIES
+ * OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ * See the Licence for the specific language governing
+ * permissions and limitations under the Licence.
+ */
+
+/**
+ * File: repbox.c
+ */
+
+#include "oslib/os.h"
+#include "oslib/wimp.h"
+#include "oslib/wimpspriteop.h"
+
+#include <string.h>
+
+#include "repbox.h"
+
+/* Report a message */
+
+void repbox_message(char *message, char *buttons)
+{
+	os_error error;
+
+	error.errnum = 255;
+	strncpy(error.errmess, message, os_ERROR_LIMIT);
+	error.errmess[os_ERROR_LIMIT - 1] = '\0';
+
+	wimp_report_error_by_category(&error, wimp_ERROR_BOX_GIVEN_CATEGORY |
+		(wimp_ERROR_BOX_CATEGORY_INFO << wimp_ERROR_BOX_CATEGORY_SHIFT),
+		"Example App", "application", wimpspriteop_AREA, buttons);
+}
+
