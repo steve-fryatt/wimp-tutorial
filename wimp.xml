@@ -2242,15 +2242,62 @@ C_NO_FNAMES =
 </chapter>
 
 
-<!-- Chapter 9
+
+<!-- Chapter 10
    -
-   - A Look at Debugging
+   - Creating Our First Window
+  -->
+
+<chapter id="chap-report-2">
+<resources>
+<images>Chapter10</images>
+<downloads>Chapter10</downloads>
+</resources>
+<filename>report2.html</filename>
+<title>Closing the Loose Reporting Ends</title>
+
+<summary>Now that we can use Reporter to quickly see what&rsquo;s going on in our code, let&rsquo;s tidy up the report code a little.</summary>
+
+<section>
+<p>A <reference id="chap-report">couple of chapters ago</reference> we left a few loose ends regarding the Wimp&rsquo;s report boxes. We had no way to find out which button the user selected, and the <file>c.repbox</file> code was a little unsatisfactory in other ways, too.</p>
+</section>
+
+<section>
+<title>User choices</title>
+
+<p>The first question is actually fairly straight forward: if we take a look at the definitions for <function>wimp_report_error()</function> and <function>wimp_report_error_by_category()</function>, we can see that they both return a value of the type <name>wimp_error_box_selection</name>.</p>
+
+<code lang="c">extern wimp_error_box_selection wimp_report_error_by_category(
+	os_error const		*error,
+	wimp_error_box_flags	flags,
+	char const		*name,
+	char const		*sprite_name,
+	osspriteop_area const	*area,
+	char const		*buttons
+);</code>
+
+<p>The clue is largely in the name: when a report closes, the Wimp returns a number indicating which button (if any) the user selected. <name>wimp_error_box_selection</name> is defined from an <name>int</name>, and OSLib also defines three constants using it.</p> 
+
+<code lang="c">typedef int wimp_error_box_selection;
+
+#define wimp_ERROR_BOX_SELECTED_NOTHING	((wimp_error_box_selection) 0x0u)
+#define wimp_ERROR_BOX_SELECTED_OK	((wimp_error_box_selection) 0x1u)
+#define wimp_ERROR_BOX_SELECTED_CANCEL	((wimp_error_box_selection) 0x2u)</code>
+
+<p>At least on modern versions of RISC&nbsp;OS (which in this context means RISC&nbsp;OS;&nbsp;3 and later), these values are fixed for the two buttons &ndash; regardless of which is highlighted as the default.</p>
+
+</section>
+</chapter>
+
+<!-- Chapter 11
+   -
+   - Creating Our First Window
   -->
 <!--
 <chapter id="chap-windows">
 <resources>
-<images>Chapter10</images>
-<downloads>Chapter10</downloads>
+<images>Chapter11</images>
+<downloads>Chapter11</downloads>
 </resources>
 <filename>windows.html</filename>
 <title>Creating our First Window</title>
