@@ -1999,7 +1999,7 @@ void repbox_message(char *message);
 	error.errmess[os_ERROR_LIMIT - 1] = '\0';
 
 	wimp_report_error_by_category(&amp;error, wimp_ERROR_BOX_GIVEN_CATEGORY  |
-			(wimp_ERROR_BOX_CATEGORY_INFO &lt;&lt; wimp_ERROR_BOX_CATEGORY_SHIFT |
+			(wimp_ERROR_BOX_CATEGORY_INFO &lt;&lt; wimp_ERROR_BOX_CATEGORY_SHIFT) |
 			wimp_ERROR_BOX_OK_ICON,
 			&quot;Example App&quot;, &quot;application&quot;, wimpspriteop_AREA, NULL);
 }</code> 
@@ -2031,7 +2031,7 @@ void repbox_message(char *message);
 	error.errmess[os_ERROR_LIMIT - 1] = '\0';
 
 	wimp_report_error_by_category(&amp;error, wimp_ERROR_BOX_GIVEN_CATEGORY  |
-			(wimp_ERROR_BOX_CATEGORY_INFO &lt;&lt; wimp_ERROR_BOX_CATEGORY_SHIFT |
+			(wimp_ERROR_BOX_CATEGORY_INFO &lt;&lt; wimp_ERROR_BOX_CATEGORY_SHIFT) |
 			wimp_ERROR_BOX_OK_ICON,
 			&quot;Example App&quot;, &quot;application&quot;, wimpspriteop_AREA, buttons);
 }</code> 
@@ -2044,10 +2044,10 @@ void repbox_message(char *message);
 
 <image id="fig-report-box-new-buttons" file="report-3.png" title="It&rsquo;s possible to add custom buttons to reports"/>
 
-<p>The &lsquo;Continue&rsquo; button is still there on the left, because <name>wimp_ERROR_BOX_OK_ICON</name> is still being set in <variable>flags</variable>. If we remove it, so that the call to <function>wimp_report_error_by_category()</function> looks like this:</p>
+<p>The &lsquo;Continue&rsquo; button is still there on the right, because <name>wimp_ERROR_BOX_OK_ICON</name> is still being set in <variable>flags</variable>. If we remove it, so that the call to <function>wimp_report_error_by_category()</function> looks like this:</p>
 
 <code lang="c">wimp_report_error_by_category(&amp;error, wimp_ERROR_BOX_GIVEN_CATEGORY  |
-		(wimp_ERROR_BOX_CATEGORY_INFO &lt;&lt; wimp_ERROR_BOX_CATEGORY_SHIFT,
+		(wimp_ERROR_BOX_CATEGORY_INFO &lt;&lt; wimp_ERROR_BOX_CATEGORY_SHIFT),
 		&quot;Example App&quot;, &quot;application&quot;, wimpspriteop_AREA, buttons);</code> 
 
 <p>then only our &lsquo;custom&rsquo; buttons will be shown to the user &ndash; as can be seen in <reference id="fig-report-box-new-buttons-custom"/>. A complete set of code can be found in <reference id="dl-report-buttons"/> below.</p>
