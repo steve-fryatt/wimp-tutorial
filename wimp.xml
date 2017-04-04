@@ -563,7 +563,7 @@ int main(int argc, char *argv[])
 <downloads>Chapter3</downloads>
 </resources>
 <filename>compiling.html</filename>
-<title>Compiling the application</title>
+<title>Compiling the Application</title>
 
 <summary>How to get the code using OSLib to compile in the DDE.</summary>
 
@@ -2180,7 +2180,7 @@ report_text0(buffer);</code>
 
 	switch (pointer->buttons) {
 	case wimp_CLICK_SELECT:
-		repbox_message(&quot;Hello World!&quot;);
+		repbox_message(&quot;Hello World!&quot;, "Howdy!,Go Away!");
 		break;
 	case wimp_CLICK_ADJUST:
 		debug_printf(&quot;This was an Adjust click - Goodbye!&quot;);
@@ -2259,13 +2259,13 @@ C_NO_FNAMES =
 <summary>Now that we can use Reporter to quickly see what&rsquo;s going on in our code, let&rsquo;s tidy up the report code a little.</summary>
 
 <section>
-<p>A <reference id="chap-report">couple of chapters ago</reference> we left a few loose ends regarding the Wimp&rsquo;s report boxes. We had no way to find out which button the user selected, and the <file>c.repbox</file> code was a little unsatisfactory in other ways, too.</p>
+<p>A <reference id="chap-report">couple of chapters ago</reference> we left a few loose ends regarding the Wimp&rsquo;s report boxes. Before moving on to create our first window, it would be a good idea to get them tidied up.</p>
 </section>
 
 <section>
 <title>User choices</title>
 
-<p>The first question is actually fairly straight forward: if we take a look at the definitions for <function>wimp_report_error()</function> and <function>wimp_report_error_by_category()</function>, we can see that they both return a value of the type <name>wimp_error_box_selection</name>.</p>
+<p>The first loose end is actually fairly straight forward to resolve: we had no way to find out which of the buttons in our report the user had selected. However, if we take a look at the definitions for <function>wimp_report_error()</function> and <function>wimp_report_error_by_category()</function>, we can see that they both return a value of the type <name>wimp_error_box_selection</name>.</p>
 
 <code lang="c">extern wimp_error_box_selection wimp_report_error_by_category(
 	os_error const		*error,
@@ -2283,6 +2283,31 @@ C_NO_FNAMES =
 #define wimp_ERROR_BOX_SELECTED_NOTHING	((wimp_error_box_selection) 0x0u)
 #define wimp_ERROR_BOX_SELECTED_OK	((wimp_error_box_selection) 0x1u)
 #define wimp_ERROR_BOX_SELECTED_CANCEL	((wimp_error_box_selection) 0x2u)</code>
+
+<p>The easiest way to see how this works is probably by example. First, let&rsquo;s go to <file>c.ibar</file> and amend the call to <function>repbox_message()</function> so that we don&rsquo;t pass any custom button names.</p>
+
+<code lang="c">repbox_message(&quot;Hello World!&quot;, NULL);</code>
+
+<p>Then in <file>c.repbox</file>, <code>#include &quot;sflib/debug.h&quot;</code> and then amend the definition of <function>repbox_message()</function> as follows:</p>
+
+<code lang="c">void repbox_message(char *message, char *buttons)
+{
+	os_error			error;
+	wimp_error_box_selection	selection;
+
+	error.errnum = 255;
+	strncpy(error.errmess, message, os_ERROR_LIMIT);
+	error.errmess[os_ERROR_LIMIT - 1] = '\0';
+
+	selection = wimp_report_error_by_category(&amp;error, wimp_ERROR_BOX_GIVEN_CATEGORY  |
+			(wimp_ERROR_BOX_CATEGORY_INFO &lt;&lt; wimp_ERROR_BOX_CATEGORY_SHIFT) |
+			wimp_ERROR_BOX_OK_ICON | wimp_ERROR_BOX_CANCEL_ICON,
+			&quot;Example App&quot;, &quot;application&quot;, wimpspriteop_AREA, buttons);
+
+	debug_printf(&quot;User selected button %d", selection);
+}</code> 
+
+<!-- Fill in stuff here -->
 
 <p>At least on modern versions of RISC&nbsp;OS (which in this context means RISC&nbsp;OS;&nbsp;3 and later), these values are fixed for the two buttons &ndash; regardless of which is highlighted as the default.</p>
 
