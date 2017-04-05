@@ -2288,7 +2288,7 @@ C_NO_FNAMES =
 
 <code lang="c">repbox_message(&quot;Hello World!&quot;, NULL);</code>
 
-<p>Then in <file>c.repbox</file>, <code>#include &quot;sflib/debug.h&quot;</code> and then amend the definition of <function>repbox_message()</function> as follows:</p>
+<p>Then in <file>c.repbox</file>, <code>#include &quot;sflib/debug.h&quot;</code> and amend the definition of <function>repbox_message()</function> as follows:</p>
 
 <code lang="c">void repbox_message(char *message, char *buttons)
 {
@@ -2304,12 +2304,22 @@ C_NO_FNAMES =
 			wimp_ERROR_BOX_OK_ICON | wimp_ERROR_BOX_CANCEL_ICON,
 			&quot;Example App&quot;, &quot;application&quot;, wimpspriteop_AREA, buttons);
 
-	debug_printf(&quot;User selected button %d", selection);
+	switch (selection) {
+	case wimp_ERROR_BOX_SELECTED_OK:
+		debug_printf(&quot;User selected OK button (code %d)&quot;, selection);
+		break;
+	case wimp_ERROR_BOX_SELECTED_CANCEL:
+		debug_printf(&quot;User selected Cancel button (code %d)&quot;, selection);
+		break;
+	default:
+		debug_printf(&quot;User selected custom button %d&quot;, selection);
+		break;
+	}
 }</code> 
 
-<!-- Fill in stuff here -->
+<p>If this code, available in <!-- DOWNLOAD -->, is compiled and run then &ndash; assuming that Reporter is loaded &ndash; clicks on the iconbar should result in messages being displayed in Reporter&rsquo;s window as seen in <!-- IMAGE -->.</p>
 
-<p>At least on modern versions of RISC&nbsp;OS (which in this context means RISC&nbsp;OS;&nbsp;3 and later), these values are fixed for the two buttons &ndash; regardless of which is highlighted as the default.</p>
+<p>Trying different combinations of the <name>wimp_ERROR_BOX_OK_ICON</name>, <name>wimp_ERROR_BOX_CANCEL_ICON</name> and <name>wimp_ERROR_BOX_HIGHLIGHT_CANCEL</name> flags in <function>wimp_report_error_by_category()</function> should reveal that OK and Cancel always return their own value &ndash; regardless of the order that they appear in.</p>
 
 </section>
 </chapter>
