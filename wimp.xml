@@ -2439,6 +2439,9 @@ static char *main_application_sprite = "application";</code>
 
 <code lang="c">error_report_question(&quot;Hello World!&quot;, &quot;Howdy!,Go Away!&quot;);</code>
 
+<p>A full set of code can be found in <reference id="dl-report2-sflib"/>.</p>
+
+<download id="dl-report2-sflib" file="ReportSFLib" title="Replace Report Code with SFLib&rsquo;s Errors Library" compatibility="none"/>
 </section>
 </chapter>
 
