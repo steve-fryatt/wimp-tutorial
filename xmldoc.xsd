@@ -109,6 +109,7 @@
       <xsd:element name="event" type="xsd:string"/>
       <xsd:element name="file" type="xsd:string"/>
       <xsd:element name="function" type="xsd:string"/>
+      <xsd:element name="icon" type="xsd:string"/>
       <xsd:element name="intro" type="xsd:string"/>
       <xsd:element name="key" type="xsd:string"/>
       <xsd:element name="link" type="LinkType"/>

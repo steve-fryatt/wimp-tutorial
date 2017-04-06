@@ -1818,7 +1818,7 @@ error.errmess[os_ERROR_LIMIT - 1] = '\0';</code>
 
 <p>It&rsquo;s generally good practice to use <function>strncpy()</function> instead of the older <function>strcpy()</function> function to copy strings into buffers, in order to ensure that we don&rsquo;t over-run the allocated space. The function is available in the 32-bit Shared C Library, so there&rsquo;s no reason for avoiding it. It&rsquo;s also important to terminate the copied string at the end of the buffer, since <function>strncpy()</function> won&rsquo;t do this for us if it did run out of space. OSLib defines <name>os_ERROR_LIMIT</name> for us to be 252, to reflect the size of the buffer defined by RISC&nbsp;OS.</p>
 
-<p>The <variable>flags</variable> passed in parameter 2 control the appearance of the box, and for now we&rsquo;ll set them to <name>wimp_ERROR_BOX_OK_ICON</name> to request that an &lsquo;OK&rsquo; button is provided. The final parameter, <variable>*name</variable>, should point to a string containing the name of our application &ndash; in <file>c.main</file> we tell <swi>Wimp_Initialise</swi> that the application is called &lsquo;Example App&rsquo;, so we&rsquo;ll stick with that here.</p>
+<p>The <variable>flags</variable> passed in parameter 2 control the appearance of the box, and for now we&rsquo;ll set them to <name>wimp_ERROR_BOX_OK_ICON</name> to request that an <icon>OK</icon> button is provided. The final parameter, <variable>*name</variable>, should point to a string containing the name of our application &ndash; in <file>c.main</file> we tell <swi>Wimp_Initialise</swi> that the application is called &lsquo;Example App&rsquo;, so we&rsquo;ll stick with that here.</p>
 </section>
 
 <section>
@@ -1914,11 +1914,11 @@ void repbox_message(char *message);
 #define wimp_ERROR_BOX_CLOSE			((wimp_error_box_flags) 0x40u)
 #define wimp_ERROR_BOX_NO_BEEP			((wimp_error_box_flags) 0x80u)</code>
 
-<p>The report currently produced by the application and shown in <reference id="fig-report-box-old-ok"/> had the <name>wimp_ERROR_BOX_OK_ICON</name> flag set, which resulted in an &lsquo;OK&rsquo; button &ndash; in fact, this is the default state, which the Wimp will fall back to if <em>no</em> flags are set at all. We could, however, have specified <name>wimp_ERROR_BOX_CANCEL_ICON</name> instead:</p>
+<p>The report currently produced by the application and shown in <reference id="fig-report-box-old-ok"/> had the <name>wimp_ERROR_BOX_OK_ICON</name> flag set, which resulted in an <icon>OK</icon> button &ndash; in fact, this is the default state, which the Wimp will fall back to if <em>no</em> flags are set at all. We could, however, have specified <name>wimp_ERROR_BOX_CANCEL_ICON</name> instead:</p>
 
 <code lang="c">wimp_report_error(&amp;error, wimp_ERROR_BOX_CANCEL_ICON, &quot;Example App&quot;);</code>
 
-<p>As might be expected, the report now has a &lsquo;Cancel&rsquo; button instead of &lsquo;OK&rsquo; &ndash; as shown in <reference id="fig-report-box-old-cancel"/>.</p>
+<p>As might be expected, the report now has a <icon>Cancel</icon> button instead of <icon>OK</icon> &ndash; as shown in <reference id="fig-report-box-old-cancel"/>.</p>
 
 <image id="fig-report-box-old-cancel" file="report-1-cancel.png" title="Using the wimp_ERROR_BOX_CANCEL_ICON flag"/>
 
@@ -1931,13 +1931,13 @@ void repbox_message(char *message);
 
 <image id="fig-report-box-old-ok-cancel" file="report-1-ok-cancel.png" title="Using the OK and Cancel flags together"/>
 
-<p>In each case, the highlighted button is the <intro>default</intro>, and will be selected if <key>Return</key> is pressed. In the <reference id="fig-report-box-old-ok-cancel">last example</reference> the &lsquo;OK&rsquo; button was highlighted, but we might prefer &lsquo;Cancel&rsquo; to be highlighted instead &ndash; perhaps if we were asking whether the user <em>really</em> wished to delete their unsaved document. To achieve this, we simply include <name>wimp_ERROR_BOX_HIGHLIGHT_CANCEL</name> in the flags:</p>
+<p>In each case, the highlighted button is the <intro>default</intro>, and will be selected if <key>Return</key> is pressed. In the <reference id="fig-report-box-old-ok-cancel">last example</reference> the <icon>OK</icon> button was highlighted, but we might prefer <icon>Cancel</icon> to be highlighted instead &ndash; perhaps if we were asking whether the user <em>really</em> wished to delete their unsaved document. To achieve this, we simply include <name>wimp_ERROR_BOX_HIGHLIGHT_CANCEL</name> in the flags:</p>
 
 <code lang="c">wimp_report_error(&amp;error,
 		wimp_ERROR_BOX_OK_ICON | wimp_ERROR_BOX_CANCEL_ICON | wimp_ERROR_BOX_HIGHLIGHT_CANCEL,
 		&quot;Example App&quot;);</code>
 
-<p>The effect is to swap the two buttons over, such that &lsquo;Cancel&rsquo; is now the default. This can be seen in <reference id="fig-report-box-old-cancel-ok"/>.</p>
+<p>The effect is to swap the two buttons over, such that <icon>Cancel</icon> is now the default. This can be seen in <reference id="fig-report-box-old-cancel-ok"/>.</p>
 
 <image id="fig-report-box-old-cancel-ok" file="report-1-cancel-ok.png" title="Making Cancel the default action"/>
 
@@ -2012,13 +2012,13 @@ void repbox_message(char *message);
 
 <download id="dl-report-new" file="NewReportBox" title="Using the &lsquo;new&rsquo; report facilities" compatibility="none"/>
 
-<p>Aside from the new graphics, the other change that has resulted from setting the <name>wimp_ERROR_BOX_GIVEN_CATEGORY</name> flag is that the &lsquo;OK&rsquo; has changed to read &lsquo;Continue&rsquo;. Presumably Acorn considered this to be more positive than &lsquo;OK&rsquo; when things might have been going wrong!</p>
+<p>Aside from the new graphics, the other change that has resulted from setting the <name>wimp_ERROR_BOX_GIVEN_CATEGORY</name> flag is that the <icon>OK</icon> has changed to read <icon>Continue</icon>. Presumably Acorn considered this to be more positive than <icon>OK</icon> when things might have been going wrong!</p>
 </section>
 
 <section>
 <title>Clearer options</title>
 
-<p>There&rsquo;s one more thing that we can change using the new report API: we can add to &ndash; or even completely replace &ndash; the &lsquo;OK&rsquo; and &lsquo;Cancel&rsquo; buttons in the box. This is done by setting <variable>*buttons</variable> to point to a string containing a set of one or more button labels in a comma separated list.</p>
+<p>There&rsquo;s one more thing that we can change using the new report API: we can add to &ndash; or even completely replace &ndash; the <icon>OK</icon> and <icon>Cancel</icon> buttons in the box. This is done by setting <variable>*buttons</variable> to point to a string containing a set of one or more button labels in a comma separated list.</p>
 
 <p>To implement this, we&rsquo;ll update <function>repbox_message()</function> again to allow a set of button labels to be supplied by the caller:</p>
 
@@ -2044,7 +2044,7 @@ void repbox_message(char *message);
 
 <image id="fig-report-box-new-buttons" file="report-3.png" title="It&rsquo;s possible to add custom buttons to reports"/>
 
-<p>The &lsquo;Continue&rsquo; button is still there on the right, because <name>wimp_ERROR_BOX_OK_ICON</name> is still being set in <variable>flags</variable>. If we remove it, so that the call to <function>wimp_report_error_by_category()</function> looks like this:</p>
+<p>The <icon>Continue</icon> button is still there on the right, because <name>wimp_ERROR_BOX_OK_ICON</name> is still being set in <variable>flags</variable>. If we remove it, so that the call to <function>wimp_report_error_by_category()</function> looks like this:</p>
 
 <code lang="c">wimp_report_error_by_category(&amp;error, wimp_ERROR_BOX_GIVEN_CATEGORY  |
 		(wimp_ERROR_BOX_CATEGORY_INFO &lt;&lt; wimp_ERROR_BOX_CATEGORY_SHIFT),
@@ -2099,7 +2099,7 @@ void repbox_message(char *message);
 
 <image id="fig-debug-start-reporter" file="starting-reporter.png" title="Reporter&rsquo;s initial appearance on the desktop"/>
 
-<p>Whilst such a level of detail can be useful when tracking down problems, it can also very easily swamp us with data in normal use &ndash; as soon as you start to interact with the desktop, you&rsquo;ll quickly see more lines appear. For this reason, I would suggest opening Reporter&rsquo;s Configuration dialogue (click <mouse>Menu</mouse> over its window and choose Config...) and adjusting its settings a bit. Go to the Options tab and make sure that &lsquo;Report OS Commands executed&rsquo; is unticked as shown in <reference id="fig-debug-configure-reporter"/>. You can then save the settings, and restart Reporter to make them take effect &ndash; you can do this automatically through the Restart tab before clicking on &lsquo;Save&rsquo;.</p>
+<p>Whilst such a level of detail can be useful when tracking down problems, it can also very easily swamp us with data in normal use &ndash; as soon as you start to interact with the desktop, you&rsquo;ll quickly see more lines appear. For this reason, I would suggest opening Reporter&rsquo;s Configuration dialogue (click <mouse>Menu</mouse> over its window and choose <menu>Config...</menu>) and adjusting its settings a bit. Go to the <icon>Options</icon> tab and make sure that <icon>Report OS Commands executed</icon>; is unticked as shown in <reference id="fig-debug-configure-reporter"/>. You can then save the settings, and restart Reporter to make them take effect &ndash; you can do this automatically through the <icon>Restart</icon> tab before clicking on <icon>Save</icon>.</p>
 
 <p>Note that Reporter uses Confix for its configuration, so you might need to have restarted the machine after installing the latter (or at least run Confix in its new home) before these changes can be made.</p>
 
@@ -2138,7 +2138,7 @@ void repbox_message(char *message);
 
 <download id="dl-debug-oslib" file="ReporterOSLib" title="Outputting Debug via Reporter" compatibility="none"/>
 
-<p>This isn&rsquo;t quite the whole story, however, because there&rsquo;s a potential problem. If we quit Reporter and try the same thing again, what we get is an error report (which, thanks to the <reference id="chap-report">last chapter</reference>, we can at least now identify as being a program report) telling us that &ldquo;Example App may have gone wrong&rdquo; and offering us the chance to Continue, Quit or Describe. The first two options will both cause the application to exit, while Describe takes us on to another report which contains the message &ldquo;SWI&nbsp;&amp;54C80 not known&rdquo;.</p>
+<p>This isn&rsquo;t quite the whole story, however, because there&rsquo;s a potential problem. If we quit Reporter and try the same thing again, what we get is an error report (which, thanks to the <reference id="chap-report">last chapter</reference>, we can at least now identify as being a program report) telling us that &ldquo;Example App may have gone wrong&rdquo; and offering us the chance to <icon>Continue</icon>, <icon>Quit</icon> or <icon>Describe</icon>. The first two options will both cause the application to exit, while Describe takes us on to another report which contains the message &ldquo;SWI&nbsp;&amp;54C80 not known&rdquo;.</p>
 
 <p>The reason for this is simply that SWI&nbsp;&amp;54C80 &ndash; more easily recognised as <swi>Report_Text0</swi> &ndash; is provided by Reporter. If Reporter isn&rsquo;t running, the SWI isn&rsquo;t available. This means that once we start to include Reporter&rsquo;s SWIs in our application, Reporter must <em>always</em> be running when the application is. This clearly isn&rsquo;t ideal!</p> 
 
@@ -2205,7 +2205,7 @@ report_text0(buffer);</code>
 
 <image id="fig-debug-program-error" file="program-error.png" title="Some error numbers are trapped by the Wimp and reported differently"/>
 
-<p>The &lsquo;Continue&rsquo; and &lsquo;Quit&rsquo; buttons correspond to &lsquo;Continue&rsquo; and &lsquo;Cancel&rsquo; in a &lsquo;non-serious&rsquo; report &ndash; the only difference is that if the application didn&rsquo;t request a Cancel button, then it will be forcibly terminated if Quit is chosen. Clicking on &lsquo;Describe&rsquo; will take the user to a second report box, as seen in <reference id="fig-debug-description-error"/>, where the <em>original</em> error message is finally revealed.</p>
+<p>The <icon>Continue</icon> and &lsquo;Quit&rsquo; buttons correspond to <icon>Continue</icon> and <icon>Cancel</icon> in a &lsquo;non-serious&rsquo; report &ndash; the only difference is that if the application didn&rsquo;t request a <icon>Cancel</icon> button, then it will be forcibly terminated if Quit is chosen. Clicking on &lsquo;Describe&rsquo; will take the user to a second report box, as seen in <reference id="fig-debug-description-error"/>, where the <em>original</em> error message is finally revealed.</p>
 
 <image id="fig-debug-description-error" file="description-error.png" title="Interested parties can still see the original error message if they wish"/>
 
@@ -2245,7 +2245,7 @@ C_NO_FNAMES =
 
 <!-- Chapter 10
    -
-   - Creating Our First Window
+   - Closing the Loose Reporting Ends
   -->
 
 <chapter id="chap-report-2">
@@ -2293,7 +2293,7 @@ C_NO_FNAMES =
 <code lang="c">void repbox_message(char *message, char *buttons)
 {
 	os_error			error;
-	wimp_error_box_selection	selection;
+	wimp_error_box_selection	selection = wimp_ERROR_BOX_SELECTED_NOTHING;
 
 	error.errnum = 255;
 	strncpy(error.errmess, message, os_ERROR_LIMIT);
@@ -2306,7 +2306,7 @@ C_NO_FNAMES =
 
 	switch (selection) {
 	case wimp_ERROR_BOX_SELECTED_OK:
-		debug_printf(&quot;User selected OK button (code %d)&quot;, selection);
+		debug_printf(&quot;User selected Continue button (code %d)&quot;, selection);
 		break;
 	case wimp_ERROR_BOX_SELECTED_CANCEL:
 		debug_printf(&quot;User selected Cancel button (code %d)&quot;, selection);
@@ -2317,9 +2317,127 @@ C_NO_FNAMES =
 	}
 }</code> 
 
-<p>If this code, available in <!-- DOWNLOAD -->, is compiled and run then &ndash; assuming that Reporter is loaded &ndash; clicks on the iconbar should result in messages being displayed in Reporter&rsquo;s window as seen in <!-- IMAGE -->.</p>
+<p>If this code, available in <reference id="dl-report2-defaults"/>, is compiled and run then &ndash; assuming that Reporter is loaded &ndash; clicks on the iconbar should result in messages being displayed in Reporter&rsquo;s window as seen in <reference id="fig-report2-ok-cancel"/>.</p>
 
-<p>Trying different combinations of the <name>wimp_ERROR_BOX_OK_ICON</name>, <name>wimp_ERROR_BOX_CANCEL_ICON</name> and <name>wimp_ERROR_BOX_HIGHLIGHT_CANCEL</name> flags in <function>wimp_report_error_by_category()</function> should reveal that OK and Cancel always return their own value &ndash; regardless of the order that they appear in.</p>
+<image id="fig-report2-ok-cancel" file="report2-ok-cancel.png" title="The selected button is shown in Reporter&rsquo;s display"/>
+
+<p>Trying different combinations of the <name>wimp_ERROR_BOX_OK_ICON</name>, <name>wimp_ERROR_BOX_CANCEL_ICON</name> and <name>wimp_ERROR_BOX_HIGHLIGHT_CANCEL</name> flags in <function>wimp_report_error_by_category()</function> should reveal that clicks on <icon>Continue</icon> and <icon>Cancel</icon> always return the values <name>wimp_ERROR_BOX_SELECTED_OK</name> and <name>wimp_ERROR_BOX_SELECTED_CANCEL</name> respectively &ndash; regardless of the order in which they are displayed in the report box.</p>
+
+<download id="dl-report2-defaults" file="ReportDefaults" title="Report on Continue and Cancel clicks" compatibility="none"/>
+
+<p>Once the values returned by <icon>Continue</icon> and <icon>Cancel</icon> make sense, we can consider what values custom buttons &ndash; added using the string passed in <variable>*buttons</variable> &ndash; might return. The answer is that they return values starting with 3 for the right-most custom button and counting upwards for each button towards the left. This remains true even if one or both of the <icon>Continue</icon> and <icon>Cancel</icon> buttons are missing.</p>
+
+<p>Go back to <file>c.ibar</file> and return the call to <function>repbox_message()</function> to the way it was before the previous example:</p>
+
+<code lang="c">repbox_message(&quot;Hello World!&quot;, &quot;Howdy!,Go Away"&quot;);</code>
+
+<p>Back in <file>c.repbox</file>, trying different combinations of the <name>wimp_ERROR_BOX_OK_ICON</name>, <name>wimp_ERROR_BOX_CANCEL_ICON</name> and <name>wimp_ERROR_BOX_HIGHLIGHT_CANCEL</name> flags in <function>wimp_report_error_by_category()</function> again should demonstrate that <icon>Go Away!</icon> always returns the value 3 while <icon>Howdy!</icon> always returns 4. This can be seen in <reference id="fig-report2-custom"/>.</p>
+
+<image id="fig-report2-custom" file="report2-custom.png" title="Custom buttons return values from 3 upwards"/>
+
+<p>A complete copy of the example code is available in <reference id="dl-report2-custom"/>.</p>
+
+<download id="dl-report2-custom" file="ReportCustom" title="Report on Continue and Cancel clicks" compatibility="none"/>
+</section>
+
+<section>
+<title>Throwing it away</title>
+
+<p>Over the course of the past couple of chapters, we&rsquo;ve seen how to use <swi>Wimp_ReportError</swi> to get messages to the user. As useful as our <function>repbox_message()</function> has been, there&rsquo;s actually still a fair bit of work that we would need to do to it to make it fully functional and support the range of things that a modern RISC&nbsp;OS application requires.</p>
+
+<p>Whilst we could do this, it will probably be a better use of our time to simply pass the job on to an existing library: in this case, SFLib&rsquo;s errors library provides a range of related functionality. The library provides a number of useful functions, of which five are relevant to us at this stage:</p>
+
+<code lang="c">wimp_error_box_selection error_report_info(
+	char		*message
+);
+
+wimp_error_box_selection error_report_question(
+	char		*message,
+	char		*buttons
+);
+
+wimp_error_box_selection error_report_error(
+	char		*message
+);
+
+void error_report_fatal(
+	char		*message
+);
+
+void error_report_program(
+	os_error	*error
+);</code>
+
+<p>The <function>error_report_info()</function>, <function>error_report_question()</function>, <function>error_report_error()</function> and <function>error_report_fatal()</function>, report messages to the user with &lsquo;information&rsquo;, &lsquo;question&rsquo;, &lsquo;error&rsquo; and &lsquo;program&rsquo; status respectively. In each case, <variable>*message</variable> is a pointer to the text of the message to be displayed.</p>
+
+<p>The <function>error_report_info()</function> and <function>error_report_error()</function> both give the user a <icon>Continue</icon> button to choose. If <variable>*buttons</variable> is <name>NULL</name>, <function>error_report_question()</function> presents the default <icon>Continue</icon> and <icon>Cancel</icon>; otherwise, <variable>*buttons</variable> is taken to point to a string containing a comma-separated list of button names as we&rsquo;ve already seen. The value returned is a <name>wimp_error_box_selection</name>, <em>unless</em> <function>error_report_question()</function> is passed a set of button names &ndash; in which case, in which case, the value returned is the number of the selected button counting from the right-hand end (that is, the value returned by <swi>Wimp_ReportError</swi> less 2).</p>
+
+<p>The final two functions &ndash; <function>error_report_fatal()</function> and <function>error_report_program()</function> &ndash; are a bit different. The first takes the parameter <variable>*message</variable>, which is a pointer to a message text just as with the other functions; the second takes a pointer to an OS&nbsp;Error block in <variable>*error</variable>. Neither function returns a value, because both functions simply terminate the application once the user has clicked on the <icon>Cancel</icon> button.</p>
+
+<p>To this end, we&rsquo;re going to delete <file>c.repbox</file> and <file>h.repbox</file> from our project, and remove the reference to it in <file>Makefile</file>. This leaves the <variable>OBJS</variable> to be set as follows:</p>
+
+<code lang="makefile">OBJS = main ibar</code>
+
+<p>One of the problems with our existing implementation of the error box was that <file>c.repbox</file> contained duplicates of the application&rsquo;s name and sprite details. When it called <function>wimp_report_error_by_category()</function>, there were hard-coded references to <code>&quot;Example App&quot;</code> and <code>&quot;application&quot;</code>:</p>
+
+<code lang="c">wimp_report_error_by_category(&amp;error, wimp_ERROR_BOX_GIVEN_CATEGORY  |
+	(wimp_ERROR_BOX_CATEGORY_INFO &lt;&lt; wimp_ERROR_BOX_CATEGORY_SHIFT) |
+	wimp_ERROR_BOX_OK_ICON | wimp_ERROR_BOX_CANCEL_ICON,
+	&quot;Example App&quot;, &quot;application&quot;, wimpspriteop_AREA, buttons);</code>
+
+<p>These values are already used elsewhere in the application &ndash; when registering with <swi>Wimp_Initialise</swi> and creating the iconbar icon &ndash; and duplication isn&rsquo;t ideal. To help overcome this, SFLib&rsquo;s errors library provides an initialisation function which must be called when the application starts up and which has the prototype:</p>
+
+<code lang="c">void error_initialise(
+	char	*name,
+	char	*sprite,
+	void	(*closedown)(void)
+);</code>
+
+<p>The <variable>*name</variable> parameter takes a pointer to the application&rsquo;s name, while <variable>*sprite</variable> takes a pointer to the name of its sprite. At present, these are the <code>&quot;Example App&quot;</code> and <code>&quot;application&quot;</code> we mentioned above; we&rsquo;ve just been inserting them into the code whenever we need them. To tidy things up, let&rsquo;s go to <file>c.main</file> and at the top (near where we define <variable>main_quit_flag</variable>) add a couple of constant variable definitions:</p>
+
+<code lang="c">static char *main_application_name = "Example App";
+
+static char *main_application_sprite = "application";</code>
+
+<p>We can then modify <function>main_initialise()</function> to use these new variables:</p>
+
+<code lang="c">static void main_initialise(void)
+{
+	wimp_initialise(wimp_VERSION_RO3, main_application_name, NULL, NULL);
+
+	error_initialise(main_application_name, main_application_sprite, NULL);
+
+	event_add_message_handler(message_QUIT, EVENT_MESSAGE_INCOMING, main_message_quit);
+
+	ibar_initialise(main_application_sprite);
+}</code>
+
+<p>In addition to updating the call to <function>wimp_initialise()</function>, we&rsquo;re using them in a new call to <function>error_initialise()</function> &ndash; which initialises SFLib&rsquo;s errors library. Note that we have to <code>#include &quot;sflib/errors.h&quot;</code> at the top of the file to be able to add this call.</p>
+
+<p>The final change is to pass <variable>main_application_sprite</variable> to <function>ibar_initialise()</function>. We&rsquo;re going to need to update the definition of this function before it will compile, but it means that the code creating the iconbar icon will also have access to the same sprite name as the errors library. This will make things very much easier when we come to add a proper application sprite!</p>
+
+<p>Moving on to <file>c.ibar</file>, we need to swap the <code>#include &quot;repbox.h&quot;</code> for <code>#include &quot;sflib/errors.h&quot;</code>. We then need to amend the defintiion of <function>ibar_initialise()</function> to take the sprite name parameter that we&rsquo;ve just added to <file>c.main</file>:</p>
+
+<code lang="c">void ibar_initialise(char *sprite)
+{
+	wimp_icon_create icon_bar;
+
+	icon_bar.w = wimp_ICON_BAR_RIGHT;
+	icon_bar.icon.extent.x0 = 0;
+	icon_bar.icon.extent.y0 = 0;
+	icon_bar.icon.extent.x1 = 68;
+	icon_bar.icon.extent.y1 = 68;
+	icon_bar.icon.flags = wimp_ICON_SPRITE | (wimp_BUTTON_CLICK &lt;&lt; wimp_ICON_BUTTON_TYPE_SHIFT);
+	strncpy(icon_bar.icon.data.sprite, sprite, osspriteop_NAME_LIMIT);
+
+	wimp_create_icon(&amp;icon_bar);
+
+	event_add_window_mouse_event(wimp_ICON_BAR, ibar_mouse_click);
+}</code>
+
+<p>Remember to change the function prototype in <file>h.ibar</file> to match. Finally, the call to <function>repbox_message()</function> can be replaced with a call to <function>error_report_question()</function> as follows:</p>
+
+<code lang="c">error_report_question(&quot;Hello World!&quot;, &quot;Howdy!,Go Away!&quot;);</code>
 
 </section>
 </chapter>
