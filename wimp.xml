@@ -2337,7 +2337,7 @@ C_NO_FNAMES =
 
 <p>A complete copy of the example code is available in <reference id="dl-report2-custom"/>.</p>
 
-<download id="dl-report2-custom" file="ReportCustom" title="Report on Continue and Cancel clicks" compatibility="none"/>
+<download id="dl-report2-custom" file="ReportCustom" title="Report on Custom Button clicks" compatibility="none"/>
 </section>
 
 <section>
