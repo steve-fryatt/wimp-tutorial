@@ -2329,7 +2329,7 @@ C_NO_FNAMES =
 
 <p>Go back to <file>c.ibar</file> and return the call to <function>repbox_message()</function> to the way it was before the previous example:</p>
 
-<code lang="c">repbox_message(&quot;Hello World!&quot;, &quot;Howdy!,Go Away"&quot;);</code>
+<code lang="c">repbox_message(&quot;Hello World!&quot;, &quot;Howdy!,Go Away&quot;);</code>
 
 <p>Back in <file>c.repbox</file>, trying different combinations of the <name>wimp_ERROR_BOX_OK_ICON</name>, <name>wimp_ERROR_BOX_CANCEL_ICON</name> and <name>wimp_ERROR_BOX_HIGHLIGHT_CANCEL</name> flags in <function>wimp_report_error_by_category()</function> again should demonstrate that <icon>Go Away!</icon> always returns the value 3 while <icon>Howdy!</icon> always returns 4. This can be seen in <reference id="fig-report2-custom"/>.</p>
 
@@ -2343,75 +2343,129 @@ C_NO_FNAMES =
 <section>
 <title>A reporting library</title>
 
-<p>Over the course of the past couple of chapters, we&rsquo;ve seen how to use <swi>Wimp_ReportError</swi> to get messages to the user. This kind of functionality underpins all applications, as being able to communicate with the user when things go wrong is essential &ndash; particularly if one wants to get any constructive bug reports back! As useful as our <function>repbox_message()</function> has been, there&rsquo;s actually still a fair bit of work that we would need to do to it to make it truly general purpose and support the range of things that a modern RISC&nbsp;OS application developer requires for ease of use.</p>
+<p>Over the course of the past couple of chapters, we&rsquo;ve seen how to use <swi>Wimp_ReportError</swi> to get messages to the user. However, this kind of functionality underpins all applications, since being able to communicate with the user when things go wrong is essential &ndash; particularly if one wants to get any constructive bug reports back! As useful as our <function>repbox_message()</function> has been in explaining the facilities on offer from the Wimp, it really belongs in a library to avoid having to duplicate it into every application that we write. Perhaps unsurprisingly, SFLib contains an errors library which will do what we need.</p>
 
-<p>Whilst we could do this, it&rsquo;s likely to be a better use of our time simply to pass the job on to an existing library. SFLib&rsquo;s errors library provides a number of functions which between them give flexible access to <swi>Wimp_ReportError</swi>, so now that we&rsquo;ve looked at the fundamentals of what the Wimp offers us it makes more sense to hand the hard work over to a library than to spend time reinventing the wheel.</p>
-
-<p>The errors library provides a number of useful functions, of which five are relevant to us at this stage:</p>
-
-<code lang="c">wimp_error_box_selection error_report_info(
-	char		*message
-);
-
-wimp_error_box_selection error_report_question(
-	char		*message,
-	char		*buttons
-);
-
-wimp_error_box_selection error_report_error(
-	char		*message
-);
-
-void error_report_fatal(
-	char		*message
-);
-
-void error_report_program(
-	os_error	*error
-);</code>
-
-<p>If you wish to see how they&rsquo;re implemented, you can take a look at the library&rsquo;s source: they use very similar techniques to those in <function>repbox_message()</function>, but be aware that the library does contain things that we won&rsquo;t be meeting for a while yet!</p>
-
-<p>The <function>error_report_info()</function>, <function>error_report_question()</function>, <function>error_report_error()</function> and <function>error_report_fatal()</function>, report messages to the user with &lsquo;information&rsquo;, &lsquo;question&rsquo;, &lsquo;error&rsquo; and &lsquo;program&rsquo; status respectively. In each case, <variable>*message</variable> is a pointer to the text of the message to be displayed. The exact details of what each function does depends on the kind of report box that it produces.</p>
-
-<p>The <function>error_report_info()</function> and <function>error_report_error()</function> functions both give the user a <icon>Continue</icon> button to choose. If <variable>*buttons</variable> is <name>NULL</name>, <function>error_report_question()</function> presents the default <icon>Continue</icon> and <icon>Cancel</icon>; otherwise, <variable>*buttons</variable> is taken to point to a string containing a comma-separated list of button names &ndash; just as we&rsquo;ve already seen with <function>repbox_message()</function>. The value returned is a <name>wimp_error_box_selection</name>: <name>wimp_ERROR_BOX_SELECTED_OK</name>, <name>wimp_ERROR_BOX_SELECTED_CANCEL</name> or a value counting from 3 upwards for custom buttons.</p>
-
-<p>The final two functions &ndash; <function>error_report_fatal()</function> and <function>error_report_program()</function> &ndash; are a bit different. The first takes the parameter <variable>*message</variable>, which is a pointer to a message text just as with the other functions; the second takes a pointer to a standard OS&nbsp;Error block &ndash; of the kind passed to <swi>Wimp_ReportError</swi> &ndash; in <variable>*error</variable>. Neither function returns a value, because both functions simply terminate the application once the user has clicked on the <icon>Cancel</icon> button. Being able to pass a pointer to an OS&nbsp;Error block to <function>error_report_program()</function> makes it easy to handle unexpected errors from the X&nbsp;forms of SWIs, simply by passing on the pointer that they return under error conditions.</p>
-</section>
-
-<section>
-<title>Throwing it all away</title>
-
-<p>To make use of SFLib&rsquo;s error library, we&rsquo;re going to delete <file>c.repbox</file> and <file>h.repbox</file> from our project and remove the reference to it in <file>Makefile</file>. This leaves the <variable>OBJS</variable> to be set as follows:</p>
-
-<code lang="makefile">OBJS = main ibar</code>
-
-<p>A small annoyance with our existing implementation of the error box was that <file>c.repbox</file> contained duplicates of the application&rsquo;s name and sprite details. When it called <function>wimp_report_error_by_category()</function>, there were hard-coded references to <code>&quot;Example App&quot;</code> and <code>&quot;application&quot;</code>:</p>
+<p>A small annoyance with our implementation of the error box in <file>c.repbox</file> was that it contained duplicates of the application&rsquo;s name and sprite details. When it called <function>wimp_report_error_by_category()</function>, there were hard-coded references to <code>&quot;Example App&quot;</code> and <code>&quot;application&quot;</code>:</p>
 
 <code lang="c">wimp_report_error_by_category(&amp;error, wimp_ERROR_BOX_GIVEN_CATEGORY  |
 	(wimp_ERROR_BOX_CATEGORY_INFO &lt;&lt; wimp_ERROR_BOX_CATEGORY_SHIFT) |
 	wimp_ERROR_BOX_OK_ICON | wimp_ERROR_BOX_CANCEL_ICON,
 	&quot;Example App&quot;, &quot;application&quot;, wimpspriteop_AREA, buttons);</code>
 
-<p>These values are already used elsewhere in the application &ndash; when registering with <swi>Wimp_Initialise</swi> and creating the iconbar icon &ndash; and duplication isn&rsquo;t ideal. Aisde from anything else, it makes the application a lot less maintainable as it grows: if the names change &ndash; as they almost certainly will do before release &ndash; they&rsquo;re much harder to change if they are specified in lots of different places.</p>
+<p>These values are already used elsewhere in the application &ndash; when registering with <swi>Wimp_Initialise</swi> and creating the iconbar icon &ndash; and duplication isn&rsquo;t ideal. Aisde from anything else, it makes the application a lot less maintainable as it grows: if the names change &ndash; as they almost certainly will do before release &ndash; they&rsquo;re much harder to change if they are specified in lots of different places. In addition, if the code is in a shared library, then the required values will be different in every application which uses it.</p>
 
-<p>To help overcome this, SFLib&rsquo;s errors library provides an initialisation function which must be called when the application starts up and which has the prototype:</p>
+<p>To overcome this, SFLib&rsquo;s errors library provides an initialisation function which must be called when the application starts up. This function takes as parameters a pair of pointers to the application and sprite names, and stores them in static global variables <variable>*error_app_name</variable> and <variable>*error_app_sprite</variable> for future reference. It also takes a pointer to a function called <variable>*closedown</variable>, which we&rsquo;re not going to use and can safely be set to <name>NULL</name>.</p>
 
-<code lang="c">void error_initialise(
-	char	*name,
-	char	*sprite,
-	void	(*closedown)(void)
-);</code>
+<code lang="c">static char	*error_app_name = NULL;
+static char	*error_app_sprite = NULL;
+static void	(*error_close_down_function)(void);
 
-<p>The <variable>*name</variable> parameter takes a pointer to the application&rsquo;s name, while <variable>*sprite</variable> takes a pointer to the name of its sprite. The <variable>*closedown</variable> parameter isn&rsquo;t used at present, and so we&rsquo;ll just pass <name>NULL</name>.</p>
+void error_initialise(char *name, char *sprite, void (*closedown)(void))
+{
+	error_app_name = name;
+	error_app_sprite = sprite;
+	error_close_down_function = closedown;
+}</code>
 
-<p>The application and sprite names are <code>&quot;Example App&quot;</code> and <code>&quot;application&quot;</code>; for now, we&rsquo;ve just been inserting them into the code as string constants whenever we need them. To tidy things up, let&rsquo;s go to <file>c.main</file> and at the top (near where we define <variable>main_quit_flag</variable>) add a couple of variable definitions:</p>
+<p>In fact, this is a bit of a fib: a bit like one of those &lsquo;facts&rsquo; told to students for passing exams. The actual <file>c.errors</file> in SFLib&rsquo;s source code contains some very different code, including several things that we haven&rsquo;t yet encountered in this guide. We&rsquo;ll come clean on these later, but for now the code above will behave in exactly the same way as that in the library whilst only using concepts that we&rsquo;ve met so far.</p>
+
+<p>The library then goes on to define a static <function>error_wimp_os_report()</function> function for its own internal use:</p>
+
+<code lang="c">static wimp_error_box_selection error_wimp_os_report(os_error *error, wimp_error_box_flags type,
+		wimp_error_box_flags buttons, char *custom_buttons)
+{
+	wimp_error_box_selection	click;
+	wimp_error_box_flags		flags;
+	char				*name, *sprite;
+
+	name = (error_app_name != NULL) ? error_app_name : &quot;Application&quot;;
+	sprite = (error_app_sprite != NULL) ? error_app_sprite : &quot;application&quot;;
+
+	if (custom_buttons != NULL &amp;&amp; *custom_buttons != '\0') {
+		flags = wimp_ERROR_BOX_GIVEN_CATEGORY | (type &lt;&lt; wimp_ERROR_BOX_CATEGORY_SHIFT);
+		click = wimp_report_error_by_category(error, flags, name, sprite, wimpspriteop_AREA, custom_buttons);
+	} else {
+		flags = wimp_ERROR_BOX_GIVEN_CATEGORY | buttons | (type &lt;&lt; wimp_ERROR_BOX_CATEGORY_SHIFT);
+		click = wimp_report_error_by_category(error, flags, name, sprite, wimpspriteop_AREA, NULL);
+	}
+
+	return click;
+}</code>
+
+<p>The code here should be fairly familiar: it takes a pointer to an OS&nbsp;Error block, flags &ndash; split into two parameters for clarity &ndash; and a pointer to a string of button names. If either of the application or sprite name pointers passed to <function>error_initialise()</function> were <name>NULL</name>, they will be substituted by <code>&quot;Application&quot;</code> and <code>&quot;application&quot;</code> respectively. If <variable>*custom_buttons</variable> is either <name>NULL</name> or pointing to an empty string, then the default <icon>Continue</icon> and <icon>Cancel</icon> buttons are used as specified in the <variable>buttons</variable> flags; otherwise the custom buttons are used in isolation. Either way, the function returns the user&rsquo;s selection.</p>
+
+<p>Being static, <function>error_wimp_os_report()</function> isn&rsquo;t available to us; instead, the library builds on it to define some more functions which <em>are</em> for our use. The first, <function>error_report_error()</function>, reports a message &ndash; pointed to by <variable>*message</variable> &ndash; with an error status and a <icon>Continue</icon> button:</p>
+
+<code lang="c">wimp_error_box_selection error_report_error(char *message)
+{
+	os_error	error;
+
+	error.errnum = 255;
+	strncpy(error.errmess, message, os_ERROR_LIMIT);
+	error.errmess[os_ERROR_LIMIT - 1] = '\0';
+
+	return error_wimp_os_report(&amp;error, wimp_ERROR_BOX_CATEGORY_ERROR, wimp_ERROR_BOX_OK_ICON, NULL);
+}</code>
+
+<p>When it&rsquo;s necessary to pass on information which <em>isn&rsquo;t</em> an error, the <function>error_report_info()</function> function can be used to present the user with a information status message &ndash; again pointed to by <variable>*message</variable> &ndash; and a <icon>Continue</icon> button:</p>
+
+<code lang="c">wimp_error_box_selection error_report_info(char *message)
+{
+	os_error	error;
+
+	error.errnum = 255;
+	strncpy(error.errmess, message, os_ERROR_LIMIT);
+	error.errmess[os_ERROR_LIMIT - 1] = '\0';
+
+	return error_wimp_os_report(&amp;error, wimp_ERROR_BOX_CATEGORY_INFO, wimp_ERROR_BOX_OK_ICON, NULL);
+}</code>
+
+<p>Finally, when we need to ask the user a question, there&rsquo;s the <function>error_report_question()</function> function. Once again, the message is pointed to by <variable>*message</variable>; if <variable>*buttons</variable> points to a string containing comma-separated button names then these will be used for the buttons, otherwise the default <icon>Continue</icon> and <icon>Cancel</icon> will be offered instead.</p>
+
+<code lang="c">wimp_error_box_selection error_report_question(char *message, char *buttons)
+{
+	os_error	error;
+
+	error.errnum = 255;
+	strncpy(error.errmess, message, os_ERROR_LIMIT);
+	error.errmess[os_ERROR_LIMIT - 1] = '\0';
+
+	if (buttons == NULL)
+		return error_wimp_os_report(&amp;error, wimp_ERROR_BOX_CATEGORY_QUESTION,
+				wimp_ERROR_BOX_OK_ICON | wimp_ERROR_BOX_CANCEL_ICON, NULL);
+	else
+		return error_wimp_os_report(&amp;error, wimp_ERROR_BOX_CATEGORY_QUESTION, 0, buttons);
+}</code>
+
+<p>One final function &ndash; for now, at least &ndash; is <function>error_report_os_error()</function>. This is a little different: instead of a message in the form of a string, it takes a pointer to an OS&nbsp;Error block in <variable>*error</variable> and presents the message that it contains in a report with a category of error. Unlike the other functions, the combination of <icon>Continue</icon> and <icon>Cancel</icon> buttons which will be presented to the user can be specified in <variable>buttons</variable>.</p>
+
+<code lang="c">wimp_error_box_selection error_report_os_error(os_error *error, wimp_error_box_flags buttons)
+{
+	if (error != NULL)
+		return error_wimp_os_report(error, wimp_ERROR_BOX_CATEGORY_ERROR, buttons, NULL);
+	else
+		return wimp_ERROR_BOX_SELECTED_NOTHING;
+}</code>
+
+<p>The function tests that <variable>*error</variable> isn&rsquo;t <name>NULL</name> before displaying the message, to allow for the standard practice of returning an error pointer of <name>NULL</name> when an operation completes successfully.</p>
+
+<p>The value returned from all four functions is a standard <name>wimp_error_box_selection</name>: <name>wimp_ERROR_BOX_SELECTED_OK</name>, <name>wimp_ERROR_BOX_SELECTED_CANCEL</name> or a value counting from 3 upwards for custom buttons.</p>
+</section>
+
+<section>
+<title>Throwing it all away</title>
+
+<p>The first step towards making use of this library is &ndash; a little drastically &ndash; to delete <file>c.repbox</file> and <file>h.repbox</file> from our project and remove the reference to it in <file>Makefile</file>: they&rsquo;re going to be replaced completely. This leaves the <variable>OBJS</variable> variable to be set in <file>Makefile</file> as follows:</p>
+
+<code lang="makefile">OBJS = main ibar</code>
+
+<p>The application and sprite names that we&rsquo;re using are <code>&quot;Example App&quot;</code> and <code>&quot;application&quot;</code>; for now, we&rsquo;ve just been inserting them into the code as string constants whenever we need them. To tidy things up, we can go to <file>c.main</file> and at the top (near where we define <variable>main_quit_flag</variable>) add a couple of variable definitions:</p>
 
 <code lang="c">static char *main_application_name = "Example App";
 
 static char *main_application_sprite = "application";</code>
 
-<p>We can then modify <function>main_initialise()</function> to use these new variables, both for <function>wimp_initialise()</function> and a new call to <function>error_initialise()</function> to set up the errors library:</p>
+<p>We can then modify <function>main_initialise()</function> to use these new variables:</p>
 
 <code lang="c">static void main_initialise(void)
 {
@@ -2424,7 +2478,7 @@ static char *main_application_sprite = "application";</code>
 	ibar_initialise(main_application_sprite);
 }</code>
 
-<p>In addition to updating the call to <function>wimp_initialise()</function>, we&rsquo;re using them in a new call to <function>error_initialise()</function> &ndash; which initialises SFLib&rsquo;s errors library. Note that we have to <code>#include &quot;sflib/errors.h&quot;</code> at the top of the file to be able to add this call.</p>
+<p>In addition to updating the call to <function>wimp_initialise()</function> to take its pointer to the application name from the <variable>main_application_name</variable> variable, we&rsquo;re using both variables in the new call to <function>error_initialise()</function> &ndash; which initialises SFLib&rsquo;s errors library. Note that we have to <code>#include &quot;sflib/errors.h&quot;</code> at the top of the file to be able to add this call.</p>
 
 <p>The final change is to pass <variable>main_application_sprite</variable> to <function>ibar_initialise()</function>. We&rsquo;re going to need to update the definition of this function before it will compile, but it means that the code creating the iconbar icon will also have access to the same sprite name as the errors library. This will make things very much easier when we come to add a proper application sprite!</p>
 
@@ -2456,6 +2510,8 @@ static char *main_application_sprite = "application";</code>
 <image id="fig-report2-sflib-project" file="report2-sflib-project.png" title="The complete project, with reports handed over to SFLib&rsquo;s errors library"/>
 
 <download id="dl-report2-sflib" file="ReportSFLib" title="Replace Report Code with SFLib&rsquo;s Errors Library" compatibility="none"/>
+
+<p>With these changes in place, we&rsquo;re ready to move on to more recognisable aspects of the Wimp &ndash; and create our own window!</p>
 </section>
 </chapter>
 
