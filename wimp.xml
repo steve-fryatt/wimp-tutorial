@@ -2038,7 +2038,7 @@ void repbox_message(char *message);
 
 <p>Remember to change the prototype in <file>h.repbox</file> as well as the function itself in <file>c.repbox</file>! We can now change the call made to <function>repbox_message()</function> in <file>c.ibar</file> to include this additional <variable>*buttons</variable> parameter. It could be set to <name>NULL</name> to retain the existing behaviour, or we could add some new buttons which respond to our application&rsquo;s greeting:</p>
 
-<code lang="c">repbox_message("Hello World!", "Howdy!,Go Away!");</code>
+<code lang="c">repbox_message(&quot;Hello World!&quot;, &quot;Howdy!,Go Away!&quot;);</code>
 
 <p>If these changes are compiled and run, clicking <mouse>Select</mouse> on our iconbar icon should result in the report shown in <reference id="fig-report-box-new-buttons"/>.</p>
 
@@ -2123,7 +2123,7 @@ void repbox_message(char *message);
 {
 	switch (pointer->buttons) {
 	case wimp_CLICK_SELECT:
-		repbox_message(&quot;Hello World!&quot;, "Howdy!,Go Away!");
+		repbox_message(&quot;Hello World!&quot;, &quot;Howdy!,Go Away!&quot;);
 		break;
 	case wimp_CLICK_ADJUST:
 		report_text0(&quot;This was an Adjust click - Goodbye!&quot;);
@@ -2146,7 +2146,7 @@ void repbox_message(char *message);
 
 <code lang="c">char buffer[256];
 
-snprintf(buffer, 256, "The value of buttons=%s", buttons);
+snprintf(buffer, 256, &quot;The value of buttons=%s&quot;, buttons);
 buffer[255] = '\0';
 
 report_text0(buffer);</code>
@@ -2157,7 +2157,7 @@ report_text0(buffer);</code>
 {
 	switch (pointer->buttons) {
 	case wimp_CLICK_SELECT:
-		repbox_message(&quot;Hello World!&quot;, "Howdy!,Go Away!");
+		repbox_message(&quot;Hello World!&quot;, &quot;Howdy!,Go Away!&quot;);
 		break;
 	case wimp_CLICK_ADJUST:
 		debug_printf(&quot;This was an Adjust click - Goodbye!&quot;);
@@ -2180,7 +2180,7 @@ report_text0(buffer);</code>
 
 	switch (pointer->buttons) {
 	case wimp_CLICK_SELECT:
-		repbox_message(&quot;Hello World!&quot;, "Howdy!,Go Away!");
+		repbox_message(&quot;Hello World!&quot;, &quot;Howdy!,Go Away!&quot;);
 		break;
 	case wimp_CLICK_ADJUST:
 		debug_printf(&quot;This was an Adjust click - Goodbye!&quot;);
@@ -2384,11 +2384,15 @@ void error_initialise(char *name, char *sprite, void (*closedown)(void))
 	sprite = (error_app_sprite != NULL) ? error_app_sprite : &quot;application&quot;;
 
 	if (custom_buttons != NULL &amp;&amp; *custom_buttons != '\0') {
-		flags = wimp_ERROR_BOX_GIVEN_CATEGORY | (type &lt;&lt; wimp_ERROR_BOX_CATEGORY_SHIFT);
-		click = wimp_report_error_by_category(error, flags, name, sprite, wimpspriteop_AREA, custom_buttons);
+		flags = wimp_ERROR_BOX_GIVEN_CATEGORY |
+				(type &lt;&lt; wimp_ERROR_BOX_CATEGORY_SHIFT);
+		click = wimp_report_error_by_category(error, flags, name, sprite,
+				wimpspriteop_AREA, custom_buttons);
 	} else {
-		flags = wimp_ERROR_BOX_GIVEN_CATEGORY | buttons | (type &lt;&lt; wimp_ERROR_BOX_CATEGORY_SHIFT);
-		click = wimp_report_error_by_category(error, flags, name, sprite, wimpspriteop_AREA, NULL);
+		flags = wimp_ERROR_BOX_GIVEN_CATEGORY | buttons |
+				(type &lt;&lt; wimp_ERROR_BOX_CATEGORY_SHIFT);
+		click = wimp_report_error_by_category(error, flags, name, sprite,
+				wimpspriteop_AREA, NULL);
 	}
 
 	return click;
@@ -2396,16 +2400,27 @@ void error_initialise(char *name, char *sprite, void (*closedown)(void))
 
 <p>The code here should be fairly familiar: it takes a pointer to an OS&nbsp;Error block, flags &ndash; split into two parameters for clarity &ndash; and a pointer to a string of button names. If either of the application or sprite name pointers passed to <function>error_initialise()</function> were <name>NULL</name>, they will be substituted by <code>&quot;Application&quot;</code> and <code>&quot;application&quot;</code> respectively. If <variable>*custom_buttons</variable> is either <name>NULL</name> or pointing to an empty string, then the default <icon>Continue</icon> and <icon>Cancel</icon> buttons are used as specified in the <variable>buttons</variable> flags; otherwise the custom buttons are used in isolation. Either way, the function returns the user&rsquo;s selection.</p>
 
-<p>Being static, <function>error_wimp_os_report()</function> isn&rsquo;t available to us; instead, the library builds on it to define some more functions which <em>are</em> for our use. The first, <function>error_report_error()</function>, reports a message &ndash; pointed to by <variable>*message</variable> &ndash; with an error status and a <icon>Continue</icon> button:</p>
+<p>Next, another static function &ndash; <function>error_complete_block()</function> &ndash; is defined to allow error blocks to be completed easily:</p>
+
+<code lang="c">#define ERROR_NUMBER 255
+
+static void error_complete_block(os_error *error, char *message)
+{
+	if (error == NULL || message == NULL)
+		return;
+
+	error-&gt;errnum = ERROR_NUMBER;
+	strncpy(error-&gt;errmess, message, os_ERROR_LIMIT);
+	error-&gt;errmess[os_ERROR_LIMIT - 1] = '\0';
+}</code>
+
+<p>Being static, neither <function>error_wimp_os_report()</function> nor <function>error_complete_block()</function> are available to our application; instead, the library builds on them to define some more functions which <em>are</em> for its use. The first, <function>error_report_error()</function>, reports a message &ndash; pointed to by <variable>*message</variable> &ndash; with an error status and a <icon>Continue</icon> button:</p>
 
 <code lang="c">wimp_error_box_selection error_report_error(char *message)
 {
 	os_error	error;
 
-	error.errnum = 255;
-	strncpy(error.errmess, message, os_ERROR_LIMIT);
-	error.errmess[os_ERROR_LIMIT - 1] = '\0';
-
+	error_complete_block(&amp;error, message);
 	return error_wimp_os_report(&amp;error, wimp_ERROR_BOX_CATEGORY_ERROR, wimp_ERROR_BOX_OK_ICON, NULL);
 }</code>
 
@@ -2415,10 +2430,7 @@ void error_initialise(char *name, char *sprite, void (*closedown)(void))
 {
 	os_error	error;
 
-	error.errnum = 255;
-	strncpy(error.errmess, message, os_ERROR_LIMIT);
-	error.errmess[os_ERROR_LIMIT - 1] = '\0';
-
+	error_complete_block(&amp;error, message);
 	return error_wimp_os_report(&amp;error, wimp_ERROR_BOX_CATEGORY_INFO, wimp_ERROR_BOX_OK_ICON, NULL);
 }</code>
 
@@ -2428,18 +2440,12 @@ void error_initialise(char *name, char *sprite, void (*closedown)(void))
 {
 	os_error	error;
 
-	error.errnum = 255;
-	strncpy(error.errmess, message, os_ERROR_LIMIT);
-	error.errmess[os_ERROR_LIMIT - 1] = '\0';
-
-	if (buttons == NULL)
-		return error_wimp_os_report(&amp;error, wimp_ERROR_BOX_CATEGORY_QUESTION,
-				wimp_ERROR_BOX_OK_ICON | wimp_ERROR_BOX_CANCEL_ICON, NULL);
-	else
-		return error_wimp_os_report(&amp;error, wimp_ERROR_BOX_CATEGORY_QUESTION, 0, buttons);
+	error_complete_block(&amp;error, message);
+	return error_wimp_os_report(&amp;error, wimp_ERROR_BOX_CATEGORY_QUESTION,
+			wimp_ERROR_BOX_OK_ICON | wimp_ERROR_BOX_CANCEL_ICON, buttons);
 }</code>
 
-<p>The value returned from all four functions is a standard <name>wimp_error_box_selection</name>: this means that it&rsquo;s either <name>wimp_ERROR_BOX_SELECTED_OK</name>, <name>wimp_ERROR_BOX_SELECTED_CANCEL</name> or a value counting from 3 upwards for custom buttons.</p>
+<p>The value returned from all three functions is a standard <name>wimp_error_box_selection</name>: this means that it&rsquo;s either <name>wimp_ERROR_BOX_SELECTED_OK</name>, <name>wimp_ERROR_BOX_SELECTED_CANCEL</name> or a value counting from 3 upwards for custom buttons.</p>
 </section>
 
 <section>
@@ -2451,9 +2457,9 @@ void error_initialise(char *name, char *sprite, void (*closedown)(void))
 
 <p>The application and sprite names that we&rsquo;re using are <code>&quot;Example App&quot;</code> and <code>&quot;application&quot;</code>; for now, we&rsquo;ve just been inserting them into the code as string constants whenever we need them. To tidy things up, we can go to <file>c.main</file> and at the top (near where we define <variable>main_quit_flag</variable>) add a couple of variable definitions:</p>
 
-<code lang="c">static char *main_application_name = "Example App";
+<code lang="c">static char *main_application_name = &quot;Example App&quot;;
 
-static char *main_application_sprite = "application";</code>
+static char *main_application_sprite = &quot;application&quot;;</code>
 
 <p>We can then modify <function>main_initialise()</function> to use these new variables:</p>
 
@@ -2509,7 +2515,7 @@ static char *main_application_sprite = "application";</code>
 
 	switch (pointer->buttons) {
 	case wimp_CLICK_SELECT:
-		selection = error_report_question("Hello World!", "Howdy!,Go Away!");
+		selection = error_report_question(&quot;Hello World!&quot;, &quot;Howdy!,Go Away!&quot;);
 
 		switch (selection) {
 		case wimp_ERROR_BOX_SELECTED_OK:
@@ -2524,7 +2530,7 @@ static char *main_application_sprite = "application";</code>
 		}
 		break;
 	case wimp_CLICK_ADJUST:
-		debug_printf("This was an Adjust click - Goodbye!");
+		debug_printf(&quot;This was an Adjust click - Goodbye!&quot;);
 		main_quit_flag = TRUE;
 		break;
 	}
