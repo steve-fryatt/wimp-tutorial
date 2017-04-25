@@ -2546,7 +2546,7 @@ static char *main_application_sprite = &quot;application&quot;;</code>
    -
    - Creating Our First Window
   -->
-<!--
+
 <chapter id="chap-windows">
 <resources>
 <images>Chapter11</images>
@@ -2558,21 +2558,180 @@ static char *main_application_sprite = &quot;application&quot;;</code>
 <summary>We&rsquo;re finally ready to create our first window!</summary>
 
 <section>
-<p>With the initial legwork complete, we&rsquo;re now ready to add the first window to our application. Unfortunately there&rsquo;s quite a lot of theory to get through before we can start doing any practical coding &ndash; so here goes!</p>
+<p>With the initial legwork complete, we&rsquo;re now ready to add the first window to our application. Windows are a fundamental part of the RISC&nbsp;OS desktop, and most of us don&rsquo;t give them much thought from day to day. A couple of examples, belonging to familiar applications Zap and Snapper, can be seen in <reference id="fig-window-sample"/>.</p>
+
+<image id="fig-window-sample" file="window-sample.png" title="A couple of windows on the RISC&nbsp;OS desktop"/>
+
+<p>All windows are views on to areas of the screen, which usually belong to an individual applications. Some, like the one belonging to Snapper to the front and left of the screenshot above, have a small fixed area which is always in view; others, like the Zap window to the back right, have a much larger area than is visible at any one time and which can be explored using their scroll bars. The area that&rsquo;s visible is known as the <intro>visible area</intro>, while the whole &lsquo;virtual&rsquo; area encompassed by moving the scroll bars from one extreme to the other is the <intro>work area</intro>. The job of the Wimp is to look after these areas and help the application to update them when required.</p>
+
+<p>There&rsquo;s a lot of theory to get through in order to define a window and get it on the screen, so instead of getting too bogged down in detail we&rsquo;ll dive in at the deep end. Once we&rsquo;ve got a window on the screen, we can then start to look at how it got there!</p>
 </section>
 
 <section>
 <title>Window definitions</title>
 
-<p>There are several stages to getting a window on to the screen with the RISC&nbsp;OS Wimp: first a window is <intro>created</intro>, based on data that the application supplies to the <swi>Wimp_CreateWindow</swi> SWI. Once created, it can be <intro>opened</intro> with <swi>Wimp_OpenWindow</swi> and &ndash; if required &ndash; <intro>closed</intro> with <swi>Wimp_CloseWindow</swi>. A window can be opened and closed any number of times before it is finally <intro>deleted</intro> with <swi>Wimp_DeleteWindow</swi>. The deleting stage is optional, as any windows which still exist when <swi>Wimp_CloseDown</swi> is called will be deleted automatically.</p>
+<p>There are several stages to getting a window on to the screen with the RISC&nbsp;OS Wimp: first it must be <intro>defined</intro> in a way that the <swi>Wimp_CreateWindow</swi> SWI can understand. This SWI will <intro>create</intro> the window for us, giving us back a <intro>window handle</intro> which we can then use to <intro>open</intro> the window on screen with the help of the <swi>Wimp_OpenWindow</swi> SWI.</p>
 
-<p>To allow both the Wimp and the application to keep track of windows throughout this process, <swi>Wimp_CreateWindow</swi> allocates a <intro>window handle</intro> to each window that it creates. This window handle can then be used to identify the window when other Wimp SWIs need to operate on it. As we saw when we looked at the iconbar in <reference id="chap-ibar"/> and <reference id="chap-click"/>, the Wimp treats it as a &lsquo;special&rsquo; window and identifies it with handles such as <name>wimp_ICON_BAR</name>. For windows more generally, the handles are just numbers which can he held in a variable for future reference.</p>
+<p>To make this happen, we&rsquo;ll create a new file called <file>c.win</file> to hold the code which defines and opens the window. Since this is new, it&rsquo;s shown in full in <reference id="list-windows-win-c"/>.</p>
+
+<code lang="c" file="c.win" id="list-windows-win-c" title="The code to define and open our first window"> /**
+ * Example 11.1
+ *
+ * (c) Stephen Fryatt, 2017
+ *
+ * File: win.c
+ */
+
+#include &quot;oslib/wimp.h&quot;
+#include &quot;oslib/wimpspriteop.h&quot;
+
+#include &lt;string.h&gt;
+
+#include "win.h"
+
+/* Global Variables */
+
+static wimp_w window_handle;
+
+/* Window Initialisation. */
+
+void win_initialise(void)
+{
+	wimp_window window_definition;
+
+	window_definition.visible.x0 = 200;
+	window_definition.visible.y0 = 200;
+	window_definition.visible.x1 = 600;
+	window_definition.visible.y1 = 600;
+	window_definition.xscroll = 0;
+	window_definition.yscroll = 0;
+	window_definition.next = wimp_TOP;
+	window_definition.flags = wimp_WINDOW_NEW_FORMAT |
+			wimp_WINDOW_MOVEABLE | wimp_WINDOW_AUTO_REDRAW |
+			wimp_WINDOW_BOUNDED_ONCE | wimp_WINDOW_BACK_ICON |
+			wimp_WINDOW_CLOSE_ICON | wimp_WINDOW_TITLE_ICON |
+			wimp_WINDOW_TOGGLE_ICON | wimp_WINDOW_VSCROLL |
+			wimp_WINDOW_SIZE_ICON | wimp_WINDOW_HSCROLL;
+	window_definition.title_fg = wimp_COLOUR_BLACK;
+	window_definition.title_bg = wimp_COLOUR_LIGHT_GREY;
+	window_definition.work_fg = wimp_COLOUR_BLACK;
+	window_definition.work_bg = wimp_COLOUR_VERY_LIGHT_GREY;
+	window_definition.scroll_outer = wimp_COLOUR_MID_LIGHT_GREY;
+	window_definition.scroll_inner = wimp_COLOUR_VERY_LIGHT_GREY;
+	window_definition.highlight_bg = wimp_COLOUR_CREAM;
+	window_definition.extra_flags = wimp_WINDOW_USE_EXTENDED_SCROLL_REQUEST;
+	window_definition.extent.x0 = 0;
+	window_definition.extent.y0 = -1200;
+	window_definition.extent.x1 = 1200;
+	window_definition.extent.y1 = 0;
+	window_definition.title_flags = wimp_ICON_TEXT |
+			wimp_ICON_BORDER | wimp_ICON_HCENTRED |
+			wimp_ICON_VCENTRED | wimp_ICON_FILLED;
+	window_definition.work_flags = wimp_BUTTON_NEVER &lt;&lt; wimp_ICON_BUTTON_TYPE_SHIFT;
+	window_definition.sprite_area = wimpspriteop_AREA;
+	window_definition.xmin = 0;
+	window_definition.ymin = 0;
+	strncpy(window_definition.title_data.text, &quot;Hello World!&quot;, 12);
+	window_definition.icon_count = 0;
+
+	window_handle = wimp_create_window(&amp;window_definition);
+}
+
+/* Open the Window. */
+
+void win_open(void)
+{
+	wimp_window_state state;
+
+	state.w = window_handle;
+	wimp_get_window_state(&amp;state);
+	state.next = wimp_TOP;
+	wimp_open_window((wimp_open *) &amp;state);
+}</code>
+
+<p>The file contains two functions. The first &ndash; <function>win_initialise()</function> &ndash; assembles the window definition in the <name>wimp_window</name> structure referred to by the <variable>window_definition</variable> variable, before passing it as a pointer to <function>wimp_create_window()</function>. <swi>Wimp_CreateWindow</swi> processes the definition and returns a window handle which is assigned to the <variable>wimp_window</variable> variable, which is of the <name>wimp_w</name> type. From this we can deduce that the <name>wimp_window</name> type is used to hold window definitions, while <name>wimp_w</name> is used to hold window handles.</p>
+
+<p>The second function &ndash; <function>win_open()</function> &ndash; does the job of taking the window handle stored in <variable>window_handle</variable> and opening it up on the screen. We&rsquo;ll see how this works shortly.</p>
+
+<p>To go with <file>c.win</file>, we also need a header file to make its functions available to the rest of the application: we&rsquo;ll call this <file>h.win</file>, and it can be seen in full in <reference id="list-windows-win-h"/>.</p>
+
+<code lang="c" file="h.win" id="list-windows-win-h" title="The header file to define the win module&rsquo;s interface"> /**
+ * Example 11.2
+ *
+ * (c) Stephen Fryatt, 2017
+ *
+ * File: win.h
+ */
+
+#ifndef EXAMPLEAPP_WIN
+#define EXAMPLEAPP_WIN
+
+/* Window Initialisation. */
+
+void win_initialise(void);
+
+/* Open the Window. */
+
+void win_open(void);
+
+#endif</code>
+
+<p>We now need to hook the new code into the rest of the application. To initialise the window when the application starts up, <code>#include &quot;win.h&quot;</code> in <file>c.main</file> and update the <function>main_initialise()</function> to call <function>win_initialise()</function>:</p>
+
+<code lang="c">static void main_initialise(void)
+{
+	wimp_initialise(wimp_VERSION_RO3, main_application_name, NULL, NULL);
+
+	error_initialise(main_application_name, main_application_sprite, NULL);
+
+	event_add_message_handler(message_QUIT, EVENT_MESSAGE_INCOMING, main_message_quit);
+
+	ibar_initialise(main_application_sprite);
+	win_initialise();
+}</code>
+
+<p>Since we&rsquo;ll want to have the window open when the user clicks on the iconbar icon, we can similarly <code>#include &quot;win.h&quot;</code> in <file>c.ibar</file> and update the <function>main_initialise()</function> to call <function>ibar_mouse_click()</function>:</p>
+
+<code lang="c">static void ibar_mouse_click(wimp_pointer *pointer)
+{
+	switch (pointer->buttons) {
+	case wimp_CLICK_SELECT:
+		win_open();
+		break;
+	case wimp_CLICK_ADJUST:
+		main_quit_flag = TRUE;
+		break;
+	}
+}</code>
+
+<p>Now, when the user clicks <mouse>Select</mouse> on the icon, the <function>win_open()</function> will be called to open the window on screen. Note that we&rsquo;ve taken the opportunity to remove the debugging output left over from the last few chapters.</p>
+
+<p>The last thing to do is to update the <file>Makefile</file> so that the compiler knows to include <file>c.win</file>, and we should be ready to go.</p>
+
+<code lang="makefile">OBJS = main ibar win</code>
+
+<p>The updated source code should look something like that shown in <reference id="fig-window-first-project"/>, and a full set of code can be found in <reference id="dl-window-first"/>.</p>
+
+<image id="fig-window-first-project" file="window-first-project.png" title="The complete project, with the window code added"/>
+
+<download id="dl-window-first" file="FirstWindow" title="The first attempt at putting a window on screen" compatibility="none"/>
+
+<p>When compiled and run, the application should install on the iconbar as before. However this time, clicking <mouse>Select</mouse> over its iconbar icon will open a window &ndash; something like the one shown in <reference id="fig-window-first"/>. Unfortunately, there&rsquo;s a problem: the window doesn&rsquo;t respond to the mouse. In fact, all attempts to move, scroll or even close it are simply ignored. Fortunately the application can still be quit with an <mouse>Adjust</mouse> click on its iconbar icon &ndash; at which point the window disappears.</p>
+
+<image id="fig-window-first" file="window-first.png" title="Our first window &ndash; Hello World!"/>
 
 
 
 
 
 
+
+
+
+
+
+
+<!--
 <code lang="c">
 struct wimp_window {
 	os_box			visible;
@@ -2599,7 +2758,7 @@ struct wimp_window {
 	wimp_icon		icons[UNKNOWN];
 };</code>
 
-
+-->
 
 
 
@@ -2612,10 +2771,6 @@ struct wimp_window {
 
 </section>
 </chapter>
-
-
--->
-
 
 
 
