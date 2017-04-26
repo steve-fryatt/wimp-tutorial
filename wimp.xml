@@ -2564,7 +2564,7 @@ static char *main_application_sprite = &quot;application&quot;;</code>
 
 <p>All windows are views on to areas of the screen, which usually belong to an individual applications. Some, like the one belonging to Snapper to the front and left of the screenshot above, have a small fixed area which is always in view; others, like the Zap window to the back right, have a much larger area than is visible at any one time and which can be explored using their scroll bars. The area that&rsquo;s visible is known as the <intro>visible area</intro>, while the whole &lsquo;virtual&rsquo; area encompassed by moving the scroll bars from one extreme to the other is the <intro>work area</intro>. The job of the Wimp is to look after these areas and help the application to update them when required.</p>
 
-<p>There&rsquo;s a lot of theory to get through in order to define a window and get it on the screen, so instead of getting too bogged down in detail we&rsquo;ll dive in at the deep end. Once we&rsquo;ve put a window on the screen, we can then start to look at how it got there!</p>
+<p>There&rsquo;s a lot of theory to get through in order to define a window and get it on the screen, so instead of getting too bogged down in detail we&rsquo;ll dive straight in at the deep end. Once we&rsquo;ve put a window on the screen, we can then start to look at how it got there!</p>
 </section>
 
 <section>
@@ -2849,7 +2849,7 @@ event_add_window_open_event(window_handle, win_open_window_request);</code>
 <chapter id="chap-window-theory">
 <resources>
 <images>Chapter12</images>
-<downloads>Chapter13</downloads>
+<downloads>Chapter12</downloads>
 </resources>
 <filename>wintheory.html</filename>
 <title>Window Theory</title>
