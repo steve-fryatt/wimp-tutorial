@@ -1,0 +1,104 @@
+/* Copyright 2015-2017, Stephen Fryatt (info@stevefryatt.org.uk)
+ *
+ * This file is part of Wimp Programming In C:
+ *
+ *   http://www.stevefryatt.org.uk/software/
+ *
+ * Licensed under the EUPL, Version 1.1 only (the "Licence");
+ * You may not use this work except in compliance with the
+ * Licence.
+ *
+ * You may obtain a copy of the Licence at:
+ *
+ *   http://joinup.ec.europa.eu/software/page/eupl
+ *
+ * Unless required by applicable law or agreed to in
+ * writing, software distributed under the Licence is
+ * distributed on an "AS IS" basis, WITHOUT WARRANTIES
+ * OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ * See the Licence for the specific language governing
+ * permissions and limitations under the Licence.
+ */
+
+/**
+ * File: win.c
+ */
+
+#include "oslib/wimp.h"
+#include "oslib/wimpspriteop.h"
+#include "sflib/event.h"
+
+#include <string.h>
+
+#include "win.h"
+
+/* Global Variables */
+
+static wimp_w window_handle;
+
+/* Function Prototypes */
+
+static void win_open_window_request(wimp_open *open);
+
+/* Window Initialisation. */
+
+void win_initialise(void)
+{
+	wimp_window window_definition;
+
+	window_definition.visible.x0 = 200;
+	window_definition.visible.y0 = 200;
+	window_definition.visible.x1 = 600;
+	window_definition.visible.y1 = 600;
+	window_definition.xscroll = 0;
+	window_definition.yscroll = 0;
+	window_definition.next = wimp_TOP;
+	window_definition.flags = wimp_WINDOW_NEW_FORMAT |
+			wimp_WINDOW_MOVEABLE | wimp_WINDOW_AUTO_REDRAW |
+			wimp_WINDOW_BOUNDED_ONCE | wimp_WINDOW_BACK_ICON |
+			wimp_WINDOW_CLOSE_ICON | wimp_WINDOW_TITLE_ICON |
+			wimp_WINDOW_TOGGLE_ICON | wimp_WINDOW_VSCROLL |
+			wimp_WINDOW_SIZE_ICON | wimp_WINDOW_HSCROLL;
+	window_definition.title_fg = wimp_COLOUR_BLACK;
+	window_definition.title_bg = wimp_COLOUR_LIGHT_GREY;
+	window_definition.work_fg = wimp_COLOUR_BLACK;
+	window_definition.work_bg = wimp_COLOUR_VERY_LIGHT_GREY;
+	window_definition.scroll_outer = wimp_COLOUR_MID_LIGHT_GREY;
+	window_definition.scroll_inner = wimp_COLOUR_VERY_LIGHT_GREY;
+	window_definition.highlight_bg = wimp_COLOUR_CREAM;
+	window_definition.extra_flags = wimp_WINDOW_USE_EXTENDED_SCROLL_REQUEST;
+	window_definition.extent.x0 = 0;
+	window_definition.extent.y0 = -1200;
+	window_definition.extent.x1 = 1200;
+	window_definition.extent.y1 = 0;
+	window_definition.title_flags = wimp_ICON_TEXT | wimp_ICON_BORDER | wimp_ICON_HCENTRED | wimp_ICON_VCENTRED | wimp_ICON_FILLED;
+	window_definition.work_flags = wimp_BUTTON_NEVER << wimp_ICON_BUTTON_TYPE_SHIFT;
+	window_definition.sprite_area = wimpspriteop_AREA;
+	window_definition.xmin = 0;
+	window_definition.ymin = 0;
+	strncpy(window_definition.title_data.text, "Hello World!", 12);
+	window_definition.icon_count = 0;
+
+	window_handle = wimp_create_window(&window_definition);
+	event_add_window_open_event(window_handle, win_open_window_request);
+}
+
+/* Open the Window. */
+
+void win_open(void)
+{
+	wimp_window_state state;
+
+	state.w = window_handle;
+	wimp_get_window_state(&state);
+	state.next = wimp_TOP;
+	wimp_open_window((wimp_open *) &state);
+}
+
+/* Open Window Request event handler. */
+
+static void win_open_window_request(wimp_open *open)
+{
+	wimp_open_window(open);
+}
