@@ -451,7 +451,7 @@ typedef union wimp_block wimp_block;</code>
 #define wimp_USER_MESSAGE_RECORDED	((wimp_event_no) 0x12u)	/* 18	*/
 #define wimp_USER_MESSAGE_ACKNOWLEDGE	((wimp_event_no) 0x13u)	/* 19	*/</code>
 
-<p>It turns out that 17 and 18 are in fact the numbers that the Wimp gives to the <name>User Message</name> and <name>User Message Recorded</name> events &ndash; we&rsquo;ll return to what these actually are later on, but as we saw in the BASIC version, we&rsquo;re looking for the word at offset 16 in the poll block returned by the Wimp to be zero for either of these reason codes.</p>
+<p>It turns out that 17 and 18 are in fact the numbers that the Wimp gives to the <name>User_Message</name> and <name>User_Message_Recorded</name> events &ndash; we&rsquo;ll return to what these actually are later on, but as we saw in the BASIC version, we&rsquo;re looking for the word at offset 16 in the poll block returned by the Wimp to be zero for either of these reason codes.</p>
 
 <p>The block is a variable of type <type>wimp_block</type>, which as we saw above is a union of several different types &ndash; one of which is <type>wimp_message</type>. Although not quite true, OSLib &lsquo;almost&rsquo; defines it as follows:</p>
 
@@ -1440,7 +1440,7 @@ while (!main_quit_flag) {
 	}
 }</code>
 
-<p>As we saw in <reference id="chap-moving-to-c"/>, <swi>Wimp_Poll</swi> returns many different reason codes. So far, we&rsquo;ve only listened out for two &ndash; those called <name>User Message</name> and <name>User Message Recorded</name>. Since we&rsquo;re interested in mouse clicks, we now need to take a look at the one called <name>Mouse Click</name>.</p>
+<p>As we saw in <reference id="chap-moving-to-c"/>, <swi>Wimp_Poll</swi> returns many different reason codes. So far, we&rsquo;ve only listened out for two &ndash; those called <name>User_Message</name> and <name>User_Message_Recorded</name>. Since we&rsquo;re interested in mouse clicks, we now need to take a look at the one called <name>Mouse Click</name>.</p>
 
 <p>In the <code>switch</code> statement above, we&rsquo;re testing the reason code returned from <swi>Wimp_Poll</swi> to see if it is equal to either <name>wimp_USER_MESSAGE</name> or <name>wimp_USER_MESSAGE_RECORDED</name>. We&rsquo;ve already seen that OSLib defines a set of these constants:</p>
 
@@ -1485,7 +1485,7 @@ while (!main_quit_flag) {
 
 typedef union wimp_block wimp_block;</code>
 
-<p>The <code>switch</code> code looks inside the <name>message</name> part of the union when either <name>User Message</name> or <name>User Message Recorded</name> is received; in a similar way, when a <name>Mouse Click</name> event is received, it needs to look inside <name>pointer</name> instead. It&rsquo;s worth re-iterating here that <name>wimp_block</name> is a union because all of these different pieces of data share the same 256&nbsp;byte chunk of memory that is passed to <swi>Wimp_Poll</swi>: how the block is filled by the Wimp before the SWI returns will depend on the reason code being used. Each time it returns, what was in the block before is overwritten.</p>
+<p>The <code>switch</code> code looks inside the <name>message</name> part of the union when either <name>User_Message</name> or <name>User_Message_Recorded</name> is received; in a similar way, when a <name>Mouse Click</name> event is received, it needs to look inside <name>pointer</name> instead. It&rsquo;s worth re-iterating here that <name>wimp_block</name> is a union because all of these different pieces of data share the same 256&nbsp;byte chunk of memory that is passed to <swi>Wimp_Poll</swi>: how the block is filled by the Wimp before the SWI returns will depend on the reason code being used. Each time it returns, what was in the block before is overwritten.</p>
 
 <p>OSLib defines <name>wimp_pointer</name> as</p>
 
@@ -2564,7 +2564,7 @@ static char *main_application_sprite = &quot;application&quot;;</code>
 
 <p>All windows are views on to areas of the screen, which usually belong to an individual applications. Some, like the one belonging to Snapper to the front and left of the screenshot above, have a small fixed area which is always in view; others, like the Zap window to the back right, have a much larger area than is visible at any one time and which can be explored using their scroll bars. The area that&rsquo;s visible is known as the <intro>visible area</intro>, while the whole &lsquo;virtual&rsquo; area encompassed by moving the scroll bars from one extreme to the other is the <intro>work area</intro>. The job of the Wimp is to look after these areas and help the application to update them when required.</p>
 
-<p>There&rsquo;s a lot of theory to get through in order to define a window and get it on the screen, so instead of getting too bogged down in detail we&rsquo;ll dive in at the deep end. Once we&rsquo;ve got a window on the screen, we can then start to look at how it got there!</p>
+<p>There&rsquo;s a lot of theory to get through in order to define a window and get it on the screen, so instead of getting too bogged down in detail we&rsquo;ll dive in at the deep end. Once we&rsquo;ve put a window on the screen, we can then start to look at how it got there!</p>
 </section>
 
 <section>
@@ -2690,7 +2690,7 @@ void win_open(void);
 	win_initialise();
 }</code>
 
-<p>Since we&rsquo;ll want to have the window open when the user clicks on the iconbar icon, we can similarly <code>#include &quot;win.h&quot;</code> in <file>c.ibar</file> and update the <function>main_initialise()</function> to call <function>ibar_mouse_click()</function>:</p>
+<p>Since we&rsquo;ll want to have the window open when the user clicks on the iconbar icon, we can similarly <code>#include &quot;win.h&quot;</code> in <file>c.ibar</file> and update the <function>main_initialise()</function> function to call <function>ibar_mouse_click()</function>:</p>
 
 <code lang="c">static void ibar_mouse_click(wimp_pointer *pointer)
 {
@@ -2704,7 +2704,7 @@ void win_open(void);
 	}
 }</code>
 
-<p>Now, when the user clicks <mouse>Select</mouse> on the icon, the <function>win_open()</function> will be called to open the window on screen. Note that we&rsquo;ve taken the opportunity to remove the debugging output left over from the last few chapters.</p>
+<p>Now, when the user clicks <mouse>Select</mouse> on the icon, the <function>win_open()</function> function will be called to open the window on screen. Note that we&rsquo;ve taken the opportunity to remove the debugging output left over from the last few chapters.</p>
 
 <p>The last thing to do is to update the <file>Makefile</file> so that the compiler knows to include <file>c.win</file>, and we should be ready to go.</p>
 
@@ -2719,12 +2719,44 @@ void win_open(void);
 <p>When compiled and run, the application should install on the iconbar as before. However this time, clicking <mouse>Select</mouse> over its iconbar icon will open a window &ndash; something like the one shown in <reference id="fig-window-first"/>. Unfortunately, there&rsquo;s a problem: the window doesn&rsquo;t respond to the mouse. In fact, all attempts to move, scroll or even close it are simply ignored. Fortunately the application can still be quit with an <mouse>Adjust</mouse> click on its iconbar icon &ndash; at which point the window disappears.</p>
 
 <image id="fig-window-first" file="window-first.png" title="Our first window &ndash; Hello World!"/>
+</section>
+
+<section>
+<title>Being responsive</title>
+
+<p>The reason for this apparent unresponsiveness is actually quite simple: we&rsquo;re missing some code. Although it might seem a little surprising at first, the Wimp is unable to open or change the position of a window &ndash; by which we mean dragging, resizing or scrolling &ndash; unless our application requests that it does so by calling <swi>Wimp_OpenWindow</swi>. Our windows appears on screen because we called <function>wimp_open_window()</function> at the end of our <function>win_open()</function> function, but after that it&rsquo;s stuck in the one place because we never ask the Wimp to move it again.</p>
+
+<p>This might seem a little surprising, but the reason is to give the programmer flexibility. Back in the days of RISC&nbsp;OS&nbsp;3, applications like Draw &ndash; in <reference id="fig-window-pane"/> below &ndash; could implement their toolboxes by manipulating the additional windows whenever the Wimp asked them to adjust their main window. With the advent of the Nested Wimp there are much easier ways to handle this requirement, but there are still some uses. Consider something like a spreadsheet, for example, where scrolling the window down or right adds rows or columns to the grid &ndash; requiring the window&rsquo;s work area to be adjusted on the fly.</p>
+
+<image id="fig-window-pane" file="window-pane.png" title="Applications like Draw use Open Window Request events to manage their tool panes"/>
+
+<p>Whenever the Wimp wants us to call <swi>Wimp_OpenWindow</swi>, it will request it by sending our application an <name>Open_Window_Request</name> event via <swi>Wimp_Poll</swi>. Fortunately, it also tells us how it thinks the window should be opened, and in the vast majority of cases this will be exactly what we want to happen as well.</p>
 
 
 
 
+<code lang="c">static void main_poll(void)
+{
+	wimp_block	blk;
+	wimp_event_no	reason;
+	int		pollword;
 
+	while (!main_quit_flag) {
+		reason = wimp_poll(wimp_MASK_NULL, &amp;blk, &amp;pollword);
 
+		if (!event_process_event(reason, &amp;blk, pollword)) {
+			switch (reason) {
+			case wimp_OPEN_WINDOW_REQUEST:
+				wimp_open_window(&amp;(blk.open));
+				break;
+
+			case wimp_CLOSE_WINDOW_REQUEST:
+				wimp_close_window(blk.close.w);
+				break;
+			}
+		}
+	}
+}</code>
 
 
 
