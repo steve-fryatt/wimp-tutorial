@@ -1132,7 +1132,7 @@ include CApp
 
 <p>With the sprite sorted out (at least in theory), the other thing we need to decide is where the icon will be placed. The Wimp uses the same coordinate system as the rest of RISC&nbsp;OS: what are usually termed <intro>OS&nbsp;units</intro>. They start at (0,0) in the bottom-left of the screen and increase towards the right and top; on a standard system (where the user hasn&rsquo;t changed the <intro>eigenvalues</intro>), there are two OS&nbsp;units for every pixel. This means that on an HD screen of 1920&nbsp;&times;&nbsp;1080, there will be 3840&nbsp;&times;&nbsp;2160 OS&nbsp;units on the screen: 0 to 3839 horizontally and 0 to 2159 vertically, as shown in <reference id="fig-ibar-screen-dims"/>.</p>
 
-<image id="fig-ibar-screen-dims" file="ibar-screen-dims.png" title="By default, a 1920 &times; 1080 screen contains 3840 &times; 2160 OS units"/>
+<image id="fig-ibar-screen-dims" file="ibar-screen-dims.png" title="By default, a 1920 &times; 1080 screen contains 3840 &times; 2160 OS&nbsp;units"/>
 
 <p>Icons are components of windows, however: when a window (such as a dialogue box) is moved around the screen, the icons move with it. This means that their locations are specified in relative terms with reference to the window itself. The units are still OS&nbsp;units, but they are no longer counting from the bottom left corner of the screen. A window&rsquo;s origin can be moved around, but by default it is at its <em>top</em> left &ndash; as we&rsquo;ll see when we look properly at windows, this means that the <maths>y</maths> coordinates of icons are often negative. The position of an icon is given in terms of two coordinate pairs: the minimum <maths>x</maths>,<maths>y</maths> (or bottom left, usually written &ldquo;<maths>x0</maths>,<maths>y0</maths>&rdquo;), and the maximum <maths>x</maths>,<maths>y</maths> (or top-right, usually written &ldquo;<maths>x1</maths>,<maths>y1</maths>&rdquo;). While <maths>x0</maths> and <maths>y0</maths> are <em>inclusive</em>, in that they point to the bottom-left pixel in the icon, <maths>x1</maths> and <maths>y1</maths> are <em>exclusive</em>: they indicate the pixel diagonally above and to the right of the top-right pixel of the icon.</p>
 
@@ -2151,7 +2151,30 @@ buffer[255] = '\0';
 
 report_text0(buffer);</code>
 
-<p>Clearly it would be cumbersome to have to do this every time that we wished to output some information about the way that our application is working. For this reason, SFLib offers a debug library &ndash; which we can access by removing <code>#include &quot;oslib/report.h&quot;</code> and adding <code>#include &quot;sflib/debug.h&quot;</code> to the top of <file>c.ibar</file>. We can then change the call to <function>report_text0()</function> so that we instead use SFLib&rsquo;s <function>debug_printf()</function>.</p>
+<p>Clearly it would be cumbersome to have to do this every time that we wished to output some information about the way that our application is working. For this reason, SFLib offers a debug library &ndash; which we can access by removing <code>#include &quot;oslib/report.h&quot;</code> and adding <code>#include &quot;sflib/debug.h&quot;</code> to the top of <file>c.ibar</file>. It provides one function:</p>
+
+<code lang="c">#define DEBUG_MAX_LINE_LENGTH 256
+
+int debug_printf(char *cntrl_string, ...)
+{
+	char		s[DEBUG_MAX_LINE_LENGTH];
+	int		ret;
+	va_list		ap;
+
+	if (xos_swi_number_from_string("Report_Text0", NULL) != NULL)
+		return 0;
+
+	va_start(ap, cntrl_string);
+	ret = vsnprintf(s, DEBUG_MAX_LINE_LENGTH, cntrl_string, ap);
+	s[DEBUG_MAX_LINE_LENGTH - 1] = '\0';
+	report_text0(s);
+
+	return ret;
+}</code>
+
+<p>The code makes use of the variable arguments provided by the standard library&rsquo;s <file>stdarg.h</file> to implement something very similar to a conventional <function>printf()</function> call. The <function>vsnprintf()</function> function &ndash; which is in <file>stdio.h</file> &ndash; is equivalent to <function>snprintf()</function>, but allows us to pass the variable arguments identified by <function>va_start()</function> straight across. A call to <swi>OS_SWINumberFromString</swi> is used to see if <swi>Report_Text0</swi> exists &ndash; and hence Reporter is loaded &ndash; before trying to use it.</p>
+
+<p>That said, we&rsquo;re drifting a little from the RISC&nbsp;OS Wimp into some of the murkier depths of C here, and we don&rsquo;t really need to understand <em>how</em> <function>debug_printf()</function> works to be able to use it. With <code>#include &quot;sflib/debug.h&quot;</code> in place, we can change the call to <function>report_text0()</function> inside <function>ibar_mouse_click()</function> so that we instead use SFLib&rsquo;s <function>debug_printf()</function>.</p>
 
 <code lang="c">static void ibar_mouse_click(wimp_pointer *pointer)
 {
@@ -2166,7 +2189,7 @@ report_text0(buffer);</code>
 	}
 }</code>
 
-<p>If this is compiled, it should become clear that the application will exit cleanly when <mouse>Adjust</mouse> is clicked, whether or not Reporter is currently loaded. In fact, <function>debug_printf()</function> checks to see if <swi>Report_Text0</swi> exists before trying to call it, so it&rsquo;s even safe to load or quit Reporter while our application is running.</p>
+<p>If this is compiled, it should become clear that the application will exit cleanly when <mouse>Adjust</mouse> is clicked, whether or not Reporter is currently loaded. As noted above, <function>debug_printf()</function> checks to see if <swi>Report_Text0</swi> exists before trying to call it, so it&rsquo;s even safe to load or quit Reporter while our application is running.</p>
 </section>
 
 <section>
@@ -2830,17 +2853,17 @@ event_add_window_open_event(window_handle, win_open_window_request);</code>
 
 <download id="dl-window-dflt-handler" file="DefaultWindowHandler" title="Using Default Open and Close Handlers" compatibility="none"/>
 
-<p>Before we move on to look at the theory behind what we&rsquo;ve implemented in this chapter, we&rsquo;ll just take a quick aside. One reason why the Wimp asks applications to close their own windows is that they might wish to do something else at the same time. When a wordprocessor&rsquo;s window closes, for instance, it might need to free up the space taken by the document that has just been discarded. A simple application like ours might wish to exit completely, and this is actually very simple to see in action by amending <code>case wimp_CLOSE_WINDOW_REQUEST</code> in the <code>switch</code> statement above.</p>
+<p>Before we move on to look at the theory behind what we&rsquo;ve implemented in this chapter, it&rsquo;s worth noting that windows which have been closed by <swi>Wimp_CloseWindow</swi> still exist out of sight. This should be clear from playing with our application: if the the window is opened, moved and closed then, when it is next opened, it will be in the position that it was last in when closed.</p>
 
-<code lang="c">case wimp_CLOSE_WINDOW_REQUEST:
-	wimp_close_window(blk.close.w);
-	main_quit_flag = TRUE;
-	break;</code>
+<p>In fact, to completely remove a window from the Wimp&rsquo;s &lsquo;memory&rsquo; it is necessary to use the <swi>Wimp_DeleteWindow</swi> SWI &ndash; in the same way that <swi>Wimp_OpenWindow</swi> and <swi>Wimp_CloseWindow</swi> form a pair, <swi>Wimp_DeleteWindow</swi> is the opposite number to <swi>Wimp_CreateWindow</swi>.</p>
 
-<p>When the <name>Close_Window_Request</name> event is received, the <variable>main_quit_flag</variable> variable is set to <name>TRUE</name> and the application will exit. Note that because this is in the default handler, it would also affect any other windows that our application might define in the future &ndash; which might not be what we intend!</p>
+<p>As with <swi>Wimp_CloseWindow</swi>, <swi>Wimp_DeleteWindow</swi> takes a single parameter consisting of the window handle for the window to be deleted:</p>
 
-<!-- TODO - Do we need a note about Wimp_DeleteWindow and how closed windows still exist? -->
+<code lang="c">extern void wimp_delete_window(
+	wimp_w	w
+};</code>
 
+<p>At present, the main reason for knowing about <swi>Wimp_DeleteWindow</swi> is to clarify the status of windows closed with <swi>Wimp_CloseWindow</swi>. It&rsquo;s rare for simple applications to need to delete windows, as there&rsquo;s no problem closing and then re-opening a window as many times as required. In fact, when <swi>Wimp_CloseDown</swi> is called as an application exits (as our example does in the <function>main_terminate()</function> function, any remaining windows will be closed and then deleted without any specific action needing to be taken to do it.</p>
 </section>
 </chapter>
 
@@ -2860,6 +2883,286 @@ event_add_window_open_event(window_handle, win_open_window_request);</code>
 <summary>With a window on the screen, we now need to understand how it works.</summary>
 
 <section>
+<p>In the <reference id="chap-windows">last chapter</reference>, we added a window to our application. This involved quite a lot of code, but we didn&rsquo;t really explain much of it in any detail; now is the time to rectify that. This chapter is going to be quite theory-heavy &ndash; it would be sensible to experiment with the concepts as we go through them, using the code from <reference id="dl-window-dflt-handler"/> as a base to work from.</p>
+
+<p>The first stage to creating a window is to define it in a <name>wimp_window</name> block suitable for passing to <swi>Wimp_CreateWindow</swi>. We created ours in <function>win_initialise()</function> as part of <reference id="list-windows-win-c"/>, and the code in question looked like this:</p>
+
+<code lang="c">wimp_window window_definition;
+
+window_definition.visible.x0 = 200;
+window_definition.visible.y0 = 200;
+window_definition.visible.x1 = 600;
+window_definition.visible.y1 = 600;
+window_definition.xscroll = 0;
+window_definition.yscroll = 0;
+window_definition.next = wimp_TOP;
+window_definition.flags = wimp_WINDOW_NEW_FORMAT |
+		wimp_WINDOW_MOVEABLE | wimp_WINDOW_AUTO_REDRAW |
+		wimp_WINDOW_BOUNDED_ONCE | wimp_WINDOW_BACK_ICON |
+		wimp_WINDOW_CLOSE_ICON | wimp_WINDOW_TITLE_ICON |
+		wimp_WINDOW_TOGGLE_ICON | wimp_WINDOW_VSCROLL |
+		wimp_WINDOW_SIZE_ICON | wimp_WINDOW_HSCROLL;
+window_definition.title_fg = wimp_COLOUR_BLACK;
+window_definition.title_bg = wimp_COLOUR_LIGHT_GREY;
+window_definition.work_fg = wimp_COLOUR_BLACK;
+window_definition.work_bg = wimp_COLOUR_VERY_LIGHT_GREY;
+window_definition.scroll_outer = wimp_COLOUR_MID_LIGHT_GREY;
+window_definition.scroll_inner = wimp_COLOUR_VERY_LIGHT_GREY;
+window_definition.highlight_bg = wimp_COLOUR_CREAM;
+window_definition.extra_flags = wimp_WINDOW_USE_EXTENDED_SCROLL_REQUEST;
+window_definition.extent.x0 = 0;
+window_definition.extent.y0 = -1200;
+window_definition.extent.x1 = 1200;
+window_definition.extent.y1 = 0;
+window_definition.title_flags = wimp_ICON_TEXT |
+		wimp_ICON_BORDER | wimp_ICON_HCENTRED |
+		wimp_ICON_VCENTRED | wimp_ICON_FILLED;
+window_definition.work_flags = wimp_BUTTON_NEVER &lt;&lt; wimp_ICON_BUTTON_TYPE_SHIFT;
+window_definition.sprite_area = wimpspriteop_AREA;
+window_definition.xmin = 0;
+window_definition.ymin = 0;
+strncpy(window_definition.title_data.text, &quot;Hello World!&quot;, 12);
+window_definition.icon_count = 0;</code>
+
+<p>The <name>wimp_window</name> structure is a block of memory which is at least 92 bytes long once all of the sub-structures within it are &lsquo;unwound&rsquo;; OSLib defines it like this:</p>
+
+<code lang="c">struct wimp_window {
+	os_box			visible;
+	int			xscroll;
+	int			yscroll;
+	wimp_w			next;
+	wimp_window_flags	flags;
+	wimp_colour		title_fg;
+	wimp_colour		title_bg;
+	wimp_colour		work_fg;
+	wimp_colour		work_bg;
+	wimp_colour		scroll_outer;
+	wimp_colour		scroll_inner;
+	wimp_colour		highlight_bg;
+	wimp_extra_window_flags	extra_flags;
+	os_box			extent;
+	wimp_icon_flags		title_flags;
+	wimp_icon_flags		work_flags;
+	osspriteop_area		*sprite_area;
+	short			xmin;
+	short			ymin;
+	wimp_icon_data		title_data;
+	int			icon_count;
+	wimp_icon		icons[UNKNOWN];
+};</code>
+
+<p><!-- TODO --></p>
+</section>
+
+<section>
+<title>The Window Dimensions</title>
+
+<p>A lot of a window&rsquo;s definition is concerned with its dimensions: where it appears on screen and how big its work area is. The area that a window occupies on screen is known as its <intro>visible area</intro>, and is defined by an <name>os_box</name> struct. We first met these when creating an iconbar icon back in <reference id="chap-ibar"/>; they hold two pairs of <maths>x</maths> and <maths>y</maths> coordinates in the form (<maths>x0</maths>,<maths>y0</maths>) and (<maths>x1</maths>,<maths>y1</maths>):</p>
+
+<code lang="c">struct os_box {
+	int		x0;
+	int		y0;
+	int		x1;
+	int		y1;
+};
+
+typedef struct os_box os_box;</code>
+
+<p>For the visible area, the coordinates used are treated as OS&nbsp;units relative to the screen origin at the bottom left of the iconbar. This can be seen graphically in <reference id="fig-win-theory-visible"/>.</p>
+
+<image id="fig-win-theory-visible" file="win-theory-visible.png" title="A window&rsquo;s Visible Area is defined in terms of screen coordinates"/>
+
+<p>When we gave the visible area as</p>
+
+<code lang="c">window_definition.visible.x0 = 200;
+window_definition.visible.y0 = 200;
+window_definition.visible.x1 = 600;
+window_definition.visible.y1 = 600;</code>
+
+<p>we were telling the Wimp that the bottom-left pixel <em>inside</em> the window&rsquo;s frame was at (200,200) and that the top-right pixel <em>just outside</em> the window (in other words in the bottom-left of the Toggle Size button&rsquo;s border) was at (600,600).</p>
+
+<p>These coordinates are where the window first opens; once the user has moved it around, they are forgotten. You can see how they affect the opening position of the window by changing the numbers given in the four lines above, re-compiling the code and looking at where the window appears when it is first opened.</p>
+
+<p>The next set of coordinates that must be specified are the <intro>work area extent</intro>. The work area is the area &lsquo;inside&rsquo; the window, and the visible area can be thought of as a view on to some or all of the work area. <reference id="fig-win-theory-visible"/> above showed a window displaying part of a graphic on the desktop; <reference id="fig-win-theory-work-area"/> shows how this visible area of the window might relate to the full graphic in its work area.</p>
+
+<image id="fig-win-theory-work-area" file="win-theory-work-area.png" title="The Work Area of a window can be larger than its Visible Area"/>
+
+<p>As with the visible area, the work area is defined by its bottom-left and top-right coordinates &ndash; but unlike the visible area, they&rsquo;re not really referenced to a specific origin. Conventionally <maths>x0</maths> and <maths>y1</maths> &ndash; which give the top-left of the work area &ndash; are both set to zero; this means that the <maths>x</maths> coordinates increase in a positive direction when moving from left to right, and the <maths>y</maths> coordinates <em>decrease</em> in a <em>negative</em> direction when moving from top to bottom. We defined (<maths>x0</maths>,<maths>y0</maths>) to be (0,&minus;1200) and (<maths>x1</maths>,<maths>y1</maths>) to be (1200,0):</p>
+
+<code lang="c">window_definition.extent.x0 = 0;
+window_definition.extent.y0 = -1200;
+window_definition.extent.x1 = 1200;
+window_definition.extent.y1 = 0;</code>
+
+<p>which means that the top-left of the window&rsquo;s work area has coordinates (0,0) and the bottom-right (1200,&minus;1200). Our resulting work area is therefore 1200 OS&nbsp;units square.</p>
+
+<p>The (0,0) &lsquo;origin&rsquo; doesn&rsquo;t have to be at the top-left of the work area, however. We could achieve the same size of area, but with coordinate (0,0) in its centre, by defining the extent as:</p>
+
+<code lang="c">window_definition.extent.x0 = -600;
+window_definition.extent.y0 = -600;
+window_definition.extent.x1 = 600;
+window_definition.extent.y1 = 600;</code>
+
+<p>However, as can be seen from <reference id="fig-win-theory-scroll-bars"/>, the location of the scroll bars when the window opens will be affected.</p>
+
+<image id="fig-win-theory-scroll-bars" file="win-theory-scroll-bars.png" title="The Work Area affects the starting position of the Scroll Bars"/>
+
+<p>The reason for this are two more values in the definition, which determine the <maths>x</maths> and <maths>y</maths> <intro>scroll offsets</intro>.</p>
+
+<code lang="c">window_definition.xscroll = 0;
+window_definition.yscroll = 0;</code>
+
+<p>The Wimp defines these two values as giving the work area coordinate which appears at the top-left of the visible area. This is why the convention of putting (0,0) at the top-left of the work area makes a lot of sense: when the window is scrolled fully up and left the <maths>x</maths> and <maths>y</maths> scroll offsets will both be zero.</p>
+
+<p>The user can resize our window, and the Wimp will apply some constraints to what they can do. The largest that the window can be dragged out will be so that the visible area matches the work area extent. At the other extreme, <variable>xmin</variable> and <variable>ymin</variable> set the minimum dimensions in OS&nbsp;units to which the window can be resized. We&rsquo;ve set the limits to zero, which are special values:</p>
+
+<code lang="c">window_definition.xmin = 0;
+window_definition.ymin = 0;</code>
+
+<p>If <variable>xmin</variable> is zero, the window&rsquo;s width can&rsquo;t be shrunk to less than the width of the title bar text; setting <variable>ymin</variable> to zero applies a limit based on any verical scroll bars which are present.</p>
+
+<p>That&rsquo;s the horizontal and vertical position of our window sorted out, but there&rsquo;s still the question of the &lsquo;third dimension&rsquo; to consider: where our window appears in the window stack. On RISC&nbsp;OS, windows on the desktop have a defined order in which they appear in the &lsquo;pile&rsquo; &ndash; when we ask the Wimp to open our window, we need to say where in the &lsquo;pile&rsquo; it should go.</p>
+
+<p>The Wimp tracks this by identifying the window which appears directly on top of ours. When opening a window, we usually want it to appear at the top of the heap, so we specify another &lsquo;special&rsquo; window handle &ndash; named <name>wimp_TOP</name> by OSLib &ndash; to indicate this.</p>
+
+<code lang="c">#define wimp_TOP ((wimp_w) 0xFFFFFFFFu)
+
+window_definition.next = wimp_TOP;</code>
+</section>
+
+<section>
+<title>Changing Appearances</title>
+
+<p>The next set of attributes that we can change for our window are its colours. The <name>wimp_window</name> structure contains a set of values which control various parts of the window:</p>
+
+<code lang="c">window_definition.title_fg = wimp_COLOUR_BLACK;
+window_definition.title_bg = wimp_COLOUR_LIGHT_GREY;
+window_definition.work_fg = wimp_COLOUR_BLACK;
+window_definition.work_bg = wimp_COLOUR_VERY_LIGHT_GREY;
+window_definition.scroll_outer = wimp_COLOUR_MID_LIGHT_GREY;
+window_definition.scroll_inner = wimp_COLOUR_VERY_LIGHT_GREY;
+window_definition.highlight_bg = wimp_COLOUR_CREAM;</code>
+
+<p>Included are foreground and background colours for the title bar and work area, a highlight colour for the title bar, and colours for the scroll bars. Values can be selected from the full range of the default Wimp palette, which OSLib defines as follows:</p>
+
+<code lang="c">#define wimp_COLOUR_WHITE		((wimp_colour) 0x0u)
+#define wimp_COLOUR_VERY_LIGHT_GREY	((wimp_colour) 0x1u)
+#define wimp_COLOUR_LIGHT_GREY		((wimp_colour) 0x2u)
+#define wimp_COLOUR_MID_LIGHT_GREY	((wimp_colour) 0x3u)
+#define wimp_COLOUR_MID_DARK_GREY	((wimp_colour) 0x4u)
+#define wimp_COLOUR_DARK_GREY		((wimp_colour) 0x5u)
+#define wimp_COLOUR_VERY_DARK_GREY	((wimp_colour) 0x6u)
+#define wimp_COLOUR_BLACK		((wimp_colour) 0x7u)
+#define wimp_COLOUR_DARK_BLUE		((wimp_colour) 0x8u)
+#define wimp_COLOUR_YELLOW		((wimp_colour) 0x9u)
+#define wimp_COLOUR_LIGHT_GREEN		((wimp_colour) 0xAu)
+#define wimp_COLOUR_RED			((wimp_colour) 0xBu)
+#define wimp_COLOUR_CREAM		((wimp_colour) 0xCu)
+#define wimp_COLOUR_DARK_GREEN		((wimp_colour) 0xDu)
+#define wimp_COLOUR_ORANGE		((wimp_colour) 0xEu)
+#define wimp_COLOUR_LIGHT_BLUE		((wimp_colour) 0xFu)
+#define wimp_COLOUR_TRANSPARENT		((wimp_colour) 0xFFFFFFFFu)</code>
+
+<p>There&rsquo;s no problem experimenting with these values, but with the advent of modern versions of the Wimp which use textured bitmaps to make up the window furniture, an increasing number of the colours have little or no effect because the parts of the window that they control are no longer visible.</p>
+
+<p>There&rsquo;s also the important fact that <em>all</em> of these colours are tightly defined by the <cite>Style Guide</cite>, which is supplied electronically with the DDE and can be <link href="https://www.riscosopen.org/content/sales/style-guide">purchased from RISC&nbsp;OS Open</link> in printed form. The <em>only</em> value which should be changed in normal cases is <variable>work_bg</variable> &ndash; and even this should remain as <name>wimp_COLOUR_VERY_LIGHT_GREY</name> in most cases.</p>
+
+<p>Aside from its colours, the window&rsquo;s appearance can be changed by using some of the <intro>window flags</intro> stored in <variable>flags</variable>:</p>
+
+<code lang="c">window_definition.flags = wimp_WINDOW_NEW_FORMAT |
+		wimp_WINDOW_MOVEABLE | wimp_WINDOW_AUTO_REDRAW |
+		wimp_WINDOW_BOUNDED_ONCE | wimp_WINDOW_BACK_ICON |
+		wimp_WINDOW_CLOSE_ICON | wimp_WINDOW_TITLE_ICON |
+		wimp_WINDOW_TOGGLE_ICON | wimp_WINDOW_VSCROLL |
+		wimp_WINDOW_SIZE_ICON | wimp_WINDOW_HSCROLL;</code>
+
+<p>The flags control many aspects of a window&rsquo;s behaviour, but one of the most obvious is which pieces of <intro>window furniture</intro> are included. OSLib defines a number of constants for us, including the following:</p>
+
+<code lang="c">#define wimp_WINDOW_BACK_ICON		((wimp_window_flags) 0x1000000u)
+#define wimp_WINDOW_CLOSE_ICON		((wimp_window_flags) 0x2000000u)
+#define wimp_WINDOW_TITLE_ICON		((wimp_window_flags) 0x4000000u)
+#define wimp_WINDOW_TOGGLE_ICON		((wimp_window_flags) 0x8000000u)
+#define wimp_WINDOW_VSCROLL		((wimp_window_flags) 0x10000000u)
+#define wimp_WINDOW_SIZE_ICON		((wimp_window_flags) 0x20000000u)
+#define wimp_WINDOW_HSCROLL		((wimp_window_flags) 0x40000000u)</code>
+
+<p>Each of these, if present, turns on one of the pieces of furniture: the iconise button, which isn&rsquo;t included, is controlled by <name>wimp_WINDOW_CLOSE_ICON</name>. As with all flags words, the required values are bitwise-ORed together to produce a number to be stored in the variable. A flag which must <em>always</em> be included is <name>wimp_WINDOW_NEW_FORMAT</name>:</p> 
+
+<code lang="c">#define wimp_WINDOW_NEW_FORMAT		((wimp_window_flags) 0x80000000u)</code>
+
+<p>In this context, &ldquo;new&rdquo; means &ldquo;RISC&nbsp;OS&rdquo; &ndash; it came in when Acorn moved on from the original Arthur operating system, and ensures that the other furniture flags behave as listed above. It is unlikely that there would ever be a situation in a modern application where this flag would not be included.</p>
+
+<code lang="c">#define wimp_WINDOW_REAL_COLOURS	((wimp_window_flags) 0x400u)</code>
+
+
+
+
+<!--
+window_definition.extra_flags = wimp_WINDOW_USE_EXTENDED_SCROLL_REQUEST;
+window_definition.title_flags = wimp_ICON_TEXT |
+		wimp_ICON_BORDER | wimp_ICON_HCENTRED |
+		wimp_ICON_VCENTRED | wimp_ICON_FILLED;
+window_definition.work_flags = wimp_BUTTON_NEVER &lt;&lt; wimp_ICON_BUTTON_TYPE_SHIFT;
+window_definition.sprite_area = wimpspriteop_AREA;
+strncpy(window_definition.title_data.text, &quot;Hello World!&quot;, 12);
+window_definition.icon_count = 0
+-->
+
+
+
+<!--
+#define wimp_WINDOW_MOVEABLE                    ((wimp_window_flags) 0x2u)
+#define wimp_WINDOW_AUTO_REDRAW                 ((wimp_window_flags) 0x10u)
+#define wimp_WINDOW_PANE                        ((wimp_window_flags) 0x20u)
+#define wimp_WINDOW_NO_BOUNDS                   ((wimp_window_flags) 0x40u)
+#define wimp_WINDOW_SCROLL_REPEAT               ((wimp_window_flags) 0x100u)
+#define wimp_WINDOW_SCROLL                      ((wimp_window_flags) 0x200u)
+
+
+#define wimp_WINDOW_BACK                        ((wimp_window_flags) 0x800u)
+#define wimp_WINDOW_HOT_KEYS                    ((wimp_window_flags) 0x1000u)
+#define wimp_WINDOW_BOUNDED                     ((wimp_window_flags) 0x2000u)
+#define wimp_WINDOW_IGNORE_XEXTENT              ((wimp_window_flags) 0x4000u)
+#define wimp_WINDOW_IGNORE_YEXTENT              ((wimp_window_flags) 0x8000u)
+#define wimp_WINDOW_PARTIAL_SIZE                ((wimp_window_flags) 0x400000u)
+      /*Window at full size, not obscuring iconbar - WindowManager 3.98+*/
+#define wimp_WINDOW_FURNITURE_WINDOW            ((wimp_window_flags) 0x800000u)
+      /*WindowManager 3.98+*/
+#define wimp_WINDOW_FOREGROUND_WINDOW           ((wimp_window_flags) 0x800000u)
+      /*RISC OS 4+*/
+
+
+
+
+
+#define wimp_WINDOW_USE_TITLE_VALIDATION_COLOURS ((wimp_extra_window_flags) 0x1u)
+      /*RISC OS 4+ Prefer Wimp_WindowUseTitleValidationString*/
+#define wimp_WINDOW_USE_TITLE_VALIDATION_STRING ((wimp_extra_window_flags) 0x1u)
+      /*RISC OS 4+*/
+#define wimp_WINDOW_USE_EXTENDED_SCROLL_REQUEST ((wimp_extra_window_flags) 0x2u)
+      /*RISC OS 4.32+*/
+#define wimp_WINDOW_NEVER3D                     ((wimp_extra_window_flags) 0x4u)
+      /*RISC OS 4+*/
+#define wimp_WINDOW_ALWAYS3D                    ((wimp_extra_window_flags) 0x8u)
+      /*RISC OS 4+*/
+#define wimp_WINDOW_GIVE_SHADED_ICON_INFO       ((wimp_extra_window_flags) 0x10u)
+
+
+#define wimp_WINDOW_OPEN                        ((wimp_window_flags) 0x10000u)
+#define wimp_WINDOW_NOT_COVERED                 ((wimp_window_flags) 0x20000u)
+#define wimp_WINDOW_FULL_SIZE                   ((wimp_window_flags) 0x40000u)
+#define wimp_WINDOW_TOGGLED                     ((wimp_window_flags) 0x80000u)
+#define wimp_WINDOW_HAS_FOCUS                   ((wimp_window_flags) 0x100000u)
+#define wimp_WINDOW_BOUNDED_ONCE                ((wimp_window_flags) 0x200000u)
+
+-->
+
+
+
+
+
+
+
 
 <!--
 
@@ -2890,34 +3193,20 @@ struct wimp_open {
 
 
 
-<!--
-<code lang="c">
-struct wimp_window {
-	os_box			visible;
-	int			xscroll;
-	int			yscroll;
-	wimp_w			next;
-	wimp_window_flags	flags;
-	wimp_colour		title_fg;
-	wimp_colour		title_bg;
-	wimp_colour		work_fg;
-	wimp_colour		work_bg;
-	wimp_colour		scroll_outer;
-	wimp_colour		scroll_inner;
-	wimp_colour		highlight_bg;
-	wimp_extra_window_flags	extra_flags;
-	os_box			extent;
-	wimp_icon_flags		title_flags;
-	wimp_icon_flags		work_flags;
-	osspriteop_area		*sprite_area;
-	short			xmin;
-	short			ymin;
-	wimp_icon_data		title_data;
-	int			icon_count;
-	wimp_icon		icons[UNKNOWN];
-};</code>
 
+
+<!--
+
+we&rsquo;ll just take a quick aside. One reason why the Wimp asks applications to close their own windows is that they might wish to do something else at the same time. When a wordprocessor&rsquo;s window closes, for instance, it might need to free up the space taken by the document that has just been discarded. A simple application like ours might wish to exit completely, and this is actually very simple to see in action by amending <code>case wimp_CLOSE_WINDOW_REQUEST</code> in the <code>switch</code> statement above.</p>
+
+<code lang="c">case wimp_CLOSE_WINDOW_REQUEST:
+	wimp_close_window(blk.close.w);
+	main_quit_flag = TRUE;
+	break;</code>
+
+<p>When the <name>Close_Window_Request</name> event is received, the <variable>main_quit_flag</variable> variable is set to <name>TRUE</name> and the application will exit. Note that because this is in the default handler, it would also affect any other windows that our application might define in the future &ndash; which might not be what we intend!</p>
 -->
+
 
 
 
