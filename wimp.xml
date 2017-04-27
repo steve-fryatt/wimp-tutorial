@@ -2726,13 +2726,13 @@ void win_open(void);
 
 <p>The reason for this apparent unresponsiveness is actually quite simple: we&rsquo;re missing some code. Although it might seem a little surprising at first, the Wimp is unable to open or change the position of a window &ndash; by which we mean dragging, resizing or scrolling &ndash; unless our application requests that it does so by calling <swi>Wimp_OpenWindow</swi>. Our window appears on screen because we called <function>wimp_open_window()</function> for it at the end of our <function>win_open()</function> function, but after that it&rsquo;s stuck in the one place because we never ask the Wimp to move it again.</p>
 
-<p>This might seem a little surprising, but the reason is to give the programmer flexibility. Back in the days of RISC&nbsp;OS&nbsp;3, applications like Draw &ndash; seen in <reference id="fig-window-pane"/> below &ndash; could implement their toolboxes by manipulating whatever additional windows they wanted whenever the Wimp asked them to adjust their main window. With the advent of the Nested Wimp there are much easier ways to handle this requirement, but the facility still has some important uses: consider something like a spreadsheet, for example, where scrolling the window down or right adds rows or columns to the grid &ndash; requiring the window&rsquo;s work area to be adjusted on the fly.</p>
+<p>This behaviour on the part of the Wimp is deliberate, and gives the programmer a great deal of flexibility. Back in the days of RISC&nbsp;OS&nbsp;3, applications like Draw &ndash; seen in <reference id="fig-window-pane"/> below &ndash; could implement their toolboxes by manipulating whatever additional windows they wanted whenever the Wimp asked them to adjust their main window. With the advent of the Nested Wimp there are much easier ways to handle this requirement, but the facility still has some important uses: consider something like a spreadsheet, for example, where scrolling the window down or right adds rows or columns to the grid &ndash; requiring the window&rsquo;s work area to be adjusted on the fly.</p>
 
 <image id="fig-window-pane" file="window-pane.png" title="Applications like Draw use Open Window Request events to manage their tool panes"/>
 
-<p>Fortunately, in the vast majority of cases &ndash; where we&rsquo;re not trying to implement spreadsheets &ndash; things are nowhere near as difficult as they might at first appear. If we look back at the <name>wimp_block</name> union returned by <swi>Wimp_Poll</swi> &ndash; which we met in <reference id="chap-moving-to-c"/> and <reference id="chap-ibar"/> &ndash; we can see that it contains an entry called <variable>open</variable> which is a <name>wimp_open</name> structure. Looking back at how we implemented the <function>win_open()</function> function above, we should see that this is the same type as the one that we cast our pointer to when calling <function>wimp_open_window()</function>.</p>
+<p>Fortunately, in the vast majority of cases &ndash; where we&rsquo;re not trying to implement spreadsheets &ndash; things are nowhere near as difficult as they might at first appear. If we examine the <name>wimp_block</name> union returned by <swi>Wimp_Poll</swi> &ndash; which we met in <reference id="chap-moving-to-c"/> and <reference id="chap-ibar"/> &ndash; we can see that it contains an entry called <variable>open</variable> which is a <name>wimp_open</name> structure. Looking back at how we implemented the <function>win_open()</function> function above, we should see that this is the same type as the one that we cast our pointer to when calling <function>wimp_open_window()</function>.</p>
 
-<p>This is no accident. When the Wimp needs an application to change the position of a window, it sends an <name>Open_Window_Request</name> event through <swi>Wimp_Poll</swi> and &ndash; in the attached data &ndash; indicates where it thinks that the window should be on screen. Unless the application wishes to do something &lsquo;clever&rsquo; with the request, all that it needs to do is pass it straight on to <swi>Wimp_OpenWindow</swi> and leave the Wimp to do the rest.</p>
+<p>This is no accident. When the Wimp needs an application to change the position of a window, it sends an <name>Open_Window_Request</name> event through <swi>Wimp_Poll</swi> and &ndash; in the data attached to the event &ndash; indicates where it thinks that the window should be on screen. Unless the application wishes to do something &lsquo;clever&rsquo; with the request, all that it needs to do is pass it straight on to <swi>Wimp_OpenWindow</swi> and leave the Wimp to do the rest.</p>
 
 <p>To make our window move, we could register an event handler for <name>Open_Window_Request</name> and use this to make the calls to <swi>Wimp_OpenWindow</swi>. Back in <reference id="chap-click"/> we saw how to do this for <name>Mouse_Click</name> events on our iconbar icon, and the process is very similar. First, we need to define a function to handle the events:</p>
 
@@ -2741,7 +2741,7 @@ void win_open(void);
 	wimp_open_window(open);
 }</code>
 
-<p>As predicted, it&rsquo;s very simple because we trust the Wimp to tell us where the window needs to be opened. In a similar way to the <name>Mouse_Click</name> event handler, the function takes as a single parameter a pointer to the <name>wimp_open</name> structure which arrived with the event, and returns nothing. The data pointed to by <variable>*open</variable> is ready to be passed straight on to <function>wimp_open_window()</function>, which is all that we need to do.</p>
+<p>As predicted, it&rsquo;s very simple because we&rsquo;re leaving the Wimp to tell us where the window needs to be opened. In a similar way to the <name>Mouse_Click</name> event handler, the function takes as a single parameter a pointer to the <name>wimp_open</name> structure which arrived with the event, and returns nothing. The data pointed to by <variable>*open</variable> is ready to be passed straight on to <function>wimp_open_window()</function>, which is all that we need to do.</p>
 
 <p>We need to let the event library know about this handler, and this is also done in a very similar manner to that used in <reference id="chap-click"/>. The main difference is that back then, we regsitered the <name>Mouse_Click</name> handler with the special <name>wimp_ICON_BAR</name> window handle, but here we actually need to use the <em>real</em> handle that the Wimp has given to our window. This is the value returned by the <function>wimp_create_window()</function> function, which we have stored in the <variable>window_handle</variable> variable.</p>
 
@@ -2754,13 +2754,13 @@ event_add_window_open_event(window_handle, win_open_window_request);</code>
 
 <download id="dl-window-open-handler" file="OpenWindowHandler" title="Using an Open Window Request Handler" compatibility="none"/>
 
-<p>However, clicking on the <icon>Close</icon> button still doesn&rsquo;t work &ndash; and there&rsquo;s another problem, too. We&rsquo;ve said that <em>every</em> window needs to respond to <name>Open_Window_Request</name> events, and since our event handler is registered to this one specific window handle, we would need to register a handler for each window that our application uses. This isn&rsquo;t impossible, but it will be a lot of duplication for something that&rsquo;s so standard.</p>
+<p>However, clicking on the <icon>Close</icon> button still doesn&rsquo;t work &ndash; and there&rsquo;s another potential problem, too. We&rsquo;ve said that <em>every</em> window needs to respond to <name>Open_Window_Request</name> events, and since our event handler is registered to this one specific window handle, we would need to register a handler for each window that our application uses. This isn&rsquo;t impossible, but it will be a lot of duplication for something that&rsquo;s so standard.</p>
 </section>
 
 <section>
 <title>Generic Event Handlers</title>
 
-<p>Fortunately there&rsquo;s a better way, if we&rsquo;re using SFLib&rsquo;s event library to dispatch Wimp events. In <file>c.main</file>, the events returned by our application&rsquo;s repeated calls to <swi>Wimp_Poll</swi> are sent out to the appropriate pieces of code by the library. Each time the SWI returns with details of a new event, it is passed on to the <function>event_process_event()</function> function and this tries to find a handler which is interested. At present, the code looks like this:</p>
+<p>If we&rsquo;re using SFLib&rsquo;s event library to dispatch Wimp events, then there&rsquo;s another way to handle these events. In <file>c.main</file>, the events returned by our application&rsquo;s repeated calls to <swi>Wimp_Poll</swi> are sent out to the appropriate pieces of code by the library. Each time the SWI returns with details of a new event, it is passed on to the <function>event_process_event()</function> function and this tries to find a handler which is interested. At present, the code looks like this:</p>
 
 <code lang="c">static void main_poll(void)
 {
@@ -2775,7 +2775,7 @@ event_add_window_open_event(window_handle, win_open_window_request);</code>
 	}
 }</code>
 
-<p>But what happens if <function>event_process_event()</function> can&rsquo;t find an interested event handler? The answer is that the function returns a boolean <name>osbool</name> value, which is <name>TRUE</name> if a handler was found and <name>FALSE</name> if one wasn&rsquo;t. We can use this to add <intro>default handlers</intro> for events and &ndash; given that the vast majority of windows simply need to call <swi>Wimp_OpenWindow</swi> for any <name>Open_Window_Request</name> events that they receive &ndash; this is an obvious use for that ability.</p>
+<p>But what happens if <function>event_process_event()</function> can&rsquo;t find an interested event handler? The answer is that the function returns a boolean <name>osbool</name> value, which is <name>TRUE</name> if a handler was found and <name>FALSE</name> if one wasn&rsquo;t. We can use this to add <intro>default handlers</intro> for events and &ndash; given that the vast majority of windows simply need to call <swi>Wimp_OpenWindow</swi> unquestioningly for any <name>Open_Window_Request</name> events that they receive &ndash; this is an obvious use for that functionality.</p>
 
 <p>Having undone the changes that we made to <file>c.win</file> when adding the <name>Open_Window_Request</name> event handler, we can now change the definition of the <function>main_poll()</function> function in <file>c.main</file> to re-introduce a <code>switch</code> statement very similar to the one that we removed back in <reference id="chap-event-driven"/>.</p>
 
@@ -2802,7 +2802,7 @@ event_add_window_open_event(window_handle, win_open_window_request);</code>
 	}
 }</code>
 
-<p>The difference now is that, because this <code>switch</code> statement is only called when <function>event_process_event()</function> returns <name>FALSE</name>, it is only used when the event library can&rsquo;t find a handler for an event. If our application had a main window with a requirement to do something clever when <name>Open_Window_Request</name> events were received, we could still register an event handler for it and this would be used instead of this fall-back <code>switch</code> statement. If it also had dialogue boxes where a simple call to <swi>Wimp_OpenWindow</swi> were enough, then default code here will handle it without us needing to give it a second thought.</p>
+<p>The difference now is that, because this <code>switch</code> statement is only called when <function>event_process_event()</function> returns <name>FALSE</name>, it is only used when the event library can&rsquo;t find a handler for an event. If our application had a main window with a requirement to do something clever when <name>Open_Window_Request</name> events were received, we could still register an event handler for it as we did in <reference id="dl-window-open-handler"/> and this would be used instead of this fall-back <code>switch</code> statement. If the same application also had dialogue boxes where a simple call to <swi>Wimp_OpenWindow</swi> were enough, then the default code here will handle it without us needing to give it a second thought.</p>
 </section>
 
 <section>
@@ -2810,7 +2810,7 @@ event_add_window_open_event(window_handle, win_open_window_request);</code>
 
 <p>You&rsquo;ll notice that there are actually <em>two</em> <code>case</code> clauses in the <code>switch</code> that has been added above. This is because our window still wasn&rsquo;t responding to clicks on its <icon>Close</icon> button, for a very similar reason.</p>
 
-<p>Just as the Wimp sends applications an <name>Open_Window_Request</name> event when it wants them to open a window with <swi>Wimp_OpenWindow</swi>, it also delegates the closing of windows. When the user clicks on our window&rsquo;s <icon>Close</icon> button, our application receives a <name>Close_Window_Request</name> event &ndash; and it should come as little surprise to know that in most cases we can simply pass this on to the <swi>Wimp_CloseWindow</swi> SWI.</p>
+<p>Just as the Wimp sends applications an <name>Open_Window_Request</name> event when it wants them to open a window with <swi>Wimp_OpenWindow</swi>, it also delegates the closing of windows. When the user clicks on our window&rsquo;s <icon>Close</icon> button, our application receives a <name>Close_Window_Request</name> event &ndash; and it should come as little surprise to know that in most cases we can simply pass this on to the <swi>Wimp_CloseWindow</swi> SWI for processing.</p>
 
 <p>The <name>wimp_close</name> structure returned by <name>Close_Window_Request</name> event is defined by OSLib as follows:</p>
 
@@ -2837,7 +2837,10 @@ event_add_window_open_event(window_handle, win_open_window_request);</code>
 	main_quit_flag = TRUE;
 	break;</code>
 
-<p>When the <name>Close_Window_Request</name> event is received, the <variable>main_quit_flag</variable> variable is set to <name>TRUE</name> and the application will exit. Note that because this is in the default handler, it would als affect any other windows that our application might define in the future &ndash; which might not be what we intend!</p>
+<p>When the <name>Close_Window_Request</name> event is received, the <variable>main_quit_flag</variable> variable is set to <name>TRUE</name> and the application will exit. Note that because this is in the default handler, it would also affect any other windows that our application might define in the future &ndash; which might not be what we intend!</p>
+
+<!-- TODO - Do we need a note about Wimp_DeleteWindow and how closed windows still exist? -->
+
 </section>
 </chapter>
 
