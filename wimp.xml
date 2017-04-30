@@ -2853,17 +2853,7 @@ event_add_window_open_event(window_handle, win_open_window_request);</code>
 
 <download id="dl-window-dflt-handler" file="DefaultWindowHandler" title="Using Default Open and Close Handlers" compatibility="none"/>
 
-<p>Before we move on to look at the theory behind what we&rsquo;ve implemented in this chapter, it&rsquo;s worth noting that windows which have been closed by <swi>Wimp_CloseWindow</swi> still exist out of sight. This should be clear from playing with our application: if the the window is opened, moved and closed then, when it is next opened, it will be in the position that it was last in when closed.</p>
-
-<p>In fact, to completely remove a window from the Wimp&rsquo;s &lsquo;memory&rsquo; it is necessary to use the <swi>Wimp_DeleteWindow</swi> SWI &ndash; in the same way that <swi>Wimp_OpenWindow</swi> and <swi>Wimp_CloseWindow</swi> form a pair, <swi>Wimp_DeleteWindow</swi> is the opposite number to <swi>Wimp_CreateWindow</swi>.</p>
-
-<p>As with <swi>Wimp_CloseWindow</swi>, <swi>Wimp_DeleteWindow</swi> takes a single parameter consisting of the window handle for the window to be deleted:</p>
-
-<code lang="c">extern void wimp_delete_window(
-	wimp_w	w
-};</code>
-
-<p>At present, the main reason for knowing about <swi>Wimp_DeleteWindow</swi> is to clarify the status of windows closed with <swi>Wimp_CloseWindow</swi>. It&rsquo;s rare for simple applications to need to delete windows, as there&rsquo;s no problem closing and then re-opening a window as many times as required. In fact, when <swi>Wimp_CloseDown</swi> is called as an application exits (as our example does in the <function>main_terminate()</function> function, any remaining windows will be closed and then deleted without any specific action needing to be taken to do it.</p>
+<p>While our application now contains all of the code required to open a window and allow the user to move it around, we&rsquo;ve glossed over a lot of detail in order to get here. Over the next couple of chapters we&rsquo;ll go back over what we&rsquo;ve done, examining how it works and why. As we go, feel free to experiment with the code in <reference id="dl-window-dflt-handler"/> to see how the ideas that are about to be covered work in practice.</p>
 </section>
 </chapter>
 
@@ -3220,8 +3210,171 @@ we&rsquo;ll just take a quick aside. One reason why the Wimp asks applications t
 </section>
 </chapter>
 
+<!-- Chapter 13
+   -
+   - Handing Windows
+  -->
+
+<chapter id="chap-window-handling">
+<resources>
+<images>Chapter13</images>
+<downloads>Chapter13</downloads>
+</resources>
+<filename>winhandle.html</filename>
+<title>Handling Windows</title>
+
+<summary>Manipulating windows isn&rsquo;t too difficult, but there are a few things to get to grips with.</summary>
+
+<section>
+<p>In the <reference id="chap-window-theory">last chapter</reference>, we saw how to assemble a <name>wimp_window</name> structure in order to create a new window. Whilst we saw this in use in <reference id="chap-windows"/>, we now need to consider how the various SWIs provided by the Wimp for handling windows actually work.</p>
+</section>
+
+<section>
+<title>Window Definitions</title>
+
+<p>As we&rsquo;ve seen, creating a window on RISC &nbsp;OS is simply a case of filling in a <name>wimp_window</name> structure and then passing a pointer to it to <swi>Wimp_CreateWindow</swi> so that it can be processed. The SWI uses the contents of the block as instructions for creating our new window, then returns us a <name>wimp_w</name> window handle for it. Whilst the process is simple, there are a couple of points which might not be immediately obvious about what&rsquo;s happening behind the scenes.</p>
+
+<p>In <reference id="list-windows-win-c"/>, the code we used to create the window was as follows:</p>
+
+<code lang="c">void win_initialise(void)
+{
+	wimp_window window_definition;
+
+	window_definition.visible.x0 = 200;
+	window_definition.visible.y0 = 200;
+	window_definition.visible.x1 = 600;
+	window_definition.visible.y1 = 600;
+	window_definition.xscroll = 0;
+	window_definition.yscroll = 0;
+	window_definition.next = wimp_TOP;
+
+	/* The values above this point are never actually used by the Wimp! */
+
+	window_definition.flags = wimp_WINDOW_NEW_FORMAT |
+			wimp_WINDOW_MOVEABLE | wimp_WINDOW_AUTO_REDRAW |
+			wimp_WINDOW_BOUNDED_ONCE | wimp_WINDOW_BACK_ICON |
+			wimp_WINDOW_CLOSE_ICON | wimp_WINDOW_TITLE_ICON |
+			wimp_WINDOW_TOGGLE_ICON | wimp_WINDOW_VSCROLL |
+			wimp_WINDOW_SIZE_ICON | wimp_WINDOW_HSCROLL;
+	window_definition.title_fg = wimp_COLOUR_BLACK;
+	window_definition.title_bg = wimp_COLOUR_LIGHT_GREY;
+	window_definition.work_fg = wimp_COLOUR_BLACK;
+	window_definition.work_bg = wimp_COLOUR_VERY_LIGHT_GREY;
+	window_definition.scroll_outer = wimp_COLOUR_MID_LIGHT_GREY;
+	window_definition.scroll_inner = wimp_COLOUR_VERY_LIGHT_GREY;
+	window_definition.highlight_bg = wimp_COLOUR_CREAM;
+	window_definition.extra_flags = wimp_WINDOW_USE_EXTENDED_SCROLL_REQUEST;
+	window_definition.extent.x0 = 0;
+	window_definition.extent.y0 = -1200;
+	window_definition.extent.x1 = 1200;
+	window_definition.extent.y1 = 0;
+	window_definition.title_flags = wimp_ICON_TEXT |
+			wimp_ICON_BORDER | wimp_ICON_HCENTRED |
+			wimp_ICON_VCENTRED | wimp_ICON_FILLED;
+	window_definition.work_flags = wimp_BUTTON_NEVER &lt;&lt; wimp_ICON_BUTTON_TYPE_SHIFT;
+	window_definition.sprite_area = wimpspriteop_AREA;
+	window_definition.xmin = 0;
+	window_definition.ymin = 0;
+	strncpy(window_definition.title_data.text, &quot;Hello World!&quot;, 12);
+	window_definition.icon_count = 0;
+
+	window_handle = wimp_create_window(&amp;window_definition);
+}</code>
+
+<p>The first thing to realise is that, for all its complexity, the <name>wimp_window</name> structure is only needed up to the point where a pointer to it is passed to <function>wimp_create_window()</function>. By the time the SWI has returned a new <name>wimp_w</name> handle for the window, it has copied the contents of the <name>wimp_window</name> block away into its own workspace and the block itself is no longer required.</p>
+
+<p>We can actually see this in the code above, since <variable>window_definition</variable> is is being defined as a local variable within the <function>win_initialise()</function> function. The compiler will take the memory needed for local variables from the stack: as a result, when the function exits, the whole <name>wimp_window</name> structure will disappear. The important thing is, this doesn&rsquo;t matter: by the time the variable vanishes, the Wimp already has its own copy of everything that it requires!</p>
+
+<p>One side effect of this is that the Wimp doesn&rsquo;t care if we pass it a pointer to the same window definition more than once. The block is just a set of instructions for how to create the window, not the window itself: if we want two identical windows for some reason &ndash; and multi-document editors, to name just one example, often do &ndash; the Wimp doesn&rsquo;t mind if we re-use the same instructions each time. Each window created from the block will be a completely separate entity, with its own <name>wimp_w</name> handle.</p>
+
+<p>The second thing to realise is that the data in the block falls into two distinct sections, which have been identified in the example above by a comment. The values set below the command &ndash; from <variable>window_definition.flags</variable> to <variable>window_definition.icon_count</variable> &ndash; are taken away by the Wimp and used to define the look and feel of the new window. Once a window has been created, there&rsquo;s no way to change its window flags, colours, sprite area or title bar definition. We can change the work area extent, but only by using a SWI dedicated to that purpose.</p>
+
+<p>In contrast, the values set above the comment &ndash; from <variable>window_definition.visible</variable> to <variable>window_definition.next</variable> &ndash; aren&rsquo;t actually used by the Wimp at all. It stores them and makes them available to us, but it never actually uses them itself. To see why, we need to consider what we need to do to get this new, but currently invisibel, window to open on the desktop.</p>
+</section>
+
+<section>
+<title>Opening Windows</title>
+
+<p>Calling <swi>Wimp_CreateWindow</swi> doesn&rsquo;t put a window on the desktop: instead, it merely creates the window internally in the Wimp and allocates it a <name>wimp_w</name> window handle. At this point the window can be considered <intro>closed</intro>, and it will be necessary to <intro>open</intro> it in order to make it available to the user.</p>
 
 
+
+
+<p>Whenever a new window is created by <swi>Wimp_CreateWindow</swi> from a <name>wimp_window</name> template, it starts life hidden from view. To make it visible to the user, it needs to be opened using the <swi>Wimp_OpenWindow</swi> SWI.</p>
+
+<p>As we&rsquo;ve seen, the Wimp&rsquo;s idea of &ldquo;opening&rdquo; is quite wide. It doesn&rsquo;t only cover the act of making a new window, or a window closed with <swi>Wimp_CloseWindow</swi>, visible &ndash; it also includes every time when a window is dragged with its title bar, gets resized, or has its work area scrolled with the scroll bars. In OSLib, the <function>wimp_open_window()</function> function is defined as follows:</p>
+
+<code lang="c">extern void wimp_open_window(
+	wimp_open *open
+);</code>
+
+<p>The SWI takes a single parameter, which is a pointer to a <name>wimp_open</name> structure. This structure, in turn, is defined as:</p>
+
+<code lang="c">struct wimp_open {
+	wimp_w	w;
+	os_box	visible;
+	int	xscroll;
+	int	yscroll;
+	wimp_w	next;
+};</code>
+
+<p>A comparison with the definition of <name>wimp_window</name> (which was given in the <reference id="chap-window-theory">last chapter</reference>) should reveal that, aside from the <name>wimp_w</name> window handle <variable>w</variable> at the top of the structure, this is identical to the first part of a window definition. The coordinates of the visible area, the <maths>x</maths> and <maths>y</maths> scroll offsets, and the position of the window in the window stack are between them sufficient to completely define the window&rsquo;s position on screen.</p>
+
+<p>Whilst the Wimp stores these values against the <name>wimp_w</name> window handle when it creates the window with <swi>Wimp_CreateWindow</swi>, and updates them every time <swi>Wimp_OpenWindow</swi> is called, it never actually reads them back. What it <em>does</em> do, however, is make them available to an application via the <swi>Wimp_GetWindowState</swi> SWI. In OSLib, this is defined as:</p>
+
+<code lang="c">extern void wimp_get_window_state(
+	wimp_window_state *state
+);</code>
+
+<p>It takes a single parameter, which is a pointer to a <name>wimp_window_state</name> structure:</p>
+
+<code lang="c">struct wimp_window_state {
+	wimp_w			w;
+	os_box			visible;
+	int			xscroll;
+	int			yscroll;
+	wimp_w			next;
+	wimp_window_flags	flags;
+};</code>
+
+<p>It&rsquo;s no accident that this <name>wimp_window_state</name> structure is very similar to <name>wimp_open</name>.</p>
+
+
+
+
+
+
+
+
+
+</section>
+
+<section>
+<title>Closing and Deleting Windows</title>
+
+<p>Closing a window is the exact opposite of opening it with <swi>Wimp_OpenWindow</swi>: it is remoced from view on the desktop, whilst retaining both its <name>wimp_w</name> window handle and the associated record in the Wimp&rsquo;s list of known windows. Effectively closing a window puts it back into a similar state to that which it was in just after <swi>Wimp_CreateWindow</swi> was called &ndash; except that any changes made since then will be retained.</p>
+
+<p>Windows are closed using the <swi>Wimp_CloseWindow</swi> SWI, but unlike its counterparts for opening windows, it&rsquo;s a much simpler affair. OSLib defines it as:</p>
+
+<code lang="c">extern void wimp_close_window(
+	wimp_w	w
+);</code>
+
+<p>The only parameter required is a <name>wimp_w</name> window handle: the one belonging to the window that is to be closed. If the window is being closed in response to a <name>Close_Window_Request</name> event from <swi>Wimp_Poll</swi>, the Wimp supplies us the handle inside the <name>wimp_close</name> structure that comes with the event; at other times, it&rsquo;s assumed that we know which window &ndash; and hence window handle &ndash; is to be closed.</p>
+
+<p>Closing a window does <em>not</em> delete it from the Wimp&rsquo;s list of windows. In fact, to completely remove a window from the Wimp&rsquo;s &lsquo;memory&rsquo; it is necessary to use the <swi>Wimp_DeleteWindow</swi> SWI &ndash; in the same way that <swi>Wimp_OpenWindow</swi> and <swi>Wimp_CloseWindow</swi> form a pair, <swi>Wimp_DeleteWindow</swi> is the opposite number to <swi>Wimp_CreateWindow</swi>.</p>
+
+<p>As with <swi>Wimp_CloseWindow</swi>, <swi>Wimp_DeleteWindow</swi> takes a single parameter consisting of the window handle for the window to be deleted:</p>
+
+<code lang="c">extern void wimp_delete_window(
+	wimp_w	w
+};</code>
+
+<p>At present, the main reason for knowing about <swi>Wimp_DeleteWindow</swi> is to clarify the status of windows closed with <swi>Wimp_CloseWindow</swi>. It&rsquo;s rare for simple applications to need to delete windows, as there&rsquo;s no problem closing and then re-opening a window as many times as required. In fact, when <swi>Wimp_CloseDown</swi> is called as an application exits (as our example does in the <function>main_terminate()</function> function, any remaining windows will be closed and then deleted without any specific action needing to be taken to do it.</p>
+
+
+</section>
+</chapter>
 
 
 </manual>
