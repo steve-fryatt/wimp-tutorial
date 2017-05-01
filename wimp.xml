@@ -2672,7 +2672,7 @@ void win_open(void)
 	wimp_open_window((wimp_open *) &amp;state);
 }</code>
 
-<p>The file contains two functions. The first &ndash; <function>win_initialise()</function> &ndash; assembles the window definition in the <name>wimp_window</name> structure referred to by the <variable>window_definition</variable> variable, before passing it as a pointer to <function>wimp_create_window()</function>. <swi>Wimp_CreateWindow</swi> processes the definition and returns a window handle which is assigned to the <variable>wimp_window</variable> variable, which is of the <name>wimp_w</name> type. From this we can deduce that the <name>wimp_window</name> type is used to hold window definitions, while <name>wimp_w</name> is used to hold window handles.</p>
+<p>The file contains two functions. The first &ndash; <function>win_initialise()</function> &ndash; assembles the window definition in the <name>wimp_window</name> structure referred to by the <variable>window_definition</variable> variable, before passing it as a pointer to <function>wimp_create_window()</function>. <swi>Wimp_CreateWindow</swi> processes the definition and returns a window handle which is assigned to the <variable>window_handle</variable> variable, which is of the <name>wimp_w</name> type. From this we can deduce that the <name>wimp_window</name> type is used to hold window definitions, while <name>wimp_w</name> is used to hold window handles.</p>
 
 <p>The second function &ndash; <function>win_open()</function> &ndash; does the job of taking the window handle stored in <variable>window_handle</variable> and opening it up on the screen. We&rsquo;ll see how this works shortly.</p>
 
@@ -2713,7 +2713,7 @@ void win_open(void);
 	win_initialise();
 }</code>
 
-<p>Since we&rsquo;ll want to have the window open when the user clicks on the iconbar icon, we can similarly <code>#include &quot;win.h&quot;</code> in <file>c.ibar</file> and update the <function>main_initialise()</function> function to call <function>ibar_mouse_click()</function>:</p>
+<p>Since we&rsquo;ll want to have the window open up when the user clicks on the iconbar icon, we can similarly <code>#include &quot;win.h&quot;</code> in <file>c.ibar</file> and update the <function>main_initialise()</function> function to call <function>ibar_mouse_click()</function>:</p>
 
 <code lang="c">static void ibar_mouse_click(wimp_pointer *pointer)
 {
@@ -3055,7 +3055,7 @@ window_definition.highlight_bg = wimp_COLOUR_CREAM;</code>
 
 <p>There&rsquo;s no problem experimenting with these values, but with the advent of modern versions of the Wimp which use textured bitmaps to make up the window furniture, an increasing number of the colours have little or no effect because the parts of the window that they control are no longer visible.</p>
 
-<p>There&rsquo;s also the important fact that <em>all</em> of these colours are tightly defined by the <cite>Style Guide</cite>, which is supplied electronically with the DDE and can be <link href="https://www.riscosopen.org/content/sales/style-guide">purchased from RISC&nbsp;OS Open</link> in printed form. The <em>only</em> value which should be changed in normal cases is <variable>work_bg</variable> &ndash; and even this should remain as <name>wimp_COLOUR_VERY_LIGHT_GREY</name> in most cases.</p>
+<p>There&rsquo;s also the important fact that <em>all</em> of these colours are tightly defined by the <cite>Style Guide</cite>, which is supplied electronically with the DDE and can be <link href="https://www.riscosopen.org/content/sales/style-guide">purchased from RISC&nbsp;OS Open</link> in printed form. The <em>only</em> value which should be changed in normal cases is <variable>work_bg</variable> &ndash; and even this should remain as <name>wimp_COLOUR_VERY_LIGHT_GREY</name> in most cases (including <em>all</em> dialogue boxes).</p>
 
 <p>Aside from its colours, the window&rsquo;s appearance can be changed by using some of the <intro>window flags</intro> stored in <variable>flags</variable>:</p>
 
@@ -3066,7 +3066,13 @@ window_definition.highlight_bg = wimp_COLOUR_CREAM;</code>
 		wimp_WINDOW_TOGGLE_ICON | wimp_WINDOW_VSCROLL |
 		wimp_WINDOW_SIZE_ICON | wimp_WINDOW_HSCROLL;</code>
 
-<p>The flags control many aspects of a window&rsquo;s behaviour, but one of the most obvious is which pieces of <intro>window furniture</intro> are included. OSLib defines a number of constants for us, including the following:</p>
+<p>The flags control many aspects of a window&rsquo;s behaviour, and OSLib defines constants for all of them; as with all flags words, the required values are bitwise-ORed together to produce a number to be stored in the variable. One flag which must <em>always</em> be included is <name>wimp_WINDOW_NEW_FORMAT</name>:</p> 
+
+<code lang="c">#define wimp_WINDOW_NEW_FORMAT		((wimp_window_flags) 0x80000000u)</code>
+
+<p>It indicates that the other flags follow the &ldquo;new format&rdquo; and, in this context, that means &ldquo;RISC&nbsp;OS&rdquo;. The flag was added in when Acorn moved on from the original Arthur operating system in 1989, and it is very unlikely that there would ever be a situation in a modern application where it would not be set.</p>
+
+<p>The remaining flags in the field fall into a number of distinct groups; the first that we&rsquo;ll consider controls which pieces of <intro>window furniture</intro> are applied to the window:</p>
 
 <code lang="c">#define wimp_WINDOW_BACK_ICON		((wimp_window_flags) 0x1000000u)
 #define wimp_WINDOW_CLOSE_ICON		((wimp_window_flags) 0x2000000u)
@@ -3076,13 +3082,58 @@ window_definition.highlight_bg = wimp_COLOUR_CREAM;</code>
 #define wimp_WINDOW_SIZE_ICON		((wimp_window_flags) 0x20000000u)
 #define wimp_WINDOW_HSCROLL		((wimp_window_flags) 0x40000000u)</code>
 
-<p>Each of these, if present, turns on one of the pieces of furniture: the iconise button, which isn&rsquo;t included, is controlled by <name>wimp_WINDOW_CLOSE_ICON</name>. As with all flags words, the required values are bitwise-ORed together to produce a number to be stored in the variable. A flag which must <em>always</em> be included is <name>wimp_WINDOW_NEW_FORMAT</name>:</p> 
+<p>Each of these, if present, turns on one of the pieces of furniture: the iconise button, which doesn&rsquo;t have its own flag, is controlled by <name>wimp_WINDOW_CLOSE_ICON</name>.</p>
 
-<code lang="c">#define wimp_WINDOW_NEW_FORMAT		((wimp_window_flags) 0x80000000u)</code>
+<p>Another group of flags determine how the window moves and responds to the user dragging its title bar and resize button:</p>
 
-<p>In this context, &ldquo;new&rdquo; means &ldquo;RISC&nbsp;OS&rdquo; &ndash; it came in when Acorn moved on from the original Arthur operating system, and ensures that the other furniture flags behave as listed above. It is unlikely that there would ever be a situation in a modern application where this flag would not be included.</p>
+<code lang="c">#define wimp_WINDOW_MOVEABLE		((wimp_window_flags) 0x2u)
+#define wimp_WINDOW_NO_BOUNDS		((wimp_window_flags) 0x40u)
+#define wimp_WINDOW_BOUNDED		((wimp_window_flags) 0x2000u)
+#define wimp_WINDOW_IGNORE_XEXTENT	((wimp_window_flags) 0x4000u)
+#define wimp_WINDOW_IGNORE_YEXTENT	((wimp_window_flags) 0x8000u)</code>
 
-<code lang="c">#define wimp_WINDOW_REAL_COLOURS	((wimp_window_flags) 0x400u)</code>
+<p>A window can only be dragged around at all if the <name>wimp_WINDOW_MOVEABLE</name> flag is set; otherwise, it will be fixed at the place where the application last put it with <swi>Wimp_OpenWindow</swi>.</p>
+
+<p>The <name>wimp_WINDOW_NO_BOUNDS</name> flag, if set, allows the window to move off the screen; however, even if it is not set, the user can force this setting for <em>all</em> windows on the desktop using the <icon>Allow windows off-screen to top and left</icon> and <icon>Allow windows off-screen to bottom and right</icon> options in the Windows section of Configure. These Configure options arrived in RISC&nbsp;OS&nbsp;3 and, as a result, the <name>wimp_WINDOW_BOUNDED</name> flag was added to <em>force</em> a window to stay on screen. It&rsquo;s generally best to leave <name>wimp_WINDOW_NO_BOUNDS</name> unset so that the user can make his or her own choice, and use <name>wimp_WINDOW_BOUNDED</name> if the window has to remain on screen.</p>
+
+<p>The final two flags, <name>wimp_WINDOW_IGNORE_XEXTENT</name> and <name>wimp_WINDOW_IGNORE_YEXTENT</name>, control the behaviour of the mouse when the user tries to drag the window&rsquo;s resize button. When set, the mouse can drag out away from the button when the window reaches full size. This isn&rsquo;t desirable, and these flags should be left unset unless there&rsquo;s some special code in place to spot this happening and change the size of the window&rsquo;s work area &ndash; this is definitely &lsquo;advanced&rsquo; behaviour, so for now assume that these flags should not be set!</p>
+
+<p>The final group of flags all relate in some way to the way that the window interacts with <swi>Wimp_Poll</swi> events:</p>
+
+<code lang="c">#define wimp_WINDOW_AUTO_REDRAW		((wimp_window_flags) 0x10u)
+#define wimp_WINDOW_PANE		((wimp_window_flags) 0x20u)
+#define wimp_WINDOW_HOT_KEYS		((wimp_window_flags) 0x1000u)
+#define wimp_WINDOW_SCROLL_REPEAT	((wimp_window_flags) 0x100u)
+#define wimp_WINDOW_SCROLL		((wimp_window_flags) 0x200u)</code>
+
+<p>If the <name>wimp_WINDOW_AUTO_REDRAW</name> flag is set, the Wimp won&rsquo;t ask the application to help with redrawing the window. For all simple windows, this flag should be set: if it isn&rsquo;t, then opening the window will lock the application (requiring <key>Alt</key>-<key>Break</key> to escape) unless there&rsquo;s code in place to redraw the window. We&rsquo;ll cover this, and the associated <swi>Wimp_Poll</swi> event, later.</p>
+
+<p>Setting the <name>wimp_WINDOW_HOT_KEYS</name> flag will cause the window to receive details of unclaimed key presses even when it doesn&rsquo;t have input focus. Generally, this isn&rsquo;t much use, and will be left un-set.</p>
+
+<p>The <name>wimp_WINDOW_SCROLL</name> and <name>wimp_WINDOW_SCROLL_REPEAT</name> flags control how the window responds to the user clicking on the arrows at the ends of its scroll bars. These can safely be left unset &ndash; at least until we&rsquo;ve met the <swi>Wimp_Poll</swi> event associated with them!</p>
+
+<p>Finally, from this group, is the <name>wimp_WINDOW_PANE</name> flag. This is intended for use by toolboxes and toolbars, such as the one found on Draw windows, but it actually does very little. It doesn&rsquo;t help attach the window to its parent (the application itself must do that), but merely ensures that if the window gets input focus, then the title bar of the window below it in the window stack is highlighted.</p>
+
+<p>The final two flags that we&rsquo;ll look at fall into the &ldquo;do not use&rdquo; category:</p>
+
+<code lang="c">#define wimp_WINDOW_BACK		((wimp_window_flags) 0x800u)
+#define wimp_WINDOW_REAL_COLOURS	((wimp_window_flags) 0x400u)</code>
+
+<p>If set, the <name>wimp_WINDOW_BACK</name> flag forces the window to remain at the bottom of the window stack. This was useful before RISC&nbsp;OS came along, but these days it&rsquo;s only likely to cause problems. In a similar way, the <name>wimp_WINDOW_REAL_COLOURS</name> allows GCOL colours to be used for the window&rsquo;s colours instead of the Wimp Palette &ndash; for compliance with the <cite>Style Guide</cite>, leave the colours as given above and don&rsquo;t set this flag!</p>
+
+<!--
+Flags which haven't been covered:
+
+#define wimp_WINDOW_FURNITURE_WINDOW            ((wimp_window_flags) 0x800000u)
+      /*WindowManager 3.98+*/
+#define wimp_WINDOW_FOREGROUND_WINDOW           ((wimp_window_flags) 0x800000u)
+      /*RISC OS 4+*/
+-->
+
+
+
+
+
 
 
 
@@ -3101,27 +3152,6 @@ window_definition.icon_count = 0
 
 
 <!--
-#define wimp_WINDOW_MOVEABLE                    ((wimp_window_flags) 0x2u)
-#define wimp_WINDOW_AUTO_REDRAW                 ((wimp_window_flags) 0x10u)
-#define wimp_WINDOW_PANE                        ((wimp_window_flags) 0x20u)
-#define wimp_WINDOW_NO_BOUNDS                   ((wimp_window_flags) 0x40u)
-#define wimp_WINDOW_SCROLL_REPEAT               ((wimp_window_flags) 0x100u)
-#define wimp_WINDOW_SCROLL                      ((wimp_window_flags) 0x200u)
-
-
-#define wimp_WINDOW_BACK                        ((wimp_window_flags) 0x800u)
-#define wimp_WINDOW_HOT_KEYS                    ((wimp_window_flags) 0x1000u)
-#define wimp_WINDOW_BOUNDED                     ((wimp_window_flags) 0x2000u)
-#define wimp_WINDOW_IGNORE_XEXTENT              ((wimp_window_flags) 0x4000u)
-#define wimp_WINDOW_IGNORE_YEXTENT              ((wimp_window_flags) 0x8000u)
-#define wimp_WINDOW_PARTIAL_SIZE                ((wimp_window_flags) 0x400000u)
-      /*Window at full size, not obscuring iconbar - WindowManager 3.98+*/
-#define wimp_WINDOW_FURNITURE_WINDOW            ((wimp_window_flags) 0x800000u)
-      /*WindowManager 3.98+*/
-#define wimp_WINDOW_FOREGROUND_WINDOW           ((wimp_window_flags) 0x800000u)
-      /*RISC OS 4+*/
-
-
 
 
 
@@ -3144,6 +3174,8 @@ window_definition.icon_count = 0
 #define wimp_WINDOW_TOGGLED                     ((wimp_window_flags) 0x80000u)
 #define wimp_WINDOW_HAS_FOCUS                   ((wimp_window_flags) 0x100000u)
 #define wimp_WINDOW_BOUNDED_ONCE                ((wimp_window_flags) 0x200000u)
+#define wimp_WINDOW_PARTIAL_SIZE                ((wimp_window_flags) 0x400000u)
+      /*Window at full size, not obscuring iconbar - WindowManager 3.98+*/
 
 -->
 
@@ -3154,48 +3186,12 @@ window_definition.icon_count = 0
 
 
 
-<!--
-
-<p>The <function>wimp_open_window()</function> function takes a pointer to a <name>wimp_open</name> structure; these are defined by OSLib like this:</p>
-
-<code lang="c">extern void wimp_open_window(
-	wimp_open *open
-);
-
-struct wimp_open {
-	wimp_w	w;
-	os_box	visible;
-	int	xscroll;
-	int	yscroll;
-	wimp_w	next;
-};</code>
-
-
-
-<p>Whenever the Wimp wants us to call <swi>Wimp_OpenWindow</swi>, it will request it by sending our application an <name>Open_Window_Request</name> event via <swi>Wimp_Poll</swi>. Fortunately, it also tells us how it thinks the window should be opened, and in the vast majority of cases this will be exactly what we want to happen as well.</p>
-
-
-
-
--->
 
 
 
 
 
 
-
-<!--
-
-we&rsquo;ll just take a quick aside. One reason why the Wimp asks applications to close their own windows is that they might wish to do something else at the same time. When a wordprocessor&rsquo;s window closes, for instance, it might need to free up the space taken by the document that has just been discarded. A simple application like ours might wish to exit completely, and this is actually very simple to see in action by amending <code>case wimp_CLOSE_WINDOW_REQUEST</code> in the <code>switch</code> statement above.</p>
-
-<code lang="c">case wimp_CLOSE_WINDOW_REQUEST:
-	wimp_close_window(blk.close.w);
-	main_quit_flag = TRUE;
-	break;</code>
-
-<p>When the <name>Close_Window_Request</name> event is received, the <variable>main_quit_flag</variable> variable is set to <name>TRUE</name> and the application will exit. Note that because this is in the default handler, it would also affect any other windows that our application might define in the future &ndash; which might not be what we intend!</p>
--->
 
 
 
@@ -3226,7 +3222,7 @@ we&rsquo;ll just take a quick aside. One reason why the Wimp asks applications t
 <summary>Manipulating windows isn&rsquo;t too difficult, but there are a few things to get to grips with.</summary>
 
 <section>
-<p>In the <reference id="chap-window-theory">last chapter</reference>, we saw how to assemble a <name>wimp_window</name> structure in order to create a new window. Whilst we saw this in use in <reference id="chap-windows"/>, we now need to consider how the various SWIs provided by the Wimp for handling windows actually work.</p>
+<p>In the <reference id="chap-window-theory">last chapter</reference>, we saw how to assemble a <name>wimp_window</name> structure in order to create a new window. Whilst this was used practically in <reference id="chap-windows"/>, we now need to consider how the various SWIs provided by the Wimp for handling windows actually work.</p>
 </section>
 
 <section>
@@ -3248,7 +3244,7 @@ we&rsquo;ll just take a quick aside. One reason why the Wimp asks applications t
 	window_definition.yscroll = 0;
 	window_definition.next = wimp_TOP;
 
-	/* The values above this point are never actually used by the Wimp! */
+	/* The values above this point aren't directly used by the Wimp */
 
 	window_definition.flags = wimp_WINDOW_NEW_FORMAT |
 			wimp_WINDOW_MOVEABLE | wimp_WINDOW_AUTO_REDRAW |
@@ -3283,26 +3279,21 @@ we&rsquo;ll just take a quick aside. One reason why the Wimp asks applications t
 
 <p>The first thing to realise is that, for all its complexity, the <name>wimp_window</name> structure is only needed up to the point where a pointer to it is passed to <function>wimp_create_window()</function>. By the time the SWI has returned a new <name>wimp_w</name> handle for the window, it has copied the contents of the <name>wimp_window</name> block away into its own workspace and the block itself is no longer required.</p>
 
-<p>We can actually see this in the code above, since <variable>window_definition</variable> is is being defined as a local variable within the <function>win_initialise()</function> function. The compiler will take the memory needed for local variables from the stack: as a result, when the function exits, the whole <name>wimp_window</name> structure will disappear. The important thing is, this doesn&rsquo;t matter: by the time the variable vanishes, the Wimp already has its own copy of everything that it requires!</p>
+<p>We can actually see this in the code above, since <variable>window_definition</variable> is is being defined as a local variable within the <function>win_initialise()</function> function. The compiler will take the memory needed for local variables from the stack and so as a result, when the function exits, the whole <name>wimp_window</name> structure will disappear. The important thing is, this doesn&rsquo;t matter: by the time the variable vanishes, the Wimp already has its own copy of everything that it requires!</p>
 
-<p>One side effect of this is that the Wimp doesn&rsquo;t care if we pass it a pointer to the same window definition more than once. The block is just a set of instructions for how to create the window, not the window itself: if we want two identical windows for some reason &ndash; and multi-document editors, to name just one example, often do &ndash; the Wimp doesn&rsquo;t mind if we re-use the same instructions each time. Each window created from the block will be a completely separate entity, with its own <name>wimp_w</name> handle.</p>
+<p>One side effect of this is that the Wimp doesn&rsquo;t care if we pass it a pointer to the same window definition more than once. The block is just a set of instructions for how to create the window, not the window itself: if we want two identical windows for some reason &ndash; and multi-document editors, to name just one example, often do &ndash; the Wimp doesn&rsquo;t mind if we re-use the same instructions each time. Regardless of where the information came from, each window created will be a completely separate entity with its own <name>wimp_w</name> handle.</p>
 
 <p>The second thing to realise is that the data in the block falls into two distinct sections, which have been identified in the example above by a comment. The values set below the command &ndash; from <variable>window_definition.flags</variable> to <variable>window_definition.icon_count</variable> &ndash; are taken away by the Wimp and used to define the look and feel of the new window. Once a window has been created, there&rsquo;s no way to change its window flags, colours, sprite area or title bar definition. We can change the work area extent, but only by using a SWI dedicated to that purpose.</p>
 
-<p>In contrast, the values set above the comment &ndash; from <variable>window_definition.visible</variable> to <variable>window_definition.next</variable> &ndash; aren&rsquo;t actually used by the Wimp at all. It stores them and makes them available to us, but it never actually uses them itself. To see why, we need to consider what we need to do to get this new, but currently invisibel, window to open on the desktop.</p>
+<p>In contrast, the values set above the comment &ndash; from <variable>window_definition.visible</variable> to <variable>window_definition.next</variable> &ndash; aren&rsquo;t actually used by the Wimp at all. It stores them and makes them available to us, but it never actually uses them itself. To see why, we need to consider what we need to do to get this new, but currently invisible, window to open on the desktop.</p>
 </section>
 
 <section>
 <title>Opening Windows</title>
 
-<p>Calling <swi>Wimp_CreateWindow</swi> doesn&rsquo;t put a window on the desktop: instead, it merely creates the window internally in the Wimp and allocates it a <name>wimp_w</name> window handle. At this point the window can be considered <intro>closed</intro>, and it will be necessary to <intro>open</intro> it in order to make it available to the user.</p>
+<p>As we&rsquo;ve seen, <swi>Wimp_CreateWindow</swi> doesn&rsquo;t put a window on the desktop: instead, it merely creates the window internally in the Wimp and allocates it a <name>wimp_w</name> window handle. At this point the window can be considered <intro>closed</intro>, and it will be necessary to <intro>open</intro> it in order to make it available to the user.</p>
 
-
-
-
-<p>Whenever a new window is created by <swi>Wimp_CreateWindow</swi> from a <name>wimp_window</name> template, it starts life hidden from view. To make it visible to the user, it needs to be opened using the <swi>Wimp_OpenWindow</swi> SWI.</p>
-
-<p>As we&rsquo;ve seen, the Wimp&rsquo;s idea of &ldquo;opening&rdquo; is quite wide. It doesn&rsquo;t only cover the act of making a new window, or a window closed with <swi>Wimp_CloseWindow</swi>, visible &ndash; it also includes every time when a window is dragged with its title bar, gets resized, or has its work area scrolled with the scroll bars. In OSLib, the <function>wimp_open_window()</function> function is defined as follows:</p>
+<p>Opening a window is done by calling the <swi>Wimp_OpenWindow</swi>, which opens &ndash; or re-opens &ndash; a window on screen. In OSLib, the <function>wimp_open_window()</function> function is defined as follows:</p>
 
 <code lang="c">extern void wimp_open_window(
 	wimp_open *open
@@ -3318,9 +3309,22 @@ we&rsquo;ll just take a quick aside. One reason why the Wimp asks applications t
 	wimp_w	next;
 };</code>
 
-<p>A comparison with the definition of <name>wimp_window</name> (which was given in the <reference id="chap-window-theory">last chapter</reference>) should reveal that, aside from the <name>wimp_w</name> window handle <variable>w</variable> at the top of the structure, this is identical to the first part of a window definition. The coordinates of the visible area, the <maths>x</maths> and <maths>y</maths> scroll offsets, and the position of the window in the window stack are between them sufficient to completely define the window&rsquo;s position on screen.</p>
+<p>The information required by <function>wimp_open_window()</function> includes the visible area of the window (the screen coordinates of the bottom-left and top-right corners), the <maths>x</maths> and <maths>y</maths> scroll offsets, and the position of the window in the window stack. Between them, these pieces of information completely define the position of the window on screen: whether it is moved by dragging the title bar, resized with the resize button, has another window opened in front of it, or has its contents scrolled, the information contained in the <name>wimp_open</name> structure will completely describe its new state.</p>
 
-<p>Whilst the Wimp stores these values against the <name>wimp_w</name> window handle when it creates the window with <swi>Wimp_CreateWindow</swi>, and updates them every time <swi>Wimp_OpenWindow</swi> is called, it never actually reads them back. What it <em>does</em> do, however, is make them available to an application via the <swi>Wimp_GetWindowState</swi> SWI. In OSLib, this is defined as:</p>
+<p>This is why the remit of the <swi>Wimp_OpenWindow</swi> is much wider than it might at first appear. It does include the obvious action of opening a previously closed window, but in fact the Wimp&rsquo;s idea of &ldquo;opening&rdquo; includes <em>any</em> occasion when a parameter contained in the <name>wimp_open</name> structure changes. In fact, as we saw in <reference id="chap-windows"/>, these attributes of a window <em>can&rsquo;t</em> change unless the application calls <swi>Wimp_OpenWindow</swi>: our window was initially immovable until our code responded to the <name>Open_Window_Request</name> events being sent by the Wimp.</p>
+
+<p>In the case that we&rsquo;re responding to a <name>Open_Window_Request</name> event, working out what to put into the <name>wimp_open</name> structure is made easier because the Wimp supplies a structure containing what <em>it</em> thinks the values should be along with the event. The application can change the values, or &ndash; more usually &ndash; perform other actions based on what those values are, before passing them on to <function>wimp_open_window()</function>, but in many cases the code that we saw in <reference id="dl-window-open-handler"/> is all that&rsquo;s required:</p>
+
+<code lang="c">static void win_open_window_request(wimp_open *open)
+{
+	wimp_open_window(open);
+}</code>
+
+<p>In practice, an application built around SFLib would use the default method, seen in <reference id="dl-window-dflt-handler"/>, for handling the events. Either way, the necessary code isn&rsquo;t complicated, because the Wimp does the hard work for us.</p>
+
+<p>Harder to work out is what to fill the <name>wimp_open</name> structure with when we wish to open a window which is currently closed. There&rsquo;s no <name>Open_Window_Request</name> event to give us a hint, but in fact the Wimp can still help. Comparing the contents of the <name>wimp_open</name> structure with the definition of <name>wimp_window</name> (which was given in the <reference id="chap-window-theory">last chapter</reference>) should reveal that, aside from the <name>wimp_w</name> window handle <variable>w</variable> at the top of the <name>wimp_open</name> structure, it is identical to the first part of a window definition.</p>
+
+<p>We said that the Wimp never used these values from the <name>wimp_window</name> structure directly, but it <em>does</em> store them away for future reference when the structure is passed to <swi>Wimp_CreateWindow</swi> and then update them every time <swi>Wimp_OpenWindow</swi> is called for the window. At any time, whether the window is open or closed, the application can request them from the Wimp using the <swi>Wimp_GetWindowState</swi> SWI. In OSLib, this is defined as:</p>
 
 <code lang="c">extern void wimp_get_window_state(
 	wimp_window_state *state
@@ -3337,10 +3341,21 @@ we&rsquo;ll just take a quick aside. One reason why the Wimp asks applications t
 	wimp_window_flags	flags;
 };</code>
 
-<p>It&rsquo;s no accident that this <name>wimp_window_state</name> structure is very similar to <name>wimp_open</name>.</p>
+<p>As with a lot of Wimp SWIs which take a pointer to a parameter structure, we need to fill some details into the structure before making the call. In the case of <function>wimp_get_window_state()</function>, the window handle <variable>w</variable> must be inserted, so that the Wimp knows which window to return the details for. In our application, we&rsquo;re calling it as follows:</p>
 
+<code lang="c">void win_open(void)
+{
+	wimp_window_state state;
 
+	state.w = window_handle;
+	wimp_get_window_state(&amp;state);
+	state.next = wimp_TOP;
+	wimp_open_window((wimp_open *) &amp;state);
+}</code>
 
+<p>The <name>wimp_window_state</name> structure is identical to the <name>wimp_open</name> structure, except for the additional <variable>flags</variable> at the end. This means that we&rsquo;re safe to cast the <variable>state</variable> from <name>wimp_window_state</name> to <name>wimp_open</name> in order to pass it to <function>wimp_open_window()</function>, as the Wimp will simply ignore the additional data in the structure.</p>
+
+<!-- close window and re-open: last position is memorised! -->
 
 
 
@@ -3374,6 +3389,50 @@ we&rsquo;ll just take a quick aside. One reason why the Wimp asks applications t
 
 
 </section>
+
+
+<!--
+
+we&rsquo;ll just take a quick aside. One reason why the Wimp asks applications to close their own windows is that they might wish to do something else at the same time. When a wordprocessor&rsquo;s window closes, for instance, it might need to free up the space taken by the document that has just been discarded. A simple application like ours might wish to exit completely, and this is actually very simple to see in action by amending <code>case wimp_CLOSE_WINDOW_REQUEST</code> in the <code>switch</code> statement above.</p>
+
+<code lang="c">case wimp_CLOSE_WINDOW_REQUEST:
+	wimp_close_window(blk.close.w);
+	main_quit_flag = TRUE;
+	break;</code>
+
+<p>When the <name>Close_Window_Request</name> event is received, the <variable>main_quit_flag</variable> variable is set to <name>TRUE</name> and the application will exit. Note that because this is in the default handler, it would also affect any other windows that our application might define in the future &ndash; which might not be what we intend!</p>
+-->
+
+
+
+<!--
+
+<p>The <function>wimp_open_window()</function> function takes a pointer to a <name>wimp_open</name> structure; these are defined by OSLib like this:</p>
+
+<code lang="c">extern void wimp_open_window(
+	wimp_open *open
+);
+
+struct wimp_open {
+	wimp_w	w;
+	os_box	visible;
+	int	xscroll;
+	int	yscroll;
+	wimp_w	next;
+};</code>
+
+
+
+<p>Whenever the Wimp wants us to call <swi>Wimp_OpenWindow</swi>, it will request it by sending our application an <name>Open_Window_Request</name> event via <swi>Wimp_Poll</swi>. Fortunately, it also tells us how it thinks the window should be opened, and in the vast majority of cases this will be exactly what we want to happen as well.</p>
+
+
+
+
+-->
+
+
+
+
 </chapter>
 
 
