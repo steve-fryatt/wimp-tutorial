@@ -2914,7 +2914,7 @@ window_definition.ymin = 0;
 strncpy(window_definition.title_data.text, &quot;Hello World!&quot;, 12);
 window_definition.icon_count = 0;</code>
 
-<p>The <name>wimp_window</name> structure is a block of memory which is at least 92 bytes long once all of the sub-structures within it are &lsquo;unwound&rsquo;; OSLib defines it like this:</p>
+<p>The <name>wimp_window</name> structure is a block of memory which is at least 92&nbsp;bytes long once all of the sub-structures within it are &lsquo;unwound&rsquo;; OSLib defines it like this:</p>
 
 <code lang="c">struct wimp_window {
 	os_box			visible;
@@ -3129,31 +3129,8 @@ Flags which haven't been covered:
 #define wimp_WINDOW_FOREGROUND_WINDOW           ((wimp_window_flags) 0x800000u)
       /*RISC OS 4+*/
 -->
-
-
-
-
-
-
-
-
-
 <!--
 window_definition.extra_flags = wimp_WINDOW_USE_EXTENDED_SCROLL_REQUEST;
-window_definition.title_flags = wimp_ICON_TEXT |
-		wimp_ICON_BORDER | wimp_ICON_HCENTRED |
-		wimp_ICON_VCENTRED | wimp_ICON_FILLED;
-window_definition.work_flags = wimp_BUTTON_NEVER &lt;&lt; wimp_ICON_BUTTON_TYPE_SHIFT;
-window_definition.sprite_area = wimpspriteop_AREA;
-strncpy(window_definition.title_data.text, &quot;Hello World!&quot;, 12);
-window_definition.icon_count = 0
--->
-
-
-
-<!--
-
-
 
 #define wimp_WINDOW_USE_TITLE_VALIDATION_COLOURS ((wimp_extra_window_flags) 0x1u)
       /*RISC OS 4+ Prefer Wimp_WindowUseTitleValidationString*/
@@ -3166,43 +3143,33 @@ window_definition.icon_count = 0
 #define wimp_WINDOW_ALWAYS3D                    ((wimp_extra_window_flags) 0x8u)
       /*RISC OS 4+*/
 #define wimp_WINDOW_GIVE_SHADED_ICON_INFO       ((wimp_extra_window_flags) 0x10u)
-
-
-#define wimp_WINDOW_OPEN                        ((wimp_window_flags) 0x10000u)
-#define wimp_WINDOW_NOT_COVERED                 ((wimp_window_flags) 0x20000u)
-#define wimp_WINDOW_FULL_SIZE                   ((wimp_window_flags) 0x40000u)
-#define wimp_WINDOW_TOGGLED                     ((wimp_window_flags) 0x80000u)
-#define wimp_WINDOW_HAS_FOCUS                   ((wimp_window_flags) 0x100000u)
-#define wimp_WINDOW_BOUNDED_ONCE                ((wimp_window_flags) 0x200000u)
-#define wimp_WINDOW_PARTIAL_SIZE                ((wimp_window_flags) 0x400000u)
-      /*Window at full size, not obscuring iconbar - WindowManager 3.98+*/
-
 -->
 
 
 
+<p>The window&rsquo;s title bar is set up in a couple of lines:</p>
+
+<code lang="c">window_definition.title_flags = wimp_ICON_TEXT |
+		wimp_ICON_BORDER | wimp_ICON_HCENTRED |
+		wimp_ICON_VCENTRED | wimp_ICON_FILLED;
+strncpy(window_definition.title_data.text, &quot;Hello World!&quot;, 12);</code>
+
+<p>The Wimp treats window title bars as though they are specialised icons with a limited set of options; we&rsquo;ll come on to icons properly soon, so for now we&rsquo;ll just have to take on trust that the flags in <variable>title_flags</variable> set up a text icon with its contents centred both vertically and horizontally. There&rsquo;s a border drawn round it (the black outline), and it has a filled background.</p>
+
+<p>With these title flags, the <variable>title_data.text</variable> is a 12&nbsp;byte field which can hold the text of the window title. The use of <function>strncpy()</function> with no attempt to terminate a buffer over-run might seem unusual, but in this case it&rsquo;s exactly what is required. The Wimp allows for titles from zero to twelve characters in length and for text up to and including eleven characters, a zero terminator is required. When the text is exactly twelve characters long, however, <em>no</em> terminator should be used. It can feel very wrong, but in this case <function>strncpy()</function> on its own is exactly what we require!</p>
+
+<code lang="c">window_definition.work_flags = wimp_BUTTON_NEVER &lt;&lt; wimp_ICON_BUTTON_TYPE_SHIFT;</code>
+
+<p>The background of the window can respond to mouse clicks, and in a similar way to the title bar, the Wimp treats it as a kind of &lsquo;pseudo-icon&rsquo; as far as configuring it is concerned. We&rsquo;ll meet <intro>icon button types</intro> in a few chapters&rsquo; time, but for now the <variable>work_flags</variable> can safely be set to <name>wimp_BUTTON_NEVER</name>.</p>
+
+<code lang="c">window_definition.sprite_area = wimpspriteop_AREA;</code>
+
+<p>If we&rsquo;re using sprites in the window, we have the option of specifying a <variable>sprite_area</variable> pointer to allow the Wimp to locate them for us. We&rsquo;re not, so for now we can just set this to the default of <name>wimpspriteop_AREA</name>.</p>
 
 
+<code lang="c">window_definition.icon_count = 0</code>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+<p>The final item at the end of the definition is the <variable>icon_count</variable>. We said earlier that the <name>wimp_window</name> structure was &ldquo;at least 92&nbsp;bytes long&rsquo;: if the window contained any icons, they could be defined in an optional array at the end of the structure. We don&rsquo;t have any icons yet, so the count is simply set to zero.</p>
 </section>
 </chapter>
 
@@ -3357,7 +3324,27 @@ window_definition.icon_count = 0
 
 <!-- close window and re-open: last position is memorised! -->
 
+</section>
 
+<!-- set window position for opening -->
+
+<section>
+<title>Getting Information About A Window</title>
+
+<p>Along with the information required by <function>wimp_open_window()</function>, <function>wimp_get_window_state()</function> returns the window&rsquo;s flags in the <name>wimp_window_state</name> structure. The reason for this isn&rsquo;t to remind us of how we defined the window, but because in addition to the flags discussed in the <reference id="chap-window-theory">last chapter</reference> which we set before calling <swi>Wimp_CreateWindow</swi>, there are a group of flags which the Wimp keeps updated to tell us about the current state of the window. These can be read using <swi>Wimp_GetWindowState</swi>, and are defined in OSLib as follows:</p>
+
+<code lang="c">#define wimp_WINDOW_OPEN		((wimp_window_flags) 0x10000u)
+#define wimp_WINDOW_NOT_COVERED		((wimp_window_flags) 0x20000u)
+#define wimp_WINDOW_FULL_SIZE		((wimp_window_flags) 0x40000u)
+#define wimp_WINDOW_TOGGLED		((wimp_window_flags) 0x80000u)
+#define wimp_WINDOW_HAS_FOCUS		((wimp_window_flags) 0x100000u)
+#define wimp_WINDOW_BOUNDED_ONCE	((wimp_window_flags) 0x200000u)
+#define wimp_WINDOW_PARTIAL_SIZE	((wimp_window_flags) 0x400000u)
+	/*Window at full size, not obscuring iconbar - WindowManager 3.98+*/</code>
+
+<p>Some of the flags describe simple aspects of the window&rsquo;s state. The <name>wimp_WINDOW_OPEN</name> flag is set if the window is open on screen, while <name>wimp_WINDOW_HAS_FOCUS</name> indicates that it has <intro>input focus</intro> &ndash; that keyboard input will be directed to it. If <name>wimp_WINDOW_NOT_COVERED</name> is set, we know that there are no other windows on top of ours.</p>
+
+<!-- Remaining flags relate to the Toggle Size operation. -->
 
 
 
@@ -3386,8 +3373,6 @@ window_definition.icon_count = 0
 };</code>
 
 <p>At present, the main reason for knowing about <swi>Wimp_DeleteWindow</swi> is to clarify the status of windows closed with <swi>Wimp_CloseWindow</swi>. It&rsquo;s rare for simple applications to need to delete windows, as there&rsquo;s no problem closing and then re-opening a window as many times as required. In fact, when <swi>Wimp_CloseDown</swi> is called as an application exits (as our example does in the <function>main_terminate()</function> function, any remaining windows will be closed and then deleted without any specific action needing to be taken to do it.</p>
-
-
 </section>
 
 
