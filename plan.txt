@@ -1,0 +1,17 @@
+Simple Icons
+Indirected Icons
+Mouse Clicks (Windows & Icons)
+Changing Icons State?
+Icons in Window Definitions
+Application Directories
+Templates
+
+Menus
+MessageTrans
+Wimp Messages
+Interactive Help
+Window Redraw
+Data Transfer Protocol
+Loading & Saving
+Global Clipboard
+Multiple Documents
