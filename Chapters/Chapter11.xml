@@ -1,0 +1,299 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+
+<!DOCTYPE xmlmanual SYSTEM "../wimp.dtd">
+
+<manual xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="xmldoc.xsd" version="1.8.6">
+
+<!-- Chapter 11
+   -
+   - Creating Our First Window
+  -->
+
+<chapter id="chap-windows">
+<resources>
+<images>Chapter11</images>
+<downloads>Chapter11</downloads>
+</resources>
+<filename>windows.html</filename>
+<title>Creating our First Window</title>
+
+<summary>We&rsquo;re finally ready to create our first window!</summary>
+
+<section>
+<p>With the initial legwork complete, we&rsquo;re now ready to add the first window to our application. Windows are a fundamental part of the RISC&nbsp;OS desktop, and most of us don&rsquo;t give them much thought from day to day. A couple of examples, belonging to familiar applications Zap and Snapper, can be seen in <reference id="fig-window-sample"/>.</p>
+
+<image id="fig-window-sample" file="window-sample.png" title="A couple of windows on the RISC&nbsp;OS desktop"/>
+
+<p>All windows are views on to areas of the screen, which usually belong to an individual applications. Some, like the one belonging to Snapper to the front and left of the screenshot above, have a small fixed area which is always in view; others, like the Zap window to the back right, have a much larger area than is visible at any one time and which can be explored using their scroll bars. The area that&rsquo;s visible is known as the <intro>visible area</intro>, while the whole &lsquo;virtual&rsquo; area encompassed by moving the scroll bars from one extreme to the other is the <intro>work area</intro>. The job of the Wimp is to look after these areas and help the application to update them when required.</p>
+
+<p>There&rsquo;s a lot of theory to get through in order to define a window and get it on the screen, so instead of getting too bogged down in detail we&rsquo;ll dive straight in at the deep end. Once we&rsquo;ve put a window on the screen, we can then start to look at how it got there!</p>
+</section>
+
+<section>
+<title>Window definitions</title>
+
+<p>There are several stages to getting a window on to the screen with the RISC&nbsp;OS Wimp: first it must be <intro>defined</intro> in a way that the <swi>Wimp_CreateWindow</swi> SWI can understand. This SWI will <intro>create</intro> the window for us, giving us back a <intro>window handle</intro> which we can then use to <intro>open</intro> the window on screen with the help of the <swi>Wimp_OpenWindow</swi> SWI.</p>
+
+<p>To make this happen, we&rsquo;ll create a new file called <file>c.win</file> to hold the code which defines and opens the window. Since this is new, it&rsquo;s shown in full in <reference id="list-windows-win-c"/>.</p>
+
+<code lang="c" file="c.win" id="list-windows-win-c" title="The code to define and open our first window"> /**
+ * Example 11.1
+ *
+ * (c) Stephen Fryatt, 2017
+ *
+ * File: win.c
+ */
+
+#include &quot;oslib/wimp.h&quot;
+#include &quot;oslib/wimpspriteop.h&quot;
+
+#include &lt;string.h&gt;
+
+#include "win.h"
+
+/* Global Variables */
+
+static wimp_w window_handle;
+
+/* Window Initialisation. */
+
+void win_initialise(void)
+{
+	wimp_window window_definition;
+
+	window_definition.visible.x0 = 200;
+	window_definition.visible.y0 = 200;
+	window_definition.visible.x1 = 600;
+	window_definition.visible.y1 = 600;
+	window_definition.xscroll = 0;
+	window_definition.yscroll = 0;
+	window_definition.next = wimp_TOP;
+	window_definition.flags = wimp_WINDOW_NEW_FORMAT |
+			wimp_WINDOW_MOVEABLE | wimp_WINDOW_AUTO_REDRAW |
+			wimp_WINDOW_BOUNDED_ONCE | wimp_WINDOW_BACK_ICON |
+			wimp_WINDOW_CLOSE_ICON | wimp_WINDOW_TITLE_ICON |
+			wimp_WINDOW_TOGGLE_ICON | wimp_WINDOW_VSCROLL |
+			wimp_WINDOW_SIZE_ICON | wimp_WINDOW_HSCROLL;
+	window_definition.title_fg = wimp_COLOUR_BLACK;
+	window_definition.title_bg = wimp_COLOUR_LIGHT_GREY;
+	window_definition.work_fg = wimp_COLOUR_BLACK;
+	window_definition.work_bg = wimp_COLOUR_VERY_LIGHT_GREY;
+	window_definition.scroll_outer = wimp_COLOUR_MID_LIGHT_GREY;
+	window_definition.scroll_inner = wimp_COLOUR_VERY_LIGHT_GREY;
+	window_definition.highlight_bg = wimp_COLOUR_CREAM;
+	window_definition.extra_flags = wimp_WINDOW_USE_EXTENDED_SCROLL_REQUEST;
+	window_definition.extent.x0 = 0;
+	window_definition.extent.y0 = -1200;
+	window_definition.extent.x1 = 1200;
+	window_definition.extent.y1 = 0;
+	window_definition.title_flags = wimp_ICON_TEXT |
+			wimp_ICON_BORDER | wimp_ICON_HCENTRED |
+			wimp_ICON_VCENTRED | wimp_ICON_FILLED;
+	window_definition.work_flags = wimp_BUTTON_NEVER &lt;&lt; wimp_ICON_BUTTON_TYPE_SHIFT;
+	window_definition.sprite_area = wimpspriteop_AREA;
+	window_definition.xmin = 0;
+	window_definition.ymin = 0;
+	strncpy(window_definition.title_data.text, &quot;Hello World!&quot;, 12);
+	window_definition.icon_count = 0;
+
+	window_handle = wimp_create_window(&amp;window_definition);
+}
+
+/* Open the Window. */
+
+void win_open(void)
+{
+	wimp_window_state state;
+
+	state.w = window_handle;
+	wimp_get_window_state(&amp;state);
+	state.next = wimp_TOP;
+	wimp_open_window((wimp_open *) &amp;state);
+}</code>
+
+<p>The file contains two functions. The first &ndash; <function>win_initialise()</function> &ndash; assembles the window definition in the <name>wimp_window</name> structure referred to by the <variable>window_definition</variable> variable, before passing it as a pointer to <function>wimp_create_window()</function>. <swi>Wimp_CreateWindow</swi> processes the definition and returns a window handle which is assigned to the <variable>window_handle</variable> variable, which is of the <name>wimp_w</name> type. From this we can deduce that the <name>wimp_window</name> type is used to hold window definitions, while <name>wimp_w</name> is used to hold window handles.</p>
+
+<p>The second function &ndash; <function>win_open()</function> &ndash; does the job of taking the window handle stored in <variable>window_handle</variable> and opening it up on the screen. We&rsquo;ll see how this works shortly.</p>
+
+<p>To go with <file>c.win</file>, we also need a header file to make its functions available to the rest of the application: we&rsquo;ll call this <file>h.win</file>, and it can be seen in full in <reference id="list-windows-win-h"/>.</p>
+
+<code lang="c" file="h.win" id="list-windows-win-h" title="The header file to define the win module&rsquo;s interface"> /**
+ * Example 11.2
+ *
+ * (c) Stephen Fryatt, 2017
+ *
+ * File: win.h
+ */
+
+#ifndef EXAMPLEAPP_WIN
+#define EXAMPLEAPP_WIN
+
+/* Window Initialisation. */
+
+void win_initialise(void);
+
+/* Open the Window. */
+
+void win_open(void);
+
+#endif</code>
+
+<p>We now need to hook the new code into the rest of the application. To initialise the window when the application starts up, <code>#include &quot;win.h&quot;</code> in <file>c.main</file> and update the <function>main_initialise()</function> to call <function>win_initialise()</function>:</p>
+
+<code lang="c">static void main_initialise(void)
+{
+	wimp_initialise(wimp_VERSION_RO3, main_application_name, NULL, NULL);
+
+	error_initialise(main_application_name, main_application_sprite, NULL);
+
+	event_add_message_handler(message_QUIT, EVENT_MESSAGE_INCOMING, main_message_quit);
+
+	ibar_initialise(main_application_sprite);
+	win_initialise();
+}</code>
+
+<p>Since we&rsquo;ll want to have the window open up when the user clicks on the iconbar icon, we can similarly <code>#include &quot;win.h&quot;</code> in <file>c.ibar</file> and update the <function>main_initialise()</function> function to call <function>ibar_mouse_click()</function>:</p>
+
+<code lang="c">static void ibar_mouse_click(wimp_pointer *pointer)
+{
+	switch (pointer->buttons) {
+	case wimp_CLICK_SELECT:
+		win_open();
+		break;
+	case wimp_CLICK_ADJUST:
+		main_quit_flag = TRUE;
+		break;
+	}
+}</code>
+
+<p>Now, when the user clicks <mouse>Select</mouse> on the icon, the <function>win_open()</function> function will be called to open the window on screen. Note that we&rsquo;ve taken the opportunity to remove the debugging output left over from the last few chapters.</p>
+
+<p>The last thing to do is to update the <file>Makefile</file> so that the compiler knows to include <file>c.win</file>, and we should be ready to go.</p>
+
+<code lang="makefile">OBJS = main ibar win</code>
+
+<p>The updated source code should look something like that shown in <reference id="fig-window-first-project"/>, and a full set of code can be found in <reference id="dl-window-first"/>.</p>
+
+<image id="fig-window-first-project" file="window-first-project.png" title="The complete project, with the window code added"/>
+
+<download id="dl-window-first" file="FirstWindow" title="The first attempt at putting a window on screen" compatibility="none"/>
+
+<p>When compiled and run, the application should install on the iconbar as before. However this time, clicking <mouse>Select</mouse> over its iconbar icon will open a window &ndash; something like the one shown in <reference id="fig-window-first"/>. Unfortunately, there&rsquo;s a problem: the window doesn&rsquo;t respond to the mouse. In fact, all attempts to move, scroll or even close it are simply ignored. Fortunately the application can still be quit with an <mouse>Adjust</mouse> click on its iconbar icon &ndash; at which point the window disappears.</p>
+
+<image id="fig-window-first" file="window-first.png" title="Our first window &ndash; Hello World!"/>
+</section>
+
+<section>
+<title>Being responsive</title>
+
+<p>The reason for this apparent unresponsiveness is actually quite simple: we&rsquo;re missing some code. Although it might seem a little surprising at first, the Wimp is unable to open or change the position of a window &ndash; by which we mean dragging, resizing or scrolling &ndash; unless our application requests that it does so by calling <swi>Wimp_OpenWindow</swi>. Our window appears on screen because we called <function>wimp_open_window()</function> for it at the end of our <function>win_open()</function> function, but after that it&rsquo;s stuck in the one place because we never ask the Wimp to move it again.</p>
+
+<p>This behaviour on the part of the Wimp is deliberate, and gives the programmer a great deal of flexibility. Back in the days of RISC&nbsp;OS&nbsp;3, applications like Draw &ndash; seen in <reference id="fig-window-pane"/> below &ndash; could implement their toolboxes by manipulating whatever additional windows they wanted whenever the Wimp asked them to adjust their main window. With the advent of the Nested Wimp there are much easier ways to handle this requirement, but the facility still has some important uses: consider something like a spreadsheet, for example, where scrolling the window down or right adds rows or columns to the grid &ndash; requiring the window&rsquo;s work area to be adjusted on the fly.</p>
+
+<image id="fig-window-pane" file="window-pane.png" title="Applications like Draw use Open Window Request events to manage their tool panes"/>
+
+<p>Fortunately, in the vast majority of cases &ndash; where we&rsquo;re not trying to implement spreadsheets &ndash; things are nowhere near as difficult as they might at first appear. If we examine the <name>wimp_block</name> union returned by <swi>Wimp_Poll</swi> &ndash; which we met in <reference id="chap-moving-to-c"/> and <reference id="chap-ibar"/> &ndash; we can see that it contains an entry called <variable>open</variable> which is a <name>wimp_open</name> structure. Looking back at how we implemented the <function>win_open()</function> function above, we should see that this is the same type as the one that we cast our pointer to when calling <function>wimp_open_window()</function>.</p>
+
+<p>This is no accident. When the Wimp needs an application to change the position of a window, it sends an <name>Open_Window_Request</name> event through <swi>Wimp_Poll</swi> and &ndash; in the data attached to the event &ndash; indicates where it thinks that the window should be on screen. Unless the application wishes to do something &lsquo;clever&rsquo; with the request, all that it needs to do is pass it straight on to <swi>Wimp_OpenWindow</swi> and leave the Wimp to do the rest.</p>
+
+<p>To make our window move, we could register an event handler for <name>Open_Window_Request</name> and use this to make the calls to <swi>Wimp_OpenWindow</swi>. Back in <reference id="chap-click"/> we saw how to do this for <name>Mouse_Click</name> events on our iconbar icon, and the process is very similar. First, we need to define a function to handle the events:</p>
+
+<code lang="c">static void win_open_window_request(wimp_open *open)
+{
+	wimp_open_window(open);
+}</code>
+
+<p>As predicted, it&rsquo;s very simple because we&rsquo;re leaving the Wimp to tell us where the window needs to be opened. In a similar way to the <name>Mouse_Click</name> event handler, the function takes as a single parameter a pointer to the <name>wimp_open</name> structure which arrived with the event, and returns nothing. The data pointed to by <variable>*open</variable> is ready to be passed straight on to <function>wimp_open_window()</function>, which is all that we need to do.</p>
+
+<p>We need to let the event library know about this handler, and this is also done in a very similar manner to that used in <reference id="chap-click"/>. The main difference is that back then, we regsitered the <name>Mouse_Click</name> handler with the special <name>wimp_ICON_BAR</name> window handle, but here we actually need to use the <em>real</em> handle that the Wimp has given to our window. This is the value returned by the <function>wimp_create_window()</function> function, which we have stored in the <variable>window_handle</variable> variable.</p>
+
+<p>To register the handler, we can call the <function>event_add_window_open_event()</function> function at the end of <function>win_initialise()</function>, immediately after the call to <function>wimp_create_window()</function>:</p>
+
+<code lang="c">window_handle = wimp_create_window(&amp;window_definition);
+event_add_window_open_event(window_handle, win_open_window_request);</code>
+
+<p>With a bit of tidying up to include the necessary function prototype and <code>#include &quot;sflib/event.h&quot;</code> in <file>c.win</file>, this addition can be found in <reference id="dl-window-open-handler"/>. When run, clicking <mouse>Select</mouse> on the iconbar icon will open our window &ndash; which should now move around when dragged, and respond to resizing and scrolling.</p>
+
+<download id="dl-window-open-handler" file="OpenWindowHandler" title="Using an Open Window Request Handler" compatibility="none"/>
+
+<p>However, clicking on the <icon>Close</icon> button still doesn&rsquo;t work &ndash; and there&rsquo;s another potential problem, too. We&rsquo;ve said that <em>every</em> window needs to respond to <name>Open_Window_Request</name> events, and since our event handler is registered to this one specific window handle, we would need to register a handler for each window that our application uses. This isn&rsquo;t impossible, but it will be a lot of duplication for something that&rsquo;s so standard.</p>
+</section>
+
+<section>
+<title>Generic Event Handlers</title>
+
+<p>If we&rsquo;re using SFLib&rsquo;s event library to dispatch Wimp events, then there&rsquo;s another way to handle these events. In <file>c.main</file>, the events returned by our application&rsquo;s repeated calls to <swi>Wimp_Poll</swi> are sent out to the appropriate pieces of code by the library. Each time the SWI returns with details of a new event, it is passed on to the <function>event_process_event()</function> function and this tries to find a handler which is interested. At present, the code looks like this:</p>
+
+<code lang="c">static void main_poll(void)
+{
+	wimp_block	blk;
+	wimp_event_no	reason;
+	int		pollword;
+
+	while (!main_quit_flag) {
+		reason = wimp_poll(wimp_MASK_NULL, &amp;blk, &amp;pollword);
+
+		event_process_event(reason, &amp;blk, pollword);
+	}
+}</code>
+
+<p>But what happens if <function>event_process_event()</function> can&rsquo;t find an interested event handler? The answer is that the function returns a boolean <name>osbool</name> value, which is <name>TRUE</name> if a handler was found and <name>FALSE</name> if one wasn&rsquo;t. We can use this to add <intro>default handlers</intro> for events and &ndash; given that the vast majority of windows simply need to call <swi>Wimp_OpenWindow</swi> unquestioningly for any <name>Open_Window_Request</name> events that they receive &ndash; this is an obvious use for that functionality.</p>
+
+<p>Having undone the changes that we made to <file>c.win</file> when adding the <name>Open_Window_Request</name> event handler, we can now change the definition of the <function>main_poll()</function> function in <file>c.main</file> to re-introduce a <code>switch</code> statement very similar to the one that we removed back in <reference id="chap-event-driven"/>.</p>
+
+<code lang="c">static void main_poll(void)
+{
+	wimp_block	blk;
+	wimp_event_no	reason;
+	int		pollword;
+
+	while (!main_quit_flag) {
+		reason = wimp_poll(wimp_MASK_NULL, &amp;blk, &amp;pollword);
+
+		if (!event_process_event(reason, &amp;blk, pollword)) {
+			switch (reason) {
+			case wimp_OPEN_WINDOW_REQUEST:
+				wimp_open_window(&amp;(blk.open));
+				break;
+
+			case wimp_CLOSE_WINDOW_REQUEST:
+				wimp_close_window(blk.close.w);
+				break;
+			}
+		}
+	}
+}</code>
+
+<p>The difference now is that, because this <code>switch</code> statement is only called when <function>event_process_event()</function> returns <name>FALSE</name>, it is only used when the event library can&rsquo;t find a handler for an event. If our application had a main window with a requirement to do something clever when <name>Open_Window_Request</name> events were received, we could still register an event handler for it as we did in <reference id="dl-window-open-handler"/> and this would be used instead of this fall-back <code>switch</code> statement. If the same application also had dialogue boxes where a simple call to <swi>Wimp_OpenWindow</swi> were enough, then the default code here will handle it without us needing to give it a second thought.</p>
+</section>
+
+<section>
+<title>Closing Windows</title>
+
+<p>You&rsquo;ll notice that there are actually <em>two</em> <code>case</code> clauses in the <code>switch</code> that has been added above. This is because our window still wasn&rsquo;t responding to clicks on its <icon>Close</icon> button, for a very similar reason.</p>
+
+<p>Just as the Wimp sends applications an <name>Open_Window_Request</name> event when it wants them to open a window with <swi>Wimp_OpenWindow</swi>, it also delegates the closing of windows. When the user clicks on our window&rsquo;s <icon>Close</icon> button, our application receives a <name>Close_Window_Request</name> event &ndash; and it should come as little surprise to know that in most cases we can simply pass this on to the <swi>Wimp_CloseWindow</swi> SWI for processing.</p>
+
+<p>The <name>wimp_close</name> structure returned by <name>Close_Window_Request</name> event is defined by OSLib as follows:</p>
+
+<code lang="c">struct wimp_close {
+	wimp_w	w;
+};</code>
+
+<p>and simply contains a window handle held in a variable <variable>w</variable> of type <name>wimp_w</name>. The <function>wimp_close_window()</function> takes a window handle as its single parameter, and is defined like this:</p>
+
+<code lang="c">extern void wimp_close_window(
+	wimp_w	w
+);</code>
+
+<p>This makes handling <name>Close_Window_Request</name> events &ndash; at least in the default case &ndash; as simple as passing the window handle to <swi>Wimp_CloseWindow</swi>.</p>
+
+<p>The changes to use default handlers for both <name>Open_Window_Request</name> and <name>Close_Window_Request</name> events can be found in <reference id="dl-window-dflt-handler"/>. If the code is complied and run, the window should be seen to be fully responsive. Not only will it move around when dragged, scrolled and resized, but it will also close when asked to do so; it can then be re-opened with another <mouse>Select</mouse> click on the iconbar.</p>
+
+<download id="dl-window-dflt-handler" file="DefaultWindowHandler" title="Using Default Open and Close Handlers" compatibility="none"/>
+
+<p>While our application now contains all of the code required to open a window and allow the user to move it around, we&rsquo;ve glossed over a lot of detail in order to get here. Over the next couple of chapters we&rsquo;ll go back over what we&rsquo;ve done, examining how it works and why. As we go, feel free to experiment with the code in <reference id="dl-window-dflt-handler"/> to see how the ideas that are about to be covered work in practice.</p>
+</section>
+</chapter>
+</manual>
+

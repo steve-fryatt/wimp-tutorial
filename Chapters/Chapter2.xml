@@ -1,0 +1,384 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+
+<!DOCTYPE xmlmanual SYSTEM "../wimp.dtd">
+
+<manual xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="xmldoc.xsd" version="1.8.6">
+
+<!-- Chapter 2
+   -
+   - Moving from BASIC to C
+  -->
+
+<chapter id="chap-moving-to-c">
+<resources>
+<images>Chapter2</images>
+<downloads>Chapter2</downloads>
+</resources>
+<filename>usingc.html</filename>
+<title>Moving to C</title>
+
+<summary>We can write a very similar application in C, which should help show the parallels with &ndash; and differences from &ndash; BASIC.</summary>
+
+<section>
+<p>In <reference id="chap-start-basic"/> we constructed a very simple Wimp application in BASIC. It didn&rsquo;t do very much &ndash; simply registering itself with the Wimp and then waiting quietly in the background until it was asked to quit &ndash; but it contained all the core elements required to make software multitask under RISC&nbsp;OS.</p>
+
+<p>We&rsquo;re now going to convert that simple application into C, to allow the two languages to be compared. For now we&rsquo;ll copy the structure of the BASIC version directly &ndash; this isn&rsquo;t the best way to go about things, but it will make it easier to compare the two without introducing too many new concepts in one go.</p>
+
+<p>The core parts of this simple application will still be useful when we come to look at restructuring the code around event handlers &ndash; a much better way to write applications in C &ndash;  in <reference id="chap-compiling">the next chapter</reference>.</p>
+</section>
+
+<section>
+<title>Accessing RISC&nbsp;OS</title>
+
+<p>The first thing, which might not be obvious to anyone who is familiar with C but has never written software for RISC&nbsp;OS, is how to access the SWI calls which are central to the system. In BASIC we&rsquo;ve already seen that it&rsquo;s possible to write something like</p>
+
+<code lang="bbcbasic">SYS &quot;Wimp_Initialise&quot;, 310, &amp;4B534154, &quot;Example App&quot;, 0</code>
+
+<p>and the interpreter will do the rest. Natively C doesn&rsquo;t have any equivalent to the BASIC <code>SYS</code> call, and so with the DDE we need to turn to the <file>kernel.h</file> and <file>swis.h</file> headers to find a way to achieve the same effect.</p>
+
+<p>The <file>kernel.h</file> header provides a <function>_kernel_swi()</function> function which allows SWIs to be called in a somewhat cumbersome way using the SWI names defined in <file>swis.h</file>. The call to <swi>Wimp_Initialise</swi> could be coded as follows:</p>
+
+<code lang="c">#include &quot;swis.h&quot;
+#include &quot;kernel.h&quot;
+
+_kernel_oserror *error;
+_kernel_swi_regs regs;
+regs.r[0] = (int) 310;
+regs.r[1] = (int) 0x4b534154;
+regs.r[2] = (int) &quot;Example App&quot;;
+regs.r[3] = (int) 0;
+error = _kernel_swi(Wimp_Initialise, &amp;regs, &amp;regs);</code>
+
+<p>This is clearly quite complex for a single SWI call, and includes a fair bit of casting to get the various types of parameter into integers, so the libraries supplied with the DDE offer an alternative in the form of the <function>_swi()</function> and <function>_swix()</function> functions in <file>swis.h</file>. Using these, we could re-write the call to <swi>Wimp_Initialise</swi> like this:</p>
+
+<code lang="c">#include &quot;swis.h&quot;
+
+_kernel_oserror *error;
+error = _swix(Wimp_Initialise, _INR(0,3), (int) 310, (int) 0x4b534154, (int) &quot;Example App&quot;, (int) 0);</code>
+
+<p>This is better, but is still a little ungainly.</p>
+
+<p>The DDE does offer some other options. The WimpLib, which comes as part of TBoxLib, supplies veneers for all of the Wimp SWIs &ndash; this would allow us to write</p>
+
+<code lang="c">#include &quot;wimplib.h&quot;
+
+_kernel_oserror *error;
+error = wimp_initialise(310, &quot;Example App&quot;, 0, 0, 0);</code>
+
+<p>This is starting to look a lot better, but the supplied header files concentrate on sections of the OS such as the Wimp and the Toolbox &ndash; plenty of areas still need the likes of <function>_swi()</function> to access them. Fortunately, there&rsquo;s a better option still.</p>
+</section>
+
+<section>
+<title>Introducing OSLib</title>
+
+<p>Originally developed by Jonathan Coxhead while he worked at Acorn, <link href="http://ro-oslib.sourceforge.net/">OSLib</link> is a library that covers the whole of the RISC&nbsp;OS API with dedicated veneer functions for each individual SWI call (and even functions for individual reason codes when SWIs like <swi>OS_SpriteOp</swi> provide multiple actions).</p>
+
+<p>Unlike the <function>_kernel_swi()</function>, <function>_swi()</function> and <function>_swix()</function> interfaces provided by the DDE, OSLib makes use of defined types so that SWI parameters require little casting and can be type-checked by the compiler. In addition, C structures are provided to represent all of the data structures used by supported SWIs, making it much easier to extract data from them.</p>
+
+<p>Without going into any detail about how it works for now, we could re-write the <swi>Wimp_Initialise</swi> example using OSLib as follows</p>
+
+<code lang="c">#include &quot;oslib/wimp.h&quot;
+
+os_error *error;
+error = xwimp_initialise(wimp_VERSION_RO3, &quot;Example App&quot;, NULL, NULL, NULL);</code>
+
+<p>Notice that in all the C examples so far, we&rsquo;ve used a variable <variable>error</variable>, which we&rsquo;ve assigned from the function. This is loosely equivalent to the following code in BASIC.</p>
+
+<code lang="bbcbasic">SYS &quot;XWimp_Initialise&quot;, 310, &amp;4B534154, &quot;Example App&quot;, 0 TO error% ;flags%
+IF (flags% AND 1) = 0 THEN error% = 0</code>
+
+<p>That is, the X form of the SWI is called: this means that in the event of an error the processor&rsquo;s V flag is set and <name>R0</name> contains a pointer to an error block. If the V flag is set, <code>SYS</code> sets bit&nbsp;0 of <variable>flags%</variable>, so the second line of code results in <variable>error%</variable> being set to zero on return if no error occurred; if something went wrong, <variable>error%</variable> points to the error block. The C convention is similar: SWI functions which return an error block pointer return <name>NULL</name> if no error occurred.</p>
+
+<p>In most of the C examples above, we&rsquo;ve explicitly called the X form of the SWI  &ndash; in the case of <function>_kernal_swi()</function> and WimpLib&rsquo;s <function>wimp_initialise()</function>, the X form was called for us. That&rsquo;s usually a good idea when working in C: without BASIC&rsquo;s error handler to look after us, it&rsquo;s often better to test for errors and handle them immediately. However, OSLib gives us the choice and the following would also work:</p>
+
+<code lang="c">#include &quot;oslib/wimp.h&quot;
+
+wimp_initialise(wimp_VERSION_RO3, &quot;Example App&quot;, NULL, NULL);</code>
+
+<p>Which to use depends on the circumstances, but generally if there&rsquo;s a risk of an error occurring the X form of the SWI is better: it allows us to trap the error, tidy up, and exit gracefully.</p>
+
+<p>OSLib&rsquo;s StrongHelp manual is more-or-less essential reading for developers, and we can see in <reference id="img2-1"/> that it contains full details of how to use <function>wimp_initialise()</function> amongst its many pages.</p>
+
+<image id="img2-1" file="c2-oslib-wimpinitman.png" title="OSLib&rsquo;s manual showing the use of wimp_initialise()"/>
+
+<p>Although we&rsquo;ll start by documenting the various parts of OSLib that we use in the opening examples, being able to navigate the supplied information will soon become essential.</p>
+</section>
+
+<section>
+<title>Different types of variable</title>
+
+<p>Now that we&rsquo;ve been introduced to OSLib, let&rsquo;s see how we can use it to re-write <reference id="list1-1"/> in C.</p>
+
+<p>As this simple example should all fit inside <function>main()</function>, the first thing to do is declare the variables that we&rsquo;ll be using. The BASIC version used three variables: <variable>quit%</variable>, <variable>b%</variable> and <variable>reason%</variable>, and the C version will be the same.</p>
+
+<code lang="c">osbool		quit = FALSE;
+wimp_block	block;
+wimp_event_no	reason;</code>
+
+<p>Just as in BASIC, we&rsquo;re going to use the <variable>quit</variable> variable as a boolean flag to track when the application must exit. We <em>could</em> just define it as an <type>int</type>, but that isn&rsquo;t a good idea when C lets us be more descriptive. The standard <file>stdbool.h</file> header gives us the <type>bool</type> type, but OSLib offers us <type>osbool</type> and we&rsquo;ve opted to us that here.</p>
+
+<p>Similarly, the BASIC code used <variable>reason%</variable> to store the reason code returned by <swi>Wimp_Poll</swi>. Although it&rsquo;s &ldquo;just&rdquo; an <type>int</type>, we&rsquo;ve already said that OSLib defines precise types to represent different SWI parameters more exactly. The <file>oslib/wimp.h</file> header contains the definition</p>
+
+<code lang="c">typedef int wimp_event_no;</code>
+
+<p>to provide a special type of <type>wimp_event_no</type> to hold the reason code &ndash; this is exactly what we need to define the <variable>reason</variable> variable.</p>
+
+<p>Finally, the BASIC contained the line</p>
+
+<code lang="bbcbasic">DIM b% 255</code>
+
+<p>to allocate 256 bytes of memory for the <swi>Wimp_Poll</swi> information block. OSLib defines a <type>union wimp_block</type> and a <type>wimp_block</type> type as follows</p>
+
+<code lang="c">union wimp_block {
+	wimp_draw	redraw;
+	wimp_open	open;
+	wimp_close	close;
+	wimp_leaving	leaving;
+	wimp_entering	entering;
+	wimp_pointer	pointer;
+	wimp_dragged	dragged;
+	wimp_key	key;
+	wimp_selection	selection;
+	wimp_scroll	scroll;
+	wimp_caret	caret;
+	wimp_pollword	pollword;
+	wimp_message	message;
+	byte		reserved[256];
+};
+
+typedef union wimp_block wimp_block;</code>
+
+<p>Each of the <code>wimp_</code> types contained in the union are defined by OSLib to match the data structures returned by the Wimp for the different reason codes &ndash; we&rsquo;ll look into these when we meet them. The final <code>byte reserved[256]</code> is simply a block of 256 bytes to reserve the space (similar to BASIC&rsquo;s <code>DIM b% 255</code>), which means that the act of declaring a variable of type <type>wimp_block</type> (as we do with <code>wimp_block block</code> above) will make the compiler reserve 256 bytes of space for it on the stack.</p>
+</section>
+
+<section>
+<title>Initialising the Wimp</title>
+
+<p>As with the BASIC version of our program, the next thing to do is to call <swi>Wimp_Initialise</swi> to register as a multitasking application. In BASIC, doing that looked like this:</p>
+
+<code lang="bbcbasic">SYS &quot;Wimp_Initialise&quot;, 310, &amp;4B534154, &quot;Example App&quot;, 0</code>
+
+<p>OSLib provides function veneers for all the OS SWIs, and as we saw above, one of those is <function>wimp_initialise()</function>:</p>
+
+<code lang="c">wimp_initialise(wimp_VERSION_RO3, &quot;Example App&quot;, NULL, NULL);</code>
+
+<p>OSLib&rsquo;s implementations of SWIs take their parameters in the same order as BASIC&rsquo;s <code>SWI</code> instruction, but unnecessary or invariant parameters are often omitted. The function prototype for <function>wimp_initialise()</function> is as follows:</p>
+
+<code lang="c">extern wimp_t wimp_initialise(
+	wimp_version_no		version,
+	char const		*name,
+	wimp_message_list const	*messages,
+	wimp_version_no		*version_out
+);</code>
+
+<p>In <swi>Wimp_Initialise</swi>, we saw before that <name>R0</name> takes the minimum version of the Wimp that the application can accept: OSLib gives its <variable>version</variable> parameter a type of <type>wimp_version_no</type>, which is defined as <code>typedef int wimp_version_no</code>. It turns out that there are a small number of &lsquo;significant&rsquo; values that the Wimp recognises for the version number, and OSLib defines constants for these:</p>
+
+<code lang="c">#define wimp_VERSION_RO2	((wimp_version_no) 0xC8u)	/* 200 */
+#define wimp_VERSION_RO30	((wimp_version_no) 0x12Cu)	/* 300 */
+#define wimp_VERSION_RO3	((wimp_version_no) 0x136u)	/* 310 */
+#define wimp_VERSION_RO35	((wimp_version_no) 0x15Eu)	/* 350 */
+#define wimp_VERSION_RO36	((wimp_version_no) 0x168u)	/* 360 */
+#define wimp_VERSION_RO37	((wimp_version_no) 0x172u)	/* 370 */
+#define wimp_VERSION_RO38	((wimp_version_no) 0x17Cu)	/* 380 */
+#define wimp_VERSION_RO40	((wimp_version_no) 0x190u)	/* 400 */</code>
+
+<p>Although the constants are defined in terms of hexadecimal (which can be confusing, despite their values not really being meant to be human-readable), we can see that <code>wimp_VERSION_RO3</code> is set to be <code>(wimp_version_no) 0x136u</code> &ndash; which is 310 in decimal with an appropriate cast from <type>uint</type> to <type>wimp_version_number</type> included.</p>
+
+<p><name>R1</name> takes the &ldquo;magic&rdquo; constant <code>&amp;4B534154</code> &ndash; or &ldquo;TASK&rdquo; &ndash; to switch off Arthur compatibility. Although we have to pass this manually in BASIC, it never changes in modern software and so OSLib&rsquo;s <function>wimp_initialise()</function> doesn&rsquo;t even offer a parameter to give us control. If you <em>really</em> need to write for Arthur, you&rsquo;ll need to use OSLib&rsquo;s alternative <function>wimp_init()</function> function which allows the value of <name>R1</name> to be specified.</p>
+
+<p>The next parameter to <swi>Wimp_Initialise</swi>, in <name>R2</name>, was a pointer to a string containing the name of the application. OSLib&rsquo;s <function>wimp_initialise()</function> is no exception, and the next parameter is <variable>*name</variable> &ndash; a pointer to a string.</p>
+
+<p>In the BASIC version, we said that we could safely pass zero in to <name>R3</name>, and that&rsquo;s not changed now. The only difference is that as the Wimp treated that zero as a pointer, we pass <name>NULL</name> here to make that more obvious. We&rsquo;ll come back and look at what <name>R3</name> is doing later on.</p>
+
+<p>One thing that we didn&rsquo;t consider in BASIC was the fact that <swi>Wimp_Initialise</swi> also returns a couple of values in <name>R0</name> and <name>R1</name>. <name>R0</name> contains the version of the Wimp that is currently active (to compare to the &ldquo;ideal&rdquo; one that we supplied in <name>R0</name> on entry), while <name>R1</name> contains a task handle: a number that uniquely identifies our application from all of the others running on the system. We don&rsquo;t actually need either of these yet &ndash; but while it was OK to just ignore them in BASIC, we now need to at least acknowledge their existence.</p>
+
+<p>OSLib&rsquo;s convention is that for non-X SWIs the most useful return value is returned by the function, while the others are returned via additional parameters passed as pointers. In the case of <function>wimp_initialise()</function>, the task handle from <name>R1</name> is returned and we can supply a pointer to a variable of type <type>wimp_version_no</type> if we want the actual version number of the Wimp from <name>R0</name>. Since we don&rsquo;t care about either at present, we just pass <name>NULL</name> for the final parameter instead of a pointer to a suitable variable &ndash; OSLib won&rsquo;t then return the value.</p> 
+
+<p>As an aside, it&rsquo;s worth mentioning that for the X form of SWIs, the function returns a pointer to an <type>os_error</type> block (or <name>NULL</name> if no error occurred). In this case, <em>all</em> return values are passed back via parameters. This means that <function>xwimp_initialise()</function> has a slightly different prototype from <function>wimp_initialise()</function>:</p>
+
+<code lang="c">extern os_error *xwimp_initialise(
+	wimp_version_no		version,
+	char const		*name,
+	wimp_message_list const	*messages,
+	wimp_version_no		*version_out,
+	wimp_t			*task_out
+);</code>
+
+<p>We&rsquo;ll be seeing more of both forms of the OSLib API as we progress.</p>
+</section>
+
+<section>
+<title>Polling the Wimp</title>
+
+<p>It&rsquo;s still necessary to call <swi>Wimp_Poll</swi> repeatedly to make our small application multitask, and that&rsquo;s done in a very similar way in C:</p>
+
+<code lang="c">while (!quit) {
+	reason = wimp_poll(wimp_MASK_NULL | wimp_MASK_ENTERING |
+			wimp_MASK_LEAVING | wimp_MASK_GAIN |
+			wimp_MASK_LOSE | wimp_MASK_POLLWORD,
+			&amp;block, NULL);
+
+	switch (reason) {
+	case wimp_USER_MESSAGE:
+	case wimp_USER_MESSAGE_RECORDED:
+		if (block.message.action == message_QUIT)
+			quit = TRUE;
+		break;
+	}
+}</code>
+
+<p>There&rsquo;s a similarity between the <code>while ()</code> loop here and the <code>REPEAT UNTIL</code> loop in the BASIC version: both just call <swi>Wimp_Poll</swi> until instructed to stop.</p>
+
+<p>The call to <swi>Wimp_Poll</swi> is similar, although again it shows some of the differences in approach between BASIC and C. Its prototype in OSLib looks like this:</p>
+
+<code lang="c">extern wimp_event_no wimp_poll(
+	wimp_poll_flags	mask,
+	wimp_block	*block,
+	int		*pollword
+);</code>
+
+<p>As with the native SWI, the call takes both an event mask (passed in <name>R0</name>) and a pointer to a block of memory to return details of any event that has occurred (passed in <name>R1</name>). As noted in the previous chapter, the mask is a 32-bit integer in which bits are set to inform that Wimp that we don&rsquo;t wish to receive certain types of event. In BASIC, we passed in the &ldquo;magic number&rdquo; of <code>&amp;3831</code>; as might be expected, OSLib makes things a bit more self-documenting by defining some constants:</p>
+
+<code lang="c">#define wimp_MASK_NULL		((wimp_poll_flags) 0x1u)
+#define wimp_QUEUE_REDRAW	((wimp_poll_flags) 0x2u)
+#define wimp_MASK_LEAVING	((wimp_poll_flags) 0x10u)
+#define wimp_MASK_ENTERING	((wimp_poll_flags) 0x20u)
+#define wimp_QUEUE_MOUSE	((wimp_poll_flags) 0x40u)
+#define wimp_QUEUE_KEY		((wimp_poll_flags) 0x100u)
+#define wimp_MASK_LOSE		((wimp_poll_flags) 0x800u)
+#define wimp_MASK_GAIN		((wimp_poll_flags) 0x1000u)
+#define wimp_MASK_POLLWORD	((wimp_poll_flags) 0x2000u)
+#define wimp_MASK_ICON_LEAVING	((wimp_poll_flags) 0x4000u)
+#define wimp_MASK_ICON_ENTERING	((wimp_poll_flags) 0x8000u)
+#define wimp_MASK_MESSAGE	((wimp_poll_flags) 0x20000u)
+#define wimp_MASK_RECORDED	((wimp_poll_flags) 0x40000u)
+#define wimp_MASK_ACKNOWLEDGE	((wimp_poll_flags) 0x80000u)
+#define wimp_GIVEN_POLLWORD	((wimp_poll_flags) 0x400000u)
+#define wimp_POLL_HIGH_PRIORITY	((wimp_poll_flags) 0x800000u)
+#define wimp_SAVE_FP		((wimp_poll_flags) 0x1000000u)
+#define wimp_ISSUE_POLL14_AND15	((wimp_poll_flags) 0x2000000u)</code>
+
+<p>Adding together the individual bits defined by the constants <name>wimp_MASK_NULL</name>, <name>wimp_MASK_ENTERING</name>, <name>wimp_MASK_LEAVING</name>, <name>wimp_MASK_GAIN</name>, <name>wimp_MASK_LOSE</name> and <name>wimp_MASK_POLLWORD</name> should give the result <code>0x3831</code> &ndash; it is, however, clearer what&rsquo;s going on and where the value came from. Or it would be, if we knew what the flags all mean: we&rsquo;ll introduce them properly in the following chapters.</p>
+
+<p>The address of the poll block that we initialised at the top of the function is passed in with the help of the &lsquo;address of&rsquo; operator; as we&rsquo;re not interested in the pollword for now, <name>NULL</name> is passed in for the final parameter to prevent a value being returned. The reason code is returned by the function when it returns.</p>
+
+<p>Just as in BASIC, the returned reason code (in <variable>reason</variable>) is tested against a list of known codes. Previously we looked for the values 17 and 18; this time &ndash; as we&rsquo;re coming to expect &ndash; OSLib provides some more meaningful constants to use instead of &ldquo;magic numbers&rdquo;:</p>
+
+<code lang="c">#define wimp_NULL_REASON_CODE		((wimp_event_no) 0x0u)	/* 0	*/
+#define wimp_REDRAW_WINDOW_REQUEST	((wimp_event_no) 0x1u)	/* 1	*/
+#define wimp_OPEN_WINDOW_REQUEST	((wimp_event_no) 0x2u)	/* 2	*/
+#define wimp_CLOSE_WINDOW_REQUEST	((wimp_event_no) 0x3u)	/* 3	*/
+#define wimp_POINTER_LEAVING_WINDOW	((wimp_event_no) 0x4u)	/* 4	*/
+#define wimp_POINTER_ENTERING_WINDOW	((wimp_event_no) 0x5u)	/* 5	*/
+#define wimp_MOUSE_CLICK		((wimp_event_no) 0x6u)	/* 6	*/
+#define wimp_USER_DRAG_BOX		((wimp_event_no) 0x7u)	/* 7	*/
+#define wimp_KEY_PRESSED		((wimp_event_no) 0x8u)	/* 8	*/
+#define wimp_MENU_SELECTION		((wimp_event_no) 0x9u)	/* 9	*/
+#define wimp_SCROLL_REQUEST		((wimp_event_no) 0xAu)	/* 10	*/
+#define wimp_LOSE_CARET			((wimp_event_no) 0xBu)	/* 11	*/
+#define wimp_GAIN_CARET			((wimp_event_no) 0xCu)	/* 12	*/
+#define wimp_POLLWORD_NON_ZERO		((wimp_event_no) 0xDu)	/* 13	*/
+#define wimp_USER_MESSAGE		((wimp_event_no) 0x11u)	/* 17	*/
+#define wimp_USER_MESSAGE_RECORDED	((wimp_event_no) 0x12u)	/* 18	*/
+#define wimp_USER_MESSAGE_ACKNOWLEDGE	((wimp_event_no) 0x13u)	/* 19	*/</code>
+
+<p>It turns out that 17 and 18 are in fact the numbers that the Wimp gives to the <name>User_Message</name> and <name>User_Message_Recorded</name> events &ndash; we&rsquo;ll return to what these actually are later on, but as we saw in the BASIC version, we&rsquo;re looking for the word at offset 16 in the poll block returned by the Wimp to be zero for either of these reason codes.</p>
+
+<p>The block is a variable of type <type>wimp_block</type>, which as we saw above is a union of several different types &ndash; one of which is <type>wimp_message</type>. Although not quite true, OSLib &lsquo;almost&rsquo; defines it as follows:</p>
+
+<code lang="c">struct wimp_message {
+	int	size;		/* Offset 0	*/
+	wimp_t	sender;		/* Offset 4	*/
+	int	my_ref;		/* Offset 8	*/
+	int	your_ref;	/* Offset 12	*/
+	bits	action;		/* Offset 16	*/
+	byte	reserved[236];	/* Offset 20	*/
+};</code>
+
+<p>That is, there are five word-sized variables at the start (<type>int</type> on RISC&nbsp;OS is 32-bits long, and both <type>wimp_t</type> and <type>bits</type> are also 32-bits in length) taking up 20 bytes, followed by 236 bytes of reserved space starting at the byte offset of 20. Altogether that gives 256 bytes, which luckily matches the <code>byte reserved[256];</code> that was also included in the <type>wimp_block</type> union.</p>
+
+<p>The reason for the &lsquo;almost&rsquo; above is that there&rsquo;s some more jiggery-pokery in the OSLib definition to give access to the additional data which arrives with most messages. <message>Message_Quit</message> doesn&rsquo;t have any more data (the application is expected to quit without asking any questions), so for now we can safely ignore the extra complexity &ndash; it will make more sense when we meet user messages properly in a later section.</p>
+
+<p>At offset 16 in the structure, we find <code>bits action</code>, which means that</p>
+
+<code lang="c">if (block.message.action == message_QUIT)
+	quit = TRUE;</code>
+
+<p>is testing the word at offset 16 to see if it is equal to <name>message_QUIT</name>. That&rsquo;s also defined by OSLib, to be</p>
+
+<code lang="c">#define message_QUIT	0x0u</code>
+
+<p>which makes the whole construct have the same effect as the BASIC</p>
+
+<code lang="bbcbasic">IF b%!16 = 0 THEN quit% = TRUE</code>
+
+<p>Hopefully it should be fair to say that the version in OSLib is clearer: there&rsquo;s no need to remember offsets into blocks of data, or the &ldquo;magic numbers&rdquo; which correspond to events and messages (clearly one could define constant variables in BASIC, but there&rsquo;s soon a speed penalty).</p>
+
+<p>As soon as <message>Message_Quit</message> is detected, the <variable>quit</variable> is set to <name>TRUE</name> &ndash; which will cause the <code>while</code> loop to terminate.</p>
+</section>
+
+
+<section>
+<title>A clean exit</title>
+
+<p>As with the BASIC, once <message>Message_Quit</message> has been received, it&rsquo;s necessary to call <swi>Wimp_CloseDown</swi> before the program exits. With OSLib, that&rsquo;s done using <function>wimp_close_down()</function> which has the following prototype:</p>
+
+<code lang="c">extern void wimp_close_down(
+	wimp_t	t
+);</code>
+
+<p>There&rsquo;s one parameter, which is the handle of the task that&rsquo;s exiting. For most &lsquo;normal&rsquo; applications this can safely be left as zero since the Wimp knows which application is quitting from context.</p>
+
+<code lang="c">wimp_close_down(0);</code>
+
+<p>There&rsquo;s no harm in passing in the task&rsquo;s handle if we know it, however &ndash; it&rsquo;s returned by <swi>Wimp_Initialise</swi>, and often an application will need to know it for other reasons.</p>
+</section>
+
+
+<section>
+<title>Putting it all together</title>
+
+<p>Assembling all of the snippets of code above will result in <reference id="list2-1"/>. Although its structure doesn&rsquo;t follow the way in which a Wimp application would normally be written in C, it has the same structure as its BASIC sibling from <reference id="list1-1"/> &ndash; allowing the two to be compared easily.</p>
+
+<code id="list2-1" lang="c" file="main.c" title="The application converted to C">/**
+ * Example 2.1
+ *
+ * (c) Stephen Fryatt, 2015
+ *
+ * File: main.c
+ */
+
+#include "oslib/wimp.h"
+
+int main(int argc, char *argv[])
+{
+	osbool		quit = FALSE;
+	wimp_block	block;
+	wimp_event_no	reason;
+
+	wimp_initialise(wimp_VERSION_RO3, &quot;Example App&quot;, NULL, NULL);
+
+	while (!quit) {
+		reason = wimp_poll(wimp_MASK_NULL | wimp_MASK_ENTERING |
+			wimp_MASK_LEAVING | wimp_MASK_GAIN |
+			wimp_MASK_LOSE | wimp_MASK_POLLWORD,
+			&amp;block, NULL);
+
+		switch (reason) {
+		case wimp_USER_MESSAGE:
+		case wimp_USER_MESSAGE_RECORDED:
+			if (block.message.action == message_QUIT)
+				quit = TRUE;
+			break;
+		}
+	}
+
+	wimp_close_down(0);
+
+	return 0;
+}</code>
+
+<p>This time, however, we will need to compile the code before we can see it in action. In the next chapter, we&rsquo;ll look at how to do that.</p>
+</section>
+</chapter>
+</manual>

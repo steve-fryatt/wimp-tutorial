@@ -1,0 +1,208 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+
+<!DOCTYPE xmlmanual SYSTEM "../wimp.dtd">
+
+<manual xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="xmldoc.xsd" version="1.8.6">
+
+<!-- Chapter 9
+   -
+   - A Look at Debugging
+  -->
+
+<chapter id="chap-debug">
+<resources>
+<images>Chapter9</images>
+<downloads>Chapter9</downloads>
+</resources>
+<filename>debug.html</filename>
+<title>A Look at Debugging</title>
+
+<summary>Before moving on to the &lsquo;serious stuff&rsquo;, it might help to take a look at a tool to help us see what&rsquo;s going on.</summary>
+
+<section>
+<p>Before we deal with the unfinished business from the <reference id="chap-report">last chapter</reference> and get on to the more recognisable parts of the Wimp, we&rsquo;re going to take a small diversion to look at a tool to help us debug the application as it begins to grow.</p>
+</section>
+
+<section>
+<title>Getting a report</title>
+
+<p>Unlike other platforms, RISC&nbsp;OS is somewhat short of tools to help developers figure out why their software isn&rsquo;t working as they expect. We&rsquo;ve got the Desktop Debugging Tool (or DDT), which comes as part of the DDE, but it&rsquo;s dated and somewhat clunky to use. There are some other alternatives &ndash; and one, which is surprisingly useful, is actually free.</p>
+
+<p>Reporter was originally developed by Chris Morison of Organizer fame; it was later picked up by Martin Avison has been developed (and still <em>is</em> being developed) much further. A cursory read of Reporter&rsquo;s manual might leave the impression that it&rsquo;s a tool for Basic programmers, but that&rsquo;s far from the truth: while there are a lot of built-in facilities for those using that language, it&rsquo;s just as useful for those of us working in C.</p>
+
+<p>The first thing to do is to download a copy of <link href="http://www.avisoft.force9.co.uk/Reporter.htm">Reporter</link>, and install it somewhere on your hard disc. You will also require a copy of <link href="http://www.xat.nl/riscos/sw/confix/">Confix</link> to configure Reporter, and <link href="http://www.stronged.iconbar.com/fjg/">StrongHelp</link> (if you don&rsquo;t already have it) to read its manual.</p>
+
+<p>Reporter can be installed wherever you like, while according it its manual, Confix is best placed inside <file>!Boot.Resources</file> so that it&rsquo;s seen when the machine starts up. Things should look something like <reference id="fig-debug-install"/> afterwards.</p>
+
+<image id="fig-debug-install" file="installing-reporter.png" title="Reporter and Confix should be installed on your machine"/>
+
+<p>Once installed, Reporter can be started by double-clicking on it in the usual way, and it will open a small window in the bottom-left of the screen as shown in . By default, Reporter is set to log operating system commands which are going on in the background, and as a result it will very quickly start to fill the window with lines of black text on a pale blue background.</p>
+
+<image id="fig-debug-start-reporter" file="starting-reporter.png" title="Reporter&rsquo;s initial appearance on the desktop"/>
+
+<p>Whilst such a level of detail can be useful when tracking down problems, it can also very easily swamp us with data in normal use &ndash; as soon as you start to interact with the desktop, you&rsquo;ll quickly see more lines appear. For this reason, I would suggest opening Reporter&rsquo;s Configuration dialogue (click <mouse>Menu</mouse> over its window and choose <menu>Config...</menu>) and adjusting its settings a bit. Go to the <icon>Options</icon> tab and make sure that <icon>Report OS Commands executed</icon>; is unticked as shown in <reference id="fig-debug-configure-reporter"/>. You can then save the settings, and restart Reporter to make them take effect &ndash; you can do this automatically through the <icon>Restart</icon> tab before clicking on <icon>Save</icon>.</p>
+
+<p>Note that Reporter uses Confix for its configuration, so you might need to have restarted the machine after installing the latter (or at least run Confix in its new home) before these changes can be made.</p>
+
+<image id="fig-debug-configure-reporter" file="configure-reporter.png" title="Configuring Reporter&rsquo;s logging options in Confix"/>
+
+<p>With this change made, Reporter should be a lot &lsquo;quieter&rsquo; in normal use. Once you&rsquo;re familiar with it you might wish to change the settings again &ndash; for now, however, we&rsquo;re ready to start using it.</p>
+</section>
+
+<section>
+<title>Writing messages</title>
+
+<p>From the point of view of an application written in C, Reporter can be accessed via a number of SWI calls which largely replicate the *commands used in BASIC. Helpfully, OSLib gives us access to these through the <file>oslib/report.h</file> header file. For our purposes, the <swi>Report_Text0</swi> SWI is probably the most useful: OSLib makes this available through the <function>report_text0()</function> function:</p>
+
+<code lang="c">extern void report_text0(
+	char const *text
+);</code>
+
+<p>We can make use of this immediately by adding <code>#include &quot;oslib/report.h&quot;</code> to the top of <file>c.ibar</file> and then amending <function>ibar_mouse_click()</function> as follows:</p>
+
+<code lang="c">static void ibar_mouse_click(wimp_pointer *pointer)
+{
+	switch (pointer->buttons) {
+	case wimp_CLICK_SELECT:
+		repbox_message(&quot;Hello World!&quot;, &quot;Howdy!,Go Away!&quot;);
+		break;
+	case wimp_CLICK_ADJUST:
+		report_text0(&quot;This was an Adjust click - Goodbye!&quot;);
+		main_quit_flag = TRUE;
+		break;
+	}
+}</code>
+
+<p>A full set of code can be found in <reference id="dl-debug-oslib"/>. If this is compiled and run then when <mouse>Adjust</mouse> is clicked on the application&rsquo;s iconbar icon, a message will be left in Reporter&rsquo;s window before the application exits &ndash; as seen in <reference id="fig-debug-log-adjust"/>. This could be extremely useful, as we can now output messages from anywhere in our code and have them appear in another multitasking window on the desktop.</p>
+
+<image id="fig-debug-log-adjust" file="log-adjust.png" title="Logging Adjust clicks in Reporter"/>
+
+<download id="dl-debug-oslib" file="ReporterOSLib" title="Outputting Debug via Reporter" compatibility="none"/>
+
+<p>This isn&rsquo;t quite the whole story, however, because there&rsquo;s a potential problem. If we quit Reporter and try the same thing again, what we get is an error report (which, thanks to the <reference id="chap-report">last chapter</reference>, we can at least now identify as being a program report) telling us that &ldquo;Example App may have gone wrong&rdquo; and offering us the chance to <icon>Continue</icon>, <icon>Quit</icon> or <icon>Describe</icon>. The first two options will both cause the application to exit, while Describe takes us on to another report which contains the message &ldquo;SWI&nbsp;&amp;54C80 not known&rdquo;.</p>
+
+<p>The reason for this is simply that SWI&nbsp;&amp;54C80 &ndash; more easily recognised as <swi>Report_Text0</swi> &ndash; is provided by Reporter. If Reporter isn&rsquo;t running, the SWI isn&rsquo;t available. This means that once we start to include Reporter&rsquo;s SWIs in our application, Reporter must <em>always</em> be running when the application is. This clearly isn&rsquo;t ideal!</p> 
+
+<p>There&rsquo;s also another problem. It would be useful to be able to include the values of variables in the reported text, in a similar manner to what we can do with <function>printf()</function>, but that isn&rsquo;t possible unless we build the string up first using code similar to this:</p>
+
+<code lang="c">char buffer[256];
+
+snprintf(buffer, 256, &quot;The value of buttons=%s&quot;, buttons);
+buffer[255] = '\0';
+
+report_text0(buffer);</code>
+
+<p>Clearly it would be cumbersome to have to do this every time that we wished to output some information about the way that our application is working. For this reason, SFLib offers a debug library &ndash; which we can access by removing <code>#include &quot;oslib/report.h&quot;</code> and adding <code>#include &quot;sflib/debug.h&quot;</code> to the top of <file>c.ibar</file>. It provides one function:</p>
+
+<code lang="c">#define DEBUG_MAX_LINE_LENGTH 256
+
+int debug_printf(char *cntrl_string, ...)
+{
+	char		s[DEBUG_MAX_LINE_LENGTH];
+	int		ret;
+	va_list		ap;
+
+	if (xos_swi_number_from_string("Report_Text0", NULL) != NULL)
+		return 0;
+
+	va_start(ap, cntrl_string);
+	ret = vsnprintf(s, DEBUG_MAX_LINE_LENGTH, cntrl_string, ap);
+	s[DEBUG_MAX_LINE_LENGTH - 1] = '\0';
+	report_text0(s);
+
+	return ret;
+}</code>
+
+<p>The code makes use of the variable arguments provided by the standard library&rsquo;s <file>stdarg.h</file> to implement something very similar to a conventional <function>printf()</function> call. The <function>vsnprintf()</function> function &ndash; which is in <file>stdio.h</file> &ndash; is equivalent to <function>snprintf()</function>, but allows us to pass the variable arguments identified by <function>va_start()</function> straight across. A call to <swi>OS_SWINumberFromString</swi> is used to see if <swi>Report_Text0</swi> exists &ndash; and hence Reporter is loaded &ndash; before trying to use it.</p>
+
+<p>That said, we&rsquo;re drifting a little from the RISC&nbsp;OS Wimp into some of the murkier depths of C here, and we don&rsquo;t really need to understand <em>how</em> <function>debug_printf()</function> works to be able to use it. With <code>#include &quot;sflib/debug.h&quot;</code> in place, we can change the call to <function>report_text0()</function> inside <function>ibar_mouse_click()</function> so that we instead use SFLib&rsquo;s <function>debug_printf()</function>.</p>
+
+<code lang="c">static void ibar_mouse_click(wimp_pointer *pointer)
+{
+	switch (pointer->buttons) {
+	case wimp_CLICK_SELECT:
+		repbox_message(&quot;Hello World!&quot;, &quot;Howdy!,Go Away!&quot;);
+		break;
+	case wimp_CLICK_ADJUST:
+		debug_printf(&quot;This was an Adjust click - Goodbye!&quot;);
+		main_quit_flag = TRUE;
+		break;
+	}
+}</code>
+
+<p>If this is compiled, it should become clear that the application will exit cleanly when <mouse>Adjust</mouse> is clicked, whether or not Reporter is currently loaded. As noted above, <function>debug_printf()</function> checks to see if <swi>Report_Text0</swi> exists before trying to call it, so it&rsquo;s even safe to load or quit Reporter while our application is running.</p>
+</section>
+
+<section>
+<title>Getting more detail</title>
+
+<p>The other advantage of <function>debug_printf()</function>, which should be apparent from its name, is that it provides the functionality of <function>printf()</function> while sending its output to Reporter via <swi>Report_Text0</swi>. We can now add another line to <function>ibar_mouse_click()</function> which reports the value of <variable>pointer->buttons</variable>:</p>
+
+<code lang="c">static void ibar_mouse_click(wimp_pointer *pointer)
+{
+	debug_printf(&quot;The value of buttons=%d&quot;, pointer->buttons);
+
+	switch (pointer->buttons) {
+	case wimp_CLICK_SELECT:
+		repbox_message(&quot;Hello World!&quot;, &quot;Howdy!,Go Away!&quot;);
+		break;
+	case wimp_CLICK_ADJUST:
+		debug_printf(&quot;This was an Adjust click - Goodbye!&quot;);
+		main_quit_flag = TRUE;
+		break;
+	}
+}</code>
+
+<p>The result of this change can be seen in <reference id="fig-debug-printf"/>. It&rsquo;s a useful level of flexibility to have when developing and testing software, and one that we will be making use of as we progress.</p>
+
+<image id="fig-debug-printf" file="debug-printf.png" title="Outputting a variable&rsquo;s value with debug_printf"/>
+
+<p>This screenshot also shows that Reporter picks up on report boxes being opened: their details are shown in its window, highlighted in red to make them stand out. <reference id="dl-debug-sflib"/> contains the full set of changes.</p>
+
+<download id="dl-debug-sflib" file="ReporterSFLib" title="Using SFLib&rsquo;s Debug for Output" compatibility="none"/>
+</section>
+
+<section>
+<title>Crashes and postmortems</title>
+
+<p>Before moving on, let&rsquo;s return briefly to the problem that we had with <swi>Report_Text0</swi> when Reporter wasn&rsquo;t loaded. When the application crashed, we saw a different error report: shown in <reference id="fig-debug-program-error"/>. Some errors &ndash; which the Wimp identifies by checking the error number in the OS error block against a list that it holds &ndash; are considered to be &lsquo;serious&rsquo; and given special treatment. The original error message is hidden from the user at first, and is replaced by the text shown.</p>
+
+<image id="fig-debug-program-error" file="program-error.png" title="Some error numbers are trapped by the Wimp and reported differently"/>
+
+<p>The <icon>Continue</icon> and &lsquo;Quit&rsquo; buttons correspond to <icon>Continue</icon> and <icon>Cancel</icon> in a &lsquo;non-serious&rsquo; report &ndash; the only difference is that if the application didn&rsquo;t request a <icon>Cancel</icon> button, then it will be forcibly terminated if Quit is chosen. Clicking on &lsquo;Describe&rsquo; will take the user to a second report box, as seen in <reference id="fig-debug-description-error"/>, where the <em>original</em> error message is finally revealed.</p>
+
+<image id="fig-debug-description-error" file="description-error.png" title="Interested parties can still see the original error message if they wish"/>
+
+<p>At this stage, it&rsquo;s often possible to request a <intro>postmortem</intro> by clicking on &lsquo;Postmortem&rsquo;. This will be presented in a single-tasking text window on the desktop, ending with the familiar &ldquo;Press SPACE or click mouse to continue&rdquo; message. The postmortem <em>should</em> show us where in the program the error occurred, but &ndash; as shown in <reference id="fig-debug-postmortem-1"/> &ndash; all it tells us is &ldquo;anonymous function&rdquo;.</p>
+
+<image id="fig-debug-postmortem-1" file="postmortem-1.png" title="The postmortem doesn&rsquo;t tell us very much"/>
+
+<p>The reason for the unhelpful postmortem information is that as things stand, the <file>Mk</file> shared makefile defaults to passing the <command>-ff</command> parameter to the C&nbsp;Compiler. This instructs the compiler not to embed function names in the code that it generates: there&rsquo;s around a 5% reduction in code size as a result, but the downside is that identifying the location of crashes can be a lot more difficult.</p>
+
+<p>To overcome this we can instruct the makefile to remove this flag, and the easiest way to achieve this is to clear Make&rsquo;s <variable>C_NO_FNAMES</variable> variable <em>after</em> the line to <code>include CApp</code>. As standard, <variable>C_NO_FNAMES</variable> is set to &lsquo;-ff&rsquo; &ndash; this in turn sets the parameter in the call to the compiler. The modified makefile should look as shown in <reference id="list-debug-make"/>.</p>
+
+<code lang="makefile" id="list-debug-make" file="Makefile"># Makefile for Example App
+
+COMPONENT = ExampleApp
+
+OBJS = main ibar repbox
+
+CINCLUDES = -IC:,OSLib:,SFLib:
+LIBS = SFLib:o.SFLib OSLib:o.OSLib32
+
+include CApp
+
+C_NO_FNAMES =
+
+# Dynamic dependencies:</code>
+
+<p>After running <file>MkClean</file> and then <file>Mk</file>, triggering the crash again should result in a slightly more useful postmortem screen as seen in <reference id="fig-debug-postmortem-2"/>. The updated makefile can be found in <reference id="dl-debug-functions"/>.</p>
+
+<image id="fig-debug-postmortem-2" file="postmortem-2.png" title="With function names embedded, the postmortem is more useful"/>
+
+<download id="dl-debug-functions" file="EmbedFunctions" title="Request the Compiler Embed Function Names" compatibility="none"/>
+</section>
+
+</chapter>
+</manual>
+
