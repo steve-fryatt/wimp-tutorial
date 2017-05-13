@@ -46,7 +46,7 @@ window_definition.work_bg = wimp_COLOUR_VERY_LIGHT_GREY;
 window_definition.scroll_outer = wimp_COLOUR_MID_LIGHT_GREY;
 window_definition.scroll_inner = wimp_COLOUR_VERY_LIGHT_GREY;
 window_definition.highlight_bg = wimp_COLOUR_CREAM;
-window_definition.extra_flags = wimp_WINDOW_USE_EXTENDED_SCROLL_REQUEST;
+window_definition.extra_flags = 0;
 window_definition.extent.x0 = 0;
 window_definition.extent.y0 = -1200;
 window_definition.extent.x1 = 1200;
@@ -202,99 +202,108 @@ window_definition.highlight_bg = wimp_COLOUR_CREAM;</code>
 
 <p>There&rsquo;s no problem experimenting with these values, but with the advent of modern versions of the Wimp which use textured bitmaps to make up the window furniture, an increasing number of the colours have little or no effect because the parts of the window that they control are no longer visible.</p>
 
-<p>There&rsquo;s also the important fact that <em>all</em> of these colours are tightly defined by the <cite>Style Guide</cite>, which is supplied electronically with the DDE and can be <link href="https://www.riscosopen.org/content/sales/style-guide">purchased from RISC&nbsp;OS Open</link> in printed form. The <em>only</em> value which should be changed in normal cases is <variable>work_bg</variable> &ndash; and even this should remain as <name>wimp_COLOUR_VERY_LIGHT_GREY</name> in most cases (including <em>all</em> dialogue boxes).</p>
+<p>There&rsquo;s also the important fact that <em>all</em> of these colours are tightly defined by the <cite>Style Guide</cite>, which is supplied electronically with the DDE and can be <link href="https://www.riscosopen.org/content/sales/style-guide">purchased from RISC&nbsp;OS Open</link> in printed form. The <em>only</em> value which should be changed in normal cases is <variable>work_bg</variable> &ndash; and even this should remain as <name>wimp_COLOUR_VERY_LIGHT_GREY</name> most of the time (including in <em>all</em> dialogue boxes).</p>
 
-<p>Aside from its colours, the window&rsquo;s appearance can be changed by using some of the <intro>window flags</intro> stored in <variable>flags</variable>:</p>
+<p>Aside from its colours, the window&rsquo;s appearance can be changed by using some of the <intro>window flags</intro> and <intro>extended window flags</intro> stored in <variable>flags</variable> and <variable>extra_flags</variable> respectively:</p>
 
 <code lang="c">window_definition.flags = wimp_WINDOW_NEW_FORMAT |
 		wimp_WINDOW_MOVEABLE | wimp_WINDOW_AUTO_REDRAW |
 		wimp_WINDOW_BOUNDED_ONCE | wimp_WINDOW_BACK_ICON |
 		wimp_WINDOW_CLOSE_ICON | wimp_WINDOW_TITLE_ICON |
 		wimp_WINDOW_TOGGLE_ICON | wimp_WINDOW_VSCROLL |
-		wimp_WINDOW_SIZE_ICON | wimp_WINDOW_HSCROLL;</code>
+		wimp_WINDOW_SIZE_ICON | wimp_WINDOW_HSCROLL;
+window_definition.extra_flags = 0;</code>
 
-<p>The flags control many aspects of a window&rsquo;s behaviour, and OSLib defines constants for all of them; as with all flags words, the required values are bitwise-ORed together to produce a number to be stored in the variable. One flag which must <em>always</em> be included is <name>wimp_WINDOW_NEW_FORMAT</name>:</p> 
+<p>The flags control many aspects of a window&rsquo;s behaviour, and OSLib defines constants for all of them; as with all flags words, the required values for the two flag fields are bitwise-ORed together to produce number to be stored in the variables. Flags which are bits within <variable>flags</variable> have the type <name>wimp_window_flags</name>, while those which are bits within <variable>extra_flags</variable> have the type <name>wimp_extra_window_flags</name>. For now we&rsquo;re not setting any exended window flags, so the code above sets <variable>extra_flags</variable> to be zero.</p>
 
-<code lang="c">#define wimp_WINDOW_NEW_FORMAT		((wimp_window_flags) 0x80000000u)</code>
+<p>One window flag which must <em>always</em> be included is <name>wimp_WINDOW_NEW_FORMAT</name>:</p> 
 
-<p>It indicates that the other flags follow the &ldquo;new format&rdquo; and, in this context, that means &ldquo;RISC&nbsp;OS&rdquo;. The flag was added in when Acorn moved on from the original Arthur operating system in 1989, and it is very unlikely that there would ever be a situation in a modern application where it would not be set.</p>
+<code lang="c">#define wimp_WINDOW_NEW_FORMAT			((wimp_window_flags) 0x80000000u)</code>
 
-<p>The remaining flags in the field fall into a number of distinct groups; the first that we&rsquo;ll consider controls which pieces of <intro>window furniture</intro> are applied to the window:</p>
+<p>It indicates that the other window flags in <variable>flags</variable> follow the &ldquo;new format&rdquo; and, in this context, that means &ldquo;RISC&nbsp;OS&rdquo;. The flag was added in when Acorn moved on from the original Arthur operating system in 1989, and it is very unlikely that there would ever be a situation in a modern application where it would not be set.</p>
 
-<code lang="c">#define wimp_WINDOW_BACK_ICON		((wimp_window_flags) 0x1000000u)
-#define wimp_WINDOW_CLOSE_ICON		((wimp_window_flags) 0x2000000u)
-#define wimp_WINDOW_TITLE_ICON		((wimp_window_flags) 0x4000000u)
-#define wimp_WINDOW_TOGGLE_ICON		((wimp_window_flags) 0x8000000u)
-#define wimp_WINDOW_VSCROLL		((wimp_window_flags) 0x10000000u)
-#define wimp_WINDOW_SIZE_ICON		((wimp_window_flags) 0x20000000u)
-#define wimp_WINDOW_HSCROLL		((wimp_window_flags) 0x40000000u)</code>
+<p>The extended window flags in <variable>extra_flags</variable> started to be added in RISC&nbsp;OS&nbsp;4, so we&rsquo;re moving into areas which diverged when RISC&nbsp;OS&nbsp;4 and RISC&nbsp;OS&nbsp;5 came into being. Things aren&rsquo;t as bad as they might appear however: flags have the same meaning on <em>all</em> branches of RISC&nbsp;OS, so all that changes is whether or not they&rsquo;re implemented. Those which are&rsquo;t implemented are ignored by the Wimp, so it&rsquo;s safe to set flags for use on those branches of the OS which support them.</p>
+
+<p>The remaining flags in the two fields fall into a number of distinct groups; the first that we&rsquo;ll consider controls which pieces of <intro>window furniture</intro> are applied to the window:</p>
+
+<code lang="c">#define wimp_WINDOW_BACK_ICON			((wimp_window_flags) 0x1000000u)
+#define wimp_WINDOW_CLOSE_ICON			((wimp_window_flags) 0x2000000u)
+#define wimp_WINDOW_TITLE_ICON			((wimp_window_flags) 0x4000000u)
+#define wimp_WINDOW_TOGGLE_ICON			((wimp_window_flags) 0x8000000u)
+#define wimp_WINDOW_VSCROLL			((wimp_window_flags) 0x10000000u)
+#define wimp_WINDOW_SIZE_ICON			((wimp_window_flags) 0x20000000u)
+#define wimp_WINDOW_HSCROLL			((wimp_window_flags) 0x40000000u)</code>
 
 <p>Each of these, if present, turns on one of the pieces of furniture: the iconise button, which doesn&rsquo;t have its own flag, is controlled by <name>wimp_WINDOW_CLOSE_ICON</name>.</p>
 
+<p>The window&rsquo;s appearance can also be modified by the <intro>extended window flags</intro> stored in <variable>extra_flags</variable>, and OSLib defines a couple which relate to the window&rsquo;s appearance:</p>
+
+<code lang="c">#define wimp_WINDOW_NEVER3D			((wimp_extra_window_flags) 0x4u)
+#define wimp_WINDOW_ALWAYS3D			((wimp_extra_window_flags) 0x8u)</code>
+
+<p>On RISC&nbsp;OS&nbsp;4, users are given the option to make their window borders three dimensional across the desktop. Since &lsquo;one size fits all&rsquo; isn&rsquo;t always a good plan, individual windows can over-rule the user: setting the <name>wimp_WINDOW_NEVER3D</name> flag will ensure that the window doesn&rsquo;t get a 3D border, while <name>wimp_WINDOW_ALWAYS3D</name> ensures that it always has one. As with so many of these options, use sparingly and &ndash; if in doubt &ndash; leave the unset and let the user decide.</p>
+
+<p>Finally, in this group of flags, are two which control the way in which the window colours above are interpreted by the Wimp:</p>
+
+<code lang="c">#define wimp_WINDOW_REAL_COLOURS		((wimp_window_flags) 0x400u)
+#define wimp_WINDOW_USE_TITLE_VALIDATION_STRING	((wimp_extra_window_flags) 0x1u)</code>
+
+<p>For now, these can both safely be left un-set.</p>
+</section>
+
+<section>
+<title>Moving the Window Around</title>
+
 <p>Another group of flags determine how the window moves and responds to the user dragging its title bar and resize button:</p>
 
-<code lang="c">#define wimp_WINDOW_MOVEABLE		((wimp_window_flags) 0x2u)
-#define wimp_WINDOW_NO_BOUNDS		((wimp_window_flags) 0x40u)
-#define wimp_WINDOW_BOUNDED		((wimp_window_flags) 0x2000u)
-#define wimp_WINDOW_IGNORE_XEXTENT	((wimp_window_flags) 0x4000u)
-#define wimp_WINDOW_IGNORE_YEXTENT	((wimp_window_flags) 0x8000u)</code>
+<code lang="c">#define wimp_WINDOW_MOVEABLE			((wimp_window_flags) 0x2u)
+#define wimp_WINDOW_NO_BOUNDS			((wimp_window_flags) 0x40u)
+#define wimp_WINDOW_BOUNDED			((wimp_window_flags) 0x2000u)
+#define wimp_WINDOW_IGNORE_XEXTENT		((wimp_window_flags) 0x4000u)
+#define wimp_WINDOW_IGNORE_YEXTENT		((wimp_window_flags) 0x8000u)</code>
 
 <p>A window can only be dragged around at all if the <name>wimp_WINDOW_MOVEABLE</name> flag is set; otherwise, it will be fixed at the place where the application last put it with <swi>Wimp_OpenWindow</swi>.</p>
 
 <p>The <name>wimp_WINDOW_NO_BOUNDS</name> flag, if set, allows the window to move off the screen; however, even if it is not set, the user can force this setting for <em>all</em> windows on the desktop using the <icon>Allow windows off-screen to top and left</icon> and <icon>Allow windows off-screen to bottom and right</icon> options in the Windows section of Configure. These Configure options arrived in RISC&nbsp;OS&nbsp;3 and, as a result, the <name>wimp_WINDOW_BOUNDED</name> flag was added to <em>force</em> a window to stay on screen. It&rsquo;s generally best to leave <name>wimp_WINDOW_NO_BOUNDS</name> unset so that the user can make his or her own choice, and use <name>wimp_WINDOW_BOUNDED</name> if the window has to remain on screen.</p>
 
 <p>The final two flags, <name>wimp_WINDOW_IGNORE_XEXTENT</name> and <name>wimp_WINDOW_IGNORE_YEXTENT</name>, control the behaviour of the mouse when the user tries to drag the window&rsquo;s resize button. When set, the mouse can drag out away from the button when the window reaches full size. This isn&rsquo;t desirable, and these flags should be left unset unless there&rsquo;s some special code in place to spot this happening and change the size of the window&rsquo;s work area &ndash; this is definitely &lsquo;advanced&rsquo; behaviour, so for now assume that these flags should not be set!</p>
+</section>
+
+<section>
+<title>Window Behaviour Flags</title>
 
 <p>The final group of flags all relate in some way to the way that the window interacts with <swi>Wimp_Poll</swi> events:</p>
 
-<code lang="c">#define wimp_WINDOW_AUTO_REDRAW		((wimp_window_flags) 0x10u)
-#define wimp_WINDOW_PANE		((wimp_window_flags) 0x20u)
-#define wimp_WINDOW_HOT_KEYS		((wimp_window_flags) 0x1000u)
-#define wimp_WINDOW_SCROLL_REPEAT	((wimp_window_flags) 0x100u)
-#define wimp_WINDOW_SCROLL		((wimp_window_flags) 0x200u)</code>
+<code lang="c">#define wimp_WINDOW_AUTO_REDRAW			((wimp_window_flags) 0x10u)
+#define wimp_WINDOW_PANE			((wimp_window_flags) 0x20u)
+#define wimp_WINDOW_SCROLL_REPEAT		((wimp_window_flags) 0x100u)
+#define wimp_WINDOW_SCROLL			((wimp_window_flags) 0x200u)
+#define wimp_WINDOW_HOT_KEYS			((wimp_window_flags) 0x1000u)
+
+#define wimp_WINDOW_USE_EXTENDED_SCROLL_REQUEST	((wimp_extra_window_flags) 0x2u)
+#define wimp_WINDOW_GIVE_SHADED_ICON_INFO	((wimp_extra_window_flags) 0x10u)</code>
 
 <p>If the <name>wimp_WINDOW_AUTO_REDRAW</name> flag is set, the Wimp won&rsquo;t ask the application to help with redrawing the window. For all simple windows, this flag should be set: if it isn&rsquo;t, then opening the window will lock the application (requiring <key>Alt</key>-<key>Break</key> to escape) unless there&rsquo;s code in place to redraw the window. We&rsquo;ll cover this, and the associated <swi>Wimp_Poll</swi> event, later.</p>
 
 <p>Setting the <name>wimp_WINDOW_HOT_KEYS</name> flag will cause the window to receive details of unclaimed key presses even when it doesn&rsquo;t have input focus. Generally, this isn&rsquo;t much use, and will be left un-set.</p>
 
-<p>The <name>wimp_WINDOW_SCROLL</name> and <name>wimp_WINDOW_SCROLL_REPEAT</name> flags control how the window responds to the user clicking on the arrows at the ends of its scroll bars. These can safely be left unset &ndash; at least until we&rsquo;ve met the <swi>Wimp_Poll</swi> event associated with them!</p>
+<p>The <name>wimp_WINDOW_SCROLL</name> and <name>wimp_WINDOW_SCROLL_REPEAT</name> flags, along with the <name>wimp_WINDOW_USE_EXTENDED_SCROLL_REQUEST</name> extended flag, control how the window responds to the user clicking on the arrows at the ends of its scroll bars. These can safely be left unset &ndash; at least until we&rsquo;ve met the <swi>Wimp_Poll</swi> event associated with them!</p>
+
+<p>On RISC&nbsp;OS&nbsp;5, control over how the window responds to Interactive Help is provided by the <name>wimp_WINDOW_GIVE_SHADED_ICON_INFO</name> extended flag. This can be left unset until we come to implement interactive help support in our application.</p>
 
 <p>Finally, from this group, is the <name>wimp_WINDOW_PANE</name> flag. This is intended for use by toolboxes and toolbars, such as the one found on Draw windows, but it actually does very little. It doesn&rsquo;t help attach the window to its parent (the application itself must do that), but merely ensures that if the window gets input focus, then the title bar of the window below it in the window stack is highlighted.</p>
 
-<p>The final two flags that we&rsquo;ll look at fall into the &ldquo;do not use&rdquo; category:</p>
+<p>The final flags relate to different <intro>window stacks</intro>. This is well outside the scope of most applications, and they can safely be left unset:</p>
 
-<code lang="c">#define wimp_WINDOW_BACK		((wimp_window_flags) 0x800u)
-#define wimp_WINDOW_REAL_COLOURS	((wimp_window_flags) 0x400u)</code>
-
-<p>If set, the <name>wimp_WINDOW_BACK</name> flag forces the window to remain at the bottom of the window stack. This was useful before RISC&nbsp;OS came along, but these days it&rsquo;s only likely to cause problems. In a similar way, the <name>wimp_WINDOW_REAL_COLOURS</name> allows GCOL colours to be used for the window&rsquo;s colours instead of the Wimp Palette &ndash; for compliance with the <cite>Style Guide</cite>, leave the colours as given above and don&rsquo;t set this flag!</p>
-
-<!--
-Flags which haven't been covered:
-
+<code lang="c">#define wimp_WINDOW_BACK			((wimp_window_flags) 0x800u)
 #define wimp_WINDOW_FURNITURE_WINDOW            ((wimp_window_flags) 0x800000u)
-      /*WindowManager 3.98+*/
-#define wimp_WINDOW_FOREGROUND_WINDOW           ((wimp_window_flags) 0x800000u)
-      /*RISC OS 4+*/
--->
-<!--
-window_definition.extra_flags = wimp_WINDOW_USE_EXTENDED_SCROLL_REQUEST;
+#define wimp_WINDOW_FOREGROUND_WINDOW           ((wimp_window_flags) 0x800000u)</code>
+</section>
 
-#define wimp_WINDOW_USE_TITLE_VALIDATION_COLOURS ((wimp_extra_window_flags) 0x1u)
-      /*RISC OS 4+ Prefer Wimp_WindowUseTitleValidationString*/
-#define wimp_WINDOW_USE_TITLE_VALIDATION_STRING ((wimp_extra_window_flags) 0x1u)
-      /*RISC OS 4+*/
-#define wimp_WINDOW_USE_EXTENDED_SCROLL_REQUEST ((wimp_extra_window_flags) 0x2u)
-      /*RISC OS 4.32+*/
-#define wimp_WINDOW_NEVER3D                     ((wimp_extra_window_flags) 0x4u)
-      /*RISC OS 4+*/
-#define wimp_WINDOW_ALWAYS3D                    ((wimp_extra_window_flags) 0x8u)
-      /*RISC OS 4+*/
-#define wimp_WINDOW_GIVE_SHADED_ICON_INFO       ((wimp_extra_window_flags) 0x10u)
--->
+<section>
+<title>The Window Title and Work Area</title>
 
-
-
-<p>The window&rsquo;s title bar is set up in a couple of lines:</p>
+<p>The contents of the window&rsquo;s title bar is set up in a couple of lines:</p>
 
 <code lang="c">window_definition.title_flags = wimp_ICON_TEXT |
 		wimp_ICON_BORDER | wimp_ICON_HCENTRED |
@@ -312,7 +321,6 @@ strncpy(window_definition.title_data.text, &quot;Hello World!&quot;, 12);</code>
 <code lang="c">window_definition.sprite_area = wimpspriteop_AREA;</code>
 
 <p>If we&rsquo;re using sprites in the window, we have the option of specifying a <variable>sprite_area</variable> pointer to allow the Wimp to locate them for us. We&rsquo;re not, so for now we can just set this to the default of <name>wimpspriteop_AREA</name>.</p>
-
 
 <code lang="c">window_definition.icon_count = 0</code>
 

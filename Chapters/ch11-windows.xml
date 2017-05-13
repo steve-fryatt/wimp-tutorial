@@ -20,7 +20,7 @@
 <summary>We&rsquo;re finally ready to create our first window!</summary>
 
 <section>
-<p>With the initial legwork complete, we&rsquo;re now ready to add the first window to our application. Windows are a fundamental part of the RISC&nbsp;OS desktop, and most of us don&rsquo;t give them much thought from day to day. A couple of examples, belonging to familiar applications Zap and Snapper, can be seen in <reference id="fig-window-sample"/>.</p>
+<p>With the initial legwork complete, we&rsquo;re now ready to add the first window to our application. Windows are a fundamental part of the RISC&nbsp;OS desktop: so much so that most of us probably don&rsquo;t give them much thought from day to day. A couple of examples, belonging to familiar applications Zap and Snapper, can be seen in <reference id="fig-window-sample"/>.</p>
 
 <image id="fig-window-sample" file="window-sample.png" title="A couple of windows on the RISC&nbsp;OS desktop"/>
 
@@ -111,7 +111,7 @@ void win_open(void)
 	wimp_open_window((wimp_open *) &amp;state);
 }</code>
 
-<p>The file contains two functions. The first &ndash; <function>win_initialise()</function> &ndash; assembles the window definition in the <name>wimp_window</name> structure referred to by the <variable>window_definition</variable> variable, before passing it as a pointer to <function>wimp_create_window()</function>. <swi>Wimp_CreateWindow</swi> processes the definition and returns a window handle which is assigned to the <variable>window_handle</variable> variable, which is of the <name>wimp_w</name> type. From this we can deduce that the <name>wimp_window</name> type is used to hold window definitions, while <name>wimp_w</name> is used to hold window handles.</p>
+<p>The file contains two functions. The first &ndash; <function>win_initialise()</function> &ndash; assembles the window definition in the <name>wimp_window</name> structure referred to by the <variable>window_definition</variable> variable, before passing it as a pointer to <function>wimp_create_window()</function>. The <swi>Wimp_CreateWindow</swi> SWI processes the definition and returns a window handle that is assigned to the <variable>window_handle</variable> variable, which is of the <name>wimp_w</name> type. From this we can deduce that the <name>wimp_window</name> type is used to hold window definitions, while <name>wimp_w</name> is used to hold window handles.</p>
 
 <p>The second function &ndash; <function>win_open()</function> &ndash; does the job of taking the window handle stored in <variable>window_handle</variable> and opening it up on the screen. We&rsquo;ll see how this works shortly.</p>
 
@@ -186,7 +186,7 @@ void win_open(void);
 <section>
 <title>Being responsive</title>
 
-<p>The reason for this apparent unresponsiveness is actually quite simple: we&rsquo;re missing some code. Although it might seem a little surprising at first, the Wimp is unable to open or change the position of a window &ndash; by which we mean dragging, resizing or scrolling &ndash; unless our application requests that it does so by calling <swi>Wimp_OpenWindow</swi>. Our window appears on screen because we called <function>wimp_open_window()</function> for it at the end of our <function>win_open()</function> function, but after that it&rsquo;s stuck in the one place because we never ask the Wimp to move it again.</p>
+<p>The reason for this apparent unresponsiveness is actually quite simple: we&rsquo;re missing some code. Although it might seem a little surprising at first, the Wimp is unable to open or change the position of a window &ndash; by which we mean dragging, resizing or scrolling it &ndash; unless our application requests that it does so by calling <swi>Wimp_OpenWindow</swi>. Our window appears on screen because we called <function>wimp_open_window()</function> for it at the end of our <function>win_open()</function> function, but after that it&rsquo;s stuck in the one place because we never ask the Wimp to move it again.</p>
 
 <p>This behaviour on the part of the Wimp is deliberate, and gives the programmer a great deal of flexibility. Back in the days of RISC&nbsp;OS&nbsp;3, applications like Draw &ndash; seen in <reference id="fig-window-pane"/> below &ndash; could implement their toolboxes by manipulating whatever additional windows they wanted whenever the Wimp asked them to adjust their main window. With the advent of the Nested Wimp there are much easier ways to handle this requirement, but the facility still has some important uses: consider something like a spreadsheet, for example, where scrolling the window down or right adds rows or columns to the grid &ndash; requiring the window&rsquo;s work area to be adjusted on the fly.</p>
 
@@ -194,7 +194,7 @@ void win_open(void);
 
 <p>Fortunately, in the vast majority of cases &ndash; where we&rsquo;re not trying to implement spreadsheets &ndash; things are nowhere near as difficult as they might at first appear. If we examine the <name>wimp_block</name> union returned by <swi>Wimp_Poll</swi> &ndash; which we met in <reference id="chap-moving-to-c"/> and <reference id="chap-ibar"/> &ndash; we can see that it contains an entry called <variable>open</variable> which is a <name>wimp_open</name> structure. Looking back at how we implemented the <function>win_open()</function> function above, we should see that this is the same type as the one that we cast our pointer to when calling <function>wimp_open_window()</function>.</p>
 
-<p>This is no accident. When the Wimp needs an application to change the position of a window, it sends an <name>Open_Window_Request</name> event through <swi>Wimp_Poll</swi> and &ndash; in the data attached to the event &ndash; indicates where it thinks that the window should be on screen. Unless the application wishes to do something &lsquo;clever&rsquo; with the request, all that it needs to do is pass it straight on to <swi>Wimp_OpenWindow</swi> and leave the Wimp to do the rest.</p>
+<p>This is no accident. When the Wimp needs an application to change the position of a window, it sends an <name>Open_Window_Request</name> event through <swi>Wimp_Poll</swi> and &ndash; in the data attached to the event &ndash; indicates where it thinks that the window should be on screen. Unless the application wishes to do something &lsquo;clever&rsquo; with the request, all that it needs to do is pass the supplied data straight on to <swi>Wimp_OpenWindow</swi> and leave the Wimp to do the rest.</p>
 
 <p>To make our window move, we could register an event handler for <name>Open_Window_Request</name> and use this to make the calls to <swi>Wimp_OpenWindow</swi>. Back in <reference id="chap-click"/> we saw how to do this for <name>Mouse_Click</name> events on our iconbar icon, and the process is very similar. First, we need to define a function to handle the events:</p>
 
@@ -216,7 +216,7 @@ event_add_window_open_event(window_handle, win_open_window_request);</code>
 
 <download id="dl-window-open-handler" file="OpenWindowHandler" title="Using an Open Window Request Handler" compatibility="none"/>
 
-<p>However, clicking on the <icon>Close</icon> button still doesn&rsquo;t work &ndash; and there&rsquo;s another potential problem, too. We&rsquo;ve said that <em>every</em> window needs to respond to <name>Open_Window_Request</name> events, and since our event handler is registered to this one specific window handle, we would need to register a handler for each window that our application uses. This isn&rsquo;t impossible, but it will be a lot of duplication for something that&rsquo;s so standard.</p>
+<p>However, clicking on the <icon>Close</icon> button still doesn&rsquo;t work &ndash; and there&rsquo;s another potential annoyance with this approach, too. We&rsquo;ve said that <em>every</em> window needs to respond to <name>Open_Window_Request</name> events, and since our event handler is registered to this one specific window handle, we would need to register a handler for each window that our application uses. This isn&rsquo;t impossible, but it will be a lot of duplication for something that&rsquo;s so standard.</p>
 </section>
 
 <section>

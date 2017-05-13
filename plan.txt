@@ -1,3 +1,13 @@
+Chapter 13
+----------
+
+Add details about opening window at a given pointer location.
+Refer to SFLib windows_open() and windows_open_centred_at_pointer().
+
+
+
+
+
 Simple Icons
 Indirected Icons
 Mouse Clicks (Windows & Icons)

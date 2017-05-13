@@ -37,18 +37,18 @@
 
 </index>
 
-<chapter file="Chapter1.xml"/>
-<chapter file="Chapter2.xml"/>
-<chapter file="Chapter3.xml"/>
-<chapter file="Chapter4.xml"/>
-<chapter file="Chapter5.xml"/>
-<chapter file="Chapter6.xml"/>
-<chapter file="Chapter7.xml"/>
-<chapter file="Chapter8.xml"/>
-<chapter file="Chapter9.xml"/>
-<chapter file="Chapter10.xml"/>
-<chapter file="Chapter11.xml"/>
-<chapter file="Chapter12.xml"/>
-<chapter file="Chapter13.xml"/>
+<chapter file="ch01-start-basic.xml"/>
+<chapter file="ch02-moving-to-c.xml"/>
+<chapter file="ch03-compiling.xml"/>
+<chapter file="ch04-event-driven.xml"/>
+<chapter file="ch05-compile-better.xml"/>
+<chapter file="ch06-ibar.xml"/>
+<chapter file="ch07-click.xml"/>
+<chapter file="ch08-report.xml"/>
+<chapter file="ch09-debug.xml"/>
+<chapter file="ch10-report-2.xml"/>
+<chapter file="ch11-windows.xml"/>
+<chapter file="ch12-window-theory.xml"/>
+<chapter file="ch13-handling-windows.xml"/>
 
 </manual>
