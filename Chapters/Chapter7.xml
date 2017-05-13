@@ -1,0 +1,370 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+
+<!DOCTYPE xmlmanual SYSTEM "../wimp.dtd">
+
+<manual xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="xmldoc.xsd" version="1.8.6">
+
+<!-- Chapter 7
+   -
+   - Iconbar Clicks
+  -->
+
+<chapter id="chap-click">
+<resources>
+<images>Chapter7</images>
+<downloads>Chapter7</downloads>
+</resources>
+<filename>clicks.html</filename>
+<title>Clicks on the Iconbar</title>
+
+<summary>There&rsquo;s not much point having an iconbar icon if it doesn&rsquo;t respond to the user!</summary>
+
+<section>
+<p>In the <reference id="chap-ibar">last chapter</reference> we got our application to place an icon on to the iconbar, but it didn&rsquo;t do very much. The icon completely ignored user interaction, which prevented it from being much use.</p>
+</section>
+
+<section>
+<title>Mouse clicks</title>
+
+<p>Up to now, all of our communication with the Wimp has been through the results of calling <swi>Wimp_Poll</swi> &ndash; so it shouldn&rsquo;t be too much of a surprise to learn that information about mouse clicks comes via this route as well. In fact, virtually everything that our application needs to know about what the user is up to arrives in this way.</p>
+
+<p>Before we go on to implement our new code properly, we&rsquo;ll go back and take a look at how it <em>might</em> have been implemented before we broke the application up into self-contained modules in <reference id="chap-event-driven"/> &ndash; this should make it clearer how things are working &lsquo;beneath the surface&rsquo;. Back in <reference id="list4-1"/>, our call to <swi>Wimp_Poll</swi> looked like this:</p>
+
+<code lang="c">wimp_block	block;
+wimp_event_no	reason;
+
+while (!main_quit_flag) {
+	reason = wimp_poll(wimp_MASK_NULL |
+		wimp_MASK_ENTERING | wimp_MASK_LEAVING |
+		wimp_MASK_GAIN | wimp_MASK_LOSE |
+		wimp_MASK_POLLWORD, &amp;block, NULL);
+
+	switch (reason) {
+	case wimp_USER_MESSAGE:
+	case wimp_USER_MESSAGE_RECORDED:
+		if (block.message.action == message_QUIT)
+			main_quit_flag = TRUE;
+		break;
+	}
+}</code>
+
+<p>As we saw in <reference id="chap-moving-to-c"/>, <swi>Wimp_Poll</swi> returns many different reason codes. So far, we&rsquo;ve only listened out for two &ndash; those called <name>User_Message</name> and <name>User_Message_Recorded</name>. Since we&rsquo;re interested in mouse clicks, we now need to take a look at the one called <name>Mouse Click</name>.</p>
+
+<p>In the <code>switch</code> statement above, we&rsquo;re testing the reason code returned from <swi>Wimp_Poll</swi> to see if it is equal to either <name>wimp_USER_MESSAGE</name> or <name>wimp_USER_MESSAGE_RECORDED</name>. We&rsquo;ve already seen that OSLib defines a set of these constants:</p>
+
+<code lang="c">#define wimp_NULL_REASON_CODE		((wimp_event_no) 0x0u)	/* 0	*/
+#define wimp_REDRAW_WINDOW_REQUEST	((wimp_event_no) 0x1u)	/* 1	*/
+#define wimp_OPEN_WINDOW_REQUEST	((wimp_event_no) 0x2u)	/* 2	*/
+#define wimp_CLOSE_WINDOW_REQUEST	((wimp_event_no) 0x3u)	/* 3	*/
+#define wimp_POINTER_LEAVING_WINDOW	((wimp_event_no) 0x4u)	/* 4	*/
+#define wimp_POINTER_ENTERING_WINDOW	((wimp_event_no) 0x5u)	/* 5	*/
+#define wimp_MOUSE_CLICK		((wimp_event_no) 0x6u)	/* 6	*/
+#define wimp_USER_DRAG_BOX		((wimp_event_no) 0x7u)	/* 7	*/
+#define wimp_KEY_PRESSED		((wimp_event_no) 0x8u)	/* 8	*/
+#define wimp_MENU_SELECTION		((wimp_event_no) 0x9u)	/* 9	*/
+#define wimp_SCROLL_REQUEST		((wimp_event_no) 0xAu)	/* 10	*/
+#define wimp_LOSE_CARET			((wimp_event_no) 0xBu)	/* 11	*/
+#define wimp_GAIN_CARET			((wimp_event_no) 0xCu)	/* 12	*/
+#define wimp_POLLWORD_NON_ZERO		((wimp_event_no) 0xDu)	/* 13	*/
+#define wimp_USER_MESSAGE		((wimp_event_no) 0x11u)	/* 17	*/
+#define wimp_USER_MESSAGE_RECORDED	((wimp_event_no) 0x12u)	/* 18	*/
+#define wimp_USER_MESSAGE_ACKNOWLEDGE	((wimp_event_no) 0x13u)	/* 19	*/</code>
+
+<p>and buried in there is reason code 6: <name>wimp_MOUSE_CLICK</name>. If the user clicks on part of our application which can accept clicks &ndash; such as the iconbar icon &ndash; then <swi>Wimp_Poll</swi> will return with <variable>reason</variable> set to <name>wimp_MOUSE_CLICK</name> to let us know all about it.</p>
+
+<p>So how do we find out about the click itself? We&rsquo;re passing <swi>Wimp_Poll</swi> a pointer to the <variable>block</variable> variable, which is declared to be a <name>wimp_block</name>. As we also saw in <reference id="chap-moving-to-c"/>, OSLib defines <name>wimp_block</name> as follows:</p>
+
+<code lang="c">union wimp_block {
+	wimp_draw	redraw;
+	wimp_open	open;
+	wimp_close	close;
+	wimp_leaving	leaving;
+	wimp_entering	entering;
+	wimp_pointer	pointer;
+	wimp_dragged	dragged;
+	wimp_key	key;
+	wimp_selection	selection;
+	wimp_scroll	scroll;
+	wimp_caret	caret;
+	wimp_pollword	pollword;
+	wimp_message	message;
+	byte		reserved[256];
+};
+
+typedef union wimp_block wimp_block;</code>
+
+<p>The <code>switch</code> code looks inside the <name>message</name> part of the union when either <name>User_Message</name> or <name>User_Message_Recorded</name> is received; in a similar way, when a <name>Mouse Click</name> event is received, it needs to look inside <name>pointer</name> instead. It&rsquo;s worth re-iterating here that <name>wimp_block</name> is a union because all of these different pieces of data share the same 256&nbsp;byte chunk of memory that is passed to <swi>Wimp_Poll</swi>: how the block is filled by the Wimp before the SWI returns will depend on the reason code being used. Each time it returns, what was in the block before is overwritten.</p>
+
+<p>OSLib defines <name>wimp_pointer</name> as</p>
+
+<code lang="c">struct wimp_pointer {
+	os_coord		pos;
+	wimp_mouse_state	buttons;
+	wimp_w			w;
+	wimp_i			i;
+};
+
+typedef struct wimp_pointer wimp_pointer;</code>
+
+<p>meaning that we&rsquo;re getting four pieces of information back with a <name>Mouse Click</name> event. The screen coordinates of the click are found in <variable>pos</variable>, while the <intro>handles</intro> of the window and icon under the pointer at the time are in <variable>w</variable> and <variable>i</variable> respectively. Finally, the combination of mouse buttons which the user clicked is held in <variable>buttons</variable>.</p>
+
+<p>The window handle is important, as it lets us quickly identify where in our application the click occurred. When we created the our icon in the <reference id="chap-ibar">last chapter</reference>, we saw that the Wimp treated the iconbar as a &lsquo;special&rsquo; window with handles of <name>wimp_ICON_BAR_LEFT</name> or <name>wimp_ICON_BAR_RIGHT</name> &ndash; which one depended on which side of the bar we wished the icon to appear. The same approach is used for the information returned by <swi>Wimp_Poll</swi>, but because it&rsquo;s no longer important to know which side of the iconbar our icon is on, the handle is simplified to be <name>wimp_ICON_BAR</name> &ndash; this covers both the left- <em>and</em> the right-hand side.</p>
+
+<p>If we wished to have our application simply quit whenever <em>any</em> click was made on its icon, we could amend the switch statement as follows:</p>
+
+<code lang="c">switch (reason) {
+case wimp_MOUSE_CLICK:
+	if (block.pointer.w == wimp_ICON_BAR)
+		main_quit_flag = TRUE;
+	break;
+case wimp_USER_MESSAGE:
+case wimp_USER_MESSAGE_RECORDED:
+	if (block.message.action == message_QUIT)
+		main_quit_flag = TRUE;
+	break;
+}</code>
+
+<p>If the event returned by <swi>Wimp_Poll</swi> is <name>Mouse Click</name>, and if the window over which it occurred is the iconbar, then <variable>main_quit_flag</variable> is set to <name>TRUE</name>. It&rsquo;s worth highlighting that <swi>Wimp_Poll</swi> will <em>only</em> return clicks on the iconbar if they are over an icon owned by our application: there&rsquo;s no danger of us quitting if there is a click on Edit&rsquo;s icon, for example!</p>
+</section>
+
+<section>
+<title>Registering events</title>
+
+<p>Unfortunately there&rsquo;s a problem with this code: the <code>switch</code> statement that we&rsquo;ve just added it to was removed in <reference id="list4-2"/>, when we replaced it with</p>
+
+<code lang="c">while (!main_quit_flag) {
+	reason = wimp_poll(wimp_MASK_NULL, &amp;blk, &amp;pollword);
+
+	event_process_event(reason, &amp;blk, pollword);
+}</code>
+
+<p>Instead of handling the events directly, we&rsquo;re now passing them on to <function>event_process_event()</function> from SFLib&rsquo;s event library and letting this route them to interested parties.</p>
+
+<p>Fortunately, just as <name>wimp_pointer</name> contains the <variable>w</variable> variable, many of the structures which form <name>wimp_block</name> have an associated window handle &ndash; as we&rsquo;ll see, much of the user&rsquo;s interaction with our application is based around windows. Using this, the event library can route these events by testing the window handle that is contained within them.</p>
+
+<p>Since we&rsquo;re dealing with clicks on the iconbar icon, the best place to put its <name>Mouse Click</name> event handler is into the <file>c.ibar</file> file. Just as we did when we implemented an event handler for <name>Message_Quit</name> in <reference id="list4-2"/>, the first thing to do is to package up the code from the <code>switch</code> statement above into a <name>Mouse Click</name> event handler.</p>
+
+<code lang="c">static void ibar_mouse_click(wimp_pointer *pointer)
+{
+	main_quit_flag = TRUE;
+}</code>
+
+<p>The handler is a function which takes a single parameter consisting of a pointer to a <name>wimp_pointer</name> structure, and returns nothing (ie. <name>void</name>) &ndash; the SFLib event library requires this prototype for all <name>Mouse Click</name> event handlers. The <name>wimp_pointer</name> structure is the one filled in by <swi>Wimp_Poll</swi>, although at present we&rsquo;re not interested in its contents because we&rsquo;re going to quit as soon as <em>any</em> click is received.</p>
+
+<p>As with the <name>Message_Quit</name> handler, a lot of the code from the <code>switch</code> is no longer required. The event library is testing for the <swi>Wimp_Poll</swi> reason code being <name>wimp_MOUSE_CLICK</name> before it even considers passing the event on to a <name>Mouse Click</name> handler, so the <code>case</code> condition can be removed. Similarly, we&rsquo;re going to register this function with the event library specifically for events affecting the iconbar &lsquo;window&rsquo; &ndash; this means that the test to confirm that <variable>block.pointer.w</variable> is equal to <name>wimp_ICON_BAR</name> will also be done for us before our function is called. This only leaves us with the job of actually setting <variable>main_quit_flag</variable> to <name>TRUE</name>.</p>
+
+<p>To let the event library know about this function, we need to add a line to <function>ibar_initialise()</function>:</p>
+
+<code lang="c">event_add_window_mouse_event(wimp_ICON_BAR, ibar_mouse_click);</code>
+
+<p>This informs the event dispatcher that the <function>ibar_mouse_click()</function> function is interested in knowing about <name>Mouse Click</name> events over the window whose handle is <name>wimp_ICON_BAR</name> &ndash; our iconbar icon.</p>
+
+<p>There&rsquo;s a little bit more work to do, however. The <variable>main_quit_flag</variable> from inside <file>c.main</file> needs to become visible outside that file in order that that the function in <file>c.ibar</file> can change its value, so we remove <code>static</code> from its declaration there</p>
+
+<code lang="c">osbool main_quit_flag = FALSE;</code>
+
+<p>and create a new <file>h.main</file> header file to declare it as an <code>extern</code> &ndash; as shown in <reference id="list-click-main-h"/>.</p>
+
+<code id="list-click-main-h" lang="c" file="h.main" title="The new main header file">/**
+ * Example 7.1
+ *
+ * (c) Stephen Fryatt, 2017
+ *
+ * File: main.h
+ */
+
+#ifndef EXAMPLEAPP_MAIN
+#define EXAMPLEAPP_MAIN
+
+/* Aplication Quit Request Flag. */
+
+extern osbool main_quit_flag;
+
+#endif</code>
+
+<p>The updated <file>c.main</file> is shown in <reference id="list-click-main-c"/>.</p>
+
+<code id="list-click-main-c" lang="c" file="c.main" title="Updates to main itself">/**
+ * Example 7.1
+ *
+ * (c) Stephen Fryatt, 2017
+ *
+ * File: main.c
+ */
+
+#include &quot;oslib/wimp.h&quot;
+#include &quot;sflib/event.h&quot;
+
+#include &quot;main.h&quot;
+
+#include &quot;ibar.h&quot;
+
+/* Global Variables */
+
+osbool main_quit_flag = FALSE;
+
+/* Function Prototypes */
+
+static void main_initialise(void);
+static void main_poll(void);
+static void main_terminate(void);
+static osbool main_message_quit(wimp_message *message);
+
+/* Main code entry point. */
+
+int main(int argc, char *argv[])
+{
+	main_initialise();
+	main_poll();
+	main_terminate();
+
+	return 0;
+}
+
+/* Global application initialisation. */
+
+static void main_initialise(void)
+{
+	wimp_initialise(wimp_VERSION_RO3, &quot;Example App&quot;, NULL, NULL);
+
+	event_add_message_handler(message_QUIT, EVENT_MESSAGE_INCOMING, main_message_quit);
+
+	ibar_initialise();
+}
+
+/* Wimp_Poll loop. */
+
+static void main_poll(void)
+{
+	wimp_block	blk;
+	wimp_event_no	reason;
+	int		pollword;
+
+	while (!main_quit_flag) {
+		reason = wimp_poll(wimp_MASK_NULL, &amp;blk, &amp;pollword);
+
+		event_process_event(reason, &amp;blk, pollword);
+	}
+}
+
+/* Global application termination. */
+
+static void main_terminate(void)
+{
+	wimp_close_down(0);
+}
+
+/* Message_Quit event handler. */
+
+static osbool main_message_quit(wimp_message *message)
+{
+	main_quit_flag = TRUE;
+
+	return TRUE;
+}</code>
+
+<p>Finally, the changes to <file>c.ibar</file> give the result shown in <reference id="list-click-ibar-c"/>. </p>
+
+<code id="list-click-ibar-c" lang="c" file="c.ibar" title="Handling mouse clicks">/**
+ * Example 7.1
+ *
+ * (c) Stephen Fryatt, 2017
+ *
+ * File: ibar.c
+ */
+
+#include &quot;oslib/wimp.h&quot;
+#include &quot;sflib/event.h&quot;
+#include &lt;string.h&gt;
+
+#include &quot;ibar.h&quot;
+
+#include &quot;main.h&quot;
+
+/* Function Prototypes. */
+
+static void ibar_mouse_click(wimp_pointer *pointer);
+
+/* Iconbar Initialisation. */
+
+void ibar_initialise(void)
+{
+	wimp_icon_create icon_bar;
+
+	icon_bar.w = wimp_ICON_BAR_RIGHT;
+	icon_bar.icon.extent.x0 = 0;
+	icon_bar.icon.extent.y0 = 0;
+	icon_bar.icon.extent.x1 = 68;
+	icon_bar.icon.extent.y1 = 68;
+	icon_bar.icon.flags = wimp_ICON_SPRITE | (wimp_BUTTON_CLICK &lt;&lt; wimp_ICON_BUTTON_TYPE_SHIFT);
+	strncpy(icon_bar.icon.data.sprite, &quot;application&quot;, osspriteop_NAME_LIMIT);
+
+	wimp_create_icon(&amp;icon_bar);
+
+	event_add_window_mouse_event(wimp_ICON_BAR, ibar_mouse_click);
+}
+
+/* Mouse Click event handler */
+
+static void ibar_mouse_click(wimp_pointer *pointer)
+{
+	main_quit_flag = TRUE;
+}</code>
+
+<p>There are no changes to <file>h.ibar</file>, which remains as shown in <reference id="list-click-ibar-h"/>.</p>
+
+<code id="list-click-ibar-h" lang="c" file="h.main" title="The new main header file">/**
+ * Example 7.1
+ *
+ * (c) Stephen Fryatt, 2017
+ *
+ * File: ibar.h
+ */
+
+#ifndef EXAMPLEAPP_IBAR
+#define EXAMPLEAPP_IBAR
+
+/* Iconbar Initialisation. */
+
+void ibar_initialise(void);
+
+#endif</code>
+
+<p>Running <file>Mk</file> should generate a new build of the application which installs on the iconbar as before. Crucially, however, clicking the mouse over its icon causes it to quit immediately: there&rsquo;s no longer any need to go via the Task Manager.</p>
+
+<p>A full set of files, with the changes for handling mouse clicks, can be found in <reference id="dl-ibar-click"/>.</p>
+
+<download id="dl-ibar-click" file="SimpleCIBarClick" title="Responding to clicks on the Iconbar" compatibility="none"/>
+</section>
+
+<section>
+<title>Being more choosy</title>
+
+<p>Normally the &lsquo;quit&rsquo; option would be in an iconbar menu, but we don&rsquo;t yet have one of those. None the less, it would be good if our application were only to quit if the click on its icon came from one of the buttons &ndash; let&rsquo;s say <mouse>Adjust</mouse>. That way, we could use the other buttons for something else.</p>
+
+<p>The <variable>*pointer</variable> parameter passed to the <function>ibar_mouse_click()</function> function that we&rsquo;ve just added is a pointer to the <name>wimp_pointer</name> structure returned from the call to <swi>Wimp_Poll</swi>. This means that it&rsquo;s actually a pointer to the <variable>blk</variable> variable defined in the <function>main_poll()</function> function, although this doesn&rsquo;t need to concern us in normal use. As far as the click handler function is concerned, the pointer supplied is simply a pointer to some data returned by the Wimp.</p>
+
+<p>As we&rsquo;ve already seen, the <name>wimp_pointer</name> structure contains a variable called <variable>buttons</variable> within it, which uniquely identifies the button &ndash; or combination of buttons &ndash; used for the click. The codes used by the Wimp are more than a little confusing, because they can vary depending on the the type of click and what was under the pointer when it happened. For our iconbar icon, however, OSLib defines three useful values for us:</p>
+
+<code lang="c">#define wimp_CLICK_SELECT	((wimp_mouse_state) 0x4u)
+#define wimp_CLICK_MENU		((wimp_mouse_state) 0x2u)
+#define wimp_CLICK_ADJUST	((wimp_mouse_state) 0x1u)</code>
+
+<p>Armed with this, we can update our mouse click event handler to test the button before it acts.</p>
+
+<code lang="c">static void ibar_mouse_click(wimp_pointer *pointer)
+{
+	switch (pointer->buttons) {
+	case wimp_CLICK_ADJUST:
+		main_quit_flag = TRUE;
+		break;
+	}
+}</code>
+
+<p>A full set of the updated files can be found in <reference id="dl-ibar-click2"/>. With this modification in place, it is now necessary to click <mouse>Adjust</mouse> on the iconbar icon in order to make the application exit: <mouse>Select</mouse> and <mouse>Menu</mouse> will be ignored.</p>
+
+<download id="dl-ibar-click2" file="SimpleCIBarClick2" title="Check for Adjust clicks before Exiting" compatibility="none"/>
+</section>
+</chapter>
+</manual>
+
