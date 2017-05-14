@@ -173,6 +173,58 @@
 
 <p>As well as these three special values, <variable>next</variable> can take any <name>wimp_w</name> window handle: if one is used, it will cause our window to open <em>behind</em> that window. This isn&rsquo;t something that we often need to use directly, but the Wimp uses it whenever it sends an <name>Open_Window_Request</name> to our application: unless the window is at the top of the window stack, the <name>wimp_open</name> structure which arrives with the event will have the handle filled in for the window directly above our in the stack. Perhaps surprisingly, this handle can be for a window belonging to <em>any</em> running application: it doesn&rsquo;t have to belong to our application.</p>
 
+<p>In the same way, it&rsquo;s also possible to change the visible area of the window before opening it, in order to enable it to appear on screen in a sensible place. Exactly what &ldquo;sensible&rdquo; means will depend on the sort of window that we&rsquo;re opening: the <cite>Style Guide</cite> requires new editor windows to open centred on the screen, while dialogue boxes might open centred on the pointer. In this case we&rsquo;ll centre the window on the screen.</p>
+
+<p>In order to centre a window on the screen, we need to know the screen dimensions. RISC&nbsp;OS makes this information available to us through the <swi>OS_ReadModeVariable</swi> SWI and, if we <code>#include &quot;sflib/general.h&quot;</code> then SFLib makes the <function>general_mode_width()</function> and <function>general_mode_height()</function> functions. These are defined within SFLib like this:</p>
+
+<code lang="c">#include &quot;oslib/os.h&quot;
+
+int general_mode_width(void)
+{
+	int width, shift;
+
+	os_read_mode_variable(os_CURRENT_MODE, os_MODEVAR_XWIND_LIMIT, &amp;width);
+	os_read_mode_variable(os_CURRENT_MODE, os_MODEVAR_XEIG_FACTOR, &amp;shift);
+
+	return (width &lt;&lt; shift);
+}
+
+int general_mode_height(void)
+{
+	int height, shift;
+
+	os_read_mode_variable(os_CURRENT_MODE, os_MODEVAR_YWIND_LIMIT, &amp;height);
+	os_read_mode_variable(os_CURRENT_MODE, os_MODEVAR_YEIG_FACTOR, &amp;shift);
+
+	return (height &lt;&lt; shift);
+}</code>
+
+<p>Each function returns one screen dimension in OS&nbsp;Units, and &ndash; armed with these &ndash; we can then change the <function>win_open()</function> function as follows:</p>
+
+<code lang="c">void win_open(void)
+{
+	wimp_window_state	window;
+	int			width, height;
+
+	window.w = w;
+	wimp_get_window_state(&amp;window);
+
+	width = window.visible.x1 - window.visible.x0;
+	height = window.visible.y1 - window.visible.y0;
+
+	window.visible.x0 = (general_mode_width() - width) / 2;
+	window.visible.y0 = (general_mode_height() - height) / 2;
+
+	window.visible.x1 = window.visible.x0 + width;
+	window.visible.y1 = window.visible.y0 + height;
+
+	window.next = wimp_TOP;
+
+	wimp_open_window((wimp_open *) &amp;window);
+}</code>
+
+<p>As before, the function starts by requesting the window state from the Wimp via <swi>Wimp_GetWindowState</swi>. However its next step is to work out the window&rsquo;s width and height by subtracting the <maths>x0</maths> coordinate from <maths>x1</maths> and the <maths>y0</maths> coordinate from <maths>y1</maths> respectively. With these values safely stored in the <variable>width</variable> and <variable>height</variable> variables, <variable>x0</variable> and <variable>y0</variable> can then be set such that the window&rsquo;s visible area appears centred on the screen. Finally, <variable>x1</variable> and <variable>y1</variable> can be updated so that the overall width and height of the visible area remains unchanged.</p>
+
 </section>
 
 <!-- set window position for opening -->
