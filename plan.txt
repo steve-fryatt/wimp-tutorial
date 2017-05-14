@@ -5,15 +5,14 @@ Add details about opening window at a given pointer location.
 Refer to SFLib windows_open() and windows_open_centred_at_pointer().
 
 
-
-
-
 Simple Icons
 Indirected Icons
+Application Directories
+Sprites in Icons
 Mouse Clicks (Windows & Icons)
 Changing Icons State?
 Icons in Window Definitions
-Application Directories
+Application Resources
 Templates
 
 Menus

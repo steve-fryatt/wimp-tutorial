@@ -203,24 +203,24 @@ int general_mode_height(void)
 
 <code lang="c">void win_open(void)
 {
-	wimp_window_state	window;
+	wimp_window_state	state;
 	int			width, height;
 
-	window.w = w;
-	wimp_get_window_state(&amp;window);
+	state.w = window_handle;
+	wimp_get_window_state(&amp;state);
 
-	width = window.visible.x1 - window.visible.x0;
-	height = window.visible.y1 - window.visible.y0;
+	width = state.visible.x1 - state.visible.x0;
+	height = state.visible.y1 - state.visible.y0;
 
-	window.visible.x0 = (general_mode_width() - width) / 2;
-	window.visible.y0 = (general_mode_height() - height) / 2;
+	state.visible.x0 = (general_mode_width() - width) / 2;
+	state.visible.y0 = (general_mode_height() - height) / 2;
 
-	window.visible.x1 = window.visible.x0 + width;
-	window.visible.y1 = window.visible.y0 + height;
+	state.visible.x1 = state.visible.x0 + width;
+	state.visible.y1 = state.visible.y0 + height;
 
-	window.next = wimp_TOP;
+	state.next = wimp_TOP;
 
-	wimp_open_window((wimp_open *) &amp;window);
+	wimp_open_window((wimp_open *) &amp;state);
 }</code>
 
 <p>As before, the function starts by requesting the window state from the Wimp via <swi>Wimp_GetWindowState</swi>. However its next step is to work out the window&rsquo;s width and height by subtracting the <maths>x0</maths> coordinate from <maths>x1</maths> and the <maths>y0</maths> coordinate from <maths>y1</maths> respectively. With these values safely stored in the <variable>width</variable> and <variable>height</variable> variables, <variable>x0</variable> and <variable>y0</variable> can then be set such that the window&rsquo;s visible area appears centred on the screen. Finally, <variable>x1</variable> and <variable>y1</variable> can be updated so that the overall width and height of the visible area remains unchanged.</p>
