@@ -1,7 +1,7 @@
 Chapter 13
 ----------
 
-Add details about opening window at a given pointer location.
+Finish writing up informational window flags for window toggling.
 Refer to SFLib windows_open() and windows_open_centred_at_pointer().
 
 
