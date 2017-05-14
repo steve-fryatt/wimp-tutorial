@@ -34,7 +34,7 @@
 
 /* Global Variables */
 
-static wimp_w window_handle;
+static wimp_w win_handle;
 
 /* Window Initialisation. */
 
@@ -75,7 +75,7 @@ void win_initialise(void)
 	strncpy(window_definition.title_data.text, "Hello World!", 12);
 	window_definition.icon_count = 0;
 
-	window_handle = wimp_create_window(&window_definition);
+	win_handle = wimp_create_window(&window_definition);
 }
 
 /* Open the Window. */
@@ -84,7 +84,7 @@ void win_open(void)
 {
 	wimp_window_state state;
 
-	state.w = window_handle;
+	state.w = win_handle;
 	wimp_get_window_state(&state);
 	state.next = wimp_TOP;
 	wimp_open_window((wimp_open *) &state);

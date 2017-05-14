@@ -72,7 +72,7 @@
 	strncpy(window_definition.title_data.text, &quot;Hello World!&quot;, 12);
 	window_definition.icon_count = 0;
 
-	window_handle = wimp_create_window(&amp;window_definition);
+	win_handle = wimp_create_window(&amp;window_definition);
 }</code>
 
 <p>The first thing to realise is that, for all its complexity, the <name>wimp_window</name> structure is only needed up to the stage where a pointer to it is passed to <function>wimp_create_window()</function>. By the time the SWI has returned a new <name>wimp_w</name> handle for the window, it has copied the contents of the <name>wimp_window</name> block away into its own workspace and the block itself is no longer required.</p>
@@ -145,7 +145,7 @@
 {
 	wimp_window_state state;
 
-	state.w = window_handle;
+	state.w = win_handle;
 	wimp_get_window_state(&amp;state);
 	state.next = wimp_TOP;
 	wimp_open_window((wimp_open *) &amp;state);
@@ -206,7 +206,7 @@ int general_mode_height(void)
 	wimp_window_state	state;
 	int			width, height;
 
-	state.w = window_handle;
+	state.w = win_handle;
 	wimp_get_window_state(&amp;state);
 
 	width = state.visible.x1 - state.visible.x0;
@@ -225,14 +225,15 @@ int general_mode_height(void)
 
 <p>As before, the function starts by requesting the window state from the Wimp via <swi>Wimp_GetWindowState</swi>. However its next step is to work out the window&rsquo;s width and height by subtracting the <maths>x0</maths> coordinate from <maths>x1</maths> and the <maths>y0</maths> coordinate from <maths>y1</maths> respectively. With these values safely stored in the <variable>width</variable> and <variable>height</variable> variables, <variable>x0</variable> and <variable>y0</variable> can then be set such that the window&rsquo;s visible area appears centred on the screen. Finally, <variable>x1</variable> and <variable>y1</variable> can be updated so that the overall width and height of the visible area remains unchanged.</p>
 
-</section>
+<p>A full set of modified code can be found in <reference id="dl-handling-windows-centre"/>: when compiled and run, the application&rsquo;s window should always open at the centre of the desktop. Slightly confusingly, it also jumps back to the centre if it is already open when <mouse>Select</mouse> is clicked on the iconbar icon; this isn&rsquo;t really good behaviour, and we&rsquo;ll sort that out next.</p>
 
-<!-- set window position for opening -->
+<download id="dl-handling-windows-centre" file="OpenAtCentre" title="Open the Window Centred on the Desktop" compatibility="none"/>
+</section>
 
 <section>
 <title>Getting Information About A Window</title>
 
-<p>Along with the information required by <function>wimp_open_window()</function>, <function>wimp_get_window_state()</function> returns the window&rsquo;s flags in the <name>wimp_window_state</name> structure. The reason for this isn&rsquo;t to remind us of how we defined the window, but because in addition to the flags discussed in the <reference id="chap-window-theory">last chapter</reference> which we set before calling <swi>Wimp_CreateWindow</swi>, there are a group of flags which the Wimp keeps updated to tell us about the current state of the window. These can be read using <swi>Wimp_GetWindowState</swi>, and are defined in OSLib as follows:</p>
+<p>Along with the information required by <function>wimp_open_window()</function>, <function>wimp_get_window_state()</function> returns the window&rsquo;s flags in the <name>wimp_window_state</name> structure. The reason for this isn&rsquo;t to remind us of how we defined the window, but because in addition to the flags discussed in the <reference id="chap-window-theory">last chapter</reference>, which we set before calling <swi>Wimp_CreateWindow</swi>, there are a group of flags which the Wimp keeps updated to tell us about the current state of the window. These can be read using <swi>Wimp_GetWindowState</swi>, and are defined in OSLib as follows:</p>
 
 <code lang="c">#define wimp_WINDOW_OPEN		((wimp_window_flags) 0x10000u)
 #define wimp_WINDOW_NOT_COVERED		((wimp_window_flags) 0x20000u)
@@ -247,6 +248,79 @@ int general_mode_height(void)
 
 <!-- Remaining flags relate to the Toggle Size operation. -->
 
+<p>Whilst all of these flags are useful in certain circumstances, the most common one for an application to read is probably <name>wimp_WINDOW_OPEN</name>. In the last section, when we updated the <function>win_open()</function> to open the window in the centre of the screen, we noticed that making the window jump back to its opening position if the icon was clicked while it was open. This is confusing, and in fact while suggesting that an application&rsquo;s main window opens at the centre of the screen, the <cite>Style Guide</cite> also suggests that if the window is already open, a click on the iconbar icon should simply bring the window to the top of the window stack.</p>
+
+<p>Fortunately, this is really easy to do in <function>win_open()</function>. The function already calls <function>wimp_get_window_state()</function> to retrieve the window&rsquo;s position details, and the <name>wimp_window_state</name> structure contains the window flags. We can therefore make the code that resets the window&rsquo;s position to the centre of the screen condition on the window not being open:</p>
+
+<code lang="c">void win_open(void)
+{
+	wimp_window_state	state;
+	int			width, height;
+
+	state.w = win_handle;
+	wimp_get_window_state(&amp;state);
+
+	if (!(state.flags &amp; wimp_WINDOW_OPEN)) {
+		width = state.visible.x1 - state.visible.x0;
+		height = state.visible.y1 - state.visible.y0;
+
+		state.visible.x0 = (general_mode_width() - width) / 2;
+		state.visible.y0 = (general_mode_height() - height) / 2;
+
+		state.visible.x1 = state.visible.x0 + width;
+		state.visible.y1 = state.visible.y0 + height;
+	}
+
+	state.next = wimp_TOP;
+
+	wimp_open_window((wimp_open *) &amp;state);
+}</code>
+
+<p>The updated code can be found in <reference id="dl-handling-windows-re-centre"/>, and if this is tried, <mouse>Select</mouse> clicks on the iconbar icon should seem a lot more &lsquo;normal&rsquo;.</p>
+
+<download id="dl-handling-windows-re-centre" file="ReopenAtCentre" title="Open the Window Centred on the Desktop" compatibility="none"/>
+
+<p>One slight curiosity still remains: while the window returns to the centre of the screen whenever it is opened, the size of its visible area is remembered from when it was closed. To see this in action, open the window, change its size with the resize icon, close it, then finally open it again with another <mouse>Select</mouse> click on the iconbar icon. The effect happens because we calculate the <variable>width</variable> and <variable>height</variable> variables from the visible area returned by <swi>Wimp_GetWindowState</swi> &ndash; which, of course, remembers where the window was when it was last closed.</p>
+
+<p>If we wished to reset the window&rsquo;s visible area each time it is opened up, we could always replace the two lines</p>
+
+<code lang="c">width = state.visible.x1 - state.visible.x0;
+height = state.visible.y1 - state.visible.y0;</code>
+
+<p>with the simpler</p>
+
+<code lang="c">width = 400;
+height = 400;</code>
+
+<p>This isn&rsquo;t ideal, however. It means that we&rsquo;re now setting the visible area of the window in the <function>win_initialise()</function> as part of the original definition passed to <swi>Wimp_CreateWindow</swi>:</p>
+
+<code lang="c">window_definition.visible.x0 = 200;
+window_definition.visible.y0 = 200;
+window_definition.visible.x1 = 600;
+window_definition.visible.y1 = 600;</code>
+
+<p>This is then ignored, to be replaced completely by the values <code>400</code> in the <function>win_open()</function>. Duplicating values like this is never good, as it can lead to confusion when the code is revisited later on. A better solution would be to create two new global variables at the top of the file to hold the initial width and height of the window:</p>
+
+<code lang="c">static int win_width, win_height;</code>
+
+<p>These can then be set in the <function>win_initialise()</function> function, after the <variable>window_definition</variable> structure has been filled in, using the same calculation that was in the <function>win_open()</function> function:</p>
+
+<code lang="c">win_width = window_definition.visible.x1 - window_definition.visible.x0;
+win_height = window_definition.visible.y1 - window_definition.visible.y0;</code>
+
+<p>Finally, the conditional code in <function>win_open()</function> can change to use the new global <variable>win_width</variable> and <variable>win_height</variable> variables:</p>
+
+<code lang="c">if (!(state.flags &amp; wimp_WINDOW_OPEN)) {
+	state.visible.x0 = (general_mode_width() - win_width) / 2;
+	state.visible.y0 = (general_mode_height() - win_height) / 2;
+
+	state.visible.x1 = state.visible.x0 + win_width;
+	state.visible.y1 = state.visible.y0 + win_height;
+}</code>
+
+<p>Now the window will always return to its initial dimensions when it is closed and then re-opened. The full set of modifications to the code can be found in <reference id="dl-handling-windows-restore"/>.</p>
+
+<download id="dl-handling-windows-restore" file="RestoreAtCentre" title="Open the Window at its Original Size" compatibility="none"/>
 </section>
 
 <section>
