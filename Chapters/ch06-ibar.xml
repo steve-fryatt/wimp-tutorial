@@ -98,7 +98,7 @@ typedef struct wimp_icon_create wimp_icon_create;</code>
 
 typedef struct wimp_icon wimp_icon;</code>
 
-<p>The structure that underlies the type contains three items: the <variable>extent</variable> or position of the icon in the window, <variable>flags</variable> which define the icon&rsquo;s appearance and behaviour, and <variable>data</variable> which holds details of the icon&rsquo;s contents.</p>
+<p>The structure that underlies the type contains three items: the <variable>wimp_icon.extent</variable> or position of the icon in the window, <variable>wimp_icon.flags</variable> which define the icon&rsquo;s appearance and behaviour, and <variable>wimp_icon.data</variable> which holds details of the icon&rsquo;s contents.</p>
 
 <p>As we saw above, the icon&rsquo;s extent is from (0,0) inclusive to (68,68) exclusive: 68 OS&nbsp;units and 34 pixels in each direction. The RISC&nbsp;OS API has a fairly standard way to give the details of two-dimensional areas like this, which takes the form of four consecutive four-byte words holding the minimum&nbsp;<maths>x</maths>, minimum&nbsp;<maths>y</maths>, maximum&nbsp;<maths>x</maths> and maximum&nbsp;<maths>y</maths> coordinates in turn. OSLib provides us with the <type>os_box</type> type to give access to this:</p>
 

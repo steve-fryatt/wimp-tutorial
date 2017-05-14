@@ -106,7 +106,7 @@ typedef union wimp_block wimp_block;</code>
 
 typedef struct wimp_pointer wimp_pointer;</code>
 
-<p>meaning that we&rsquo;re getting four pieces of information back with a <name>Mouse Click</name> event. The screen coordinates of the click are found in <variable>pos</variable>, while the <intro>handles</intro> of the window and icon under the pointer at the time are in <variable>w</variable> and <variable>i</variable> respectively. Finally, the combination of mouse buttons which the user clicked is held in <variable>buttons</variable>.</p>
+<p>meaning that we&rsquo;re getting four pieces of information back with a <name>Mouse Click</name> event. The screen coordinates of the click are found in <variable>wimp_pointer.pos</variable>, while the <intro>handles</intro> of the window and icon under the pointer at the time are in <variable>wimp_pointer.w</variable> and <variable>wimp_pointer.i</variable> respectively. Finally, the combination of mouse buttons which the user clicked is held in <variable>wimp_pointer.buttons</variable>.</p>
 
 <p>The window handle is important, as it lets us quickly identify where in our application the click occurred. When we created the our icon in the <reference id="chap-ibar">last chapter</reference>, we saw that the Wimp treated the iconbar as a &lsquo;special&rsquo; window with handles of <name>wimp_ICON_BAR_LEFT</name> or <name>wimp_ICON_BAR_RIGHT</name> &ndash; which one depended on which side of the bar we wished the icon to appear. The same approach is used for the information returned by <swi>Wimp_Poll</swi>, but because it&rsquo;s no longer important to know which side of the iconbar our icon is on, the handle is simplified to be <name>wimp_ICON_BAR</name> &ndash; this covers both the left- <em>and</em> the right-hand side.</p>
 
@@ -140,7 +140,7 @@ case wimp_USER_MESSAGE_RECORDED:
 
 <p>Instead of handling the events directly, we&rsquo;re now passing them on to <function>event_process_event()</function> from SFLib&rsquo;s event library and letting this route them to interested parties.</p>
 
-<p>Fortunately, just as <name>wimp_pointer</name> contains the <variable>w</variable> variable, many of the structures which form <name>wimp_block</name> have an associated window handle &ndash; as we&rsquo;ll see, much of the user&rsquo;s interaction with our application is based around windows. Using this, the event library can route these events by testing the window handle that is contained within them.</p>
+<p>Fortunately, just as <name>wimp_pointer</name> contains the <variable>wimp_pointer.w</variable> variable, many of the structures which form <name>wimp_block</name> have an associated window handle &ndash; as we&rsquo;ll see, much of the user&rsquo;s interaction with our application is based around windows. Using this, the event library can route these events by testing the window handle that is contained within them.</p>
 
 <p>Since we&rsquo;re dealing with clicks on the iconbar icon, the best place to put its <name>Mouse Click</name> event handler is into the <file>c.ibar</file> file. Just as we did when we implemented an event handler for <name>Message_Quit</name> in <reference id="list4-2"/>, the first thing to do is to package up the code from the <code>switch</code> statement above into a <name>Mouse Click</name> event handler.</p>
 
@@ -344,7 +344,7 @@ void ibar_initialise(void);
 
 <p>The <variable>*pointer</variable> parameter passed to the <function>ibar_mouse_click()</function> function that we&rsquo;ve just added is a pointer to the <name>wimp_pointer</name> structure returned from the call to <swi>Wimp_Poll</swi>. This means that it&rsquo;s actually a pointer to the <variable>blk</variable> variable defined in the <function>main_poll()</function> function, although this doesn&rsquo;t need to concern us in normal use. As far as the click handler function is concerned, the pointer supplied is simply a pointer to some data returned by the Wimp.</p>
 
-<p>As we&rsquo;ve already seen, the <name>wimp_pointer</name> structure contains a variable called <variable>buttons</variable> within it, which uniquely identifies the button &ndash; or combination of buttons &ndash; used for the click. The codes used by the Wimp are more than a little confusing, because they can vary depending on the the type of click and what was under the pointer when it happened. For our iconbar icon, however, OSLib defines three useful values for us:</p>
+<p>As we&rsquo;ve already seen, the <name>wimp_pointer</name> structure contains an element called <variable>wimp_pointer.buttons</variable> within it, which uniquely identifies the button &ndash; or combination of buttons &ndash; used for the click. The codes used by the Wimp are more than a little confusing, because they can vary depending on the the type of click and what was under the pointer when it happened. For our iconbar icon, however, OSLib defines three useful values for us:</p>
 
 <code lang="c">#define wimp_CLICK_SELECT	((wimp_mouse_state) 0x4u)
 #define wimp_CLICK_MENU		((wimp_mouse_state) 0x2u)

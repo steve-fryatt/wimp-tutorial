@@ -151,12 +151,12 @@ window_definition.yscroll = 0;</code>
 
 <p>The Wimp defines these two values as giving the work area coordinate which appears at the top-left of the visible area. This is why the convention of putting (0,0) at the top-left of the work area makes a lot of sense: when the window is scrolled fully up and left the <maths>x</maths> and <maths>y</maths> scroll offsets will both be zero.</p>
 
-<p>The user can resize our window, and the Wimp will apply some constraints to what they can do. The largest that the window can be dragged out will be so that the visible area matches the work area extent. At the other extreme, <variable>xmin</variable> and <variable>ymin</variable> set the minimum dimensions in OS&nbsp;units to which the window can be resized. We&rsquo;ve set the limits to zero, which are special values:</p>
+<p>The user can resize our window, and the Wimp will apply some constraints to what they can do. The largest that the window can be dragged out will be so that the visible area matches the work area extent. At the other extreme, <variable>window_definition.xmin</variable> and <variable>window_definition.ymin</variable> set the minimum dimensions in OS&nbsp;units to which the window can be resized. We&rsquo;ve set the limits to zero, which are special values:</p>
 
 <code lang="c">window_definition.xmin = 0;
 window_definition.ymin = 0;</code>
 
-<p>If <variable>xmin</variable> is zero, the window&rsquo;s width can&rsquo;t be shrunk to less than the width of the title bar text; setting <variable>ymin</variable> to zero applies a limit based on any verical scroll bars which are present.</p>
+<p>If <variable>window_definition.xmin</variable> is zero, the window&rsquo;s width can&rsquo;t be shrunk to less than the width of the title bar text; setting <variable>window_definition.ymin</variable> to zero applies a limit based on any verical scroll bars which are present.</p>
 
 <p>That&rsquo;s the horizontal and vertical position of our window sorted out, but there&rsquo;s still the question of the &lsquo;third dimension&rsquo; to consider: where our window appears in the window stack. On RISC&nbsp;OS, windows on the desktop have a defined order in which they appear in the &lsquo;pile&rsquo; &ndash; when we ask the Wimp to open our window, we need to say where in the &lsquo;pile&rsquo; it should go.</p>
 
@@ -202,9 +202,9 @@ window_definition.highlight_bg = wimp_COLOUR_CREAM;</code>
 
 <p>There&rsquo;s no problem experimenting with these values, but with the advent of modern versions of the Wimp which use textured bitmaps to make up the window furniture, an increasing number of the colours have little or no effect because the parts of the window that they control are no longer visible &ndash; being hidden behind the new window tool sprite designs.</p>
 
-<p>There&rsquo;s also the important fact that <em>all</em> of these colours are tightly defined by the <cite>Style Guide</cite>, which is supplied electronically with the DDE and can be <link href="https://www.riscosopen.org/content/sales/style-guide">purchased from RISC&nbsp;OS Open</link> in printed form. The <em>only</em> value which should be changed in normal cases is <variable>work_bg</variable> &ndash; and even this should remain as <name>wimp_COLOUR_VERY_LIGHT_GREY</name> most of the time (including in <em>all</em> dialogue boxes).</p>
+<p>There&rsquo;s also the important fact that <em>all</em> of these colours are tightly defined by the <cite>Style Guide</cite>, which is supplied electronically with the DDE and can be <link href="https://www.riscosopen.org/content/sales/style-guide">purchased from RISC&nbsp;OS Open</link> in printed form. The <em>only</em> value which should be changed in normal cases is <variable>window_definition.work_bg</variable> &ndash; and even this should remain as <name>wimp_COLOUR_VERY_LIGHT_GREY</name> most of the time (including in <em>all</em> dialogue boxes).</p>
 
-<p>Aside from its colours, the window&rsquo;s appearance can be changed by using some of the <intro>window flags</intro> and <intro>extended window flags</intro> stored in <variable>flags</variable> and <variable>extra_flags</variable> respectively:</p>
+<p>Aside from its colours, the window&rsquo;s appearance can be changed by using some of the <intro>window flags</intro> and <intro>extended window flags</intro> stored in <variable>window_definition.flags</variable> and <variable>window_definition.extra_flags</variable> respectively:</p>
 
 <code lang="c">window_definition.flags = wimp_WINDOW_NEW_FORMAT |
 		wimp_WINDOW_MOVEABLE | wimp_WINDOW_AUTO_REDRAW |
@@ -214,15 +214,15 @@ window_definition.highlight_bg = wimp_COLOUR_CREAM;</code>
 		wimp_WINDOW_SIZE_ICON | wimp_WINDOW_HSCROLL;
 window_definition.extra_flags = 0;</code>
 
-<p>The flags control many aspects of a window&rsquo;s behaviour, and OSLib defines constants for all of them; as with all flags words, the required individual bits for the two fields are bitwise-ORed together to produce the numbers to be stored in the variables. Flags which are bits within <variable>flags</variable> have the type <name>wimp_window_flags</name>; those which are bits within <variable>extra_flags</variable> have the type <name>wimp_extra_window_flags</name>. For now we&rsquo;re not setting any exended window flags, so the code above sets <variable>extra_flags</variable> to be zero.</p>
+<p>The flags control many aspects of a window&rsquo;s behaviour, and OSLib defines constants for all of them; as with all flags words, the required individual bits for the two fields are bitwise-ORed together to produce the numbers to be stored in the variables. Flags which are bits within <variable>window_definition.flags</variable> have the type <name>wimp_window_flags</name>; those which are bits within <variable>window_definition.extra_flags</variable> have the type <name>wimp_extra_window_flags</name>. For now we&rsquo;re not setting any exended window flags, so the code above sets <variable>window_definition.extra_flags</variable> to be zero.</p>
 
 <p>One window flag which must <em>always</em> be included is <name>wimp_WINDOW_NEW_FORMAT</name>:</p> 
 
 <code lang="c">#define wimp_WINDOW_NEW_FORMAT			((wimp_window_flags) 0x80000000u)</code>
 
-<p>It indicates that the other window flags in <variable>flags</variable> follow the &ldquo;new format&rdquo; and, in this context, that means &ldquo;RISC&nbsp;OS&rdquo;. The flag was added in when Acorn moved on from the original Arthur operating system in 1989, and it is very unlikely that there would ever be a situation in a modern application where it would not be set.</p>
+<p>It indicates that the other window flags in <variable>window_definition.flags</variable> follow the &ldquo;new format&rdquo; and, in this context, that means &ldquo;RISC&nbsp;OS&rdquo;. The flag was added in when Acorn moved on from the original Arthur operating system in 1989, and it is very unlikely that there would ever be a situation in a modern application where it would not be set.</p>
 
-<p>The extended window flags in <variable>extra_flags</variable> started to be added in RISC&nbsp;OS&nbsp;4, so we&rsquo;re moving into areas which diverged when RISC&nbsp;OS&nbsp;4 and RISC&nbsp;OS&nbsp;5 came into being. Things aren&rsquo;t as bad as they might appear however: flags have the same meaning on <em>all</em> branches of RISC&nbsp;OS, so all that changes is whether or not they&rsquo;re implemented. Those which are not implemented are ignored by the Wimp, so it&rsquo;s safe to set flags for use on those branches of the OS which support them.</p>
+<p>The extended window flags in <variable>window_definition.extra_flags</variable> started to be added in RISC&nbsp;OS&nbsp;4, so we&rsquo;re moving into areas which diverged when RISC&nbsp;OS&nbsp;4 and RISC&nbsp;OS&nbsp;5 came into being. Things aren&rsquo;t as bad as they might appear however: flags have the same meaning on <em>all</em> branches of RISC&nbsp;OS, so all that changes is whether or not they&rsquo;re implemented. Those which are not implemented are ignored by the Wimp, so it&rsquo;s safe to set flags for use on those branches of the OS which support them.</p>
 
 <p>The remaining flags in the two fields fall into a number of distinct groups; the first that we&rsquo;ll consider controls which pieces of <intro>window furniture</intro> are applied to the window:</p>
 
@@ -236,7 +236,7 @@ window_definition.extra_flags = 0;</code>
 
 <p>Each of these, if present, turns on one of the pieces of furniture: the iconise button, which doesn&rsquo;t have its own flag, is controlled by <name>wimp_WINDOW_CLOSE_ICON</name> and appears when the close button is displayed (and the user has configured the button on across the desktop).</p>
 
-<p>The window&rsquo;s appearance can also be modified by a couple of the <intro>extended window flags</intro> stored in <variable>extra_flags</variable>. OSLib defines the following two constants:</p>
+<p>The window&rsquo;s appearance can also be modified by a couple of the <intro>extended window flags</intro> stored in <variable>window_definition.extra_flags</variable>. OSLib defines the following two constants:</p>
 
 <code lang="c">#define wimp_WINDOW_NEVER3D			((wimp_extra_window_flags) 0x4u)
 #define wimp_WINDOW_ALWAYS3D			((wimp_extra_window_flags) 0x8u)</code>
@@ -310,21 +310,21 @@ window_definition.extra_flags = 0;</code>
 		wimp_ICON_VCENTRED | wimp_ICON_FILLED;
 strncpy(window_definition.title_data.text, &quot;Hello World!&quot;, 12);</code>
 
-<p>The Wimp treats window title bars as though they are specialised icons with a limited set of options; we&rsquo;ll come on to icons properly soon, so for now we&rsquo;ll just have to take on trust that the flags in <variable>title_flags</variable> set up a text icon with its contents centred both vertically and horizontally. There&rsquo;s a border drawn round it (the black outline), and it has a filled background.</p>
+<p>The Wimp treats window title bars as though they are specialised icons with a limited set of options; we&rsquo;ll come on to icons properly soon, so for now we&rsquo;ll just have to take on trust that the flags in <variable>window_definition.title_flags</variable> set up a text icon with its contents centred both vertically and horizontally. There&rsquo;s a border drawn round it (the black outline), and it has a filled background.</p>
 
-<p>With these title flags, the <variable>title_data.text</variable> is a 12&nbsp;byte field which can hold the text of the window title. The use of <function>strncpy()</function> with no attempt to terminate a buffer over-run might seem unusual, but in this case it&rsquo;s exactly what is required. The Wimp allows for titles from zero to twelve characters in length and for text up to and including eleven characters, a zero terminator is required. When the text is exactly twelve characters long, however, <em>no</em> terminator should be used. It can feel very wrong for anyone used to always terminating copied strings, but for this specific task <function>strncpy()</function> on its own is the correct solution!</p>
+<p>With these title flags, the <variable>window_definition.title_data.text</variable> is a 12&nbsp;byte field which can hold the text of the window title. The use of <function>strncpy()</function> with no attempt to terminate a buffer over-run might seem unusual, but in this case it&rsquo;s exactly what is required. The Wimp allows for titles from zero to twelve characters in length and for text up to and including eleven characters, a zero terminator is required. When the text is exactly twelve characters long, however, <em>no</em> terminator should be used. It can feel very wrong for anyone used to always terminating copied strings, but for this specific task <function>strncpy()</function> on its own is the correct solution!</p>
 
 <code lang="c">window_definition.work_flags = wimp_BUTTON_NEVER &lt;&lt; wimp_ICON_BUTTON_TYPE_SHIFT;</code>
 
-<p>The background of the window can respond to mouse clicks, and in a similar way to the title bar, the Wimp treats it as a kind of &lsquo;pseudo-icon&rsquo; as far as configuring it is concerned. We&rsquo;ll meet <intro>icon button types</intro> in a few chapters&rsquo; time, but for now the <variable>work_flags</variable> can safely be set to <name>wimp_BUTTON_NEVER</name>.</p>
+<p>The background of the window can respond to mouse clicks, and in a similar way to the title bar, the Wimp treats it as a kind of &lsquo;pseudo-icon&rsquo; as far as configuring it is concerned. We&rsquo;ll meet <intro>icon button types</intro> in a few chapters&rsquo; time, but for now the <variable>window_definition.work_flags</variable> can safely be set to <name>wimp_BUTTON_NEVER</name>.</p>
 
 <code lang="c">window_definition.sprite_area = wimpspriteop_AREA;</code>
 
-<p>If we&rsquo;re using sprites in the window, we have the option of specifying a <variable>sprite_area</variable> pointer to allow the Wimp to locate them for us. We&rsquo;re not, so for now we can just set this to the default of <name>wimpspriteop_AREA</name> &ndash; we&rsquo;ll look at this properly when we come to consider sprites in icons.</p>
+<p>If we&rsquo;re using sprites in the window, we have the option of specifying a <variable>window_definition.sprite_area</variable> pointer to allow the Wimp to locate them for us. We&rsquo;re not, so for now we can just set this to the default of <name>wimpspriteop_AREA</name> &ndash; we&rsquo;ll look at this properly when we come to consider sprites in icons.</p>
 
 <code lang="c">window_definition.icon_count = 0</code>
 
-<p>The final item at the end of the definition is the <variable>icon_count</variable>. We said earlier that the <name>wimp_window</name> structure was &ldquo;at least 92&nbsp;bytes long&rdquo;: if the window contained any icons, they could be defined in an optional array at the end of the structure. We don&rsquo;t have any icons yet, so the count is simply set to zero and the Wimp will then ignore the <variable>icons[]</variable> array at the end of the <name>wimp_window</name> structure definition.</p>
+<p>The final item at the end of the definition is the <variable>window_definition.icon_count</variable>. We said earlier that the <name>wimp_window</name> structure was &ldquo;at least 92&nbsp;bytes long&rdquo;: if the window contained any icons, they could be defined in an optional array at the end of the structure. We don&rsquo;t have any icons yet, so the count is simply set to zero and the Wimp will then ignore the <variable>window_definition.icons[]</variable> array at the end of the <name>wimp_window</name> structure definition.</p>
 </section>
 </chapter>
 </manual>

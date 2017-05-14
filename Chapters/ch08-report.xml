@@ -52,7 +52,7 @@
 
 typedef struct os_error os_error;</code>
 
-<p>The 256 byte block contains an <intro>error number</intro> in <variable>errnum</variable>, followed by an arbitrary message in <variable>errmess</variable>. The number is a RISC&nbsp;OS error number and will often define precisely what the problem was. In the case that we wish to use <swi>Wimp_ReportError</swi> to present a message to the user, then the actual error number is somewhat arbitrary. Setting it to 255 &ndash; which is unused by the OS &ndash; seems to be a common compromise. We could, therefore, set up an error block to pass a message to the user using code similar to the following:</p>
+<p>The 256 byte block contains an <intro>error number</intro> in <variable>os_error.errnum</variable>, followed by an arbitrary message in <variable>os_error.errmess</variable>. The number is a RISC&nbsp;OS error number and will often define precisely what the problem was. In the case that we wish to use <swi>Wimp_ReportError</swi> to present a message to the user, then the actual error number is somewhat arbitrary. Setting it to 255 &ndash; which is unused by the OS &ndash; seems to be a common compromise. We could, therefore, set up an error block to pass a message to the user using code similar to the following:</p>
 
 <code lang="c">os_error error;
 
