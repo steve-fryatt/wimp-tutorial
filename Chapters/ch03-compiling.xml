@@ -11,8 +11,8 @@
 
 <chapter id="chap-compiling">
 <resources>
-<images>Chapter3</images>
-<downloads>Chapter3</downloads>
+<images>Chapter03</images>
+<downloads>Chapter03</downloads>
 </resources>
 <filename>compiling.html</filename>
 <title>Compiling the Application</title>
