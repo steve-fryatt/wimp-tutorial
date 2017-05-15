@@ -176,7 +176,7 @@ void win_open(void);
 
 <image id="fig-window-first-project" file="window-first-project.png" title="The complete project, with the window code added"/>
 
-<download id="dl-window-first" file="FirstWindow" title="The first attempt at putting a window on screen" compatibility="none"/>
+<download id="dl-window-first" file="FirstWindow" title="A First Attempt at Putting a Window on the Desktop" compatibility="none"/>
 
 <p>When compiled and run, the application should install on the iconbar as before. However this time, clicking <mouse>Select</mouse> over its iconbar icon will open a window &ndash; something like the one shown in <reference id="fig-window-first"/>. Unfortunately, there&rsquo;s a problem: the window doesn&rsquo;t respond to the mouse. In fact, all attempts to move, scroll or even close it are simply ignored. Fortunately the application can still be quit with an <mouse>Adjust</mouse> click on its iconbar icon &ndash; at which point the window disappears.</p>
 

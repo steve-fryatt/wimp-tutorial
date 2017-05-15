@@ -141,7 +141,7 @@ void repbox_message(char *message);
 
 <image id="fig-report-box-old-ok" file="report-1-ok.png" title="Our first feedback from the application"/>
 
-<download id="dl-report-old" file="OldReportBox" title="Respond to Select clicks with a simple report" compatibility="none"/>
+<download id="dl-report-old" file="OldReportBox" title="Respond to Select Clicks with a Simple Report" compatibility="none"/>
 </section>
 
 <section>
@@ -254,7 +254,7 @@ void repbox_message(char *message);
 
 <image id="fig-report-box-new" file="report-2.png" title="Using an Information report to say &ldquo;hello&rdquo;"/>
 
-<download id="dl-report-new" file="NewReportBox" title="Using the &lsquo;new&rsquo; report facilities" compatibility="none"/>
+<download id="dl-report-new" file="NewReportBox" title="Using the &lsquo;New&rsquo; Report Facilities" compatibility="none"/>
 
 <p>Aside from the new graphics, the other change that has resulted from setting the <name>wimp_ERROR_BOX_GIVEN_CATEGORY</name> flag is that the <icon>OK</icon> has changed to read <icon>Continue</icon>. Presumably Acorn considered this to be more positive than <icon>OK</icon> when things might have been going wrong!</p>
 </section>

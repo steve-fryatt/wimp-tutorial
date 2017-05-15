@@ -84,7 +84,7 @@
 
 <p>Trying different combinations of the <name>wimp_ERROR_BOX_OK_ICON</name>, <name>wimp_ERROR_BOX_CANCEL_ICON</name> and <name>wimp_ERROR_BOX_HIGHLIGHT_CANCEL</name> flags in <function>wimp_report_error_by_category()</function> should reveal that clicks on <icon>Continue</icon> and <icon>Cancel</icon> always return the values <name>wimp_ERROR_BOX_SELECTED_OK</name> and <name>wimp_ERROR_BOX_SELECTED_CANCEL</name> respectively &ndash; regardless of the order in which they are displayed in the report box.</p>
 
-<download id="dl-report2-defaults" file="ReportDefaults" title="Report on Continue and Cancel clicks" compatibility="none"/>
+<download id="dl-report2-defaults" file="ReportDefaults" title="Report on Continue and Cancel Clicks" compatibility="none"/>
 
 <p>Once the values returned by <icon>Continue</icon> and <icon>Cancel</icon> make sense, we can consider what values custom buttons &ndash; added using the string passed in <variable>*buttons</variable> &ndash; might return. The answer is that they return values starting with 3 for the right-most custom button and counting upwards for each button towards the left. This remains true even if one or both of the <icon>Continue</icon> and <icon>Cancel</icon> buttons are missing.</p>
 
@@ -98,7 +98,7 @@
 
 <p>A complete copy of the example code is available in <reference id="dl-report2-custom"/>.</p>
 
-<download id="dl-report2-custom" file="ReportCustom" title="Report on Custom Button clicks" compatibility="none"/>
+<download id="dl-report2-custom" file="ReportCustom" title="Report on Custom Button Clicks" compatibility="none"/>
 </section>
 
 <section>

@@ -334,7 +334,7 @@ void ibar_initialise(void);
 
 <p>A full set of files, with the changes for handling mouse clicks, can be found in <reference id="dl-ibar-click"/>.</p>
 
-<download id="dl-ibar-click" file="SimpleCIBarClick" title="Responding to clicks on the Iconbar" compatibility="none"/>
+<download id="dl-ibar-click" file="SimpleCIBarClick" title="Responding to Clicks on the Iconbar" compatibility="none"/>
 </section>
 
 <section>
@@ -363,7 +363,7 @@ void ibar_initialise(void);
 
 <p>A full set of the updated files can be found in <reference id="dl-ibar-click2"/>. With this modification in place, it is now necessary to click <mouse>Adjust</mouse> on the iconbar icon in order to make the application exit: <mouse>Select</mouse> and <mouse>Menu</mouse> will be ignored.</p>
 
-<download id="dl-ibar-click2" file="SimpleCIBarClick2" title="Check for Adjust clicks before Exiting" compatibility="none"/>
+<download id="dl-ibar-click2" file="SimpleCIBarClick2" title="Check for Adjust Clicks before Exiting" compatibility="none"/>
 </section>
 </chapter>
 </manual>

@@ -308,7 +308,7 @@ include CApp
 
 <p>A full set of files for the iconbar changes can be found in <reference id="dl-simple-ibar"/>.</p>
 
-<download id="dl-simple-ibar" file="SimpleCIBar" title="Placing an icon on to the Iconbar" compatibility="none"/>
+<download id="dl-simple-ibar" file="SimpleCIBar" title="Placing an Icon on to the Iconbar" compatibility="none"/>
 
 </section>
 </chapter>
