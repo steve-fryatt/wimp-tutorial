@@ -92,7 +92,7 @@ window_definition.icon_count = 0;</code>
 </section>
 
 <section>
-<title>The Window Dimensions</title>
+<title>The window dimensions</title>
 
 <p>A lot of a window&rsquo;s definition is concerned with its dimensions: where it appears on screen and how big its work area is. The area that a window occupies on screen is known as its <intro>visible area</intro>, and is defined by an <name>os_box</name> struct. We first met these when creating an iconbar icon back in <reference id="chap-ibar"/>; they hold two pairs of <maths>x</maths> and <maths>y</maths> coordinates in the form (<maths>x0</maths>,<maths>y0</maths>) and (<maths>x1</maths>,<maths>y1</maths>):</p>
 
@@ -168,7 +168,7 @@ window_definition.next = wimp_TOP;</code>
 </section>
 
 <section>
-<title>Changing Appearances</title>
+<title>Changing appearances</title>
 
 <p>The next set of attributes that we can change for our window are its colours. The <name>wimp_window</name> structure contains a set of values which control various parts of the window:</p>
 
@@ -252,7 +252,7 @@ window_definition.extra_flags = 0;</code>
 </section>
 
 <section>
-<title>Moving the Window Around</title>
+<title>Moving the window around</title>
 
 <p>Another group of flags determine how the window moves and responds to the user dragging its title bar and resize button:</p>
 
@@ -270,7 +270,7 @@ window_definition.extra_flags = 0;</code>
 </section>
 
 <section>
-<title>Window Behaviour Flags</title>
+<title>Window behaviour flags</title>
 
 <p>The final group of flags all relate in some way to the way that the window interacts with <swi>Wimp_Poll</swi> events:</p>
 
@@ -301,7 +301,7 @@ window_definition.extra_flags = 0;</code>
 </section>
 
 <section>
-<title>The Window Title and Work Area</title>
+<title>The window title and work area</title>
 
 <p>The contents of the window&rsquo;s title bar is set up in a couple of lines:</p>
 

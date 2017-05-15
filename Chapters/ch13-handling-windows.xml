@@ -24,7 +24,7 @@
 </section>
 
 <section>
-<title>Window Definitions</title>
+<title>Window definitions</title>
 
 <p>As we&rsquo;ve seen, creating a window on RISC &nbsp;OS is simply a case of filling in a <name>wimp_window</name> structure and then passing a pointer to it to <swi>Wimp_CreateWindow</swi> so that it can be processed. The SWI uses the contents of the block as instructions for creating the new window, then returns us a <name>wimp_w</name> window handle for it. Whilst the process is simple, there are a couple of points which might not be immediately obvious about what&rsquo;s happening behind the scenes.</p>
 
@@ -87,7 +87,7 @@
 </section>
 
 <section>
-<title>Opening Windows</title>
+<title>Opening windows</title>
 
 <p>As we&rsquo;ve seen, <swi>Wimp_CreateWindow</swi> doesn&rsquo;t put a window on the desktop: instead, it merely creates the window internally in the Wimp and allocates it a <name>wimp_w</name> window handle. At this point the window can be considered <intro>closed</intro>, and it will be necessary to <intro>open</intro> it in order to make it available to the user.</p>
 
@@ -155,7 +155,7 @@
 </section>
 
 <section>
-<title>Changing Where Our Window Opens</title>
+<title>Changing where our window opens</title>
 
 <p>Every time a window is opened with <swi>Wimp_OpenWindow</swi>, the Wimp stores the new position away ready for it to be returned if <swi>Wimp_GetWindowState</swi> is called. In fact we can see this in action very easily: open our application&rsquo;s window, drag it to a new location, then close it. If the window is re-opened with another <mouse>Select</mouse> click on the iconbar, it will appear in the last location that it was in before it closed. This happens because the call to <function>wimp_get_window_state()</function> retrieves the most recently saved values, which our application then passes on to <function>wimp_open_window()</function>.</p>
 
@@ -231,7 +231,7 @@ int general_mode_height(void)
 </section>
 
 <section>
-<title>Getting Information About A Window</title>
+<title>Getting information about a window</title>
 
 <p>Along with the information required by <function>wimp_open_window()</function>, <function>wimp_get_window_state()</function> returns the window&rsquo;s flags in the <name>wimp_window_state</name> structure. The reason for this isn&rsquo;t to remind us of how we defined the window, but because in addition to the flags discussed in the <reference id="chap-window-theory">last chapter</reference>, which we set before calling <swi>Wimp_CreateWindow</swi>, there are a group of flags which the Wimp keeps updated to tell us about the current state of the window. These can be read using <swi>Wimp_GetWindowState</swi>, and are defined in OSLib as follows:</p>
 
@@ -323,7 +323,7 @@ win_height = window_definition.visible.y1 - window_definition.visible.y0;</code>
 </section>
 
 <section>
-<title>Closing and Deleting Windows</title>
+<title>Closing and deleting windows</title>
 
 <p>Closing a window is the exact opposite of opening it with <swi>Wimp_OpenWindow</swi>: it is removed from view on the desktop, whilst retaining both its <name>wimp_w</name> window handle and the associated record in the Wimp&rsquo;s list of known windows. In effect, closing a window puts it back into a similar state to that which it was in just after <swi>Wimp_CreateWindow</swi> was called &ndash; except that any changes made since then will be stored ready for retrieval by <swi>Wimp_GetWindowState</swi>.</p>
 

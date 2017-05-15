@@ -220,7 +220,7 @@ event_add_window_open_event(win_handle, win_open_window_request);</code>
 </section>
 
 <section>
-<title>Generic Event Handlers</title>
+<title>Generic event handlers</title>
 
 <p>If we&rsquo;re using SFLib&rsquo;s event library to dispatch Wimp events, then there&rsquo;s another way to handle these events. In <file>c.main</file>, the events returned by our application&rsquo;s repeated calls to <swi>Wimp_Poll</swi> are sent out to the appropriate pieces of code by the library. Each time the SWI returns with details of a new event, it is passed on to the <function>event_process_event()</function> function and this tries to find a handler which is interested. At present, the code looks like this:</p>
 
@@ -268,7 +268,7 @@ event_add_window_open_event(win_handle, win_open_window_request);</code>
 </section>
 
 <section>
-<title>Closing Windows</title>
+<title>Closing windows</title>
 
 <p>You&rsquo;ll notice that there are actually <em>two</em> <code>case</code> clauses in the <code>switch</code> that has been added above. This is because our window still wasn&rsquo;t responding to clicks on its <icon>Close</icon> button, for a very similar reason.</p>
 

@@ -150,7 +150,7 @@ case wimp_USER_MESSAGE_RECORDED:
 
 
 <section>
-<title>Event Dispatch</title>
+<title>Event dispatch</title>
 <p>It&rsquo;s not a great leap to go from here to full event handlers, but it will require assistance from a third-party library. Over the years, several libraries have been written which include a Wimp event dispatcher &ndash; which to use is a matter of personal preference and this guide will be sticking to SFLib (and in turn OSLib) throughout.</p>
 
 <p>Once all of the test for reason and message action codes have been removed, the routine above can be re-packaged as an event handler function.</p>
