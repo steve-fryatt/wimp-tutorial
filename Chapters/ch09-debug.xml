@@ -94,7 +94,14 @@ report_text0(buffer);</code>
 
 <p>Clearly it would be cumbersome to have to do this every time that we wished to output some information about the way that our application is working. For this reason, SFLib offers a debug library &ndash; which we can access by removing <code>#include &quot;oslib/report.h&quot;</code> and adding <code>#include &quot;sflib/debug.h&quot;</code> to the top of <file>c.ibar</file>. It provides one function:</p>
 
-<code lang="c">#define DEBUG_MAX_LINE_LENGTH 256
+<code lang="c">#include &quot;oslib/os.h&quot;
+#include &quot;oslib/report.h&quot;
+
+#include &lt;stdarg.h&gt;
+#include &lt;stdio.h&gt;
+
+
+#define DEBUG_MAX_LINE_LENGTH 256
 
 int debug_printf(char *cntrl_string, ...)
 {
@@ -115,7 +122,7 @@ int debug_printf(char *cntrl_string, ...)
 
 <p>The code makes use of the variable arguments provided by the standard library&rsquo;s <file>stdarg.h</file> to implement something very similar to a conventional <function>printf()</function> call. The <function>vsnprintf()</function> function &ndash; which is in <file>stdio.h</file> &ndash; is equivalent to <function>snprintf()</function>, but allows us to pass the variable arguments identified by <function>va_start()</function> straight across. A call to <swi>OS_SWINumberFromString</swi> is used to see if <swi>Report_Text0</swi> exists &ndash; and hence Reporter is loaded &ndash; before trying to use it.</p>
 
-<p>That said, we&rsquo;re drifting a little from the RISC&nbsp;OS Wimp into some of the murkier depths of C here, and we don&rsquo;t really need to understand <em>how</em> <function>debug_printf()</function> works to be able to use it. With <code>#include &quot;sflib/debug.h&quot;</code> in place, we can change the call to <function>report_text0()</function> inside <function>ibar_mouse_click()</function> so that we instead use SFLib&rsquo;s <function>debug_printf()</function>.</p>
+<p>That said, we&rsquo;re drifting a little from the RISC&nbsp;OS Wimp into some of the murkier depths of C here, and we don&rsquo;t really need to understand <em>how</em> <function>debug_printf()</function> works in order to be able to use it. With <code>#include &quot;sflib/debug.h&quot;</code> in place, we can change the call to <function>report_text0()</function> inside <function>ibar_mouse_click()</function> so that we instead use SFLib&rsquo;s <function>debug_printf()</function>.</p>
 
 <code lang="c">static void ibar_mouse_click(wimp_pointer *pointer)
 {
