@@ -28,7 +28,7 @@
 
 <p>The first thing to do is to take the code from <reference id="list2-1"/> and re-write it in a slightly more modular form. This isn&rsquo;t essential at this stage, but it will help to keep things clear as we go on and add more features. It results in the code seen in <reference id="list4-1"/>.</p>
 
-<code id="list4-1" lang="c" file="main.c" title="Restructuring the code to use functions">/**
+<code id="list4-1" lang="c" file="c.main" title="Restructuring the code to use functions">/**
  * Example 4.1
  *
  * (c) Stephen Fryatt, 2015.
@@ -196,7 +196,7 @@ case wimp_USER_MESSAGE_RECORDED:
 
 <p>Putting this all together results in the code found in <reference id="list4-2"/>, which should perform exactly the same as <reference id="list4-1"/> when run.</p>
 
-<code id="list4-2" lang="c" file="main.c" title="Using the event dispatcher">/**
+<code id="list4-2" lang="c" file="c.main" title="Using the event dispatcher">/**
  * Example 4.2
  *
  * (c) Stephen Fryatt, 2015.

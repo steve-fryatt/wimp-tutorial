@@ -340,7 +340,7 @@ typedef union wimp_block wimp_block;</code>
 
 <p>Assembling all of the snippets of code above will result in <reference id="list2-1"/>. Although its structure doesn&rsquo;t follow the way in which a Wimp application would normally be written in C, it has the same structure as its BASIC sibling from <reference id="list1-1"/> &ndash; allowing the two to be compared easily.</p>
 
-<code id="list2-1" lang="c" file="main.c" title="The application converted to C">/**
+<code id="list2-1" lang="c" file="c.main" title="The application converted to C">/**
  * Example 2.1
  *
  * (c) Stephen Fryatt, 2015

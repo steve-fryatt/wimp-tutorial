@@ -123,7 +123,7 @@ typedef struct os_box os_box;</code>
 
 <p>The first thing we need to do is create a new source file called <file>c.ibar</file>, as shown in <reference id="list-ibar-ibar-c"/>, containing the code we&rsquo;ve discussed so far.</p>
 
-<code id="list-ibar-ibar-c" lang="c" file="ibar.c" title="The code to create our iconbar icon">/**
+<code id="list-ibar-ibar-c" lang="c" file="c.ibar" title="The code to create our iconbar icon">/**
  * Example 6.1
  *
  * (c) Stephen Fryatt, 2015
@@ -159,7 +159,7 @@ void ibar_initialise(void)
 
 <p>The <function>ibar_initialise()</function> function needs to be called as the application starts up, which means adding a call to it from <function>main_initialise()</function> in <file>c.main</file>. To be able to do that, there needs to be a function prototype that&rsquo;s visible to <file>c.main</file> &ndash; we therefore need to create a <file>h.ibar</file> header file to go with our new code. The contents can be seen in <reference id="list-ibar-ibar-h"/>: it simply contains a function prototype for <function>ibar_initialise()</function>.</p>
 
-<code id="list-ibar-ibar-h" lang="c" file="ibar.h" title="The header file to define the ibar module&rsquo;s interface">/**
+<code id="list-ibar-ibar-h" lang="c" file="h.ibar" title="The header file to define the ibar module&rsquo;s interface">/**
  * Example 6.1
  *
  * (c) Stephen Fryatt, 2015
@@ -196,7 +196,7 @@ void ibar_initialise(void);
 
 <p>Putting these changes into the existing file results in the code seen in <reference id="list-ibar-main-c"/>.</p>
 
-<code id="list-ibar-main-c" lang="c" file="main.c" title="Using the event dispatcher">/**
+<code id="list-ibar-main-c" lang="c" file="c.main" title="Using the event dispatcher">/**
  * Example 6.1
  *
  * (c) Stephen Fryatt, 2015.
