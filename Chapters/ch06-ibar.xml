@@ -111,7 +111,7 @@ typedef struct wimp_icon wimp_icon;</code>
 
 typedef struct os_box os_box;</code>
 
-<p>An icon&rsquo;s flags determine how it looks and behaves. We&rsquo;ll cover the options properly when we take a full look at icons, but our iconbar icon is fairly simple: it consists of a sprite, and if it&rsquo;s to be of any use, we need to be told when the user clicks on it. In OSLib&rsquo;s terms, this means that it will need the <name>wimp_ICON_SPRITE</name> flag set, and must have the <intro>button type</intro> of <name>wimp_BUTTON_CLICK</name>.</p>
+<p>An icon&rsquo;s flags determine how it looks and behaves. We&rsquo;ll cover the options properly when we take a full look at icons in <reference id="chap-icons-intro"/>, but our iconbar icon is fairly simple: it consists of a sprite, and if it&rsquo;s to be of any use, we need to be told when the user clicks on it. In OSLib&rsquo;s terms, this means that it will need the <name>wimp_ICON_SPRITE</name> flag set, and must have the <intro>button type</intro> of <name>wimp_BUTTON_CLICK</name>.</p>
 
 <p>The final piece of the icon definition is its data, which in the case of a <name>wimp_ICON_SPRITE</name> icon is the name of a sprite from the <intro>Wimp pool</intro> which should be used. The <type>wimp_icon_data</type> type is actually a union which contains &ndash; amongst other items related to different icon configurations &ndash; a <code>char sprite[12]</code> to hold the name of the sprite. We can copy a sprite name into this string when initialising the icon data, and leave the Wimp to do the rest of the work of finding the correct image from the Wimp sprite pool for us.</p>
 </section>

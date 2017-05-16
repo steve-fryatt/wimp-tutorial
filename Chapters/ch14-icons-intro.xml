@@ -1,0 +1,86 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+
+<!DOCTYPE xmlmanual SYSTEM "../wimp.dtd">
+
+<manual xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="xmldoc.xsd" version="1.8.6">
+
+<!-- Chapter 14
+   -
+   - Introducing Icons
+  -->
+
+<chapter id="chap-icons-intro">
+<resources>
+<images>Chapter14</images>
+<downloads>Chapter14</downloads>
+</resources>
+<filename>icons.html</filename>
+<title>Introducing Icons</title>
+
+<summary>Icons are the building blocks used to make windows do something useful.</summary>
+
+<section>
+<p>Over the past few chapters, we&rsquo;ve seen how to create a window and get it to open on the desktop. Whilst windows are useful on their own, they become a lot more useful when combined with <intro>icons</intro>.</p>
+
+<p>The <cite>Programmer&rsquo;s Reference Manual</cite> defines an icon as &ldquo;a rectangular area of a window&rsquo;s workspace&rdquo; which &ndash; while accurate &ndash; is a little vague. In fact, many familiar pieces of the RISC&nbsp;OS desktop are icons: <reference id="fig-icons-intro-egs"/> shows a collection of common icons on the left-hand side of a window, while on the right are some of the more basic forms that icons can take.</p>
+
+<image id="fig-icons-intro-egs" file="icons-intro-egs.png" title="Icons come in all shapes and sizes"/>
+
+<p>Icons can contain text, or a sprite, or both text <em>and</em> a sprite. They can have a border, or go without; if they do have a border, it can take a range of 3D effects if required. Icons can respond to mouse clicks &ndash; to change their appearance, notify the application, or both &ndash; and <intro>writable icons</intro> can accept and display keyboard input from the user. In many cases, this functionality is provided automatically by the Wimp, without the application needing to do anything.</p>
+
+<p>On RISC&nbsp;OS, icons belong to windows: when creating an icon it&rsquo;s necessary to either give the <name>wimp_w</name> handle of the window in which it will exist, or to include the icon definition within a <name>wimp_window</name> structure. For now we&rsquo;ll stick to the former method; the latter will be introduced later on.</p>
+</section>
+
+<section>
+<title>A simple icon</title>
+
+<p>Probably the simplest form of icon that we can create is a basic text icon. In a similar way to windows, icons are created by filling in a <name>wimp_icon_create</name> structure and passing it to the <swi>Wimp_CreateIcon</swi> SWI &ndash; this adds the icon to its target window, so that it will be there when the window is opened. This structure, in turn, contains the handle of the window to contain the icon (in <variable>wimp_icon_create.w</variable>) and a <name>wimp_icon</name> structure (<variable>wimp_icon_create.icon</variable>) which actually defines the icon.</p>
+
+<code lang="c">struct wimp_icon {
+	os_box		extent;
+	wimp_icon_flags	flags;
+	wimp_icon_data	data;
+};
+
+typedef struct wimp_icon wimp_icon;
+
+struct wimp_icon_create {
+	wimp_w		w;
+	wimp_icon	icon;
+};
+
+typedef struct wimp_icon_create wimp_icon_create;</code>
+
+<p>The icon definition in the <name>wimp_icon</name> structure contains three pieces of information, the first of which is <variable>wimp_icon.extent</variable> &ndash; an <name>os_box</name> structure. We&rsquo;ve met <name>os_box</name> before, most recently in <reference id="chap-window-theory"/>: it&rsquo;s a structure containing two pairs of <maths>x</maths>,<maths>y</maths> coordinates which locate the icon within its window&rsquo;s work area.</p>
+
+
+
+<code lang="c">
+union wimp_icon_data {
+	char			text[12];
+	char			sprite[12];
+	char			text_and_sprite[12];
+	struct {
+		char		*text;
+		char		*validation;
+		int		size;
+	} indirected_text;
+	struct {
+		osspriteop_id	id;
+		osspriteop_area	*area;
+		int		size;
+	} indirected_sprite;
+	struct {
+		char		*text;
+		char		*validation;
+		int		size;
+	} indirected_text_and_sprite;
+};
+
+typedef union wimp_icon_data wimp_icon_data;</code>
+
+
+
+</section>
+</chapter>
+</manual>
