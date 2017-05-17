@@ -44,7 +44,8 @@ static int win_width, win_height;
 
 void win_initialise(void)
 {
-	wimp_window window_definition;
+	wimp_window		window_definition;
+	wimp_icon_create	icon_definition;
 
 	window_definition.visible.x0 = 200;
 	window_definition.visible.y0 = 200;
@@ -83,6 +84,18 @@ void win_initialise(void)
 
 	win_width = window_definition.visible.x1 - window_definition.visible.x0;
 	win_height = window_definition.visible.y1 - window_definition.visible.y0;
+
+	/* Create an icon. */
+
+	icon_definition.w = win_handle;
+	icon_definition.icon.extent.x0 = 100;
+	icon_definition.icon.extent.y0 = -300;
+	icon_definition.icon.extent.x1 = 300;
+	icon_definition.icon.extent.y1 = -100;
+	icon_definition.icon.flags = wimp_ICON_TEXT | wimp_ICON_BORDER | wimp_ICON_HCENTRED | wimp_ICON_VCENTRED |
+			(wimp_COLOUR_BLACK << wimp_ICON_FG_COLOUR_SHIFT);
+	strncpy(icon_definition.icon.data.text, "Icon", 12);
+	wimp_create_icon(&icon_definition);
 }
 
 /* Open the Window. */

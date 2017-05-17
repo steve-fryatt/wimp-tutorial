@@ -34,7 +34,84 @@
 <section>
 <title>A simple icon</title>
 
-<p>Probably the simplest form of icon that we can create is a basic text icon. In a similar way to windows, icons are created by filling in a <name>wimp_icon_create</name> structure and passing it to the <swi>Wimp_CreateIcon</swi> SWI &ndash; this adds the icon to its target window, so that it will be there when the window is opened. This structure, in turn, contains the handle of the window to contain the icon (in <variable>wimp_icon_create.w</variable>) and a <name>wimp_icon</name> structure (<variable>wimp_icon_create.icon</variable>) which actually defines the icon.</p>
+<p>Probably the simplest form of icon that we can create is a basic text icon. In a similar way to windows, icons are created by filling in a <name>wimp_icon_create</name> structure and passing it to the <swi>Wimp_CreateIcon</swi> SWI &ndash; this adds the icon to its target window, so that it will be there when the window is opened. Let&rsquo;s start by updating the <function>win_initialise()</function> function to add an icon to our window:</p>
+
+<code lang="c">void win_initialise(void)
+{
+	wimp_window		window_definition;
+	wimp_icon_create	icon_definition;
+
+	window_definition.visible.x0 = 200;
+	window_definition.visible.y0 = 200;
+	window_definition.visible.x1 = 600;
+	window_definition.visible.y1 = 600;
+	window_definition.xscroll = 0;
+	window_definition.yscroll = 0;
+	window_definition.next = wimp_TOP;
+	window_definition.flags = wimp_WINDOW_NEW_FORMAT |
+			wimp_WINDOW_MOVEABLE | wimp_WINDOW_AUTO_REDRAW |
+			wimp_WINDOW_BOUNDED_ONCE | wimp_WINDOW_BACK_ICON |
+			wimp_WINDOW_CLOSE_ICON | wimp_WINDOW_TITLE_ICON |
+			wimp_WINDOW_TOGGLE_ICON | wimp_WINDOW_VSCROLL |
+			wimp_WINDOW_SIZE_ICON | wimp_WINDOW_HSCROLL;
+	window_definition.title_fg = wimp_COLOUR_BLACK;
+	window_definition.title_bg = wimp_COLOUR_LIGHT_GREY;
+	window_definition.work_fg = wimp_COLOUR_BLACK;
+	window_definition.work_bg = wimp_COLOUR_VERY_LIGHT_GREY;
+	window_definition.scroll_outer = wimp_COLOUR_MID_LIGHT_GREY;
+	window_definition.scroll_inner = wimp_COLOUR_VERY_LIGHT_GREY;
+	window_definition.highlight_bg = wimp_COLOUR_CREAM;
+	window_definition.extra_flags = 0;
+	window_definition.extent.x0 = 0;
+	window_definition.extent.y0 = -1200;
+	window_definition.extent.x1 = 1200;
+	window_definition.extent.y1 = 0;
+	window_definition.title_flags = wimp_ICON_TEXT | wimp_ICON_BORDER | wimp_ICON_HCENTRED | wimp_ICON_VCENTRED | wimp_ICON_FILLED;
+	window_definition.work_flags = wimp_BUTTON_NEVER &lt;&lt; wimp_ICON_BUTTON_TYPE_SHIFT;
+	window_definition.sprite_area = wimpspriteop_AREA;
+	window_definition.xmin = 0;
+	window_definition.ymin = 0;
+	strncpy(window_definition.title_data.text, &quot;Hello World!&quot;, 12);
+	window_definition.icon_count = 0;
+
+	win_handle = wimp_create_window(&amp;window_definition);
+
+	win_width = window_definition.visible.x1 - window_definition.visible.x0;
+	win_height = window_definition.visible.y1 - window_definition.visible.y0;
+
+	/* Create an icon. */
+
+	icon_definition.w = win_handle;
+	icon_definition.icon.extent.x0 = 100;
+	icon_definition.icon.extent.y0 = -300;
+	icon_definition.icon.extent.x1 = 300;
+	icon_definition.icon.extent.y1 = -100;
+	icon_definition.icon.flags = wimp_ICON_TEXT | wimp_ICON_BORDER | wimp_ICON_HCENTRED | wimp_ICON_VCENTRED |
+			(wimp_COLOUR_BLACK &lt;&lt; wimp_ICON_FG_COLOUR_SHIFT);
+	strncpy(icon_definition.icon.data.text, &quot;Icon&quot;, 12);
+	wimp_create_icon(&amp;icon_definition);
+}</code>
+
+<p>If this is compiled and run, the window that opens will have gained a square box containing the word &ldquo;Icon&rdquo; as shown in <reference id="fig-icons-intro-text"/>.</p>
+
+<image id="fig-icons-intro-text" file="icons-intro-text.png" title="Our application&rsquo;s window with a simple text icon added"/>
+
+<p>The complete code can be found in <reference id="dl-icons-intro-text"/>. It will be useful to experiment with the values used for creating the icon as we start to explain what&rsquo;s going on.</p>
+
+<download id="dl-icons-intro-text" file="TextIcon" title="Adding a Text Icon to the Window" compatibility="none"/>
+
+<p>At the top of the <function>win_initialise()</function> function, we&rsquo;ve added a declaration for an <variable>icon_definition</variable> variable, which has the type of a <name>wimp_icon_create</name> structure. This structure is defined by OSLib as follows:</p>
+
+<code lang="c">struct wimp_icon_create {
+	wimp_w		w;
+	wimp_icon	icon;
+};
+
+typedef struct wimp_icon_create wimp_icon_create;</code>
+
+<p>It contains two elements, the first of which &ndash; <variable>wimp_icon_create.w</variable> &ndash; contains the handle of the window which will contain the icon. The icon is to go into the window that has just been defined and created, so we assign <variable>icon_definition.w</variable> to have the <name>wimp_w</name> handle stored in <variable>win_handle</variable>.</p>
+
+<p>The other element of the <name>wimp_icon_create</name> structure is <variable>wimp_icon_create.icon</variable>. This is actually another structure, <name>wimp_icon</name>, which actually defines the icon:</p>
 
 <code lang="c">struct wimp_icon {
 	os_box		extent;
@@ -42,18 +119,24 @@
 	wimp_icon_data	data;
 };
 
-typedef struct wimp_icon wimp_icon;
-
-struct wimp_icon_create {
-	wimp_w		w;
-	wimp_icon	icon;
-};
-
-typedef struct wimp_icon_create wimp_icon_create;</code>
-
-<p>The icon definition in the <name>wimp_icon</name> structure contains three pieces of information, the first of which is <variable>wimp_icon.extent</variable> &ndash; an <name>os_box</name> structure. We&rsquo;ve met <name>os_box</name> before, most recently in <reference id="chap-window-theory"/>: it&rsquo;s a structure containing two pairs of <maths>x</maths>,<maths>y</maths> coordinates which locate the icon within its window&rsquo;s work area.</p>
+typedef struct wimp_icon wimp_icon;</code>
 
 
+
+<p>The icon definition in the <name>wimp_icon</name> structure contains three pieces of information, the first of which is <variable>wimp_icon.extent</variable> &ndash; an <name>os_box</name> structure. We&rsquo;ve met <name>os_box</name> before, most recently in <reference id="chap-window-theory"/>: it&rsquo;s a structure containing two pairs of <maths>x</maths>,<maths>y</maths> coordinates which locate the icon within its window&rsquo;s work area. We looked briefly at the dimensions of icons back in <reference id="chap-ibar"/>, when we created an icon on the iconbar. The iconbar is a very specific case, however &ndash; we now need to consider things more generally.</p>
+
+<p>Unlike windows, whose visible area extents are specified in terms of the overall screen coordinates as we saw in <reference id="chap-window-theory"/>, icons live <em>within</em> windows and so their extents are given in terms of their parent window&rsquo;s work area. The origin of a window&rsquo;s work area is up to the .</p>
+
+<image id="fig-icons-intro-dims" file="icons-intro-dims.png" title="An icon&rsquo;s location is defined in terms of its parent window"/>
+
+<!-- Finish the description of the icon extent here! -->
+
+</section>
+
+<section>
+<title>Types of icon</title>
+
+<p>With the icon&rsquo;s extent established, there are two more parts to the icon definition: its <intro>flags</intro> and <intro>data</intro>. Like the <name>wimp_window_flags</name> we met earlier, <name>wimp_icon_flags</name> consists of a 32-bit word split into a number of distinct parts; the data is held in a <name>wimp_icon_data</name> union at <variable>wimp_icon.data</variable>, which is defined as follows:</p>
 
 <code lang="c">
 union wimp_icon_data {
@@ -78,6 +161,91 @@ union wimp_icon_data {
 };
 
 typedef union wimp_icon_data wimp_icon_data;</code>
+
+<p>There are six parts to the union, so it should be little suprise to learn that there are six basic types of icon in RISC&nbsp;OS. Which of these types an icon falls into, and hence which set of icon data it uses, is defined by three flags held in <variable>wimp_icon.flags</variable>. OSLib names them as follows:</p>
+
+<code lang="c">#define wimp_ICON_TEXT			((wimp_icon_flags) 0x1u)
+#define wimp_ICON_SPRITE		((wimp_icon_flags) 0x2u)
+#define wimp_ICON_INDIRECTED		((wimp_icon_flags) 0x100u)</code>
+
+<p>By setting one or both of the <name>wimp_ICON_TEXT</name> and <name>wimp_ICON_SPRITE</name> flags, it is possible to make our icon either a <intro>text icon</intro>, a <intro>sprite icon</intro> or a <intro>text and sprite icon</intro>. Each of these three variants can then be either <intro>indirected</intro> or <intro>non-indirected</intro>, which give us the six options. We&rsquo;ll leave indirected icons until the next chapter, so for now there are three flavours to explore.</p>
+
+
+
+
+<!--
+
+
+#define wimp_ICON_BORDER                        ((wimp_icon_flags) 0x4u)
+#define wimp_ICON_HCENTRED                      ((wimp_icon_flags) 0x8u)
+#define wimp_ICON_VCENTRED                      ((wimp_icon_flags) 0x10u)
+#define wimp_ICON_FILLED                        ((wimp_icon_flags) 0x20u)
+#define wimp_ICON_RJUSTIFIED                    ((wimp_icon_flags) 0x200u)
+#define wimp_ICON_HALF_SIZE                     ((wimp_icon_flags) 0x800u)
+
+
+
+#define wimp_ICON_ANTI_ALIASED                  ((wimp_icon_flags) 0x40u)
+#define wimp_ICON_NEEDS_HELP                    ((wimp_icon_flags) 0x80u)
+
+#define wimp_ICON_BUTTON_TYPE_SHIFT             (12)
+#define wimp_ICON_BUTTON_TYPE                   ((wimp_icon_flags) 0xF000u)
+      /*shift button bits by Wimp_IconButtonTypeShift*/
+
+#define wimp_ICON_ESG_SHIFT                     (16)
+#define wimp_ICON_ESG                           ((wimp_icon_flags) 0x1F0000u)
+      /*shift ESG bits by Wimp_IconESGShift*/
+#define wimp_ICON_ALLOW_ADJUST                  ((wimp_icon_flags) 0x400u)
+
+#define wimp_ICON_SELECTED                      ((wimp_icon_flags) 0x200000u)
+#define wimp_ICON_SHADED                        ((wimp_icon_flags) 0x400000u)
+#define wimp_ICON_DELETED                       ((wimp_icon_flags) 0x800000u)
+
+#define wimp_ICON_FG_COLOUR_SHIFT               (24)
+#define wimp_ICON_FG_COLOUR                     ((wimp_icon_flags) 0xF000000u)
+      /*shift FG Colour bits by Wimp_IconFGColourShift*/
+
+#define wimp_ICON_BG_COLOUR_SHIFT               (28)
+#define wimp_ICON_BG_COLOUR                     ((wimp_icon_flags) 0xF0000000u)
+      /*shift BG Colour bits by Wimp_IconBGColourShift*/
+
+#define wimp_ICON_FONT_HANDLE_SHIFT             (24)
+#define wimp_ICON_FONT_HANDLE                   ((wimp_icon_flags) 0xFF000000u)
+      /*shift Font Handle bits by Wimp_IconFontHandleShift*/
+      
+      
+      
+#define wimp_BUTTON_NEVER                       ((wimp_icon_flags) 0x0u)
+      /*shift by Wimp_IconButtonTypeShift*/
+#define wimp_BUTTON_ALWAYS                      ((wimp_icon_flags) 0x1u)
+      /*shift by Wimp_IconButtonTypeShift*/
+#define wimp_BUTTON_REPEAT                      ((wimp_icon_flags) 0x2u)
+      /*shift by Wimp_IconButtonTypeShift*/
+#define wimp_BUTTON_CLICK                       ((wimp_icon_flags) 0x3u)
+      /*shift by Wimp_IconButtonTypeShift*/
+#define wimp_BUTTON_RELEASE                     ((wimp_icon_flags) 0x4u)
+      /*shift by Wimp_IconButtonTypeShift*/
+#define wimp_BUTTON_DOUBLE_CLICK                ((wimp_icon_flags) 0x5u)
+      /*shift by Wimp_IconButtonTypeShift*/
+#define wimp_BUTTON_CLICK_DRAG                  ((wimp_icon_flags) 0x6u)
+      /*shift by Wimp_IconButtonTypeShift*/
+#define wimp_BUTTON_RELEASE_DRAG                ((wimp_icon_flags) 0x7u)
+      /*shift by Wimp_IconButtonTypeShift*/
+#define wimp_BUTTON_DOUBLE_DRAG                 ((wimp_icon_flags) 0x8u)
+      /*shift by Wimp_IconButtonTypeShift*/
+#define wimp_BUTTON_MENU_ICON                   ((wimp_icon_flags) 0x9u)
+      /*shift by Wimp_IconButtonTypeShift*/
+#define wimp_BUTTON_DOUBLE_CLICK_DRAG           ((wimp_icon_flags) 0xAu)
+      /*shift by Wimp_IconButtonTypeShift*/
+#define wimp_BUTTON_RADIO                       ((wimp_icon_flags) 0xBu)
+      /*shift by Wimp_IconButtonTypeShift*/
+#define wimp_BUTTON_WRITE_CLICK_DRAG            ((wimp_icon_flags) 0xEu)
+      /*shift by Wimp_IconButtonTypeShift*/
+#define wimp_BUTTON_WRITABLE                    ((wimp_icon_flags) 0xFu)
+ 
+
+
+-->
 
 
 
