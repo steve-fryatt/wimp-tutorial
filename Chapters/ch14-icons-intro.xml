@@ -20,87 +20,56 @@
 <summary>Icons are the building blocks used to make windows do something useful.</summary>
 
 <section>
-<p>Over the past few chapters, we&rsquo;ve seen how to create a window and get it to open on the desktop. Whilst windows are useful on their own, they become a lot more useful when combined with <intro>icons</intro>.</p>
+<p>Over the past few chapters, we&rsquo;ve seen how to create a window and get it to open on the desktop. Whilst windows are extremely useful in their own right, they can often become a lot more useful when combined with <intro>icons</intro>.</p>
 
-<p>The <cite>Programmer&rsquo;s Reference Manual</cite> defines an icon as &ldquo;a rectangular area of a window&rsquo;s workspace&rdquo; which &ndash; while accurate &ndash; is a little vague. In fact, many familiar pieces of the RISC&nbsp;OS desktop are icons: <reference id="fig-icons-intro-egs"/> shows a collection of common icons on the left-hand side of a window, while on the right are some of the more basic forms that icons can take.</p>
+<p>The <cite>Programmer&rsquo;s Reference Manual</cite> defines an icon as &ldquo;a rectangular area of a window&rsquo;s workspace&rdquo; which &ndash; while accurate &ndash; is perhaps a little vague. In fact, many familiar pieces of the RISC&nbsp;OS desktop are icons: <reference id="fig-icons-intro-egs"/> shows four windows (from Paint, Ovation&nbsp;Pro and UnitConv) which are composed entirely using them.</p>
 
 <image id="fig-icons-intro-egs" file="icons-intro-egs.png" title="Icons come in all shapes and sizes"/>
 
 <p>Icons can contain text, or a sprite, or both text <em>and</em> a sprite. They can have a border, or go without; if they do have a border, it can take a range of 3D effects if required. Icons can respond to mouse clicks &ndash; to change their appearance, notify the application, or both &ndash; and <intro>writable icons</intro> can accept and display keyboard input from the user. In many cases, this functionality is provided automatically by the Wimp, without the application needing to do anything.</p>
-
-<p>On RISC&nbsp;OS, icons belong to windows: when creating an icon it&rsquo;s necessary to either give the <name>wimp_w</name> handle of the window in which it will exist, or to include the icon definition within a <name>wimp_window</name> structure. For now we&rsquo;ll stick to the former method; the latter will be introduced later on.</p>
 </section>
 
 <section>
 <title>A simple icon</title>
 
-<p>Probably the simplest form of icon that we can create is a basic text icon. In a similar way to windows, icons are created by filling in a <name>wimp_icon_create</name> structure and passing it to the <swi>Wimp_CreateIcon</swi> SWI &ndash; this adds the icon to its target window, so that it will be there when the window is opened. Let&rsquo;s start by updating the <function>win_initialise()</function> function to add an icon to our window:</p>
+<p>There are two ways to create an icon on RISC&nbsp;OS. One is to add its details to the end of a <name>wimp_window</name> structure and have the <swi>Wimp_CreateWindow</swi> SWI process them: this is what the <variable>wimp_window.icon_count</variable> and <variable>wimp_window.icons[]</variable> elements in the <name>wimp_window</name> structure, which we glossed over in <reference id="chap-window-theory"/>, are for. The other is to assemble the same set of details and pass them to the <swi>Wimp_CreateIcon</swi> SWI after the window has been created.</p>
 
-<code lang="c">void win_initialise(void)
+<p>For now, we&rsquo;re going to concentrate on the latter method, because this will allow us to examine the various components in detail and to see how they all interact with each other. In practice, most applications will use the former method in conjunction with a piece of software called a <intro>template editor</intro> &ndash; this approach allows many windows and dialogue boxes to be laid out in an almost WYSIWYG manner, much as one might put together an image in Draw. The window and icon designs can then be saved out as a <intro>template file</intro> which the Wimp can load and turn into a set of <name>wimp_window</name> structures. All the complexity that we&rsquo;re about to encounter is still present, however, so it&rsquo;s essential to know how it works &ndash; for now we&rsquo;ll do things &lsquo;the hard way&rsquo; and see exactly what&rsquo;s going on. Once the fundamentals are in place, we can move on to template files in a later chapter.</p>
+
+<p>Probably the simplest form of icon that we can create is a basic text icon. In a similar way to windows, icons can be created by filling in a structure and passing a pointer to it to the <swi>Wimp_CreateIcon</swi> SWI &ndash; this SWI then adds the icon to its target window, so that it will be there when the window is opened. Let&rsquo;s start by adding a new <function>win_create_icon()</function> to our <file>win.c</file> file:</p>
+
+<code lang="c">static wimp_i win_create_icon(int x0, int y0, int x1, int y1,
+		char *text, wimp_colour fg_colour, wimp_icon_flags flags)
 {
-	wimp_window		window_definition;
-	wimp_icon_create	icon_definition;
-
-	window_definition.visible.x0 = 200;
-	window_definition.visible.y0 = 200;
-	window_definition.visible.x1 = 600;
-	window_definition.visible.y1 = 600;
-	window_definition.xscroll = 0;
-	window_definition.yscroll = 0;
-	window_definition.next = wimp_TOP;
-	window_definition.flags = wimp_WINDOW_NEW_FORMAT |
-			wimp_WINDOW_MOVEABLE | wimp_WINDOW_AUTO_REDRAW |
-			wimp_WINDOW_BOUNDED_ONCE | wimp_WINDOW_BACK_ICON |
-			wimp_WINDOW_CLOSE_ICON | wimp_WINDOW_TITLE_ICON |
-			wimp_WINDOW_TOGGLE_ICON | wimp_WINDOW_VSCROLL |
-			wimp_WINDOW_SIZE_ICON | wimp_WINDOW_HSCROLL;
-	window_definition.title_fg = wimp_COLOUR_BLACK;
-	window_definition.title_bg = wimp_COLOUR_LIGHT_GREY;
-	window_definition.work_fg = wimp_COLOUR_BLACK;
-	window_definition.work_bg = wimp_COLOUR_VERY_LIGHT_GREY;
-	window_definition.scroll_outer = wimp_COLOUR_MID_LIGHT_GREY;
-	window_definition.scroll_inner = wimp_COLOUR_VERY_LIGHT_GREY;
-	window_definition.highlight_bg = wimp_COLOUR_CREAM;
-	window_definition.extra_flags = 0;
-	window_definition.extent.x0 = 0;
-	window_definition.extent.y0 = -1200;
-	window_definition.extent.x1 = 1200;
-	window_definition.extent.y1 = 0;
-	window_definition.title_flags = wimp_ICON_TEXT | wimp_ICON_BORDER | wimp_ICON_HCENTRED | wimp_ICON_VCENTRED | wimp_ICON_FILLED;
-	window_definition.work_flags = wimp_BUTTON_NEVER &lt;&lt; wimp_ICON_BUTTON_TYPE_SHIFT;
-	window_definition.sprite_area = wimpspriteop_AREA;
-	window_definition.xmin = 0;
-	window_definition.ymin = 0;
-	strncpy(window_definition.title_data.text, &quot;Hello World!&quot;, 12);
-	window_definition.icon_count = 0;
-
-	win_handle = wimp_create_window(&amp;window_definition);
-
-	win_width = window_definition.visible.x1 - window_definition.visible.x0;
-	win_height = window_definition.visible.y1 - window_definition.visible.y0;
-
-	/* Create an icon. */
+	wimp_icon_create icon_definition;
 
 	icon_definition.w = win_handle;
-	icon_definition.icon.extent.x0 = 100;
-	icon_definition.icon.extent.y0 = -300;
-	icon_definition.icon.extent.x1 = 300;
-	icon_definition.icon.extent.y1 = -100;
-	icon_definition.icon.flags = wimp_ICON_TEXT | wimp_ICON_BORDER | wimp_ICON_HCENTRED | wimp_ICON_VCENTRED |
-			(wimp_COLOUR_BLACK &lt;&lt; wimp_ICON_FG_COLOUR_SHIFT);
-	strncpy(icon_definition.icon.data.text, &quot;Icon&quot;, 12);
-	wimp_create_icon(&amp;icon_definition);
+	icon_definition.icon.extent.x0 = x0;
+	icon_definition.icon.extent.y0 = y0;
+	icon_definition.icon.extent.x1 = x1;
+	icon_definition.icon.extent.y1 = y1;
+	icon_definition.icon.flags = flags | (fg_colour &lt;&lt; wimp_ICON_FG_COLOUR_SHIFT);
+	strncpy(icon_definition.icon.data.text, text, 12);
+
+	return wimp_create_icon(&amp;icon_definition);
 }</code>
 
-<p>If this is compiled and run, the window that opens will have gained a square box containing the word &ldquo;Icon&rdquo; as shown in <reference id="fig-icons-intro-text"/>.</p>
+<p>In a similar manner to that in which <function>win_initialise()</function> called <swi>Wimp_CreateWindow</swi>, this code initialises a block of memory by declaring a <name>wimp_icon_create</name> structure and then fills it in with the complete details of the icon that we wish to create. Once the structure&rsquo;s contents is ready, a pointer is passed to <function>wimp_create_icon()</function> &ndash; which causes the Wimp to create an icon from the information contained within. In the same way that <function>wimp_create_window()</function> returns a <name>wimp_w</name> window handle, <function>wimp_create_icon()</function> returns a <name>wimp_i</name> icon handle to to identify the icon within the window. Another similarity is that the structure passed to <function>wimp_create_icon()</function> is no longer required as soon as the SWI returns; as with the <variable>window_definition</variable> variable in <function>win_initialise()</function>, <variable>icon_definition</variable> is a local variable which will disappear as soon as the <function>win_create_icon()</function> function exits.</p>
 
-<image id="fig-icons-intro-text" file="icons-intro-text.png" title="Our application&rsquo;s window with a simple text icon added"/>
+<p>The function has been declared as <code>static</code> because it&rsquo;s closely tied to the window defined within <file>win.c</file>. With a suitable function prototype added at the top of the file, we can then add a line to call <function>win_create_icon</function> from the end of <function>win_initialise</function>:</p>
 
-<p>The complete code can be found in <reference id="dl-icons-intro-text"/>. It will be useful to experiment with the values used for creating the icon as we start to explain what&rsquo;s going on.</p>
+<code lang="c">win_create_icon(100, -300, 300, -100, &quot;Icon&quot;, wimp_COLOUR_BLACK,
+		wimp_ICON_TEXT | wimp_ICON_BORDER | wimp_ICON_HCENTRED | wimp_ICON_VCENTRED);</code>
+
+<p>The complete code can be found in <reference id="dl-icons-intro-text"/>. It will be useful as a base from which to experiment with the values used for creating the icon as we start to explain what&rsquo;s going on.</p>
 
 <download id="dl-icons-intro-text" file="TextIcon" title="Adding a Text Icon to the Window" compatibility="none"/>
 
-<p>At the top of the <function>win_initialise()</function> function, we&rsquo;ve added a declaration for an <variable>icon_definition</variable> variable, which has the type of a <name>wimp_icon_create</name> structure. This structure is defined by OSLib as follows:</p>
+<p>When the code is compiled and run, the window that opens will have gained a square box containing the word &ldquo;Icon&rdquo; as shown in <reference id="fig-icons-intro-text"/>.</p>
+
+<image id="fig-icons-intro-text" file="icons-intro-text.png" title="Our application&rsquo;s window with a simple text icon added"/>
+
+<p>The <name>wimp_icon_create</name> structure, with which we declare the <variable>icon_definition</variable> variable in our new function, is defined by OSLib as follows and contains two elements:</p>
 
 <code lang="c">struct wimp_icon_create {
 	wimp_w		w;
@@ -109,9 +78,13 @@
 
 typedef struct wimp_icon_create wimp_icon_create;</code>
 
-<p>It contains two elements, the first of which &ndash; <variable>wimp_icon_create.w</variable> &ndash; contains the handle of the window which will contain the icon. The icon is to go into the window that has just been defined and created, so we assign <variable>icon_definition.w</variable> to have the <name>wimp_w</name> handle stored in <variable>win_handle</variable>.</p>
+<p>Rather like a set of Russion Dolls, one of the elements &ndash; <variable>wimp_icon_create.icon</variable> &ndash; is itself a structure. It has the same type as the <variable>wimp_window.icons[]</variable> array in the <name>wimp_window</name> structure, and contains the actual icon definition. To enable <swi>Wimp_CreateIcon</swi> to know which window to create the new icon in, the other element of <name>wimp_icon_create</name> is a <name>wimp_w</name> window handle stored in <variable>wimp_icon_create.w</variable>.</p>
 
-<p>The other element of the <name>wimp_icon_create</name> structure is <variable>wimp_icon_create.icon</variable>. This is actually another structure, <name>wimp_icon</name>, which actually defines the icon:</p>
+<code lang="c">	icon_definition.w = win_handle;</code>
+
+<p>The icon that we&rsquo;re creating is to go in the window that has just been defined and created, so we assign <variable>icon_definition.w</variable> to have the <name>wimp_w</name> handle stored in the global <variable>win_handle</variable> variable. If we were going to make <function>win_create_icon()</function> a general-purpose function, we would want to pass this window handle in as a parameter &ndash; since we&rsquo;ll only be using it to create icons in the one window, the global variable is fine for now.</p>
+
+<p>The other element of the structure, <variable>icon_definition.icon</variable>, is a <name>wimp_icon</name> structure defined by OSLib as:</p>
 
 <code lang="c">struct wimp_icon {
 	os_box		extent;
@@ -121,16 +94,20 @@ typedef struct wimp_icon_create wimp_icon_create;</code>
 
 typedef struct wimp_icon wimp_icon;</code>
 
+<p>This structure is the icon equivalent of the <name>wimp_window</name> structure for windows, although it&rsquo;s a lot shorter. The first piece of information that it contains is  <variable>wimp_icon.extent</variable> &ndash; an <name>os_box</name> structure. We&rsquo;ve met <name>os_box</name> before, most recently in <reference id="chap-window-theory"/>: it&rsquo;s a structure containing two pairs of <maths>x</maths>,<maths>y</maths> coordinates which locate the icon within its window&rsquo;s work area. We looked briefly at the dimensions of icons back in <reference id="chap-ibar"/>, when we created an icon on the iconbar. The iconbar is a very specific case, however &ndash; we now need to consider things more generally.</p>
 
+<p>Unlike windows, whose visible area extents are specified in terms of the overall screen coordinates as we saw in <reference id="chap-window-theory"/>, icons live <em>within</em> windows and so their extents are given in terms of their parent window&rsquo;s work area. The origin of a window&rsquo;s work area is up to the developer but, as we&rsquo;ve seen, conventionally (0,0) is located at the top-left. Our window&rsquo;s visible area is 400&nbsp;&times;&nbsp;400 OS&nbsp;Units square, so with both scroll offsets set to zero the work area that&rsquo;s initially visible is 0 to 400 in the <maths>x</maths> direction, and 0 to &minus;400 in the <maths>y</maths> direction.</p>
 
-<p>The icon definition in the <name>wimp_icon</name> structure contains three pieces of information, the first of which is <variable>wimp_icon.extent</variable> &ndash; an <name>os_box</name> structure. We&rsquo;ve met <name>os_box</name> before, most recently in <reference id="chap-window-theory"/>: it&rsquo;s a structure containing two pairs of <maths>x</maths>,<maths>y</maths> coordinates which locate the icon within its window&rsquo;s work area. We looked briefly at the dimensions of icons back in <reference id="chap-ibar"/>, when we created an icon on the iconbar. The iconbar is a very specific case, however &ndash; we now need to consider things more generally.</p>
-
-<p>Unlike windows, whose visible area extents are specified in terms of the overall screen coordinates as we saw in <reference id="chap-window-theory"/>, icons live <em>within</em> windows and so their extents are given in terms of their parent window&rsquo;s work area. The origin of a window&rsquo;s work area is up to the .</p>
+<p>To make an icon that&rsquo;s 200&nbsp;&times;&nbsp;200 OS&nbsp;Units square in the centre of this initial visible area, the minimum and maximum <maths>x</maths> coordinates of the icon will be at 100 and 300 OS&nbsp;Units. Similarly, the minimum and maximum <maths>y</maths> coordinates will be at &minus;300 and &minus;100 OS&nbsp;Units respectively. As with window coordinates, the minimum coordinates are <em>inclusive</em> whilst the maximum ones are <em>exclusive</em> to the icon&rsquo; area. This is shown graphically in <reference id="fig-icons-intro-dims"/>.</p>
 
 <image id="fig-icons-intro-dims" file="icons-intro-dims.png" title="An icon&rsquo;s location is defined in terms of its parent window"/>
 
-<!-- Finish the description of the icon extent here! -->
+<p>In the case of our icon defintion, we set the four values <variable>icon_definition.icon.extent.x0</variable>, <variable>icon_definition.icon.extent.y0</variable>, <variable>icon_definition.icon.extent.x1</variable> and <variable>icon_definition.icon.extent.y1</variable> to the function parameters <variable>x0</variable>,  <variable>y0</variable>,  <variable>x1</variable>,  <variable>y1</variable> respectively. These, in turn, are given the values 100, &minus;300, 300 and &minus;100 when the function is called.</p>
 
+<code lang="c">icon_definition.icon.extent.x0 = x0;
+icon_definition.icon.extent.y0 = y0;
+icon_definition.icon.extent.x1 = x1;
+icon_definition.icon.extent.y1 = y1;</code>
 </section>
 
 <section>

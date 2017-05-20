@@ -40,12 +40,15 @@ static wimp_w win_handle;
 
 static int win_width, win_height;
 
+/* Function Prototypes */
+
+static wimp_i win_create_icon(int x0, int y0, int x1, int y1, char *text, wimp_colour fg_colour, wimp_icon_flags flags);
+
 /* Window Initialisation. */
 
 void win_initialise(void)
 {
-	wimp_window		window_definition;
-	wimp_icon_create	icon_definition;
+	wimp_window window_definition;
 
 	window_definition.visible.x0 = 200;
 	window_definition.visible.y0 = 200;
@@ -87,15 +90,25 @@ void win_initialise(void)
 
 	/* Create an icon. */
 
+	win_create_icon(100, -300, 300, -100, "Icon", wimp_COLOUR_BLACK,
+			wimp_ICON_TEXT | wimp_ICON_BORDER | wimp_ICON_HCENTRED | wimp_ICON_VCENTRED);
+}
+
+/* Create an icon in a window. */
+
+static wimp_i win_create_icon(int x0, int y0, int x1, int y1, char *text, wimp_colour fg_colour, wimp_icon_flags flags)
+{
+	wimp_icon_create icon_definition;
+
 	icon_definition.w = win_handle;
-	icon_definition.icon.extent.x0 = 100;
-	icon_definition.icon.extent.y0 = -300;
-	icon_definition.icon.extent.x1 = 300;
-	icon_definition.icon.extent.y1 = -100;
-	icon_definition.icon.flags = wimp_ICON_TEXT | wimp_ICON_BORDER | wimp_ICON_HCENTRED | wimp_ICON_VCENTRED |
-			(wimp_COLOUR_BLACK << wimp_ICON_FG_COLOUR_SHIFT);
-	strncpy(icon_definition.icon.data.text, "Icon", 12);
-	wimp_create_icon(&icon_definition);
+	icon_definition.icon.extent.x0 = x0;
+	icon_definition.icon.extent.y0 = y0;
+	icon_definition.icon.extent.x1 = x1;
+	icon_definition.icon.extent.y1 = y1;
+	icon_definition.icon.flags = flags | (fg_colour << wimp_ICON_FG_COLOUR_SHIFT);
+	strncpy(icon_definition.icon.data.text, text, 12);
+
+	return wimp_create_icon(&icon_definition);
 }
 
 /* Open the Window. */
