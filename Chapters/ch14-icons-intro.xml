@@ -38,8 +38,8 @@
 
 <p>Probably the simplest form of icon that we can create is a basic text icon. In a similar way to windows, icons can be created by filling in a structure and passing a pointer to it to the <swi>Wimp_CreateIcon</swi> SWI &ndash; this SWI then adds the icon to its target window, so that it will be there when the window is opened. Let&rsquo;s start by adding a new <function>win_create_icon()</function> to our <file>win.c</file> file:</p>
 
-<code lang="c">static wimp_i win_create_icon(int x0, int y0, int x1, int y1,
-		char *text, wimp_colour fg_colour, wimp_icon_flags flags)
+<code lang="c">static wimp_i win_create_icon(int x0, int y0, int x1, int y1, char *text,
+		wimp_colour fg_colour, wimp_colour bg_colour, wimp_icon_flags flags)
 {
 	wimp_icon_create icon_definition;
 
@@ -48,7 +48,9 @@
 	icon_definition.icon.extent.y0 = y0;
 	icon_definition.icon.extent.x1 = x1;
 	icon_definition.icon.extent.y1 = y1;
-	icon_definition.icon.flags = flags | (fg_colour &lt;&lt; wimp_ICON_FG_COLOUR_SHIFT);
+	icon_definition.icon.flags = flags |
+			(fg_colour &lt;&lt; wimp_ICON_FG_COLOUR_SHIFT) |
+			(bg_colour &lt;&lt; wimp_ICON_BG_COLOUR_SHIFT);
 	strncpy(icon_definition.icon.data.text, text, 12);
 
 	return wimp_create_icon(&amp;icon_definition);
@@ -58,7 +60,7 @@
 
 <p>The function has been declared as <code>static</code> because it&rsquo;s closely tied to the window defined within <file>win.c</file>. With a suitable function prototype added at the top of the file, we can then add a line to call <function>win_create_icon</function> from the end of <function>win_initialise</function>:</p>
 
-<code lang="c">win_create_icon(100, -300, 300, -100, &quot;Icon&quot;, wimp_COLOUR_BLACK,
+<code lang="c">win_create_icon(100, -300, 300, -100, &quot;Icon&quot;, wimp_COLOUR_BLACK, wimp_COLOUR_WHITE,
 		wimp_ICON_TEXT | wimp_ICON_BORDER | wimp_ICON_HCENTRED | wimp_ICON_VCENTRED);</code>
 
 <p>The complete code can be found in <reference id="dl-icons-intro-text"/>. It will be useful as a base from which to experiment with the values used for creating the icon as we start to explain what&rsquo;s going on.</p>
@@ -94,7 +96,13 @@ typedef struct wimp_icon_create wimp_icon_create;</code>
 
 typedef struct wimp_icon wimp_icon;</code>
 
-<p>This structure is the icon equivalent of the <name>wimp_window</name> structure for windows, although it&rsquo;s a lot shorter. The first piece of information that it contains is  <variable>wimp_icon.extent</variable> &ndash; an <name>os_box</name> structure. We&rsquo;ve met <name>os_box</name> before, most recently in <reference id="chap-window-theory"/>: it&rsquo;s a structure containing two pairs of <maths>x</maths>,<maths>y</maths> coordinates which locate the icon within its window&rsquo;s work area. We looked briefly at the dimensions of icons back in <reference id="chap-ibar"/>, when we created an icon on the iconbar. The iconbar is a very specific case, however &ndash; we now need to consider things more generally.</p>
+<p>This structure is the icon equivalent of the <name>wimp_window</name> structure for windows, although it&rsquo;s a lot shorter: unlike a window, icons only have a handful of pieces of information associated with them.</p>
+</section>
+
+<section>
+<title>The icon&rsquo;s extent</title>
+
+<p>The first piece of information that the <name>wimp_icon</name> structure contains is <variable>wimp_icon.extent</variable> &ndash; an <name>os_box</name> structure. We&rsquo;ve met <name>os_box</name> before, most recently in <reference id="chap-window-theory"/>: it&rsquo;s a structure containing two pairs of <maths>x</maths>,<maths>y</maths> coordinates which locate the icon within its window&rsquo;s work area. We looked briefly at the dimensions of icons back in <reference id="chap-ibar"/>, when we created an icon on the iconbar. The iconbar is a very specific case, however &ndash; we now need to consider things more generally.</p>
 
 <p>Unlike windows, whose visible area extents are specified in terms of the overall screen coordinates as we saw in <reference id="chap-window-theory"/>, icons live <em>within</em> windows and so their extents are given in terms of their parent window&rsquo;s work area. The origin of a window&rsquo;s work area is up to the developer but, as we&rsquo;ve seen, conventionally (0,0) is located at the top-left. Our window&rsquo;s visible area is 400&nbsp;&times;&nbsp;400 OS&nbsp;Units square, so with both scroll offsets set to zero the work area that&rsquo;s initially visible is 0 to 400 in the <maths>x</maths> direction, and 0 to &minus;400 in the <maths>y</maths> direction.</p>
 
@@ -111,12 +119,73 @@ icon_definition.icon.extent.y1 = y1;</code>
 </section>
 
 <section>
-<title>Types of icon</title>
+<title>The icon&rsquo;s appearance</title>
 
-<p>With the icon&rsquo;s extent established, there are two more parts to the icon definition: its <intro>flags</intro> and <intro>data</intro>. Like the <name>wimp_window_flags</name> we met earlier, <name>wimp_icon_flags</name> consists of a 32-bit word split into a number of distinct parts; the data is held in a <name>wimp_icon_data</name> union at <variable>wimp_icon.data</variable>, which is defined as follows:</p>
+<p>With the icon&rsquo;s extent established, the next part of the definition to consider are the <intro>icon flags</intro>. Like the <name>wimp_window_flags</name> which we met earlier, <name>wimp_icon_flags</name> consists of a 32-bit word split into a number of distinct parts which &ndash; taken together &ndash; define a lot about the icon. The first thing to decide is what kind of icon we&rsquo;re looking at, and this is defined by three flag bits within the word:</p>
 
-<code lang="c">
-union wimp_icon_data {
+<code lang="c">#define wimp_ICON_TEXT			((wimp_icon_flags) 0x1u)
+#define wimp_ICON_SPRITE		((wimp_icon_flags) 0x2u)
+#define wimp_ICON_INDIRECTED		((wimp_icon_flags) 0x100u)</code>
+
+<p>Our icon definition set the <variable>icon_definition.icon.flags</variable> element to</p>
+
+<code lang="c">	icon_definition.icon.flags = flags |
+			(fg_colour &lt;&lt; wimp_ICON_FG_COLOUR_SHIFT) |
+			(bg_colour &lt;&lt; wimp_ICON_BG_COLOUR_SHIFT);</code>
+
+<p>and when the function was called, the <variable>flags</variable> parameter had the <name>wimp_ICON_TEXT</name> bit set. This means that the icon we&rsquo;ve created is a <intro>text icon</intro>: it contains a single piece of text, which is simply the word &ldquo;Icon&rdquo;.</p>
+
+<p>A number of other icon flags control the appearance and layout of the icon:</p>
+
+<code lang="c">#define wimp_ICON_BORDER		((wimp_icon_flags) 0x4u)
+#define wimp_ICON_HCENTRED		((wimp_icon_flags) 0x8u)
+#define wimp_ICON_VCENTRED		((wimp_icon_flags) 0x10u)
+#define wimp_ICON_FILLED		((wimp_icon_flags) 0x20u)
+#define wimp_ICON_RJUSTIFIED		((wimp_icon_flags) 0x200u)
+#define wimp_ICON_HALF_SIZE		((wimp_icon_flags) 0x800u)</code>
+
+<p>Our icon has the <name>wimp_ICON_HCENTRED</name> and <name>wimp_ICON_VCENTRED</name> flags set, which means that the text appears centred within the icon&rsquo;s extent &ndash; as was seen in <reference id="fig-icons-intro-text"/>. By setting the <name>wimp_ICON_VCENTRED</name> on its own, <name>wimp_ICON_HCENTRED</name> and <name>wimp_ICON_VCENTRED</name> together, or <name>wimp_ICON_RJUSTIFIED</name> and <name>wimp_ICON_VCENTRED</name> together, it is possible to left align, centre or right align the text respectively as shown in <reference id="fig-icons-intro-halign"/>. The <name>wimp_ICON_VCENTRED</name> flag, whilst ostensibly controlling vertical alignment, has little effect on text icons.</p>
+
+<image id="fig-icons-intro-halign" file="icons-intro-halign.png" title="The icon&rsquo;s text can be aligned left, centre or right"/>
+
+<p>The final flag set in our icon definition is <name>wimp_ICON_BORDER</name>, which causes the Wimp to draw an outline around the icon&rsquo;s extent. If the flag is omitted than, as can be seen in <reference id="fig-icons-intro-border"/>, the outline is omitted.</p>
+
+<image id="fig-icons-intro-border" file="icons-intro-border.png" title="Icons can either have a border, or go without"/>
+
+<p>Since the <name>wimp_ICON_HALF_SIZE</name> flag only applies to icons containing sprites &ndash; which we&rsquo;ll meet soon &ndash; this only leaves one flag to consider: <name>wimp_ICON_FILLED</name>. When set, this allows the icon&rsquo;s background to be filled with a solid colour instead of the window&rsquo;s background being allowed to show through. Before this makes any sense, however, we need to consider the colours used for the icon.</p>
+
+<p>Unlike the <name>wimp_window_flags</name>, which consisted entirely of flag bits, the value of <name>wimp_icon_flags</name> contains a mixture of single-bit flags and groups of bits which form numeric values. When we set <variable>icon_definition.icon.flags</variable>, we combine the value of the <variable>flags</variable> parameter with the values of the <variable>fg_colour</variable> and <variable>bg_colour</variable> parameters. To do this, the value of <variable>fg_colour</variable> and <variable>bg_colour</variable> are shifted left by <name>wimp_ICON_FG_COLOUR_SHIFT</name> and <name>wimp_ICON_BG_COLOUR_SHIFT</name> respectively &ndash; which OSLib defines for us as:</p>
+
+<code lang="c">#define wimp_ICON_FG_COLOUR_SHIFT	(24)
+#define wimp_ICON_FG_COLOUR		((wimp_icon_flags) 0xF000000u)
+
+#define wimp_ICON_BG_COLOUR_SHIFT	(28)
+#define wimp_ICON_BG_COLOUR		((wimp_icon_flags) 0xF0000000u)</code>
+
+<p>The four bits from 24 to 27 of <name>wimp_icon_flags</name> are taken by the Wimp to indicate the foreground colour of the icon, whilst the bits from 28 to 31 are taken as the background colour if one is needed. We&rsquo;ve split the two values out from <variable>flags</variable> into separate <variable>fg_colour</variable> and <variable>bg_colour</variable> parameters to make it easier to see what&rsquo;s going on.</p>
+
+<p>Both parameters are given as <name>wimp_colour</name> values &ndash; the same one that we met back in <reference id="chap-window-theory"/> for defining window colours. The required values are shifted up by 24 positions and 28 positions respectively, before being added into the flag value: OSLib helpfully provides <name>wimp_ICON_FG_COLOUR_SHIFT</name> and <name>wimp_ICON_BG_COLOUR_SHIFT</name>to give the required shifts; two masks are also defined as <name>wimp_ICON_FG_COLOUR</name> and <name>wimp_ICON_BG_COLOUR</name> to indicate the bits that contain the values.</p>
+
+<p>Some examples showing the effect of applying different foreground colours can be seen in <reference id="fig-icons-intro-fgcol"/>.</p>
+
+<image id="fig-icons-intro-fgcol" file="icons-intro-fgcol.png" title="Icons can appear in any of the Wimp colours"/>
+
+<p>To be able to specify a background colour for the icon, it must be filled &ndash; this can be achieved by setting the <name>wimp_ICON_FILLED</name> flag in the <variable>flags</variable> parameter passed to <function>win_create_icon()</function>. If the call to the function is changed to</p>
+
+<code lang="c">win_create_icon(100, -300, 300, -100, &quot;Icon&quot;, wimp_COLOUR_BLACK, wimp_COLOUR_WHITE,
+		wimp_ICON_TEXT | wimp_ICON_FILLED | wimp_ICON_BORDER | wimp_ICON_HCENTRED | wimp_ICON_VCENTRED);</code>
+
+<p>and then compiled and run, then the icon created should have a filled white background as seen in <reference id="fig-icons-intro-fill"/>.</p>
+
+<image id="fig-icons-intro-fill" file="icons-intro-fill.png" title="Icons can be filled with a solid background colour"/>
+</section>
+
+<section>
+<title>The icon data</title>
+
+<p>The final part of the <name>wimp_icon</name> structure is the <intro>icon data</intro> held in <variable>wimp_icon.data</variable>. The <name>wimp_icon_data</name> type is a union occupying 12 bytes of memory, which OSLib defines as follows:</p>
+
+<code lang="c">union wimp_icon_data {
 	char			text[12];
 	char			sprite[12];
 	char			text_and_sprite[12];
@@ -139,26 +208,21 @@ union wimp_icon_data {
 
 typedef union wimp_icon_data wimp_icon_data;</code>
 
-<p>There are six parts to the union, so it should be little suprise to learn that there are six basic types of icon in RISC&nbsp;OS. Which of these types an icon falls into, and hence which set of icon data it uses, is defined by three flags held in <variable>wimp_icon.flags</variable>. OSLib names them as follows:</p>
+<p>Whilst this might look confusing at first glance, there are six distinct parts to the union which correspond to the six &lsquo;types&rsquo; of icon which are available on RISC&nbsp;OS. It is possible to create <intro>text icons</intro>, <intro>sprite icons</intro> or <intro>text and sprite icons</intro>; each of these three variants can then be either <intro>indirected</intro> or <intro>non-indirected</intro>, which give us the six options.</p>
 
-<code lang="c">#define wimp_ICON_TEXT			((wimp_icon_flags) 0x1u)
-#define wimp_ICON_SPRITE		((wimp_icon_flags) 0x2u)
-#define wimp_ICON_INDIRECTED		((wimp_icon_flags) 0x100u)</code>
+<p>As we saw earlier, our icon is a text icon, because it has the <name>wimp_ICON_TEXT</name> flag bit set: this means that only the <variable>wimp_icon_data.text[]</variable> element of the union applies. It is simply a <name>char</name> array holding 12 values.</p>
 
-<p>By setting one or both of the <name>wimp_ICON_TEXT</name> and <name>wimp_ICON_SPRITE</name> flags, it is possible to make our icon either a <intro>text icon</intro>, a <intro>sprite icon</intro> or a <intro>text and sprite icon</intro>. Each of these three variants can then be either <intro>indirected</intro> or <intro>non-indirected</intro>, which give us the six options. We&rsquo;ll leave indirected icons until the next chapter, so for now there are three flavours to explore.</p>
+<p>For a non-indirected text icon, the Wimp treats the 12 bytes of icon data as holding between 0 and 12 characters of text to be displayed in the icon. In our <function>win_create_icon()</function> function, we set it up by copying in a string from a location pointed to by the <variable>text</variable> parameter:</p>
 
+<code lang="c">strncpy(icon_definition.icon.data.text, text, 12);</code>
+
+<p>As with a number of other, similar text buffers in other parts of the system, the Wimp treats the icon data for a non-indirected text icon a little surprisingly. If the length of the icon text is between 0 and 11 characters, it should be a <intro>control terminated string</intro> with a control character (such as a <code>'\0'</code>) after the last character. If the text is 12 characters long, however, it should be <em>unterminated</em>: this makes the behaviour of <function>strncpy()</function> ideal for populating it.</p>
 
 
 
 <!--
 
 
-#define wimp_ICON_BORDER                        ((wimp_icon_flags) 0x4u)
-#define wimp_ICON_HCENTRED                      ((wimp_icon_flags) 0x8u)
-#define wimp_ICON_VCENTRED                      ((wimp_icon_flags) 0x10u)
-#define wimp_ICON_FILLED                        ((wimp_icon_flags) 0x20u)
-#define wimp_ICON_RJUSTIFIED                    ((wimp_icon_flags) 0x200u)
-#define wimp_ICON_HALF_SIZE                     ((wimp_icon_flags) 0x800u)
 
 
 
@@ -177,14 +241,6 @@ typedef union wimp_icon_data wimp_icon_data;</code>
 #define wimp_ICON_SELECTED                      ((wimp_icon_flags) 0x200000u)
 #define wimp_ICON_SHADED                        ((wimp_icon_flags) 0x400000u)
 #define wimp_ICON_DELETED                       ((wimp_icon_flags) 0x800000u)
-
-#define wimp_ICON_FG_COLOUR_SHIFT               (24)
-#define wimp_ICON_FG_COLOUR                     ((wimp_icon_flags) 0xF000000u)
-      /*shift FG Colour bits by Wimp_IconFGColourShift*/
-
-#define wimp_ICON_BG_COLOUR_SHIFT               (28)
-#define wimp_ICON_BG_COLOUR                     ((wimp_icon_flags) 0xF0000000u)
-      /*shift BG Colour bits by Wimp_IconBGColourShift*/
 
 #define wimp_ICON_FONT_HANDLE_SHIFT             (24)
 #define wimp_ICON_FONT_HANDLE                   ((wimp_icon_flags) 0xFF000000u)

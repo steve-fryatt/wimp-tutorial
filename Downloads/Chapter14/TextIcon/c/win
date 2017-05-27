@@ -42,7 +42,7 @@ static int win_width, win_height;
 
 /* Function Prototypes */
 
-static wimp_i win_create_icon(int x0, int y0, int x1, int y1, char *text, wimp_colour fg_colour, wimp_icon_flags flags);
+static wimp_i win_create_icon(int x0, int y0, int x1, int y1, char *text, wimp_colour fg_colour, wimp_colour bg_colour, wimp_icon_flags flags);
 
 /* Window Initialisation. */
 
@@ -90,13 +90,13 @@ void win_initialise(void)
 
 	/* Create an icon. */
 
-	win_create_icon(100, -300, 300, -100, "Icon", wimp_COLOUR_BLACK,
-			wimp_ICON_TEXT | wimp_ICON_BORDER | wimp_ICON_HCENTRED | wimp_ICON_VCENTRED);
+	win_create_icon(100, -300, 300, -100, "Icon", wimp_COLOUR_BLACK, wimp_COLOUR_WHITE,
+			wimp_ICON_TEXT | wimp_ICON_FILLED | wimp_ICON_BORDER | wimp_ICON_HCENTRED | wimp_ICON_VCENTRED);
 }
 
 /* Create an icon in a window. */
 
-static wimp_i win_create_icon(int x0, int y0, int x1, int y1, char *text, wimp_colour fg_colour, wimp_icon_flags flags)
+static wimp_i win_create_icon(int x0, int y0, int x1, int y1, char *text, wimp_colour fg_colour, wimp_colour bg_colour, wimp_icon_flags flags)
 {
 	wimp_icon_create icon_definition;
 
@@ -105,7 +105,7 @@ static wimp_i win_create_icon(int x0, int y0, int x1, int y1, char *text, wimp_c
 	icon_definition.icon.extent.y0 = y0;
 	icon_definition.icon.extent.x1 = x1;
 	icon_definition.icon.extent.y1 = y1;
-	icon_definition.icon.flags = flags | (fg_colour << wimp_ICON_FG_COLOUR_SHIFT);
+	icon_definition.icon.flags = flags | (fg_colour << wimp_ICON_FG_COLOUR_SHIFT) | (bg_colour << wimp_ICON_BG_COLOUR_SHIFT);
 	strncpy(icon_definition.icon.data.text, text, 12);
 
 	return wimp_create_icon(&icon_definition);
