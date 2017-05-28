@@ -170,9 +170,9 @@ icon_definition.icon.extent.y1 = -100;</code>
 
 <image id="fig-icons-intro-fgcol" file="icons-intro-fgcol.png" title="Icons can appear in any of the Wimp colours"/>
 
-<p>To be able to specify a background colour for the icon, it must be filled &ndash; this can be achieved by setting the <name>wimp_ICON_FILLED</name> flag in the <variable>flags</variable> parameter passed to <function>win_create_icon()</function>. If the flag definition is changed to</p>
+<p>To be able to specify a background colour for the icon, it must be filled so that the background shows up &ndash; this can be achieved by setting the <name>wimp_ICON_FILLED</name> flag in <variable>icon_definition.icon.flags</variable> within <function>win_create_icon()</function>. If the flag definition is changed to</p>
 
-<code lang="c">	icon_definition.icon.flags = wimp_ICON_TEXT |
+<code lang="c">icon_definition.icon.flags = wimp_ICON_TEXT |
 		wimp_ICON_BORDER | wimp_ICON_FILLED |
 		wimp_ICON_HCENTRED | wimp_ICON_VCENTRED |
 		(wimp_COLOUR_BLACK &lt;&lt; wimp_ICON_FG_COLOUR_SHIFT) |
@@ -211,17 +211,101 @@ icon_definition.icon.extent.y1 = -100;</code>
 
 typedef union wimp_icon_data wimp_icon_data;</code>
 
-<p>Whilst this might look confusing at first glance, there are six distinct parts to the union which correspond to the six &lsquo;types&rsquo; of icon which are available on RISC&nbsp;OS. It is possible to create <intro>text icons</intro>, <intro>sprite icons</intro> or <intro>text and sprite icons</intro>; each of these three variants can then be either <intro>indirected</intro> or <intro>non-indirected</intro>, which give us the six options.</p>
+<p>Whilst this might look confusing at first glance, there are actually six distinct parts to the union corresponding to the six &lsquo;types&rsquo; of icon which are available on RISC&nbsp;OS. It is possible to create <intro>text icons</intro>, <intro>sprite icons</intro> or <intro>text and sprite icons</intro>; each of these three variants can then be either <intro>indirected</intro> or <intro>non-indirected</intro>, which give us the six options.</p>
 
-<p>As we saw earlier, our icon is a text icon, because it has the <name>wimp_ICON_TEXT</name> flag bit set: this means that only the <variable>wimp_icon_data.text[]</variable> element of the union applies. It is simply a <name>char</name> array holding 12 values.</p>
+<p>As we saw earlier, our icon is a text icon, because it has the <name>wimp_ICON_TEXT</name> flag bit set: this means that only the <variable>wimp_icon_data.text[]</variable> element at the top of the union definition applies. This is simply a <name>char</name> array holding 12 values: for a non-indirected text icon, the Wimp treats the 12 bytes of icon data as holding between 0 and 12 characters of text to be displayed in the icon.</p>
 
-<p>For a non-indirected text icon, the Wimp treats the 12 bytes of icon data as holding between 0 and 12 characters of text to be displayed in the icon. In our <function>win_create_icon()</function> function, we set it up by copying in a string from a location pointed to by the <variable>text</variable> parameter:</p>
+<p>In our <function>win_create_icon()</function> function, we set it up by copying in a string from a location pointed to by the <variable>text</variable> parameter:</p>
 
 <code lang="c">strncpy(icon_definition.icon.data.text, text, 12);</code>
 
 <p>As with a number of other, similar text buffers in other parts of the system, the Wimp treats the icon data for a non-indirected text icon a little surprisingly. If the length of the icon text is between 0 and 11 characters, it should be a <intro>control terminated string</intro> with a control character (such as a <code>'\0'</code>) after the last character. If the text is 12 characters long, however, it should be <em>unterminated</em>: this makes the behaviour of <function>strncpy()</function> ideal for populating it.</p>
+</section>
 
+<section>
+<title>Sprite icons</title>
 
+<p>If a text icon contains a piece of text, a sprite icon contains &ndash; unsurprisingly &ndash; a sprite. We&rsquo;ve already met sprite icons, in fact, as the iconbar icon that we created back in <reference id="chap-ibar"/> was one. All of the formatting options that we&rsquo;ve encountered so far apply equally to both text icons and sprite icons, so we can change our icon into a sprite icon simply by updating the <function>win_create_icon()</function> function as follows:</p>
+
+<code lang="c">static wimp_i win_create_icon(void)
+{
+	wimp_icon_create icon_definition;
+
+	icon_definition.w = win_handle;
+	icon_definition.icon.extent.x0 = 100;
+	icon_definition.icon.extent.y0 = -300;
+	icon_definition.icon.extent.x1 = 300;
+	icon_definition.icon.extent.y1 = -100;
+	icon_definition.icon.flags = wimp_ICON_SPRITE |
+			wimp_ICON_BORDER | wimp_ICON_FILLED |
+			wimp_ICON_HCENTRED | wimp_ICON_VCENTRED |
+			(wimp_COLOUR_BLACK &lt;&lt; wimp_ICON_FG_COLOUR_SHIFT) |
+			(wimp_COLOUR_WHITE &lt;&lt; wimp_ICON_BG_COLOUR_SHIFT);
+	strncpy(icon_definition.icon.data.sprite, &quot;directory&quot;, 12);
+
+	return wimp_create_icon(&amp;icon_definition);
+}</code>
+
+<p>Aside from changing the <name>wimp_ICON_TEXT</name> into <name>wimp_ICON_SPRITE</name> when setting <variable>icon_definition.icon.flags</variable>, the only change is to the line using <function>strncpy()</function> to initialise <variable>icon_definition.icon.data</variable>.</p>
+
+<p>Since this is now a sprite icon, we need to change to initialising the <variable>wimp_icon_data.sprite[]</variable> element instead of <variable>wimp_icon_data.text[]</variable>. Instead of a piece of text to be displayed, the icon data now contains the name of the sprite which is to be shown &ndash; again up to 12 characters long, and terminated by a control character (which means <code>'\0'</code> in C) if it&rsquo; 11 characters or less. We&rsquo;ve also changed the text that&rsquo;s copied in: now we&rsquo;re using the name of a sprite which we know exists in the Wimp&rsquo;s sprite area.</p>
+
+<p>If the changes, which can be found in full in <reference id="dl-icons-intro-sprite"/>, are compiled and run, the window seen in <reference id="fig-icons-intro-sprite"/> should be seen. The icon now contains a standard directory icon centred in its box, still with the same black border and white background.</p>
+
+<image id="fig-icons-intro-sprite" file="icons-intro-sprite.png" title="Sprite icons display a sprite instead of text"/>
+
+<download id="dl-icons-intro-sprite" file="SpriteIcon" title="Adding a Sprite Icon to the Window" compatibility="none"/>
+
+<p>All of the formatting options which we applied to the text icon can also be used on this sprite icon. The sprite can be aligned horizontally to the left, right or centre based on the settings of the <name>wimp_ICON_HCENTRED</name>, <name>wimp_ICON_VCENTRED</name> and <name>wimp_ICON_RJUSTIFIED</name> flags. It can have a border if <name>wimp_ICON_BORDER</name> is set, and it can be filled if <name>wimp_ICON_FILLED</name> is set. The foreground and background colours can also be changed.</p>
+
+<p>Since this is a sprite icon, the <name>wimp_ICON_HALF_SIZE</name> flag can also be used to change its appearance. If set, the Wimp scales the sprite to half-size when displaying it, which is used by the Filer to produce &lsquo;small&rsquo; icons when small sprites aren&rsquo;t available. Its effect can be seen in <reference id="fig-icons-intro-half"/>.</p>
+
+<image id="fig-icons-intro-half" file="icons-intro-half.png" title="The sprites in sprite icons can be shown at half size"/>
+</section>
+
+<section>
+<title>Text and sprite icons</title>
+
+<p>The final type of icon is the text and sprite icon; unfortunately, there are no prizes for guessing what this kind of icon does. This kind of icon is created by setting both the <name>wimp_ICON_TEXT</name> <em>and</em> <name>wimp_ICON_SPRITE</name> flags in the definition, like this:</p>
+
+<code lang="c">static wimp_i win_create_icon(void)
+{
+	wimp_icon_create icon_definition;
+
+	icon_definition.w = win_handle;
+	icon_definition.icon.extent.x0 = 100;
+	icon_definition.icon.extent.y0 = -300;
+	icon_definition.icon.extent.x1 = 300;
+	icon_definition.icon.extent.y1 = -100;
+	icon_definition.icon.flags = wimp_ICON_TEXT | wimp_ICON_SPRITE |
+			wimp_ICON_BORDER | wimp_ICON_FILLED |
+			wimp_ICON_HCENTRED | wimp_ICON_VCENTRED |
+			(wimp_COLOUR_BLACK &lt;&lt; wimp_ICON_FG_COLOUR_SHIFT) |
+			(wimp_COLOUR_WHITE &lt;&lt; wimp_ICON_BG_COLOUR_SHIFT);
+	strncpy(icon_definition.icon.data.text_and_sprite, &quot;directory&quot;, 12);
+
+	return wimp_create_icon(&amp;icon_definition);
+}</code>
+
+<p>The only other change to the definition is that we&rsquo;re now initialising the <variable>wimp_icon_data.text_and_sprite[]</variable> element of the <variable>icon_definition.icon.data</variable> union. A full set of code can be found in <reference id="dl-icons-intro-textsprite"/>.</p>
+
+<download id="dl-icons-intro-textsprite" file="TextAndSpriteIcon" title="Combining Text and Sprite in an Icon" compatibility="none"/>
+
+<p>When the changed code is compiled and run, the result should be as shown in <reference id="fig-icons-intro-textsprite"/>. The Wimp is treating the string held in <variable>icon_definition.icon.data.text_and_sprite</variable> as both the sprite name <em>and</em> the text to be displayed in the icon &ndash; this is a big limitation, as there are few occasions where this is likely to be useful.</p>
+
+<image id="fig-icons-intro-textsprite" file="icons-intro-textsprite.png" title="Combining both text and a sprite into the same icon"/>
+
+<p>The alignment of the icon&rsquo;s contents is still controlled by the <name>wimp_ICON_HCENTRED</name>, <name>wimp_ICON_VCENTRED</name> and <name>wimp_ICON_RJUSTIFIED</name> flags, but with this kind of icon they are used together to specify one of eight arrangements as shown in <reference id="fig-icons-intro-textsprite-align"/>.</p>
+
+<image id="fig-icons-intro-textsprite-align" file="icons-intro-textsprite-align.png" title="The eight ways in which text and sprite icons can be arranged"/>
+
+<p>The final &lsquo;oddity&rsquo; of text and sprite icons is that whatever the state of the <name>wimp_ICON_FILLED</name> flag, the text background is <em>always</em> filled. This can be seen in <reference id="fig-icons-intro-textsprite-fill"/>, where the icon on the left is filled and the icon on the right isn&rsquo;t &ndash; a contrasting colour has been used to make the effect stand out clearly.</p>
+
+<image id="fig-icons-intro-textsprite-fill" file="icons-intro-textsprite-fill.png" title="The text always has a filled background in text and sprite icons"/>
+
+<p>Clearly the icons that we&rsquo;ve seen up to now are limited in their potential uses: aside from the fact that text and sprite icons must contain sprites with names that exactly match their text, the limitation of twelve characters for simple text icons is quite a restriction. Fortunately there&rsquo;s a solution available, and in the next chapter we&rsquo;ll learn what it is when we meet <intro>indirected icons</intro>.</p>
+
+<p>In the meantime, now would be a good time to go back and play with all of the options that we&rsquo;ve met in this chapter until you&rsquo;re completely comfortable with them and what they do. Icons are central to the RISC&nbsp;OS Wimp, and the following chapters will be much easier to follow if the basics have been mastered!</p>
 
 <!--
 
@@ -229,8 +313,8 @@ typedef union wimp_icon_data wimp_icon_data;</code>
 
 
 
-#define wimp_ICON_ANTI_ALIASED                  ((wimp_icon_flags) 0x40u)
-#define wimp_ICON_NEEDS_HELP                    ((wimp_icon_flags) 0x80u)
+#define wimp_ICON_ANTI_ALIASED		((wimp_icon_flags) 0x40u)
+#define wimp_ICON_NEEDS_HELP		((wimp_icon_flags) 0x80u)
 
 #define wimp_ICON_BUTTON_TYPE_SHIFT             (12)
 #define wimp_ICON_BUTTON_TYPE                   ((wimp_icon_flags) 0xF000u)

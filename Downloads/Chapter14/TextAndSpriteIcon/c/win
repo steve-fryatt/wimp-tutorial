@@ -104,11 +104,12 @@ static wimp_i win_create_icon(void)
 	icon_definition.icon.extent.y0 = -300;
 	icon_definition.icon.extent.x1 = 300;
 	icon_definition.icon.extent.y1 = -100;
-	icon_definition.icon.flags = wimp_ICON_TEXT |
-			wimp_ICON_BORDER |
+	icon_definition.icon.flags = wimp_ICON_TEXT | wimp_ICON_SPRITE |
+			wimp_ICON_BORDER | wimp_ICON_FILLED |
 			wimp_ICON_HCENTRED | wimp_ICON_VCENTRED |
-			(wimp_COLOUR_BLACK << wimp_ICON_FG_COLOUR_SHIFT);
-	strncpy(icon_definition.icon.data.text, "Icon", 12);
+			(wimp_COLOUR_BLACK << wimp_ICON_FG_COLOUR_SHIFT) |
+			(wimp_COLOUR_WHITE << wimp_ICON_BG_COLOUR_SHIFT);
+	strncpy(icon_definition.icon.data.text_and_sprite, "directory", 12);
 
 	return wimp_create_icon(&icon_definition);
 }
