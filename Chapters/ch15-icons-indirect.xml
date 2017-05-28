@@ -1,0 +1,91 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+
+<!DOCTYPE xmlmanual SYSTEM "../wimp.dtd">
+
+<manual xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="xmldoc.xsd" version="1.8.6">
+
+<!-- Chapter 15
+   -
+   - Indirected Icons
+  -->
+
+<chapter id="chap-icons-indirect">
+<resources>
+<images>Chapter15</images>
+<downloads>Chapter15</downloads>
+</resources>
+<filename>indirect.html</filename>
+<title>Indirected Icons</title>
+
+<summary>Icons are the building blocks used to make windows do something useful.</summary>
+
+<section>
+<p>Over the past few chapters, we&rsquo;ve seen how to create a window and get it to open on the desktop. Whilst windows are extremely useful in their own right, they can often become a lot more useful when combined with <intro>icons</intro>.</p>
+
+
+
+<!--
+
+
+
+
+
+#define wimp_ICON_ANTI_ALIASED		((wimp_icon_flags) 0x40u)
+#define wimp_ICON_NEEDS_HELP		((wimp_icon_flags) 0x80u)
+
+#define wimp_ICON_BUTTON_TYPE_SHIFT             (12)
+#define wimp_ICON_BUTTON_TYPE                   ((wimp_icon_flags) 0xF000u)
+      /*shift button bits by Wimp_IconButtonTypeShift*/
+
+#define wimp_ICON_ESG_SHIFT                     (16)
+#define wimp_ICON_ESG                           ((wimp_icon_flags) 0x1F0000u)
+      /*shift ESG bits by Wimp_IconESGShift*/
+#define wimp_ICON_ALLOW_ADJUST                  ((wimp_icon_flags) 0x400u)
+
+#define wimp_ICON_SELECTED                      ((wimp_icon_flags) 0x200000u)
+#define wimp_ICON_SHADED                        ((wimp_icon_flags) 0x400000u)
+#define wimp_ICON_DELETED                       ((wimp_icon_flags) 0x800000u)
+
+#define wimp_ICON_FONT_HANDLE_SHIFT             (24)
+#define wimp_ICON_FONT_HANDLE                   ((wimp_icon_flags) 0xFF000000u)
+      /*shift Font Handle bits by Wimp_IconFontHandleShift*/
+      
+      
+      
+#define wimp_BUTTON_NEVER                       ((wimp_icon_flags) 0x0u)
+      /*shift by Wimp_IconButtonTypeShift*/
+#define wimp_BUTTON_ALWAYS                      ((wimp_icon_flags) 0x1u)
+      /*shift by Wimp_IconButtonTypeShift*/
+#define wimp_BUTTON_REPEAT                      ((wimp_icon_flags) 0x2u)
+      /*shift by Wimp_IconButtonTypeShift*/
+#define wimp_BUTTON_CLICK                       ((wimp_icon_flags) 0x3u)
+      /*shift by Wimp_IconButtonTypeShift*/
+#define wimp_BUTTON_RELEASE                     ((wimp_icon_flags) 0x4u)
+      /*shift by Wimp_IconButtonTypeShift*/
+#define wimp_BUTTON_DOUBLE_CLICK                ((wimp_icon_flags) 0x5u)
+      /*shift by Wimp_IconButtonTypeShift*/
+#define wimp_BUTTON_CLICK_DRAG                  ((wimp_icon_flags) 0x6u)
+      /*shift by Wimp_IconButtonTypeShift*/
+#define wimp_BUTTON_RELEASE_DRAG                ((wimp_icon_flags) 0x7u)
+      /*shift by Wimp_IconButtonTypeShift*/
+#define wimp_BUTTON_DOUBLE_DRAG                 ((wimp_icon_flags) 0x8u)
+      /*shift by Wimp_IconButtonTypeShift*/
+#define wimp_BUTTON_MENU_ICON                   ((wimp_icon_flags) 0x9u)
+      /*shift by Wimp_IconButtonTypeShift*/
+#define wimp_BUTTON_DOUBLE_CLICK_DRAG           ((wimp_icon_flags) 0xAu)
+      /*shift by Wimp_IconButtonTypeShift*/
+#define wimp_BUTTON_RADIO                       ((wimp_icon_flags) 0xBu)
+      /*shift by Wimp_IconButtonTypeShift*/
+#define wimp_BUTTON_WRITE_CLICK_DRAG            ((wimp_icon_flags) 0xEu)
+      /*shift by Wimp_IconButtonTypeShift*/
+#define wimp_BUTTON_WRITABLE                    ((wimp_icon_flags) 0xFu)
+ 
+
+
+-->
+
+
+
+</section>
+</chapter>
+</manual>
