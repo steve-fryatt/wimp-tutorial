@@ -17,10 +17,71 @@
 <filename>indirect.html</filename>
 <title>Indirected Icons</title>
 
-<summary>Icons are the building blocks used to make windows do something useful.</summary>
+<summary>Having seen the basics, it&rsquo;s time to start making icons do more complicated things.</summary>
 
 <section>
-<p>Over the past few chapters, we&rsquo;ve seen how to create a window and get it to open on the desktop. Whilst windows are extremely useful in their own right, they can often become a lot more useful when combined with <intro>icons</intro>.</p>
+<p>In the <reference id="chap-icons-intro">last chapter</reference> we saw how to create simple icons containing text and sprites, but were limited by the twelve character restriction on the data field. The way around this, as was hinted at the end, is to use <intro>indirected icons</intro> instead of the simple icons which we have seen up to now.</p>
+
+<p>In a simple text icon, the twelve bytes of icon data are simply used to hold up to twelve characters for display in the icon.</p>
+
+<code lang="c">char			text[12];</code>
+
+<p>Whilst this works, it&rsquo;s quite restrictive and doesn&rsquo;t allow for any complex messages to be displayed. There&rsquo;s also another issue: just as with windows, it isn&rsquo;t possible to change an icon&rsquo;s definition after it has been created. This means that it isn&rsquo;t possible to change the text in a simple text icon.</p>
+
+<p>With an indirected text icon, the Wimp treats the icon data as three numeric words: two pointers and an integer.</p>
+
+<code lang="c">struct {
+	char		*text;
+	char		*validation;
+	int		size;
+} indirected_text;</code>
+
+
+
+<table>
+<columns><col>Command</col><col>Action</col></columns>
+<row><col>A</col><col>Allow Characters</col></row>
+<row><col>C</col><col>Set 24-bit Colours</col></row>
+<row><col>D</col><col>Display Mask Character</col></row>
+<row><col>F</col><col>Set Wimp Font Colours</col></row>
+<row><col>K</col><col>Assign Functionality to Keys</col></row>
+<row><col>L</col><col>Format the Icon Text</col></row>
+<row><col>N</col><col>Set Icon Name</col></row>
+<row><col>P</col><col>Set the Pointer Shape and Active Point</col></row>
+<row><col>R</col><col>3D Border Commands</col></row>
+<row><col>S</col><col>Sprite Names</col></row>
+<row><col>U</col><col>Unicode Character Limit</col></row>
+<row><col>X</col><col>Disable Width Calculation</col></row>
+<row><col>Y</col><col>Enable Features</col></row>
+</table>
+
+<p>Creating an indirected text icon is simply a case of setting the <name>wimp_ICON_TEXT</name> and <name>wimp_ICON_INDIRECTED</name> flags when setting <variable>icon_definition.icon.flags</variable> .</p>
+
+
+<code lang="c">union wimp_icon_data {
+	char			text[12];
+	char			sprite[12];
+	char			text_and_sprite[12];
+	struct {
+		char		*text;
+		char		*validation;
+		int		size;
+	} indirected_text;
+	struct {
+		osspriteop_id	id;
+		osspriteop_area	*area;
+		int		size;
+	} indirected_sprite;
+	struct {
+		char		*text;
+		char		*validation;
+		int		size;
+	} indirected_text_and_sprite;
+};</code>
+
+
+
+
 
 
 
@@ -33,52 +94,52 @@
 #define wimp_ICON_ANTI_ALIASED		((wimp_icon_flags) 0x40u)
 #define wimp_ICON_NEEDS_HELP		((wimp_icon_flags) 0x80u)
 
-#define wimp_ICON_BUTTON_TYPE_SHIFT             (12)
-#define wimp_ICON_BUTTON_TYPE                   ((wimp_icon_flags) 0xF000u)
+#define wimp_ICON_BUTTON_TYPE_SHIFT	(12)
+#define wimp_ICON_BUTTON_TYPE		((wimp_icon_flags) 0xF000u)
       /*shift button bits by Wimp_IconButtonTypeShift*/
 
-#define wimp_ICON_ESG_SHIFT                     (16)
-#define wimp_ICON_ESG                           ((wimp_icon_flags) 0x1F0000u)
+#define wimp_ICON_ESG_SHIFT		(16)
+#define wimp_ICON_ESG			((wimp_icon_flags) 0x1F0000u)
       /*shift ESG bits by Wimp_IconESGShift*/
-#define wimp_ICON_ALLOW_ADJUST                  ((wimp_icon_flags) 0x400u)
+#define wimp_ICON_ALLOW_ADJUST		((wimp_icon_flags) 0x400u)
 
-#define wimp_ICON_SELECTED                      ((wimp_icon_flags) 0x200000u)
-#define wimp_ICON_SHADED                        ((wimp_icon_flags) 0x400000u)
-#define wimp_ICON_DELETED                       ((wimp_icon_flags) 0x800000u)
+#define wimp_ICON_SELECTED		((wimp_icon_flags) 0x200000u)
+#define wimp_ICON_SHADED		((wimp_icon_flags) 0x400000u)
+#define wimp_ICON_DELETED		((wimp_icon_flags) 0x800000u)
 
-#define wimp_ICON_FONT_HANDLE_SHIFT             (24)
-#define wimp_ICON_FONT_HANDLE                   ((wimp_icon_flags) 0xFF000000u)
+#define wimp_ICON_FONT_HANDLE_SHIFT	(24)
+#define wimp_ICON_FONT_HANDLE		((wimp_icon_flags) 0xFF000000u)
       /*shift Font Handle bits by Wimp_IconFontHandleShift*/
       
       
       
-#define wimp_BUTTON_NEVER                       ((wimp_icon_flags) 0x0u)
+#define wimp_BUTTON_NEVER		((wimp_icon_flags) 0x0u)
       /*shift by Wimp_IconButtonTypeShift*/
-#define wimp_BUTTON_ALWAYS                      ((wimp_icon_flags) 0x1u)
+#define wimp_BUTTON_ALWAYS		((wimp_icon_flags) 0x1u)
       /*shift by Wimp_IconButtonTypeShift*/
-#define wimp_BUTTON_REPEAT                      ((wimp_icon_flags) 0x2u)
+#define wimp_BUTTON_REPEAT		((wimp_icon_flags) 0x2u)
       /*shift by Wimp_IconButtonTypeShift*/
-#define wimp_BUTTON_CLICK                       ((wimp_icon_flags) 0x3u)
+#define wimp_BUTTON_CLICK		((wimp_icon_flags) 0x3u)
       /*shift by Wimp_IconButtonTypeShift*/
-#define wimp_BUTTON_RELEASE                     ((wimp_icon_flags) 0x4u)
+#define wimp_BUTTON_RELEASE		((wimp_icon_flags) 0x4u)
       /*shift by Wimp_IconButtonTypeShift*/
-#define wimp_BUTTON_DOUBLE_CLICK                ((wimp_icon_flags) 0x5u)
+#define wimp_BUTTON_DOUBLE_CLICK	((wimp_icon_flags) 0x5u)
       /*shift by Wimp_IconButtonTypeShift*/
-#define wimp_BUTTON_CLICK_DRAG                  ((wimp_icon_flags) 0x6u)
+#define wimp_BUTTON_CLICK_DRAG		((wimp_icon_flags) 0x6u)
       /*shift by Wimp_IconButtonTypeShift*/
-#define wimp_BUTTON_RELEASE_DRAG                ((wimp_icon_flags) 0x7u)
+#define wimp_BUTTON_RELEASE_DRAG	((wimp_icon_flags) 0x7u)
       /*shift by Wimp_IconButtonTypeShift*/
-#define wimp_BUTTON_DOUBLE_DRAG                 ((wimp_icon_flags) 0x8u)
+#define wimp_BUTTON_DOUBLE_DRAG		((wimp_icon_flags) 0x8u)
       /*shift by Wimp_IconButtonTypeShift*/
-#define wimp_BUTTON_MENU_ICON                   ((wimp_icon_flags) 0x9u)
+#define wimp_BUTTON_MENU_ICON		((wimp_icon_flags) 0x9u)
       /*shift by Wimp_IconButtonTypeShift*/
-#define wimp_BUTTON_DOUBLE_CLICK_DRAG           ((wimp_icon_flags) 0xAu)
+#define wimp_BUTTON_DOUBLE_CLICK_DRAG	((wimp_icon_flags) 0xAu)
       /*shift by Wimp_IconButtonTypeShift*/
-#define wimp_BUTTON_RADIO                       ((wimp_icon_flags) 0xBu)
+#define wimp_BUTTON_RADIO		((wimp_icon_flags) 0xBu)
       /*shift by Wimp_IconButtonTypeShift*/
-#define wimp_BUTTON_WRITE_CLICK_DRAG            ((wimp_icon_flags) 0xEu)
+#define wimp_BUTTON_WRITE_CLICK_DRAG	((wimp_icon_flags) 0xEu)
       /*shift by Wimp_IconButtonTypeShift*/
-#define wimp_BUTTON_WRITABLE                    ((wimp_icon_flags) 0xFu)
+#define wimp_BUTTON_WRITABLE		((wimp_icon_flags) 0xFu)
  
 
 
