@@ -273,7 +273,7 @@ static osbool main_message_quit(wimp_message *message)
 	return TRUE;
 }</code>
 
-<p>There&rsquo;s one other change that we need to make, to help the compiler find the new files. The makefile that <reference id="list-shared-make">we have used up to now</reference> only allows for a single source file, called <file>main.c</file> &ndash; the same as the name of the absolute file that the compiler generates. With two source files, this is no longer sufficient for our needs.</p>
+<p>There&rsquo;s one other change that we need to make, to help the compiler find the new files. The makefile that <reference id="list-compile-better-shared-make">we have used up to now</reference> only allows for a single source file, called <file>main.c</file> &ndash; the same as the name of the absolute file that the compiler generates. With two source files, this is no longer sufficient for our needs.</p>
 
 <p>Fortunately, the Standard Makefile system allows more complex configurations to be described by using the <variable>OBJS</variable> variable to list the intermediate object files that the compiler should generate in the <file>o</file> folder &ndash; and hence the original source files contained in the <file>c</file> folder. Adding a line reading <code>OBJS = main ibar</code> tells Make that it should be compiling two source files &ndash; <file>c.main</file> and <file>c.ibar</file> &ndash; into two object files: <file>o.main</file> and <file>o.ibar</file>. The <file>h.ibar</file> header file is found via the <code>#include</code> lines in the source files.</p>
 

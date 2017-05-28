@@ -97,9 +97,9 @@ wimp_initialise(wimp_VERSION_RO3, &quot;Example App&quot;, NULL, NULL);</code>
 
 <p>Which to use depends on the circumstances, but generally if there&rsquo;s a risk of an error occurring the X form of the SWI is better: it allows us to trap the error, tidy up, and exit gracefully.</p>
 
-<p>OSLib&rsquo;s StrongHelp manual is more-or-less essential reading for developers, and we can see in <reference id="img2-1"/> that it contains full details of how to use <function>wimp_initialise()</function> amongst its many pages.</p>
+<p>OSLib&rsquo;s StrongHelp manual is more-or-less essential reading for developers, and we can see in <reference id="fig-moving-to-c-oslib-wiman"/> that it contains full details of how to use <function>wimp_initialise()</function> amongst its many pages.</p>
 
-<image id="img2-1" file="c2-oslib-wimpinitman.png" title="OSLib&rsquo;s manual showing the use of wimp_initialise()"/>
+<image id="fig-moving-to-c-oslib-wiman" file="moving-to-c-oslib-wiman.png" title="OSLib&rsquo;s manual showing the use of wimp_initialise()"/>
 
 <p>Although we&rsquo;ll start by documenting the various parts of OSLib that we use in the opening examples, being able to navigate the supplied information will soon become essential.</p>
 </section>
@@ -107,7 +107,7 @@ wimp_initialise(wimp_VERSION_RO3, &quot;Example App&quot;, NULL, NULL);</code>
 <section>
 <title>Different types of variable</title>
 
-<p>Now that we&rsquo;ve been introduced to OSLib, let&rsquo;s see how we can use it to re-write <reference id="list1-1"/> in C.</p>
+<p>Now that we&rsquo;ve been introduced to OSLib, let&rsquo;s see how we can use it to re-write <reference id="list-start-basic-simple"/> in C.</p>
 
 <p>As this simple example should all fit inside <function>main()</function>, the first thing to do is declare the variables that we&rsquo;ll be using. The BASIC version used three variables: <variable>quit%</variable>, <variable>b%</variable> and <variable>reason%</variable>, and the C version will be the same.</p>
 
@@ -338,9 +338,9 @@ typedef union wimp_block wimp_block;</code>
 <section>
 <title>Putting it all together</title>
 
-<p>Assembling all of the snippets of code above will result in <reference id="list2-1"/>. Although its structure doesn&rsquo;t follow the way in which a Wimp application would normally be written in C, it has the same structure as its BASIC sibling from <reference id="list1-1"/> &ndash; allowing the two to be compared easily.</p>
+<p>Assembling all of the snippets of code above will result in <reference id="list-moving-to-c-simple"/>. Although its structure doesn&rsquo;t follow the way in which a Wimp application would normally be written in C, it has the same structure as its BASIC sibling from <reference id="list-start-basic-simple"/> &ndash; allowing the two to be compared easily.</p>
 
-<code id="list2-1" lang="c" file="c.main" title="The application converted to C">/**
+<code id="list-moving-to-c-simple" lang="c" file="c.main" title="The application converted to C">/**
  * Example 2.1
  *
  * (c) Stephen Fryatt, 2015

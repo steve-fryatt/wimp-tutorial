@@ -20,7 +20,7 @@
 <summary>With a window on the screen, we now need to understand how it works.</summary>
 
 <section>
-<p>In the <reference id="chap-windows">last chapter</reference>, we added a window to our application. This involved quite a lot of code, but we didn&rsquo;t really explain much of it in any detail; now is the time to rectify that. This chapter is going to be quite theory-heavy &ndash; it would be sensible to experiment with the concepts as we go through them, using the code from <reference id="dl-window-dflt-handler"/> as a base to work from.</p>
+<p>In the <reference id="chap-windows">last chapter</reference>, we added a window to our application. This involved quite a lot of code, but we didn&rsquo;t really explain much of it in any detail; now is the time to rectify that. This chapter is going to be quite theory-heavy &ndash; it would be sensible to experiment with the concepts as we go through them, using the code from <reference id="dl-windows-dflt-handler"/> as a base to work from.</p>
 
 <p>The first stage to creating a window is to define it in a <name>wimp_window</name> block suitable for passing to <swi>Wimp_CreateWindow</swi>. We created ours in <function>win_initialise()</function> as part of <reference id="list-windows-win-c"/>, and the code in question looked like this:</p>
 
@@ -105,9 +105,9 @@ window_definition.icon_count = 0;</code>
 
 typedef struct os_box os_box;</code>
 
-<p>For the visible area, the coordinates used are treated as OS&nbsp;units relative to the screen origin at the bottom left of the iconbar. This can be seen graphically in <reference id="fig-win-theory-visible"/>.</p>
+<p>For the visible area, the coordinates used are treated as OS&nbsp;units relative to the screen origin at the bottom left of the iconbar. This can be seen graphically in <reference id="fig-window-theory-visible"/>.</p>
 
-<image id="fig-win-theory-visible" file="win-theory-visible.png" title="A window&rsquo;s Visible Area is defined in terms of screen coordinates"/>
+<image id="fig-window-theory-visible" file="window-theory-visible.png" title="A window&rsquo;s Visible Area is defined in terms of screen coordinates"/>
 
 <p>When we gave the visible area as</p>
 
@@ -120,9 +120,9 @@ window_definition.visible.y1 = 600;</code>
 
 <p>These coordinates are where the window first opens; once the user has moved it around, they are forgotten. You can see how they affect the opening position of the window by changing the numbers given in the four lines above, re-compiling the code and looking at where the window appears when it is first opened.</p>
 
-<p>The next set of coordinates that must be specified are the <intro>work area extent</intro>. The work area is the area &lsquo;inside&rsquo; the window, and the visible area can be thought of as a view on to some or all of the work area. <reference id="fig-win-theory-visible"/> above showed a window displaying part of a graphic on the desktop; <reference id="fig-win-theory-work-area"/> shows how this visible area of the window might relate to the full graphic in its work area.</p>
+<p>The next set of coordinates that must be specified are the <intro>work area extent</intro>. The work area is the area &lsquo;inside&rsquo; the window, and the visible area can be thought of as a view on to some or all of the work area. <reference id="fig-window-theory-visible"/> above showed a window displaying part of a graphic on the desktop; <reference id="fig-window-theory-work-area"/> shows how this visible area of the window might relate to the full graphic in its work area.</p>
 
-<image id="fig-win-theory-work-area" file="win-theory-work-area.png" title="The Work Area of a window can be larger than its Visible Area"/>
+<image id="fig-window-theory-work-area" file="window-theory-work-area.png" title="The Work Area of a window can be larger than its Visible Area"/>
 
 <p>As with the visible area, the work area is defined by its bottom-left and top-right coordinates &ndash; but unlike the visible area, they&rsquo;re not really referenced to a specific origin. Conventionally <maths>x0</maths> and <maths>y1</maths> &ndash; which give the top-left of the work area &ndash; are both set to zero; this means that the <maths>x</maths> coordinates increase in a positive direction when moving from left to right, and the <maths>y</maths> coordinates <em>decrease</em> in a <em>negative</em> direction when moving from top to bottom. We defined (<maths>x0</maths>,<maths>y0</maths>) to be (0,&minus;1200) and (<maths>x1</maths>,<maths>y1</maths>) to be (1200,0):</p>
 
@@ -140,9 +140,9 @@ window_definition.extent.y0 = -600;
 window_definition.extent.x1 = 600;
 window_definition.extent.y1 = 600;</code>
 
-<p>However, as can be seen from <reference id="fig-win-theory-scroll-bars"/>, the location of the scroll bars when the window opens will be affected.</p>
+<p>However, as can be seen from <reference id="fig-window-theory-scroll-bars"/>, the location of the scroll bars when the window opens will be affected.</p>
 
-<image id="fig-win-theory-scroll-bars" file="win-theory-scroll-bars.png" title="The Work Area affects the starting position of the Scroll Bars"/>
+<image id="fig-window-theory-scroll-bars" file="window-theory-scroll-bars.png" title="The Work Area affects the starting position of the Scroll Bars"/>
 
 <p>The reason for this are two more values in the definition, which determine the <maths>x</maths> and <maths>y</maths> <intro>scroll offsets</intro>.</p>
 

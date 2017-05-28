@@ -20,15 +20,15 @@
 <summary>The RISC&nbsp;OS Wimp is essentially an event-driven environment, so why don&rsquo;t we take advantage of that?</summary>
 
 <section>
-<p>Our first foray into programming the Wimp in C (see <reference id="list2-1"/>) followed the very BASIC-like approach of repeatedly polling the Wimp inside a <code>while</code> loop and processing the resulting reason codes in a <code>switch</code> statement. While it worked, it&rsquo;s not very well structured: apart from anything else, the entire application is contained inside the single <function>main()</function> function!</p>
+<p>Our first foray into programming the Wimp in C (see <reference id="list-moving-to-c-simple"/>) followed the very BASIC-like approach of repeatedly polling the Wimp inside a <code>while</code> loop and processing the resulting reason codes in a <code>switch</code> statement. While it worked, it&rsquo;s not very well structured: apart from anything else, the entire application is contained inside the single <function>main()</function> function!</p>
 </section>
 
 <section>
 <title>Modular code</title>
 
-<p>The first thing to do is to take the code from <reference id="list2-1"/> and re-write it in a slightly more modular form. This isn&rsquo;t essential at this stage, but it will help to keep things clear as we go on and add more features. It results in the code seen in <reference id="list4-1"/>.</p>
+<p>The first thing to do is to take the code from <reference id="list-moving-to-c-simple"/> and re-write it in a slightly more modular form. This isn&rsquo;t essential at this stage, but it will help to keep things clear as we go on and add more features. It results in the code seen in <reference id="list-event-driven-funcs"/>.</p>
 
-<code id="list4-1" lang="c" file="c.main" title="Restructuring the code to use functions">/**
+<code id="list-event-driven-funcs" lang="c" file="c.main" title="Restructuring the code to use functions">/**
  * Example 4.1
  *
  * (c) Stephen Fryatt, 2015.
@@ -98,15 +98,15 @@ static void main_terminate(void)
 
 <p>While very similar to its predecessor, there&rsquo;s now an initialisation, poll and termination routine, which breaks the code up into logical chunks. Each has a name starting with <code>main_</code> &ndash; this isn&rsquo;t essential, but will help us to keep track of where things are when the code grows. The <function>main()</function> itself simply calls these routines.</p>
 
-<p>A copy of the modified code can be found in <reference id="dl4-1"/>. It should compile in exactly the same way as <reference id="dl3-1"/>.</p>
+<p>A copy of the modified code can be found in <reference id="dl-event-driven-funcs"/>. It should compile in exactly the same way as <reference id="dl-compiling-simple"/>.</p>
 
-<download id="dl4-1" file="SimpleCApp2" title="A Simple C Application Version 2" compatibility="none"/>
+<download id="dl-event-driven-funcs" file="SimpleCApp2" title="A Simple C Application Version 2" compatibility="none"/>
 </section>
 
 <section>
 <title>Routing events</title>
 
-<p>There was another problem with <reference id="list2-1"/>, however, which is still present in <reference id="list4-1"/> and will become more obvious as the application develops: the <code>switch</code> statement following <function>wimp_poll()</function> will need to know about every single piece of the application in order to pass control on to the correct parts. For now that&rsquo;s not much of an issue, but as more features are added to our application it will soon become one.</p>
+<p>There was another problem with <reference id="list-moving-to-c-simple"/>, however, which is still present in <reference id="list-event-driven-funcs"/> and will become more obvious as the application develops: the <code>switch</code> statement following <function>wimp_poll()</function> will need to know about every single piece of the application in order to pass control on to the correct parts. For now that&rsquo;s not much of an issue, but as more features are added to our application it will soon become one.</p>
 
 <p>This is a common problem in BASIC, and many applications will be centred around a <code>CASE</code> statement similar to the one in below (don&rsquo;t worry about what the different <code>WHEN</code> clauses actually do).</p>
 
@@ -135,7 +135,7 @@ ENDPROC</code>
 
 <p>The RISC&nbsp;OS Wimp is also event-driven, although to a casual observer &ndash; especially one working in BASIC &ndash; it&rsquo;s quite well hidden. With the exception, perhaps, of <name>Null_Reason</name>, the information returned by <swi>Wimp_Poll</swi> is a series of events: a <name>Mouse_Click</name> could be an event destined for an action button in a window somewhere, while <name>Redraw_Window_Request</name> is an indication that a window wishes to be redrawn.</p>
 
-<p>The <code>while</code> loop contained in <function>main_poll()</function> in <reference id="list4-1"/> does in fact contain an event handler &ndash; in the <code>switch</code> statement here.</p>
+<p>The <code>while</code> loop contained in <function>main_poll()</function> in <reference id="list-event-driven-funcs"/> does in fact contain an event handler &ndash; in the <code>switch</code> statement here.</p>
 
 <code lang="c">switch (reason) {
 case wimp_USER_MESSAGE:
@@ -194,9 +194,9 @@ case wimp_USER_MESSAGE_RECORDED:
 <code lang="c">#include "oslib/wimp.h"
 #include "sflib/event.h"</code>
 
-<p>Putting this all together results in the code found in <reference id="list4-2"/>, which should perform exactly the same as <reference id="list4-1"/> when run.</p>
+<p>Putting this all together results in the code found in <reference id="list-event-driven-dispatch"/>, which should perform exactly the same as <reference id="list-event-driven-funcs"/> when run.</p>
 
-<code id="list4-2" lang="c" file="c.main" title="Using the event dispatcher">/**
+<code id="list-event-driven-dispatch" lang="c" file="c.main" title="Using the event dispatcher">/**
  * Example 4.2
  *
  * (c) Stephen Fryatt, 2015.

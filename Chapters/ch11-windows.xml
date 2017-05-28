@@ -20,9 +20,9 @@
 <summary>We&rsquo;re finally ready to create our first window!</summary>
 
 <section>
-<p>With the initial legwork complete, we&rsquo;re now ready to add the first window to our application. Windows are a fundamental part of the RISC&nbsp;OS desktop: so much so that most of us probably don&rsquo;t give them much thought from day to day. A couple of examples, belonging to familiar applications Zap and Snapper, can be seen in <reference id="fig-window-sample"/>.</p>
+<p>With the initial legwork complete, we&rsquo;re now ready to add the first window to our application. Windows are a fundamental part of the RISC&nbsp;OS desktop: so much so that most of us probably don&rsquo;t give them much thought from day to day. A couple of examples, belonging to familiar applications Zap and Snapper, can be seen in <reference id="fig-windows-sample"/>.</p>
 
-<image id="fig-window-sample" file="window-sample.png" title="A couple of windows on the RISC&nbsp;OS desktop"/>
+<image id="fig-windows-sample" file="windows-sample.png" title="A couple of windows on the RISC&nbsp;OS desktop"/>
 
 <p>All windows are views on to areas of the screen, which usually belong to an individual applications. Some, like the one belonging to Snapper to the front and left of the screenshot above, have a small fixed area which is always in view; others, like the Zap window to the back right, have a much larger area than is visible at any one time and which can be explored using their scroll bars. The area that&rsquo;s visible is known as the <intro>visible area</intro>, while the whole &lsquo;virtual&rsquo; area encompassed by moving the scroll bars from one extreme to the other is the <intro>work area</intro>. The job of the Wimp is to look after these areas and help the application to update them when required.</p>
 
@@ -172,15 +172,15 @@ void win_open(void);
 
 <code lang="makefile">OBJS = main ibar win</code>
 
-<p>The updated source code should look something like that shown in <reference id="fig-window-first-project"/>, and a full set of code can be found in <reference id="dl-window-first"/>.</p>
+<p>The updated source code should look something like that shown in <reference id="fig-windows-first-project"/>, and a full set of code can be found in <reference id="dl-windows-first"/>.</p>
 
-<image id="fig-window-first-project" file="window-first-project.png" title="The complete project, with the window code added"/>
+<image id="fig-windows-first-project" file="windows-first-project.png" title="The complete project, with the window code added"/>
 
-<download id="dl-window-first" file="FirstWindow" title="A First Attempt at Putting a Window on the Desktop" compatibility="none"/>
+<download id="dl-windows-first" file="FirstWindow" title="A First Attempt at Putting a Window on the Desktop" compatibility="none"/>
 
-<p>When compiled and run, the application should install on the iconbar as before. However this time, clicking <mouse>Select</mouse> over its iconbar icon will open a window &ndash; something like the one shown in <reference id="fig-window-first"/>. Unfortunately, there&rsquo;s a problem: the window doesn&rsquo;t respond to the mouse. In fact, all attempts to move, scroll or even close it are simply ignored. Fortunately the application can still be quit with an <mouse>Adjust</mouse> click on its iconbar icon &ndash; at which point the window disappears.</p>
+<p>When compiled and run, the application should install on the iconbar as before. However this time, clicking <mouse>Select</mouse> over its iconbar icon will open a window &ndash; something like the one shown in <reference id="fig-windows-first"/>. Unfortunately, there&rsquo;s a problem: the window doesn&rsquo;t respond to the mouse. In fact, all attempts to move, scroll or even close it are simply ignored. Fortunately the application can still be quit with an <mouse>Adjust</mouse> click on its iconbar icon &ndash; at which point the window disappears.</p>
 
-<image id="fig-window-first" file="window-first.png" title="Our first window &ndash; Hello World!"/>
+<image id="fig-windows-first" file="windows-first.png" title="Our first window &ndash; Hello World!"/>
 </section>
 
 <section>
@@ -188,9 +188,9 @@ void win_open(void);
 
 <p>The reason for this apparent unresponsiveness is actually quite simple: we&rsquo;re missing some code. Although it might seem a little surprising at first, the Wimp is unable to open or change the position of a window &ndash; by which we mean dragging, resizing or scrolling it &ndash; unless our application requests that it does so by calling <swi>Wimp_OpenWindow</swi>. Our window appears on screen because we called <function>wimp_open_window()</function> for it at the end of our <function>win_open()</function> function, but after that it&rsquo;s stuck in the one place because we never ask the Wimp to move it again.</p>
 
-<p>This behaviour on the part of the Wimp is deliberate, and gives the programmer a great deal of flexibility. Back in the days of RISC&nbsp;OS&nbsp;3, applications like Draw &ndash; seen in <reference id="fig-window-pane"/> below &ndash; could implement their toolboxes by manipulating whatever additional windows they wanted whenever the Wimp asked them to adjust their main window. With the advent of the Nested Wimp there are much easier ways to handle this requirement, but the facility still has some important uses: consider something like a spreadsheet, for example, where scrolling the window down or right adds rows or columns to the grid &ndash; requiring the window&rsquo;s work area to be adjusted on the fly.</p>
+<p>This behaviour on the part of the Wimp is deliberate, and gives the programmer a great deal of flexibility. Back in the days of RISC&nbsp;OS&nbsp;3, applications like Draw &ndash; seen in <reference id="fig-windows-pane"/> below &ndash; could implement their toolboxes by manipulating whatever additional windows they wanted whenever the Wimp asked them to adjust their main window. With the advent of the Nested Wimp there are much easier ways to handle this requirement, but the facility still has some important uses: consider something like a spreadsheet, for example, where scrolling the window down or right adds rows or columns to the grid &ndash; requiring the window&rsquo;s work area to be adjusted on the fly.</p>
 
-<image id="fig-window-pane" file="window-pane.png" title="Applications like Draw use Open Window Request events to manage their tool panes"/>
+<image id="fig-windows-pane" file="windows-pane.png" title="Applications like Draw use Open Window Request events to manage their tool panes"/>
 
 <p>Fortunately, in the vast majority of cases &ndash; where we&rsquo;re not trying to implement spreadsheets &ndash; things are nowhere near as difficult as they might at first appear. If we examine the <name>wimp_block</name> union returned by <swi>Wimp_Poll</swi> &ndash; which we met in <reference id="chap-moving-to-c"/> and <reference id="chap-ibar"/> &ndash; we can see that it contains an entry called <variable>wimp_block.open</variable> which is a <name>wimp_open</name> structure. Looking back at how we implemented the <function>win_open()</function> function above, we should see that this is the same type as the one that we cast our pointer to when calling <function>wimp_open_window()</function>.</p>
 
@@ -212,9 +212,9 @@ void win_open(void);
 <code lang="c">win_handle = wimp_create_window(&amp;window_definition);
 event_add_window_open_event(win_handle, win_open_window_request);</code>
 
-<p>With a bit of tidying up to include the necessary function prototype and <code>#include &quot;sflib/event.h&quot;</code> in <file>c.win</file>, this addition can be found in <reference id="dl-window-open-handler"/>. When run, clicking <mouse>Select</mouse> on the iconbar icon will open our window &ndash; which should now move around when dragged, and respond to resizing and scrolling.</p>
+<p>With a bit of tidying up to include the necessary function prototype and <code>#include &quot;sflib/event.h&quot;</code> in <file>c.win</file>, this addition can be found in <reference id="dl-windows-open-handler"/>. When run, clicking <mouse>Select</mouse> on the iconbar icon will open our window &ndash; which should now move around when dragged, and respond to resizing and scrolling.</p>
 
-<download id="dl-window-open-handler" file="OpenWindowHandler" title="Using an Open Window Request Handler" compatibility="none"/>
+<download id="dl-windows-open-handler" file="OpenWindowHandler" title="Using an Open Window Request Handler" compatibility="none"/>
 
 <p>However, clicking on the <icon>Close</icon> button still doesn&rsquo;t work &ndash; and there&rsquo;s another potential annoyance with this approach, too. We&rsquo;ve said that <em>every</em> window needs to respond to <name>Open_Window_Request</name> events, and since our event handler is registered to this one specific window handle, we would need to register a handler for each window that our application uses. This isn&rsquo;t impossible, but it will be a lot of duplication for something that&rsquo;s so standard.</p>
 </section>
@@ -264,7 +264,7 @@ event_add_window_open_event(win_handle, win_open_window_request);</code>
 	}
 }</code>
 
-<p>The difference now is that, because this <code>switch</code> statement is only called when <function>event_process_event()</function> returns <name>FALSE</name>, it is only used when the event library can&rsquo;t find a handler for an event. If our application had a main window with a requirement to do something clever when <name>Open_Window_Request</name> events were received, we could still register an event handler for it as we did in <reference id="dl-window-open-handler"/> and this would be used instead of this fall-back <code>switch</code> statement. If the same application also had dialogue boxes where a simple call to <swi>Wimp_OpenWindow</swi> were enough, then the default code here will handle it without us needing to give it a second thought.</p>
+<p>The difference now is that, because this <code>switch</code> statement is only called when <function>event_process_event()</function> returns <name>FALSE</name>, it is only used when the event library can&rsquo;t find a handler for an event. If our application had a main window with a requirement to do something clever when <name>Open_Window_Request</name> events were received, we could still register an event handler for it as we did in <reference id="dl-windows-open-handler"/> and this would be used instead of this fall-back <code>switch</code> statement. If the same application also had dialogue boxes where a simple call to <swi>Wimp_OpenWindow</swi> were enough, then the default code here will handle it without us needing to give it a second thought.</p>
 </section>
 
 <section>
@@ -288,11 +288,11 @@ event_add_window_open_event(win_handle, win_open_window_request);</code>
 
 <p>This makes handling <name>Close_Window_Request</name> events &ndash; at least in the default case &ndash; as simple as passing the window handle to <swi>Wimp_CloseWindow</swi>.</p>
 
-<p>The changes to use default handlers for both <name>Open_Window_Request</name> and <name>Close_Window_Request</name> events can be found in <reference id="dl-window-dflt-handler"/>. If the code is complied and run, the window should be seen to be fully responsive. Not only will it move around when dragged, scrolled and resized, but it will also close when asked to do so; it can then be re-opened with another <mouse>Select</mouse> click on the iconbar.</p>
+<p>The changes to use default handlers for both <name>Open_Window_Request</name> and <name>Close_Window_Request</name> events can be found in <reference id="dl-windows-dflt-handler"/>. If the code is complied and run, the window should be seen to be fully responsive. Not only will it move around when dragged, scrolled and resized, but it will also close when asked to do so; it can then be re-opened with another <mouse>Select</mouse> click on the iconbar.</p>
 
-<download id="dl-window-dflt-handler" file="DefaultWindowHandler" title="Using Default Open and Close Handlers" compatibility="none"/>
+<download id="dl-windows-dflt-handler" file="DefaultWindowHandler" title="Using Default Open and Close Handlers" compatibility="none"/>
 
-<p>While our application now contains all of the code required to open a window and allow the user to move it around, we&rsquo;ve glossed over a lot of detail in order to get here. Over the next couple of chapters we&rsquo;ll go back over what we&rsquo;ve done, examining how it works and why. As we go, feel free to experiment with the code in <reference id="dl-window-dflt-handler"/> to see how the ideas that are about to be covered work in practice.</p>
+<p>While our application now contains all of the code required to open a window and allow the user to move it around, we&rsquo;ve glossed over a lot of detail in order to get here. Over the next couple of chapters we&rsquo;ll go back over what we&rsquo;ve done, examining how it works and why. As we go, feel free to experiment with the code in <reference id="dl-windows-dflt-handler"/> to see how the ideas that are about to be covered work in practice.</p>
 </section>
 </chapter>
 </manual>

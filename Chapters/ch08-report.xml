@@ -31,7 +31,7 @@
 
 <p>The appearance of the report boxes has evolved over the years; an example from Draw running on a recent version of the OS can be seen in <reference id="fig-report-example-draw"/>.</p>
 
-<image id="fig-report-example-draw" file="example-draw.png" title="A simple example of a Wimp Report box"/>
+<image id="fig-report-example-draw" file="report-example-draw.png" title="A simple example of a Wimp Report box"/>
 
 <p>Error reports are made using <swi>Wimp_ReportError</swi>, which maps to <em>two</em> functions in OSLib: <function>wimp_report_error()</function> and <function>wimp_report_error_by_category()</function>. Aside from anything else, this provides a neat example of how OSLib handles SWIs which present two or more significantly different options in the sets of parameters that they require. In this case, the reason is that error reporting changed significantly when RISC&nbsp;OS&nbsp;3.5 was released with the RiscPC. Although modern applications should probably be using the new interface, the old one is still more or less supported and &ndash; as it requires less setting up, we&rsquo;ll start there before upgrading to the new system.</p>
 
@@ -139,7 +139,7 @@ void repbox_message(char *message);
 
 <p>we can double-click on <file>Mk</file> to build a new version of our application. After running it, click <mouse>Select</mouse> on its iconbar icon and the report shown in <reference id="fig-report-box-old-ok"/> should appear. The full code can be found in <reference id="dl-report-old"/>.</p>
 
-<image id="fig-report-box-old-ok" file="report-1-ok.png" title="Our first feedback from the application"/>
+<image id="fig-report-box-old-ok" file="report-box-old-ok.png" title="Our first feedback from the application"/>
 
 <download id="dl-report-old" file="OldReportBox" title="Respond to Select Clicks with a Simple Report" compatibility="none"/>
 </section>
@@ -164,7 +164,7 @@ void repbox_message(char *message);
 
 <p>As might be expected, the report now has a <icon>Cancel</icon> button instead of <icon>OK</icon> &ndash; as shown in <reference id="fig-report-box-old-cancel"/>.</p>
 
-<image id="fig-report-box-old-cancel" file="report-1-cancel.png" title="Using the wimp_ERROR_BOX_CANCEL_ICON flag"/>
+<image id="fig-report-box-old-cancel" file="report-box-old-cancel.png" title="Using the wimp_ERROR_BOX_CANCEL_ICON flag"/>
 
 <p>Similarly, we could request the inclusion of <em>both</em> buttons by setting both flags: this is done by bitwise-oring them together using the <code>|</code> operator:</p>
 
@@ -173,7 +173,7 @@ void repbox_message(char *message);
 
 <p>The result can be seen in <reference id="fig-report-box-old-ok-cancel"/>.</p>
 
-<image id="fig-report-box-old-ok-cancel" file="report-1-ok-cancel.png" title="Using the OK and Cancel flags together"/>
+<image id="fig-report-box-old-ok-cancel" file="report-box-old-ok-cancel.png" title="Using the OK and Cancel flags together"/>
 
 <p>In each case, the highlighted button is the <intro>default</intro>, and will be selected if <key>Return</key> is pressed. In the <reference id="fig-report-box-old-ok-cancel">last example</reference> the <icon>OK</icon> button was highlighted, but we might prefer <icon>Cancel</icon> to be highlighted instead &ndash; perhaps if we were asking whether the user <em>really</em> wished to delete their unsaved document. To achieve this, we simply include <name>wimp_ERROR_BOX_HIGHLIGHT_CANCEL</name> in the flags:</p>
 
@@ -183,7 +183,7 @@ void repbox_message(char *message);
 
 <p>The effect is to swap the two buttons over, such that <icon>Cancel</icon> is now the default. This can be seen in <reference id="fig-report-box-old-cancel-ok"/>.</p>
 
-<image id="fig-report-box-old-cancel-ok" file="report-1-cancel-ok.png" title="Making Cancel the default action"/>
+<image id="fig-report-box-old-cancel-ok" file="report-box-old-cancel-ok.png" title="Making Cancel the default action"/>
 
 <p>The title of the report in <reference id="fig-report-box-old-ok"/> above was &ldquo;Message from Example App&rdquo;: this came from the Wimp prefixing the application name pointed to by  <variable>*name</variable> with &ldquo;Message from &rdquo;. In older versions of RISC&nbsp;OS, this could be the slightly more worrying &ldquo;Error from &rdquo; instead. It&rsquo;s possible to ask the Wimp not to do this by including <name>wimp_ERROR_BOX_SHORT_TITLE</name> in <variable>flags</variable> &ndash; meaning that the title will be the exact string pointed to by <variable>*name</variable>;. Either way, the supplied text must be less than 20 characters long.</p>
 
@@ -252,7 +252,7 @@ void repbox_message(char *message);
 
 <p>A full set of the changes can be found in <reference id="dl-report-new"/>. When the application is re-compiled and run, a <mouse>Select</mouse> click on its iconbar icon will produce the information report seen in <reference id="fig-report-box-new"/>.</p>
 
-<image id="fig-report-box-new" file="report-2.png" title="Using an Information report to say &ldquo;hello&rdquo;"/>
+<image id="fig-report-box-new" file="report-box-new.png" title="Using an Information report to say &ldquo;hello&rdquo;"/>
 
 <download id="dl-report-new" file="NewReportBox" title="Using the &lsquo;New&rsquo; Report Facilities" compatibility="none"/>
 
@@ -286,7 +286,7 @@ void repbox_message(char *message);
 
 <p>If these changes are compiled and run, clicking <mouse>Select</mouse> on our iconbar icon should result in the report shown in <reference id="fig-report-box-new-buttons"/>.</p>
 
-<image id="fig-report-box-new-buttons" file="report-3.png" title="It&rsquo;s possible to add custom buttons to reports"/>
+<image id="fig-report-box-new-buttons" file="report-box-new-buttons.png" title="It&rsquo;s possible to add custom buttons to reports"/>
 
 <p>The <icon>Continue</icon> button is still there on the right, because <name>wimp_ERROR_BOX_OK_ICON</name> is still being set in <variable>flags</variable>. If we remove it, so that the call to <function>wimp_report_error_by_category()</function> looks like this:</p>
 
@@ -294,9 +294,9 @@ void repbox_message(char *message);
 		(wimp_ERROR_BOX_CATEGORY_INFO &lt;&lt; wimp_ERROR_BOX_CATEGORY_SHIFT),
 		&quot;Example App&quot;, &quot;application&quot;, wimpspriteop_AREA, buttons);</code> 
 
-<p>then only our &lsquo;custom&rsquo; buttons will be shown to the user &ndash; as can be seen in <reference id="fig-report-box-new-buttons-custom"/>. A complete set of code can be found in <reference id="dl-report-buttons"/> below.</p>
+<p>then only our &lsquo;custom&rsquo; buttons will be shown to the user &ndash; as can be seen in <reference id="fig-report-box-new-custom"/>. A complete set of code can be found in <reference id="dl-report-buttons"/> below.</p>
 
-<image id="fig-report-box-new-buttons-custom" file="report-3-custom.png" title="We don&rsquo;t even need to include the default buttons"/>
+<image id="fig-report-box-new-custom" file="report-box-new-custom.png" title="We don&rsquo;t even need to include the default buttons"/>
 
 <p>It should be clear that the report system is fairly flexible, and the fact that the Wimp sorts out all of the formatting for us makes it easy to use. There are some limitations to the additional buttons, though: although the Wimp will extend the report box horizontally to accommodate a large number of buttons, this can quickly fill a small screen and should be used with caution. That said, if you need to ask a question with more than a &ldquo;Yes, No or Cancel&rdquo; kind of answer, then a report box probably isn&rsquo;t going to be the correct way to do it &ndash; you should be thinking about a proper dialogue box, once you know how to do that!</p>
 

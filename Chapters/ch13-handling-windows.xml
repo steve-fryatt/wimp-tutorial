@@ -111,14 +111,14 @@
 
 <p>This is why the remit of the <swi>Wimp_OpenWindow</swi> is much wider than it might at first appear. It does include the obvious action of opening a previously closed window, but in fact the Wimp&rsquo;s idea of &ldquo;opening&rdquo; includes <em>any</em> occasion when a parameter contained in the <name>wimp_open</name> structure changes. In fact, as we saw in <reference id="chap-windows"/>, these attributes of a window <em>can&rsquo;t</em> change unless the application calls <swi>Wimp_OpenWindow</swi>: our window was initially immovable until our code responded to the <name>Open_Window_Request</name> events being sent by the Wimp.</p>
 
-<p>In the case that we&rsquo;re responding to a <name>Open_Window_Request</name> event, working out what to put into the <name>wimp_open</name> structure is made easier because the Wimp supplies a structure of its own along with the event, containing what <em>it</em> thinks the values should be. The application can change the values, or &ndash; more usually &ndash; perform other actions based on what those values are, before passing them on to <function>wimp_open_window()</function>, but in many cases the code that we saw in <reference id="dl-window-open-handler"/> is all that&rsquo;s required:</p>
+<p>In the case that we&rsquo;re responding to a <name>Open_Window_Request</name> event, working out what to put into the <name>wimp_open</name> structure is made easier because the Wimp supplies a structure of its own along with the event, containing what <em>it</em> thinks the values should be. The application can change the values, or &ndash; more usually &ndash; perform other actions based on what those values are, before passing them on to <function>wimp_open_window()</function>, but in many cases the code that we saw in <reference id="dl-windows-open-handler"/> is all that&rsquo;s required:</p>
 
 <code lang="c">static void win_open_window_request(wimp_open *open)
 {
 	wimp_open_window(open);
 }</code>
 
-<p>In practice, an application built around SFLib would probably use the default method of responding to the event, as seen in <reference id="dl-window-dflt-handler"/>, instead of a dedicated function like this &ndash; but the result is the same. Either way, the necessary code isn&rsquo;t complicated, because the Wimp does the hard work for us.</p>
+<p>In practice, an application built around SFLib would probably use the default method of responding to the event, as seen in <reference id="dl-windows-dflt-handler"/>, instead of a dedicated function like this &ndash; but the result is the same. Either way, the necessary code isn&rsquo;t complicated, because the Wimp does the hard work for us.</p>
 
 <p>Harder to work out is what to fill the <name>wimp_open</name> structure with when we wish to open a window which is currently closed. There&rsquo;s no <name>Open_Window_Request</name> event to give us a hint, but in fact the Wimp can still help despite that. Comparing the contents of the <name>wimp_open</name> structure with the definition of <name>wimp_window</name> (which was given in the <reference id="chap-window-theory">last chapter</reference>) should reveal that, aside from the <name>wimp_w</name> window handle <variable>wimp_open.w</variable> at the top of the <name>wimp_open</name> structure, it is identical to the first part of a window definition.</p>
 

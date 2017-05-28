@@ -28,7 +28,7 @@
 
 <p>Up to now, all of our communication with the Wimp has been through the results of calling <swi>Wimp_Poll</swi> &ndash; so it shouldn&rsquo;t be too much of a surprise to learn that information about mouse clicks comes via this route as well. In fact, virtually everything that our application needs to know about what the user is up to arrives in this way.</p>
 
-<p>Before we go on to implement our new code properly, we&rsquo;ll go back and take a look at how it <em>might</em> have been implemented before we broke the application up into self-contained modules in <reference id="chap-event-driven"/> &ndash; this should make it clearer how things are working &lsquo;beneath the surface&rsquo;. Back in <reference id="list4-1"/>, our call to <swi>Wimp_Poll</swi> looked like this:</p>
+<p>Before we go on to implement our new code properly, we&rsquo;ll go back and take a look at how it <em>might</em> have been implemented before we broke the application up into self-contained modules in <reference id="chap-event-driven"/> &ndash; this should make it clearer how things are working &lsquo;beneath the surface&rsquo;. Back in <reference id="list-event-driven-funcs"/>, our call to <swi>Wimp_Poll</swi> looked like this:</p>
 
 <code lang="c">wimp_block	block;
 wimp_event_no	reason;
@@ -130,7 +130,7 @@ case wimp_USER_MESSAGE_RECORDED:
 <section>
 <title>Registering events</title>
 
-<p>Unfortunately there&rsquo;s a problem with this code: the <code>switch</code> statement that we&rsquo;ve just added it to was removed in <reference id="list4-2"/>, when we replaced it with</p>
+<p>Unfortunately there&rsquo;s a problem with this code: the <code>switch</code> statement that we&rsquo;ve just added it to was removed in <reference id="list-event-driven-dispatch"/>, when we replaced it with</p>
 
 <code lang="c">while (!main_quit_flag) {
 	reason = wimp_poll(wimp_MASK_NULL, &amp;blk, &amp;pollword);
@@ -142,7 +142,7 @@ case wimp_USER_MESSAGE_RECORDED:
 
 <p>Fortunately, just as <name>wimp_pointer</name> contains the <variable>wimp_pointer.w</variable> variable, many of the structures which form <name>wimp_block</name> have an associated window handle &ndash; as we&rsquo;ll see, much of the user&rsquo;s interaction with our application is based around windows. Using this, the event library can route these events by testing the window handle that is contained within them.</p>
 
-<p>Since we&rsquo;re dealing with clicks on the iconbar icon, the best place to put its <name>Mouse Click</name> event handler is into the <file>c.ibar</file> file. Just as we did when we implemented an event handler for <name>Message_Quit</name> in <reference id="list4-2"/>, the first thing to do is to package up the code from the <code>switch</code> statement above into a <name>Mouse Click</name> event handler.</p>
+<p>Since we&rsquo;re dealing with clicks on the iconbar icon, the best place to put its <name>Mouse Click</name> event handler is into the <file>c.ibar</file> file. Just as we did when we implemented an event handler for <name>Message_Quit</name> in <reference id="list-event-driven-dispatch"/>, the first thing to do is to package up the code from the <code>switch</code> statement above into a <name>Mouse Click</name> event handler.</p>
 
 <code lang="c">static void ibar_mouse_click(wimp_pointer *pointer)
 {
@@ -332,9 +332,9 @@ void ibar_initialise(void);
 
 <p>Running <file>Mk</file> should generate a new build of the application which installs on the iconbar as before. Crucially, however, clicking the mouse over its icon causes it to quit immediately: there&rsquo;s no longer any need to go via the Task Manager.</p>
 
-<p>A full set of files, with the changes for handling mouse clicks, can be found in <reference id="dl-ibar-click"/>.</p>
+<p>A full set of files, with the changes for handling mouse clicks, can be found in <reference id="dl-click-ibar"/>.</p>
 
-<download id="dl-ibar-click" file="SimpleCIBarClick" title="Responding to Clicks on the Iconbar" compatibility="none"/>
+<download id="dl-click-ibar" file="SimpleCIBarClick" title="Responding to Clicks on the Iconbar" compatibility="none"/>
 </section>
 
 <section>
@@ -361,9 +361,9 @@ void ibar_initialise(void);
 	}
 }</code>
 
-<p>A full set of the updated files can be found in <reference id="dl-ibar-click2"/>. With this modification in place, it is now necessary to click <mouse>Adjust</mouse> on the iconbar icon in order to make the application exit: <mouse>Select</mouse> and <mouse>Menu</mouse> will be ignored.</p>
+<p>A full set of the updated files can be found in <reference id="dl-click-ibar2"/>. With this modification in place, it is now necessary to click <mouse>Adjust</mouse> on the iconbar icon in order to make the application exit: <mouse>Select</mouse> and <mouse>Menu</mouse> will be ignored.</p>
 
-<download id="dl-ibar-click2" file="SimpleCIBarClick2" title="Check for Adjust Clicks before Exiting" compatibility="none"/>
+<download id="dl-click-ibar2" file="SimpleCIBarClick2" title="Check for Adjust Clicks before Exiting" compatibility="none"/>
 </section>
 </chapter>
 </manual>

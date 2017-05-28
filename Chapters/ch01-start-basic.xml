@@ -97,9 +97,9 @@ END</code>
 <section>
 <title>Putting it all together</title>
 
-<p>Putting the pieces together, we end up with the program in <reference id="list1-1"/>.</p>
+<p>Putting the pieces together, we end up with the program in <reference id="list-start-basic-simple"/>.</p>
 
-<code id="list1-1" lang="bbcbasic" title="A simple Wimp application in BASIC">REM >Example 1.1
+<code id="list-start-basic-simple" lang="bbcbasic" title="A simple Wimp application in BASIC">REM >Example 1.1
 REM
 REM (c) Stephen Fryatt, 2015
 
@@ -122,9 +122,9 @@ SYS &quot;Wimp_CloseDown&quot;
 
 END</code>
 
-<p>When run, the application creates an entry in the Task Manager as shown in <reference id="img1-1"/> and waits to be asked to quit via the menu (selecting <menu>Quit</menu> from the Task Manager will send a <message>Message_Quit</message> to the application).</p>
+<p>When run, the application creates an entry in the Task Manager as shown in <reference id="fig-start-basic-tmgr"/> and waits to be asked to quit via the menu (selecting <menu>Quit</menu> from the Task Manager will send a <message>Message_Quit</message> to the application).</p>
 
-<image id="img1-1" file="example1-1.png" title="Our application in the Task Manager&rsquo;s display"/>
+<image id="fig-start-basic-tmgr" file="start-basic-tmgr.png" title="Our application in the Task Manager&rsquo;s display"/>
 
 <p>It&rsquo;s not exactly a <em>useful</em> application, but it does show the main structure required to interact with the Wimp.</p>
 </section>

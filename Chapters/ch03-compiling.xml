@@ -24,22 +24,22 @@
 
 <p>There are two choices of compiler when it comes to using C on RISC&nbsp;OS: the port of GCC, and CC which comes as part of the <link href="https://www.riscosopen.org/content/sales/dde">Desktop Development Environment</link> (or DDE) from RISC&nbsp;OS Open Ltd (which is more usually refered to as &ldquo;Norcroft&rdquo; after its original authors: Arthur Norman and Alan Mycroft). In this tutorial we&rsquo;re going to concentrate on the DDE, since that&rsquo;s the &lsquo;native&rsquo; compiler and that one that&rsquo;s still used for all OS development.</p>
 
-<p>Once installed, the DDE consists of two main folders on the hard disc: <file>AcornC/C++</file> in the root directory, and <file>DDE</file> within <file>Apps</file> &ndash; both are shown in <reference id="img3-1"/>. Other folders are also included in the install: the most important are probably the <file>DDE</file> manuals folder which is placed in <file>Documents</file> and <file>Sources</file> which is placed in the root directory of the disc.</p>
+<p>Once installed, the DDE consists of two main folders on the hard disc: <file>AcornC/C++</file> in the root directory, and <file>DDE</file> within <file>Apps</file> &ndash; both are shown in <reference id="fig-compiling-dde-files"/>. Other folders are also included in the install: the most important are probably the <file>DDE</file> manuals folder which is placed in <file>Documents</file> and <file>Sources</file> which is placed in the root directory of the disc.</p>
 
-<image id="img3-1" file="c3-dde-files.png" title="The main contents of the DDE"/>
+<image id="fig-compiling-dde-files" file="compiling-dde-files.png" title="The main contents of the DDE"/>
 </section>
 
-<section id="sect-install-oslib">
+<section id="sect-compiling-install-oslib">
 <title>Installing OSLib</title>
 <p>To be able to compile our application, we&rsquo;ll also require the OSLib library to be available: this doesn&rsquo;t come as standard with the DDE, but is easily obtained from the <link href="http://ro-oslib.sourceforge.net/">OSLib website</link>. Follow the link to the <link href="http://ro-oslib.sourceforge.net/archives.html">Zip Archives</link> and then on to the latest release &ndash; at the time of writing, this was <link href="http://ro-oslib.sourceforge.net/release-7.00.html">Version&nbsp;7.00</link>. From the &ldquo;Library downloads&rdquo; section, fetch the version of OSLib for &ldquo;Acorn/Norcroft and GCCSDK GCC&nbsp;3.4.x&rdquo;; for this tutorial, there&rsquo;s no need to download OSLibSupport. It&rsquo;s a good idea to also download the StrongHelp manual from the &ldquo;Other downloads&rdquo; section: this documents all of the functions, types and constants defined by the library.</p>
 
-<p>With the two zip files downloaded from the OSLib site, the files shown in <reference id="img3-2"/> should now be available. Note that the screenshot shows version 7.00: the filenames &ndash; and contents &ndash; of the archives may vary in future releases.</p>
+<p>With the two zip files downloaded from the OSLib site, the files shown in <reference id="fig-compiling-oslib-files"/> should now be available. Note that the screenshot shows version 7.00: the filenames &ndash; and contents &ndash; of the archives may vary in future releases.</p>
 
-<image id="img3-2" file="c3-oslib-files.png" title="The OSLib library (version 7.00 here) comes in two separate archives"/>
+<image id="fig-compiling-oslib-files" file="compiling-oslib-files.png" title="The OSLib library (version 7.00 here) comes in two separate archives"/>
 
-<p>There&rsquo;s no set way to install OSLib, so it&rsquo;s very much a matter of personal preference. In this case, we&rsquo;ll copy the contents of the main OSLib archive into a folder called <file>OSLib</file> which has been created in the <file>AcornC/C++</file> folder as shown in <reference id="img3-3"/>. This keeps the library together with the other DDE resources. The StrongHelp manual can be put wherever we like: storing it with the documentation, or with other StrongHelp manuals, might be a good idea.</p>
+<p>There&rsquo;s no set way to install OSLib, so it&rsquo;s very much a matter of personal preference. In this case, we&rsquo;ll copy the contents of the main OSLib archive into a folder called <file>OSLib</file> which has been created in the <file>AcornC/C++</file> folder as shown in <reference id="fig-compiling-oslib-install"/>. This keeps the library together with the other DDE resources. The StrongHelp manual can be put wherever we like: storing it with the documentation, or with other StrongHelp manuals, might be a good idea.</p>
 
-<image id="img3-3" file="c3-oslib-install.png" title="The OSLib files installed ready for use"/>
+<image id="fig-compiling-oslib-install" file="compiling-oslib-install.png" title="The OSLib files installed ready for use"/>
 
 <p>In the <file>OSLib</file> folder that we&rsquo;ve just created is an Obey file called <file>SetVars</file>;. In a similar way to the DDE&rsquo;s <file>!SetPaths</file> application, <file>SetVars</file> must be run (or double-clicked) before attempting to use OSLib in a compilation.</p>
 </section>
@@ -47,25 +47,25 @@
 <section>
 <title>Creating a project</title>
 
-<p>To get our new project started, we&rsquo;ll begin by launching the DDE and setting up OSLib. Open the <file>AcornC/C++</file> folder and double-click on <file>!SetPaths</file> to set up the DDE environment (as shown in <reference id="img3-3"/>); next open the <file>OSLib</file> folder and double-click on <file>SetVars</file> to do the same for OSLib. These actions set up system variables which will allow all the necessary files and resources to be found until the machine is shut down or reset.</p>
+<p>To get our new project started, we&rsquo;ll begin by launching the DDE and setting up OSLib. Open the <file>AcornC/C++</file> folder and double-click on <file>!SetPaths</file> to set up the DDE environment (as shown in <reference id="fig-compiling-oslib-install"/>); next open the <file>OSLib</file> folder and double-click on <file>SetVars</file> to do the same for OSLib. These actions set up system variables which will allow all the necessary files and resources to be found until the machine is shut down or reset.</p>
 
-<p>The next thing to do is to create a home for the files that form our new application: for now, that&rsquo;s just a single text file containing the C source code introduced as <reference id="list2-1"/> in the previous chapter. Using Zap, the result will look something like that shown in <reference id="img3-4"/>.</p>
+<p>The next thing to do is to create a home for the files that form our new application: for now, that&rsquo;s just a single text file containing the C source code introduced as <reference id="list-moving-to-c-simple"/> in the previous chapter. Using Zap, the result will look something like that shown in <reference id="fig-compiling-simple-zap"/>.</p>
 
-<image id="img3-4" file="c3-ex1-zap.png" title="The listing typed into Zap"/>
+<image id="fig-compiling-simple-zap" file="compiling-simple-zap.png" title="The listing typed into Zap"/>
 
-<p>Next, we need to set some folders up on disc to take the project and all its files. Create a folder somewhere to house the project &ndash; here we&rsquo;ve called it <file>SimpleCApp</file> &ndash; and inside it create three more folders called <file>c</file>, <file>h</file> and <file>o</file>. Save the text file as <file>main</file> inside the <file>c</file> folder, as shown in <reference id="img3-5"/>.</p>
+<p>Next, we need to set some folders up on disc to take the project and all its files. Create a folder somewhere to house the project &ndash; here we&rsquo;ve called it <file>SimpleCApp</file> &ndash; and inside it create three more folders called <file>c</file>, <file>h</file> and <file>o</file>. Save the text file as <file>main</file> inside the <file>c</file> folder, as shown in <reference id="fig-compiling-simple-folders"/>.</p>
 
-<image id="img3-5" file="c3-ex1-folders.png" title="The project folders on disc"/>
+<image id="fig-compiling-simple-folders" file="compiling-simple-folders.png" title="The project folders on disc"/>
 
 <p>The three folders are used to get around the lack of filename extensions in RISC&nbsp;OS: while compilers on other systems would tend to put a &lsquo;.c&rsquo; extenstion on the end of C source files (<file>main.c</file> in our case), the DDC stores them without extensions inside folders. Thus the &lsquo;.c&rsquo; files live in the <file>c</file> folder, &lsquo;.h&rsquo; files in the <file>h</file> folder, and so on.</p>
 
-<p>At present our project is simple enough not to need any header files, but we&rsquo;ve created an <file>h</file> folder for them ready for when we do need it. The <file>o</file> folder will take any object files (whose names would end with &lsquo;.o&rsquo; on other systems) created during the compilation. A complete set of the project&rsquo;s files can be found in <reference id="dl3-1"/>.</p>
+<p>At present our project is simple enough not to need any header files, but we&rsquo;ve created an <file>h</file> folder for them ready for when we do need it. The <file>o</file> folder will take any object files (whose names would end with &lsquo;.o&rsquo; on other systems) created during the compilation. A complete set of the project&rsquo;s files can be found in <reference id="dl-compiling-simple"/>.</p>
 
-<download id="dl3-1" file="SimpleCApp" title="A Simple C Application" compatibility="none"/>
+<download id="dl-compiling-simple" file="SimpleCApp" title="A Simple C Application" compatibility="none"/>
 
 </section>
 
-<section id="compile-dde-1">
+<section id="sect-compiling-dde">
 <title>Compiling the code</title>
 
 <p>To compile the code, we&rsquo;re going to use the CC compiler that comes with the DDE. Assuming that the environment has been installed in its default state (as described above), go to the <file>Apps</file> folder on the hard disc, then into <file>DDE</file>, and double-click on <file>!CC</file> to install it on the iconbar.</p>
@@ -76,23 +76,23 @@
 
 <p>at the top of the file.</p>
 
-<p>When run, the <file>SetVars</file> obey file in the OSLib folder sets up a couple of system variables to point to the library: <variable>OSLib$Path</variable> and <variable>OSLib$Dir</variable>. For the instalation shown in <reference id="img3-3"/>, these are set as shown in <reference id="img3-6"/>.</p>
+<p>When run, the <file>SetVars</file> obey file in the OSLib folder sets up a couple of system variables to point to the library: <variable>OSLib$Path</variable> and <variable>OSLib$Dir</variable>. For the instalation shown in <reference id="fig-compiling-oslib-install"/>, these are set as shown in <reference id="fig-compiling-oslib-paths"/>.</p>
 
-<image id="img3-6" file="c3-oslib-paths.png" title="OSLib&rsquo;s SetVars creates two system variable to point to the library"/>
+<image id="fig-compiling-oslib-paths" file="compiling-oslib-paths.png" title="OSLib&rsquo;s SetVars creates two system variable to point to the library"/>
 
-<p>Since the <file>OSLib</file> folder pointed to by these variables contains another folder called <file>oslib</file> which in turn holds all of the library&rsquo;s header files, telling the compiler to &lsquo;include&rsquo; <file>OSLib:</file> will ensure that the <code>#include</code> works as intended (since <file>wimp.h</file> can be found at <file>OSLib:oslib.h.wimp</file>). We therefore need to add <code>OSLib:</code> to the comma-separated list in the <icon>Include</icon> field as shown in <reference id="img3-7"/>.</p>
+<p>Since the <file>OSLib</file> folder pointed to by these variables contains another folder called <file>oslib</file> which in turn holds all of the library&rsquo;s header files, telling the compiler to &lsquo;include&rsquo; <file>OSLib:</file> will ensure that the <code>#include</code> works as intended (since <file>wimp.h</file> can be found at <file>OSLib:oslib.h.wimp</file>). We therefore need to add <code>OSLib:</code> to the comma-separated list in the <icon>Include</icon> field as shown in <reference id="fig-compiling-cc-include"/>.</p>
 
-<image id="img3-7" file="c3-cc-include.png" title="OSLib needs to be added to the list of include paths known to CC"/>
+<image id="fig-compiling-cc-include" file="compiling-cc-include.png" title="OSLib needs to be added to the list of include paths known to CC"/>
 
-<p>It&rsquo;s also necessary to tell CC where to find the OSLib library itself: click <mouse>Menu</mouse> over the <window>CC</window> window, slide over <menu>Libraries</menu> and add <code>OSLib:o.OSLib32</code> to the <em>start</em> of the comma-separated list as shown in <reference id="img3-8"/>.</p>
+<p>It&rsquo;s also necessary to tell CC where to find the OSLib library itself: click <mouse>Menu</mouse> over the <window>CC</window> window, slide over <menu>Libraries</menu> and add <code>OSLib:o.OSLib32</code> to the <em>start</em> of the comma-separated list as shown in <reference id="fig-compiling-cc-libraries"/>.</p>
 
-<image id="img3-8" file="c3-cc-libraries.png" title="The OSLib file itself must also be added to the list of libraries"/>
+<image id="fig-compiling-cc-libraries" file="compiling-cc-libraries.png" title="The OSLib file itself must also be added to the list of libraries"/>
 
-<p>With the OSLib library set up, click on <icon>Run</icon> to start the compilation. A throwback window will open and, if there are no errors, a save dialogue will appear as shown in <reference id="img3-9"/>. Clicking <icon>OK</icon> will by default save the file in the project folder.</p>
+<p>With the OSLib library set up, click on <icon>Run</icon> to start the compilation. A throwback window will open and, if there are no errors, a save dialogue will appear as shown in <reference id="fig-compiling-cc-run"/>. Clicking <icon>OK</icon> will by default save the file in the project folder.</p>
 
-<image id="img3-9" file="c3-cc-run.png" title="Compiling and saving the code"/>
+<image id="fig-compiling-cc-run" file="compiling-cc-run.png" title="Compiling and saving the code"/>
 
-<p>The <file>main</file> application can now be run by double-clicking on it: if all goes well, it should perform exactly the same as the original BASIC application shown in <reference id="img1-1"/>.</p>
+<p>The <file>main</file> application can now be run by double-clicking on it: if all goes well, it should perform exactly the same as the original BASIC application shown in <reference id="fig-start-basic-tmgr"/>.</p>
 
 </section>
 </chapter>
