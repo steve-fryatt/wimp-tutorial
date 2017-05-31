@@ -39,7 +39,10 @@
 
 
 <table>
-<columns><col>Command</col><col>Action</col></columns>
+<columns>
+<col align="centre">Command</col>
+<col align="left">Action</col>
+</columns>
 <row><col>A</col><col>Allow Characters</col></row>
 <row><col>C</col><col>Set 24-bit Colours</col></row>
 <row><col>D</col><col>Display Mask Character</col></row>
