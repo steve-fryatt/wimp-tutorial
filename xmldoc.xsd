@@ -72,6 +72,7 @@
     <xsd:sequence>
       <xsd:element name="title" type="xsd:string" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="p" type="ParagraphType" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="table" type="TableType" minOccurs="0" maxOccurs="unbounded"/>
       <xsd:element name="code" type="CodeType" minOccurs="0" maxOccurs="unbounded"/>
       <xsd:element name="image" type="ImageType" minOccurs="0" maxOccurs="unbounded"/>
       <xsd:element name="download" type="DownloadType" minOccurs="0" maxOccurs="unbounded"/>
@@ -80,6 +81,22 @@
 <!--    <xsd:attribute name="kind" type="MemberKind" use="required"/>  -->
   </xsd:complexType>
   
+  <xsd:complexType name="TableType">
+    <xsd:attribute name="id" type="xsd:string"/>
+    <xsd:attribute name="title" type="xsd:string"/>
+    <xsd:element name="columns" type="ColumnsType" minOccurs="1" maxOccurs="1"/>
+    <xsd:element name="row" type="RowType" minOccurs="1" maxOccurs="unbounded"/>
+  </xsd:complexType>
+   
+  <xsd:complexType name="ColumnsType">
+    <xsd:attribute name="align" type="xsd:string"/>
+    <xsd:element name="col" type="ParagraphType" minOccurs="1" maxOccurs="unbounded"/>
+  </xsd:complexType>
+  
+  <xsd:complexType name="RowType">
+    <xsd:element name="col" type="ParagraphType" minOccurs="1" maxOccurs="unbounded"/>
+  </xsd:complexType>
+ 
   <xsd:complexType name="CodeType">
     <xsd:attribute name="lang" type="xsd:string" use="required"/>
     <xsd:attribute name="file" type="xsd:string"/>
