@@ -26,9 +26,9 @@
 
 <code lang="c">char			text[12];</code>
 
-<p>Whilst this works, it&rsquo;s quite restrictive and doesn&rsquo;t allow for any complex messages to be displayed. There&rsquo;s also another issue: just as with windows, it isn&rsquo;t possible to change an icon&rsquo;s definition after it has been created. This means that it isn&rsquo;t possible to change the text in a simple text icon.</p>
+<p>Whilst this works, it&rsquo;s quite restrictive and doesn&rsquo;t allow for any complex messages to be displayed. There&rsquo;s also another issue: just as with windows, it isn&rsquo;t possible to change an icon&rsquo;s definition after it has been created. This means that it isn&rsquo;t possible to change the text in a simple text icon once it has been created in a window.</p>
 
-<p>With an indirected text icon, the Wimp treats the icon data as three numeric words: two pointers and an integer.</p>
+<p>With an indirected text icon, the Wimp treats the icon data as three numeric words: two pointers and an integer:</p>
 
 <code lang="c">struct {
 	char		*text;
@@ -36,27 +36,71 @@
 	int		size;
 } indirected_text;</code>
 
+<p>To make use of this, we start by creating a global text buffer. It can&rsquo;t be declared locally within the <function>win_create_icon()</function> function, as it must remain in existence for as long as the icon does &ndash; local variables only exist on the stack for as long as the function is executing. We&rsquo;re going to allocate 20 bytes, which is enough for 19 characters and a <code>'\0'</code> terminator.</p>
 
+<code lang="c">#define WIN_ICON_TEXT_LEN 20
 
-<table>
+static char win_icon_text[WIN_ICON_TEXT_LEN];</code>
+
+<p>We can now update <function>win_create_icon()</function> itself:</p>
+
+<code lang="c">static wimp_i win_create_icon(void)
+{
+	wimp_icon_create icon_definition;
+
+	icon_definition.w = win_handle;
+	icon_definition.icon.extent.x0 = 100;
+	icon_definition.icon.extent.y0 = -300;
+	icon_definition.icon.extent.x1 = 500;
+	icon_definition.icon.extent.y1 = -100;
+	icon_definition.icon.flags = wimp_ICON_TEXT | wimp_ICON_INDIRECTED |
+			wimp_ICON_BORDER | wimp_ICON_FILLED |
+			wimp_ICON_HCENTRED | wimp_ICON_VCENTRED |
+			(wimp_COLOUR_BLACK &lt;&lt; wimp_ICON_FG_COLOUR_SHIFT) |
+			(wimp_COLOUR_WHITE &lt;&lt; wimp_ICON_BG_COLOUR_SHIFT);
+
+	icon_definition.icon.data.indirected_text.text = win_icon_text;
+	icon_definition.icon.data.indirected_text.size = WIN_ICON_TEXT_LEN;
+	icon_definition.icon.data.indirected_text.validation = &quot;&quot;;
+
+	strncpy(win_icon_text, &quot;A Longer Icon Text&quot;, WIN_ICON_TEXT_LEN);
+	win_icon_text[WIN_ICON_TEXT_LEN - 1] = '\0';
+
+	return wimp_create_icon(&amp;icon_definition);
+}</code>
+
+<p>We&rsquo;ve returned the icon to being a simple text icon with the <name>wimp_ICON_TEXT</name> flag set, but have also included the <name>wimp_ICON_INDIRECTED</name> flag to make it an indirected icon. As a result, the code following sets up the <variable>icon_definition.icon.data.indirected_text</variable> structure within the union.</p>
+
+<p>The two pointers in the structure refer to text buffers. The first, <variable>indirected_text.text</variable>, points to a buffer which the Wimp expects to hold the text that is to be displayed in the icon: we set this to point to the <variable>win_icon_text[]</variable> array. The <variable>indirected_text.size</variable> element contains the size of, or number of bytes in, the buffer &ndash; we can use the <name>WIN_ICON_TEXT_LEN</name> constant used to define the size of the <variable>win_icon_text[]</variable> array.</p>
+
+<p>The other pointer in the data, <variable>indirected_text.validation</variable>, directs the Wimp towards something called a <intro>validation string</intro>. We don&rsquo;t need this just yet, so we&rsquo;re just supplying an empty string.</p>
+
+<p>Finally, with all of this set up, we can copy a string into the buffer using <function>strncpy()</function> as before. With indirected icons, however, the Wimp always expects the string to be terminated &ndash; just in case the supplied string was too long, we ensure that the last byte of the buffer is set to a <code>'\0'</code> character.</p>
+
+<table id="table-icons-indirect-validation" title="Validation Strings">
 <columns>
 <col align="centre">Command</col>
 <col align="left">Action</col>
 </columns>
 <row><col>A</col><col>Allow Characters</col></row>
+<!-- B = Interface Module's Border Type -->
 <row><col>C</col><col>Set 24-bit Colours</col></row>
 <row><col>D</col><col>Display Mask Character</col></row>
 <row><col>F</col><col>Set Wimp Font Colours</col></row>
 <row><col>K</col><col>Assign Functionality to Keys</col></row>
 <row><col>L</col><col>Format the Icon Text</col></row>
+<!-- M = Reserved -->
 <row><col>N</col><col>Set Icon Name</col></row>
 <row><col>P</col><col>Set the Pointer Shape and Active Point</col></row>
 <row><col>R</col><col>3D Border Commands</col></row>
 <row><col>S</col><col>Sprite Names</col></row>
+<row><col>T</col><col>Tinting Sprites</col></row>
 <row><col>U</col><col>Unicode Character Limit</col></row>
 <row><col>X</col><col>Disable Width Calculation</col></row>
 <row><col>Y</col><col>Enable Features</col></row>
+<!-- Z = RISC OS 3 Border, replaced by R -->
 </table>
+
 
 <p>Creating an indirected text icon is simply a case of setting the <name>wimp_ICON_TEXT</name> and <name>wimp_ICON_INDIRECTED</name> flags when setting <variable>icon_definition.icon.flags</variable> .</p>
 
