@@ -20,29 +20,50 @@
 <summary>Having seen the basics, it&rsquo;s time to start making icons do more complicated things.</summary>
 
 <section>
-<p>In the <reference id="chap-icons-intro">last chapter</reference> we saw how to create simple icons containing text and sprites, but were limited by the twelve character restriction on the data field. The way around this, as was hinted at the end, is to use <intro>indirected icons</intro> instead of the simple icons which we have seen up to now.</p>
+<p>In the <reference id="chap-icons-intro">last chapter</reference> we saw how to create simple icons containing text and sprites, but were limited by the twelve character restriction on the data field. The way around this, as was hinted at the end, is to use <intro>indirected icons</intro> instead of the simple icons which we have seen up to now. As we&rsquo;ve seen, an icon&rsquo;s data consists of 12 bytes which OSLib represents as a <name>wimp_icon_data</name> union:</p>
 
-<p>In a simple text icon, the twelve bytes of icon data are simply used to hold up to twelve characters for display in the icon.</p>
+<code lang="c">union wimp_icon_data {
+	char			text[12];
+	char			sprite[12];
+	char			text_and_sprite[12];
+	struct {
+		char		*text;
+		char		*validation;
+		int		size;
+	} indirected_text;
+	struct {
+		osspriteop_id	id;
+		osspriteop_area	*area;
+		int		size;
+	} indirected_sprite;
+	struct {
+		char		*text;
+		char		*validation;
+		int		size;
+	} indirected_text_and_sprite;
+};</code>
 
-<code lang="c">char			text[12];</code>
+<p>In a non-indirected text or sprite icon, the twelve bytes of icon data are simply used to hold up to twelve characters of either text or sprite name:</p>
 
-<p>Whilst this works, it&rsquo;s quite restrictive and doesn&rsquo;t allow for any complex messages to be displayed. There&rsquo;s also another issue: just as with windows, it isn&rsquo;t possible to change an icon&rsquo;s definition after it has been created. This means that it isn&rsquo;t possible to change the text in a simple text icon once it has been created in a window.</p>
+<code lang="c">char			text[12];
+char			sprite[12];
+char			text_and_sprite[12];</code>
 
-<p>With an indirected text icon, the Wimp treats the icon data as three numeric words: two pointers and an integer:</p>
+<p>Whilst this works, it&rsquo;s quite restrictive and doesn&rsquo;t allow for any complex messages to be displayed. There&rsquo;s also another issue: just as with windows, it isn&rsquo;t possible to change an icon&rsquo;s definition after it has been created. This means that with a simple text icon, where the text is embedded in the icon definition, it isn&rsquo;t possible to change the text once the icon has been created.</p>
+</section>
 
-<code lang="c">struct {
-	char		*text;
-	char		*validation;
-	int		size;
-} indirected_text;</code>
+<section>
+<title>Indirected text icons</title>
 
-<p>To make use of this, we start by creating a global text buffer. It can&rsquo;t be declared locally within the <function>win_create_icon()</function> function, as it must remain in existence for as long as the icon does &ndash; local variables only exist on the stack for as long as the function is executing. We&rsquo;re going to allocate 20 bytes, which is enough for 19 characters and a <code>'\0'</code> terminator.</p>
+<p>The difference with an indirected text icon is that the text itself is removed from the icon definition and placed into a separate buffer which is under the control of the application; a pointer to this buffer is then passed to the Wimp as part of the icon definition. Since the icon definition can&rsquo;t change, the buffer must remain in place &ndash; and not change location or size &ndash; for the lifetime of the icon. It can be more than 12 bytes in size, however &ndash; and it can be changed at ant time by simply writing next text to the buffer.</p>
+
+<p>To make use of this, we start by creating a global text buffer, using a <name>char</name> array. It can&rsquo;t be declared locally within the <function>win_create_icon()</function> function, since this would cause it to be allocated from the stack and therefore disappear as soon as the function exits; instead, we&rsquo;ll create it as global within the <file>c.win</file> file. We&rsquo;re going to allocate 20 bytes, which is enough for 19 characters and a <code>'\0'</code> terminator.</p>
 
 <code lang="c">#define WIN_ICON_TEXT_LEN 20
 
 static char win_icon_text[WIN_ICON_TEXT_LEN];</code>
 
-<p>We can now update <function>win_create_icon()</function> itself:</p>
+<p>With this buffer definition in place, we can now update <function>win_create_icon()</function> itself:</p>
 
 <code lang="c">static wimp_i win_create_icon(void)
 {
@@ -69,13 +90,78 @@ static char win_icon_text[WIN_ICON_TEXT_LEN];</code>
 	return wimp_create_icon(&amp;icon_definition);
 }</code>
 
-<p>We&rsquo;ve returned the icon to being a simple text icon with the <name>wimp_ICON_TEXT</name> flag set, but have also included the <name>wimp_ICON_INDIRECTED</name> flag to make it an indirected icon. As a result, the code following sets up the <variable>icon_definition.icon.data.indirected_text</variable> structure within the union.</p>
+<p>There are a few changes to the definition, starting with an increase in the <maths>x</maths>&nbsp;extent so that the icon spans from 100 to 500 OS&nbsp;Units. This will allow it to hold a longer piece of text.</p>
 
-<p>The two pointers in the structure refer to text buffers. The first, <variable>indirected_text.text</variable>, points to a buffer which the Wimp expects to hold the text that is to be displayed in the icon: we set this to point to the <variable>win_icon_text[]</variable> array. The <variable>indirected_text.size</variable> element contains the size of, or number of bytes in, the buffer &ndash; we can use the <name>WIN_ICON_TEXT_LEN</name> constant used to define the size of the <variable>win_icon_text[]</variable> array.</p>
+<p>We&rsquo;ve returned the icon to being a simple text icon with the <name>wimp_ICON_TEXT</name> flag set, removing the <name>wimp_ICON_SPRITE</name> flag. We have, however, now included the <name>wimp_ICON_INDIRECTED</name> flag to make the icon indirected. As a result, the code following sets up the <variable>icon_definition.icon.data.indirected_text</variable> structure within the union. OSLib defines this structure as follows:</p>
+
+<code lang="c">struct {
+	char		*text;
+	char		*validation;
+	int		size;
+} indirected_text;</code>
+
+<p>The <variable>indirected_text.text</variable> pointer should be set to point to the text buffer that has been set up for the icon: we set this to point to the <variable>win_icon_text[]</variable> array. The <variable>indirected_text.size</variable> element contains the size of, or number of bytes in, the buffer &ndash; we can use the <name>WIN_ICON_TEXT_LEN</name> constant used to define the size of the <variable>win_icon_text[]</variable> array.</p>
 
 <p>The other pointer in the data, <variable>indirected_text.validation</variable>, directs the Wimp towards something called a <intro>validation string</intro>. We don&rsquo;t need this just yet, so we&rsquo;re just supplying an empty string.</p>
 
-<p>Finally, with all of this set up, we can copy a string into the buffer using <function>strncpy()</function> as before. With indirected icons, however, the Wimp always expects the string to be terminated &ndash; just in case the supplied string was too long, we ensure that the last byte of the buffer is set to a <code>'\0'</code> character.</p>
+<p>Finally we can copy a string into our icon buffer using <function>strncpy()</function>. With indirected icons, however, the Wimp always expects the buffer&rsquo;s contents to be terminated so &ndash; just in case the supplied string was too long &ndash; we ensure that the last byte of the buffer is set to a <code>'\0'</code> character.</p>
+
+<p>With the changes in place, the code should look that that found in <reference id="dl-icons-indirect-text"/>. We&rsquo;ve also taken the opportunity to expand the window&rsquo;s visible area to display the full extent of the wider icon.</p>
+
+<download id="dl-icons-indirect-text" file="IndirectedTextIcon" title="Using Indirected Text in an Icon" compatibility="none"/>
+
+<p>When compiled and run, the updated icons should look as shown in <reference id="fig-icons-indirect-text"/>.</p>
+
+<image id="fig-icons-indirect-text" file="icons-indirect-text.png" title="Indirected text icons can hold longer messages"/>
+</section>
+
+<section>
+<title>Changing the icon&rsquo;s behaviour</title>
+
+<p>So far, all of the icons that we have created have been &lsquo;passive&rsquo; &ndash; that is, they haven&rsquo;t interacted with the user. All icons have a <intro>button type</intro>, which defines how they behave &ndash; in a similar way to the icon colours, it&rsquo;s specified by bits 12 to 15 of the icon flags:</p>
+
+<code lang="c">#define wimp_ICON_BUTTON_TYPE_SHIFT	(12)
+#define wimp_ICON_BUTTON_TYPE		((wimp_icon_flags) 0xF000u)</code>
+
+<p>The four bits allow for up to sixteen different types of button, and the Wimp defines fourteen:</p>
+
+<code lang="c">#define wimp_BUTTON_NEVER		((wimp_icon_flags) 0x0u)
+#define wimp_BUTTON_ALWAYS		((wimp_icon_flags) 0x1u)
+#define wimp_BUTTON_REPEAT		((wimp_icon_flags) 0x2u)
+#define wimp_BUTTON_CLICK		((wimp_icon_flags) 0x3u)
+#define wimp_BUTTON_RELEASE		((wimp_icon_flags) 0x4u)
+#define wimp_BUTTON_DOUBLE_CLICK	((wimp_icon_flags) 0x5u)
+#define wimp_BUTTON_CLICK_DRAG		((wimp_icon_flags) 0x6u)
+#define wimp_BUTTON_RELEASE_DRAG	((wimp_icon_flags) 0x7u)
+#define wimp_BUTTON_DOUBLE_DRAG		((wimp_icon_flags) 0x8u)
+#define wimp_BUTTON_MENU_ICON		((wimp_icon_flags) 0x9u)
+#define wimp_BUTTON_DOUBLE_CLICK_DRAG	((wimp_icon_flags) 0xAu)
+#define wimp_BUTTON_RADIO		((wimp_icon_flags) 0xBu)
+#define wimp_BUTTON_WRITE_CLICK_DRAG	((wimp_icon_flags) 0xEu)
+#define wimp_BUTTON_WRITABLE		((wimp_icon_flags) 0xFu)</code>
+
+<p>Up to now we haven&rsquo;t been setting the button type, which means that it has been zero &ndash; or <name>wimp_BUTTON_NEVER</name> which, as its name suggests, never does anything. Icons of this type ignore the user completely, which is ideal for things like labels in a dialogue box.</p>
+
+<p>Many of the other button types require us to be able to process mouse clicks, which we won&rsquo;t be able to do for another few chapters. However, one type of icon which the wimp will handle for us is a <intro>writable icon</intro>: a field into which the user can type. Making the icon writable is simply a case of amending the icon flags to include an appropriate button type:</p>
+
+<code lang="c">icon_definition.icon.flags = wimp_ICON_TEXT | wimp_ICON_INDIRECTED |
+		wimp_ICON_BORDER | wimp_ICON_FILLED |
+		wimp_ICON_HCENTRED | wimp_ICON_VCENTRED |
+		(wimp_BUTTON_WRITE_CLICK_DRAG &lt;&lt; wimp_ICON_BUTTON_TYPE_SHIFT) |
+		(wimp_COLOUR_BLACK &lt;&lt; wimp_ICON_FG_COLOUR_SHIFT) |
+		(wimp_COLOUR_WHITE &lt;&lt; wimp_ICON_BG_COLOUR_SHIFT);</code>
+
+<p>Setting the button type is done in a very similar way to setting the colours: the required value is shifted into position using the constants defined by OSLib. We&rsquo;re using <name>wimp_BUTTON_WRITE_CLICK_DRAG</name> instead of <name>wimp_BUTTON_WRITABLE</name> because the latter is largely obsolete. The modified code can be found in <reference id="dl-icons-indirect-writable"/>.</p>
+
+<download id="dl-icons-indirect-writable" file="WritableIcon" title="Creating a Writable Icon" compatibility="none"/>
+
+<p>When compiled and run, the resulting window and icon will look exactly the same as they did in the previous example. However, clicking the mouse in the icon will cause it to gain the <intro>caret</intro>, which will then accept input from the keyboard as seen in <reference id="fig-icons-indirect-writable"/>. Since we made the icon&rsquo;s text buffer 20 bytes long by defining <name>WIN_ICON_TEXT_LEN</name>, up to 19 characters can be entered into the icon &ndash; the existing text can be deleted and replaced in the usual way, of course.</p>
+
+<image id="fig-icons-indirect-writable" file="icons-indirect-writable.png" title="Icons can be made writable, so that the user can enter text"/>
+
+<p>In normal use, the Wimp completely controls the user&rsquo;s interaction with writable icons for us. This makes them a powerful way to manage data entry, since the application does not have to worry about making them behave in the correct way.</p>
+
+<!-- Start to write about validation strings. A, D. -->
 
 <table id="table-icons-indirect-validation" title="Validation Strings">
 <columns>
@@ -141,10 +227,6 @@ static char win_icon_text[WIN_ICON_TEXT_LEN];</code>
 #define wimp_ICON_ANTI_ALIASED		((wimp_icon_flags) 0x40u)
 #define wimp_ICON_NEEDS_HELP		((wimp_icon_flags) 0x80u)
 
-#define wimp_ICON_BUTTON_TYPE_SHIFT	(12)
-#define wimp_ICON_BUTTON_TYPE		((wimp_icon_flags) 0xF000u)
-      /*shift button bits by Wimp_IconButtonTypeShift*/
-
 #define wimp_ICON_ESG_SHIFT		(16)
 #define wimp_ICON_ESG			((wimp_icon_flags) 0x1F0000u)
       /*shift ESG bits by Wimp_IconESGShift*/
@@ -160,33 +242,6 @@ static char win_icon_text[WIN_ICON_TEXT_LEN];</code>
       
       
       
-#define wimp_BUTTON_NEVER		((wimp_icon_flags) 0x0u)
-      /*shift by Wimp_IconButtonTypeShift*/
-#define wimp_BUTTON_ALWAYS		((wimp_icon_flags) 0x1u)
-      /*shift by Wimp_IconButtonTypeShift*/
-#define wimp_BUTTON_REPEAT		((wimp_icon_flags) 0x2u)
-      /*shift by Wimp_IconButtonTypeShift*/
-#define wimp_BUTTON_CLICK		((wimp_icon_flags) 0x3u)
-      /*shift by Wimp_IconButtonTypeShift*/
-#define wimp_BUTTON_RELEASE		((wimp_icon_flags) 0x4u)
-      /*shift by Wimp_IconButtonTypeShift*/
-#define wimp_BUTTON_DOUBLE_CLICK	((wimp_icon_flags) 0x5u)
-      /*shift by Wimp_IconButtonTypeShift*/
-#define wimp_BUTTON_CLICK_DRAG		((wimp_icon_flags) 0x6u)
-      /*shift by Wimp_IconButtonTypeShift*/
-#define wimp_BUTTON_RELEASE_DRAG	((wimp_icon_flags) 0x7u)
-      /*shift by Wimp_IconButtonTypeShift*/
-#define wimp_BUTTON_DOUBLE_DRAG		((wimp_icon_flags) 0x8u)
-      /*shift by Wimp_IconButtonTypeShift*/
-#define wimp_BUTTON_MENU_ICON		((wimp_icon_flags) 0x9u)
-      /*shift by Wimp_IconButtonTypeShift*/
-#define wimp_BUTTON_DOUBLE_CLICK_DRAG	((wimp_icon_flags) 0xAu)
-      /*shift by Wimp_IconButtonTypeShift*/
-#define wimp_BUTTON_RADIO		((wimp_icon_flags) 0xBu)
-      /*shift by Wimp_IconButtonTypeShift*/
-#define wimp_BUTTON_WRITE_CLICK_DRAG	((wimp_icon_flags) 0xEu)
-      /*shift by Wimp_IconButtonTypeShift*/
-#define wimp_BUTTON_WRITABLE		((wimp_icon_flags) 0xFu)
  
 
 

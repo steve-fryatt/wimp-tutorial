@@ -11,6 +11,13 @@ Finish writing up informational window flags for window toggling.
 Refer to SFLib windows_open() and windows_open_centred_at_pointer().
 
 
+Chapter 15
+----------
+
+Need to go back and cover button types for windows.
+Forward reference to handling button clicks (Changing the icon's behaviour).
+
+
 Simple Icons
 Indirected Icons
 Application Directories

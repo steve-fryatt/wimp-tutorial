@@ -57,11 +57,7 @@
 
 <p>In a similar manner to that in which <function>win_initialise()</function> called <swi>Wimp_CreateWindow</swi>, this code initialises a block of memory by declaring a <name>wimp_icon_create</name> structure and then fills it in with the complete details of the icon that we wish to create. Once the structure&rsquo;s contents is ready, a pointer is passed to <function>wimp_create_icon()</function> &ndash; which causes the Wimp to create an icon from the information contained within. In the same way that <function>wimp_create_window()</function> returns a <name>wimp_w</name> window handle, <function>wimp_create_icon()</function> returns a <name>wimp_i</name> icon handle to to identify the icon within the window. Another similarity is that the structure passed to <function>wimp_create_icon()</function> is no longer required as soon as the SWI returns; as with the <variable>window_definition</variable> variable in <function>win_initialise()</function>, <variable>icon_definition</variable> is a local variable which will disappear as soon as the <function>win_create_icon()</function> function exits.</p>
 
-<p>The function has been declared as <code>static</code> because it&rsquo;s closely tied to the window defined within <file>win.c</file>. With a suitable function prototype added at the top of the file, we can then add a line to call <function>win_create_icon</function> from the end of <function>win_initialise</function>:</p>
-
-<code lang="c">win_create_icon();</code>
-
-<p>The complete code can be found in <reference id="dl-icons-intro-text"/>. It will be useful as a base from which to experiment with the values used for creating the icon as we start to explain what&rsquo;s going on.</p>
+<p>The function has been declared as <code>static</code> because it&rsquo;s closely tied to the window defined within <file>win.c</file>. With a suitable function prototype added at the top of the file, we can then add a line to call <function>win_create_icon()</function> from the end of <function>win_initialise()</function>. The complete code can be found in <reference id="dl-icons-intro-text"/>. It will be useful as a base from which to experiment with the values used for creating the icon as we start to explain what&rsquo;s going on.</p>
 
 <download id="dl-icons-intro-text" file="TextIcon" title="Adding a Text Icon to the Window" compatibility="none"/>
 
@@ -213,13 +209,13 @@ typedef union wimp_icon_data wimp_icon_data;</code>
 
 <p>Whilst this might look confusing at first glance, there are actually six distinct parts to the union corresponding to the six &lsquo;types&rsquo; of icon which are available on RISC&nbsp;OS. It is possible to create <intro>text icons</intro>, <intro>sprite icons</intro> or <intro>text and sprite icons</intro>; each of these three variants can then be either <intro>indirected</intro> or <intro>non-indirected</intro>, which give us the six options.</p>
 
-<p>As we saw earlier, our icon is a text icon, because it has the <name>wimp_ICON_TEXT</name> flag bit set: this means that only the <variable>wimp_icon_data.text[]</variable> element at the top of the union definition applies. This is simply a <name>char</name> array holding 12 values: for a non-indirected text icon, the Wimp treats the 12 bytes of icon data as holding between 0 and 12 characters of text to be displayed in the icon.</p>
+<p>As we saw earlier, our icon is a text icon, because it has the <name>wimp_ICON_TEXT</name> flag bit set: this means that only the <variable>wimp_icon_data.text[]</variable> element at the top of the union definition applies. This is simply a <name>char</name> array with 12 entries: for a non-indirected text icon, the Wimp treats the 12 bytes of icon data as holding between 0 and 12 characters of text to be displayed in the icon.</p>
 
 <p>In our <function>win_create_icon()</function> function, we set it up by copying in a string from a location pointed to by the <variable>text</variable> parameter:</p>
 
 <code lang="c">strncpy(icon_definition.icon.data.text, text, 12);</code>
 
-<p>As with a number of other, similar text buffers in other parts of the system, the Wimp treats the icon data for a non-indirected text icon a little surprisingly. If the length of the icon text is between 0 and 11 characters, it should be a <intro>control terminated string</intro> with a control character (such as a <code>'\0'</code>) after the last character. If the text is 12 characters long, however, it should be <em>unterminated</em>: this makes the behaviour of <function>strncpy()</function> ideal for populating it.</p>
+<p>As with a number of other, similar text buffers in other parts of the system, the Wimp treats the icon data for a non-indirected text icon a little surprisingly. If the length of the icon text is between 0 and 11 characters, it should be a <intro>control terminated string</intro> with a control character (such as a <code>'\0'</code>) after the last character. If the text is 12 characters long, however, it should be <em>unterminated</em>. This makes the behaviour of <function>strncpy()</function> ideal for populating it, because should the function reach the end of the destination buffer before it reaches the end of the string to copy, the buffer is left without a terminator.</p>
 </section>
 
 <section>
@@ -246,7 +242,7 @@ typedef union wimp_icon_data wimp_icon_data;</code>
 	return wimp_create_icon(&amp;icon_definition);
 }</code>
 
-<p>Aside from changing the <name>wimp_ICON_TEXT</name> into <name>wimp_ICON_SPRITE</name> when setting <variable>icon_definition.icon.flags</variable>, the only change is to the line using <function>strncpy()</function> to initialise <variable>icon_definition.icon.data</variable>.</p>
+<p>Aside from changing the <name>wimp_ICON_TEXT</name> into <name>wimp_ICON_SPRITE</name> when setting <variable>icon_definition.icon.flags</variable>, the only change is to the line using <function>strncpy()</function> to initialise <variable>icon_definition.icon.data</variable> &ndash; it now copies data into the <variable>wimp_icon_data.sprite</variable> part of the union.</p>
 
 <p>Since this is now a sprite icon, we need to change to initialising the <variable>wimp_icon_data.sprite[]</variable> element instead of <variable>wimp_icon_data.text[]</variable>. Instead of a piece of text to be displayed, the icon data now contains the name of the sprite which is to be shown &ndash; again up to 12 characters long, and terminated by a control character (which means <code>'\0'</code> in C) if it&rsquo; 11 characters or less. We&rsquo;ve also changed the text that&rsquo;s copied in: now we&rsquo;re using the name of a sprite which we know exists in the Wimp&rsquo;s sprite area.</p>
 
@@ -266,7 +262,7 @@ typedef union wimp_icon_data wimp_icon_data;</code>
 <section>
 <title>Text and sprite icons</title>
 
-<p>The final type of icon is the text and sprite icon; unfortunately, there are no prizes for guessing what this kind of icon does. This kind of icon is created by setting both the <name>wimp_ICON_TEXT</name> <em>and</em> <name>wimp_ICON_SPRITE</name> flags in the definition, like this:</p>
+<p>The final type of icon is the text and sprite icon; unfortunately, there are no prizes for guessing what this kind of icon does. It can be created by setting both the <name>wimp_ICON_TEXT</name> <em>and</em> <name>wimp_ICON_SPRITE</name> flags in the definition, like this:</p>
 
 <code lang="c">static wimp_i win_create_icon(void)
 {
