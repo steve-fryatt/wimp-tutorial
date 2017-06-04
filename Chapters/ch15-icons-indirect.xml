@@ -160,10 +160,20 @@ static char win_icon_text[WIN_ICON_TEXT_LEN];</code>
 <image id="fig-icons-indirect-writable" file="icons-indirect-writable.png" title="Icons can be made writable, so that the user can enter text"/>
 
 <p>In normal use, the Wimp completely controls the user&rsquo;s interaction with writable icons for us. This makes them a powerful way to manage data entry, since the application does not have to worry about making them behave in the correct way.</p>
+</section>
 
-<!-- Start to write about validation strings. A, D. -->
+<section id="sect-icons-indirect-valid">
+<title>Validation strings</title>
 
-<table id="table-icons-indirect-validation" title="Validation Strings">
+<p>The other piece of information in the icon data, <variable>indirected_text.validation</variable>, is the <intro>validation string</intro>. So far, we&rsquo;ve left this pointing to an empty string (<code>&quot;&quot;</code>), but it can be used to dramatically alter the appearance and behaviour of the icon.</p>
+
+<p>The string can hold one or more commands to the Wimp, given in the form of almost human-readable text. Each command takes the form of a single character between <code>A</code> and <code>Z</code> (or <code>a</code> and <code>z</code>, because they&rsquo;re case insensitive) and can be followed by data. Without going into details yet, a validation string might be the letter <code>L</code>, which is an <name>L</name> command with no parameters; it could also be <code>AA-Za-z</code>, which consists of an <name>A</name> command followed by the data <code>A-Za-z</code>.</p>
+
+<p>If more than one command is required, they can be separated by semicolons: <code>Pptr_write;Kta</code> contains the <name>P</name> and <name>K</name> commands with data <code>ptr_write</code> and <code>ta</code> respectively. If you wish to include a semicolon in a command&rsquo;s data, it must be &lsquo;escaped&rsquo; by prefixing it with a backslash: <code>\;</code>. In total there are four special characters which must always be &lsquo;escaped&rsquo; in validation strings: <code>-</code>, <code>;</code>, <code>~</code> and <code>\</code> should always be entered <code>\-</code>,<code>\;</code>,<code>\~</code> and <code>\\</code> if you need to use them literally.</p>
+
+<p>A full set of validation commands are listed in <reference id="table-icons-indirect-validation"/>. There are a lot of different options, but we&rsquo;ll introduce them over the coming chapters as needed.</p>
+
+<table id="table-icons-indirect-validation" title="The validation string commands">
 <columns>
 <col align="centre">Command</col>
 <col align="left">Action</col>
@@ -187,30 +197,41 @@ static char win_icon_text[WIN_ICON_TEXT_LEN];</code>
 <!-- Z = RISC OS 3 Border, replaced by R -->
 </table>
 
+<p>Unlike the icon text buffer, the contents of a validation string usually doesn&rsquo;t change once its icon has been created. As with the text buffers, the string <em>must</em> remain in memory as long as the icon exists, but without the need to change their contents specifying them as string constants in the code &ndash; as we&rsquo;ll be doing here &ndash; will have the required effect without the need to define a global buffer array for each one.</p>
+</section>
 
-<p>Creating an indirected text icon is simply a case of setting the <name>wimp_ICON_TEXT</name> and <name>wimp_ICON_INDIRECTED</name> flags when setting <variable>icon_definition.icon.flags</variable> .</p>
+<section>
+<title>Filtering input</title>
 
+<p>When asking the user to enter data, a common requirement is to be able to limit what characters they can type. If an application is expecting an amount of money, for example, then limiting input to the characters from 0 to 9 along with . and - might be desirable. This can be done very easily in writable icons using the <name>A</name> validation command.</p>
 
-<code lang="c">union wimp_icon_data {
-	char			text[12];
-	char			sprite[12];
-	char			text_and_sprite[12];
-	struct {
-		char		*text;
-		char		*validation;
-		int		size;
-	} indirected_text;
-	struct {
-		osspriteop_id	id;
-		osspriteop_area	*area;
-		int		size;
-	} indirected_sprite;
-	struct {
-		char		*text;
-		char		*validation;
-		int		size;
-	} indirected_text_and_sprite;
-};</code>
+<p>Our icon currently contains the text &ldquo;A Longer Icon Text&rdquo;, but since it&rsquo;s writable the user can change this to anything that they can type at the keyboard: try deleting the contents and entering &ldquo;0123456789&rdquo;, for example. Suppose that we wished to restrict the user to typing the characters A to Z, in upper or lower case, plus a space? The answer is to set the validation string to include an <name>A</name> command with a suitable filter:</p>
+
+<code lang="c">icon_definition.icon.data.indirected_text.validation = &quot;AA-Za-z &quot;;</code>
+
+<p>The data which follows an <name>A</name> command is simply a list of allowable characters for typing into the icon. Since it&rsquo;s not uncommon to need to specify whole ranges of characters, a <code>-</code> can indicate a &lsquo;range&rsquo; of characters &ndash; in this example the two sets of letters from A to Z and from a to z. Note the space at the end, to allow the spacebar to be used. If this change is made to <function>win_create_icon()</function> and the code compiled, then it will no longer be possible to type anything other than letters and spaces into the icon &ndash; try it and see!</p>
+
+<p>What about if we wished to limit input to monetary values, as suggested above? This time we might wish to allow the user to enter a - character in case they have a negative amount to specify, but we&rsquo;ve seen that the Wimp treats this as indicating a range of characters. The answer is as follows:</p>
+
+<code lang="c">icon_definition.icon.data.indirected_text.validation = &quot;A0-9.\-&quot;;</code>
+
+<p>To make sure that the - is recognised, we&rsquo;ve &lsquo;escaped&rsquo; it with a backslash. Again, compile this change and try it out!</p>
+
+<p>This time, something slightly odd should become apparent. We&rsquo;ve limited the valid characters to a set which contain the digits 0 to 9 along with - and . but the Wimp is still quite happy to initialise the icon with the contents &ldquo;A Longer Icon Text&rdquo;. The Wimp only applies the <name>A</name> command when the user tries to type into an icon, so as a developer we must always be careful to set icons up so that they comply with the restrictions that we&rsquo;ve applied!</p>
+
+<p>Another common requirement when filtering characters is to allow everything <em>except</em> one or two letters: a common example is that it&rsquo;s not valid to enter spaces in filenames. Clearly it would be cumbersome to specify every character which was allowed, so we can use a <code>~</code> to negate options. Change the icon&rsquo;s definition as follows, and suddenly it should be possible to enter any character unless it&rsquo;s a space:</p>
+
+<code lang="c">icon_definition.icon.data.indirected_text.validation = &quot;A~ &quot;;</code>
+
+<p>The <code>~</code> is actually more subtle than this example suggests, however. If it&rsquo;s the first character in the data, then all of the characters which follow it are disallowed: setting the validation string to <code>&quot;A~ .&quot;</code> would allow anything except space and full stop. It also allows characters to be disallowed from a previous range, however: the validation string <code>&quot;AA-Za-z~dpu&quot;</code> would allow the letters from A to Z and a to z, <em>except</em> for d, p and u (although D, P and U would be OK).</p>
+
+<p>The character ranges are completely flexible, and there's no requirement to specify complete sets of characters. For instance, to restrict input to those characters valid in a hexadecimal number, the string <code>&quot;A0-9A-F&amp;&quot;</code> could be used. This would restrict input to the digits 0 to 9, the capital letters A to F and an ampersand.</p>
+</section>
+
+<section>
+<title>Icon text formatting</title>
+
+<!-- Start to write about validation strings. P, D & L. -->
 
 
 
