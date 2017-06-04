@@ -21,8 +21,7 @@ Forward reference to slab-in colours for R5 and R6 borders. Also slab-in operati
 Forward reference to identifying the version of Wimp that's in use.
 
 
-Simple Icons
-Indirected Icons
+
 Application Directories
 Sprites in Icons
 Mouse Clicks (Windows & Icons)

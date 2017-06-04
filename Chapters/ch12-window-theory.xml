@@ -314,6 +314,8 @@ strncpy(window_definition.title_data.text, &quot;Hello World!&quot;, 12);</code>
 
 <p>With these title flags, the <variable>window_definition.title_data.text</variable> is a 12&nbsp;byte field which can hold the text of the window title. The use of <function>strncpy()</function> with no attempt to terminate a buffer over-run might seem unusual, but in this case it&rsquo;s exactly what is required. The Wimp allows for titles from zero to twelve characters in length and for text up to and including eleven characters, a zero terminator is required. When the text is exactly twelve characters long, however, <em>no</em> terminator should be used. It can feel very wrong for anyone used to always terminating copied strings, but for this specific task <function>strncpy()</function> on its own is the correct solution!</p>
 
+<p>Once we&rsquo;ve covered icons properly, we&rsquo;ll revisit title bars properly in <reference id="sect-icons-indirect-window"/>.</p>
+
 <code lang="c">window_definition.work_flags = wimp_BUTTON_NEVER &lt;&lt; wimp_ICON_BUTTON_TYPE_SHIFT;</code>
 
 <p>The background of the window can respond to mouse clicks, and in a similar way to the title bar, the Wimp treats it as a kind of &lsquo;pseudo-icon&rsquo; as far as configuring it is concerned. We&rsquo;ll meet <intro>icon button types</intro> in <reference id="chap-icons-indirect"/>, but for now the <variable>window_definition.work_flags</variable> can safely be set to <name>wimp_BUTTON_NEVER</name>.</p>

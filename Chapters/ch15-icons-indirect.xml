@@ -302,37 +302,30 @@ static char win_icon_text[WIN_ICON_TEXT_LEN];</code>
 
 <image id="fig-icons-indirect-wrap" file="icons-indirect-wrap.png" title="Icons can be made to warp the text within them"/>
 
-<p>The code of this final example can be found in <reference id="dl-icons-indirect-display"/>. It&rsquo;s a good idea to experiment with this code and that of the other examples in the chapter to make sure that everything makes sense before we move on.</p>
+<p>The code of this final example can be found in <reference id="dl-icons-indirect-display"/>.</p>
 
 <download id="dl-icons-indirect-display" file="WrapDisplayIcon" title="Displaying and Wrapping Text in an Icon" compatibility="none"/>
+</section>
 
-<!--
+<section id="sect-icons-indirect-window">
+<title>Window titles as icons</title>
 
-#define wimp_ICON_ANTI_ALIASED		((wimp_icon_flags) 0x40u)
-#define wimp_ICON_NEEDS_HELP		((wimp_icon_flags) 0x80u)
+<p>Back in <reference id="sect-window-theory-loose-ends"/> we glossed over two aspects of the <name>wimp_window</name> structure holding our window definition. Specifically, we noted that the following lines of code set up the window title, but didn&rsquo;t really explain <em>how</em> they did so.</p>
 
-#define wimp_ICON_ESG_SHIFT		(16)
-#define wimp_ICON_ESG			((wimp_icon_flags) 0x1F0000u)
-      /*shift ESG bits by Wimp_IconESGShift*/
-#define wimp_ICON_ALLOW_ADJUST		((wimp_icon_flags) 0x400u)
+<code lang="c">window_definition.title_flags = wimp_ICON_TEXT |
+		wimp_ICON_BORDER | wimp_ICON_HCENTRED |
+		wimp_ICON_VCENTRED | wimp_ICON_FILLED;
+strncpy(window_definition.title_data.text, &quot;Hello World!&quot;, 12);</code>
 
-#define wimp_ICON_SELECTED		((wimp_icon_flags) 0x200000u)
-#define wimp_ICON_SHADED		((wimp_icon_flags) 0x400000u)
-#define wimp_ICON_DELETED		((wimp_icon_flags) 0x800000u)
+<p>With the benefit of the knowledge gained in this chapter and <reference id="chap-icons-intro">the last one</reference>, it should be obvious that this is a <name>wimp_icon</name> definition without the extent. In fact, <variable>window_definition.title_flags</variable> is a set of <name>wimp_icon_flags</name>, while <variable>window_definition.title_data</variable> is the by now familiar <name>wimp_icon_data</name> union.</p>
 
-#define wimp_ICON_FONT_HANDLE_SHIFT	(24)
-#define wimp_ICON_FONT_HANDLE		((wimp_icon_flags) 0xFF000000u)
-      /*shift Font Handle bits by Wimp_IconFontHandleShift*/
-      
-      
-      
- 
+<p>Given that the title bar is embedded in the window, there are some restrictions on what can be done. The <name>wimp_ICON_TEXT</name>, <name>wimp_ICON_SPRITE</name> and <name>wimp_ICON_INDIRECTED</name> flags all work, but in practice etiquette dictates that title bars should never contain sprites: indirected and non-indirected text are the only sensible options. We can also set the <name>wimp_ICON_HCENTRED</name>, <name>wimp_ICON_VCENTRED</name> and <name>wimp_ICON_RJUSTIFIED</name> flags, but again convention says that a title bar&rsquo;s contents should <em>always</em> be horizontally and vertically centred.</p>
 
+<p>The Wimp treats the <name>wimp_ICON_FILLED</name> and <name>wimp_ICON_BORDER</name> flags as always being set: the bar must always be filled and have a border, whether or not the flags are included. The foreground and background colour fields in the flags are ignored, since the values are held in the <variable>wimp_window.title_fg</variable> and <variable>wimp_window.title_bg</variable> elements of the window definition structure. With the exception of outline fonts &ndash; which we haven&rsquo;t yet met and shouldn&rsquo;t be used in a title bar anyway &ndash; none of the other features of the icon flags will work in a title bar.</p>
 
--->
+<p>Since the title bar is only ever going to be a text icon in the majority of applications, its data will either be held in the <variable>window_definition.title_data.text[]</variable> array or the <variable>window_definition.title_data.indirected_text</variable> structure. These both behave in exactly the same way as for any other icon.</p>
 
-
-
+<p>That&rsquo;s it for &lsquo;passive&rsquo; icons &ndash; in the <reference id="chap-icons-interact">next chapter</reference> we&rsquo;ll begin to make our window react to the user. In the meantime, it&rsquo;s a good idea to experiment with the icon code that we&rsquo;ve met so far, to make sure that everything makes sense before we move on.</p>
 </section>
 </chapter>
 </manual>

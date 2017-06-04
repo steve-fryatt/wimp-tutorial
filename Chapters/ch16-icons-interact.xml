@@ -1,0 +1,81 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+
+<!DOCTYPE xmlmanual SYSTEM "../wimp.dtd">
+
+<manual xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="xmldoc.xsd" version="1.8.6">
+
+<!-- Chapter 16
+   -
+   - Interacting With Icons
+  -->
+
+<chapter id="chap-icons-interact">
+<resources>
+<images>Chapter16</images>
+<downloads>Chapter16</downloads>
+</resources>
+<filename>icon-interact.html</filename>
+<title>Interacting With Icons</title>
+
+<summary>Icons can make it easy for the user to interact with and control the application, if we let them.</summary>
+
+<section>
+<p>In <reference id="chap-icons-intro"/> and <reference id="chap-icons-indirect"/> we introduced the theory of getting icons displayed in a window, but so far we&rsquo;ve not considered how to let the user interact with them and provide feedback to the application. There are two ways in which this can happen: mouse clicks, and keypresses. Both are returned to our application using events, as a result of our calling <swi>Wimp_Poll</swi>.</p>
+
+<p>Once again, we&rsquo;ve already met <name>Mouse Click</name> events in <reference id="chap-click"/>, when we set up the code necessary to respond to clicks on our iconbar icon. Each event comes with a <name>wimp_pointer</name> structure, holding details of the user&rsquo;s action:</p>
+
+<code lang="c">struct wimp_pointer {
+	os_coord		pos;
+	wimp_mouse_state	buttons;
+	wimp_w			w;
+	wimp_i			i;
+};
+
+typedef struct wimp_pointer wimp_pointer;</code>
+
+<p>The structure contains four pieces of information. The position of the mouse pointer when the click occurred is held in <variable>wimp_pointer.pos</variable>, while the combination of buttons which were clicked (or dragged) can be found in <variable>wimp_pointer.buttons</variable>. Finally, the <name>wimp_w</name> and <name>wimp_i</name> handles of the window and icon which were under the pointer are held in <variable>wimp_pointer.w</variable> and <variable>wimp_pointer.i</variable> respectively.</p>
+
+<p>Following the same process as in <reference id="chap-click"/>, the first thing that we need to do is create a <name>Mouse Click</name> event handler to attach to our window. It should look very similar to the one already in <file>c.ibar</file>:</p>
+
+<code lang="c">static void win_mouse_click(wimp_pointer *pointer)
+{
+	debug_printf("Click at (%d,%d), buttons=%d, window=0x%x, icon=%d",
+			pointer-&gt;pos.x, pointer-&gt;pos.y, pointer-&gt;buttons, pointer-&gt;w, pointer-&gt;i);
+}</code>
+
+<p>For now we&rsquo;re going to use <function>debug_printf()</function> to see what&rsquo;s going on, so we will need to <code>#include &quot;sflib/debug.h&quot;</code> at the head of the file and make sure that Reporter is running (see <reference id="chap-debug"/> for details). We will also need to <code>#include &quot;sflib/event.h&quot;</code>, before adding a line to the end of the <function>win_initialise()</function> function to register the handler.</p>
+
+<code lang="c">event_add_window_mouse_event(win_handle, win_mouse_click);</code>
+
+<p>We&rsquo;re only interested in clicks which occur over our window, so we supply the <name>wimp_w</name> handle returned by <function>wimp_create_window()</function> to allow the event library to recognise it.</p>
+
+<!--
+
+#define wimp_ICON_ANTI_ALIASED		((wimp_icon_flags) 0x40u)
+#define wimp_ICON_NEEDS_HELP		((wimp_icon_flags) 0x80u)
+
+#define wimp_ICON_ESG_SHIFT		(16)
+#define wimp_ICON_ESG			((wimp_icon_flags) 0x1F0000u)
+      /*shift ESG bits by Wimp_IconESGShift*/
+#define wimp_ICON_ALLOW_ADJUST		((wimp_icon_flags) 0x400u)
+
+#define wimp_ICON_SELECTED		((wimp_icon_flags) 0x200000u)
+#define wimp_ICON_SHADED		((wimp_icon_flags) 0x400000u)
+#define wimp_ICON_DELETED		((wimp_icon_flags) 0x800000u)
+
+#define wimp_ICON_FONT_HANDLE_SHIFT	(24)
+#define wimp_ICON_FONT_HANDLE		((wimp_icon_flags) 0xFF000000u)
+      /*shift Font Handle bits by Wimp_IconFontHandleShift*/
+      
+      
+      
+ 
+
+
+-->
+
+
+
+</section>
+</chapter>
+</manual>
