@@ -183,7 +183,7 @@ void win_open(void);
 <image id="fig-windows-first" file="windows-first.png" title="Our first window &ndash; Hello World!"/>
 </section>
 
-<section>
+<section id="sect-windows-response">
 <title>Being responsive</title>
 
 <p>The reason for this apparent unresponsiveness is actually quite simple: we&rsquo;re missing some code. Although it might seem a little surprising at first, the Wimp is unable to open or change the position of a window &ndash; by which we mean dragging, resizing or scrolling it &ndash; unless our application requests that it does so by calling <swi>Wimp_OpenWindow</swi>. Our window appears on screen because we called <function>wimp_open_window()</function> for it at the end of our <function>win_open()</function> function, but after that it&rsquo;s stuck in the one place because we never ask the Wimp to move it again.</p>

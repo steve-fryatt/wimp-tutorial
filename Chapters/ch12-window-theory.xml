@@ -91,7 +91,7 @@ window_definition.icon_count = 0;</code>
 <p><!-- TODO --></p>
 </section>
 
-<section>
+<section id="sect-window-theory-dims">
 <title>The window dimensions</title>
 
 <p>A lot of a window&rsquo;s definition is concerned with its dimensions: where it appears on screen and how big its work area is. The area that a window occupies on screen is known as its <intro>visible area</intro>, and is defined by an <name>os_box</name> struct. We first met these when creating an iconbar icon back in <reference id="chap-ibar"/>; they hold two pairs of <maths>x</maths> and <maths>y</maths> coordinates in the form (<maths>x0</maths>,<maths>y0</maths>) and (<maths>x1</maths>,<maths>y1</maths>):</p>
@@ -167,7 +167,7 @@ window_definition.ymin = 0;</code>
 window_definition.next = wimp_TOP;</code>
 </section>
 
-<section>
+<section id="sect-window-theory-appearance">
 <title>Changing appearances</title>
 
 <p>The next set of attributes that we can change for our window are its colours. The <name>wimp_window</name> structure contains a set of values which control various parts of the window:</p>
@@ -300,7 +300,7 @@ window_definition.extra_flags = 0;</code>
 #define wimp_WINDOW_FOREGROUND_WINDOW           ((wimp_window_flags) 0x800000u)</code>
 </section>
 
-<section>
+<section id="sect-window-theory-loose-ends">
 <title>The window title and work area</title>
 
 <p>The contents of the window&rsquo;s title bar is set up in a couple of lines:</p>
@@ -310,13 +310,13 @@ window_definition.extra_flags = 0;</code>
 		wimp_ICON_VCENTRED | wimp_ICON_FILLED;
 strncpy(window_definition.title_data.text, &quot;Hello World!&quot;, 12);</code>
 
-<p>The Wimp treats window title bars as though they are specialised icons with a limited set of options; we&rsquo;ll come on to icons properly soon, so for now we&rsquo;ll just have to take on trust that the flags in <variable>window_definition.title_flags</variable> set up a text icon with its contents centred both vertically and horizontally. There&rsquo;s a border drawn round it (the black outline), and it has a filled background.</p>
+<p>The Wimp treats window title bars as though they are specialised icons with a limited set of options; we&rsquo;ll come on to icons properly in <reference id="chap-icons-intro"/>, so for now we&rsquo;ll just have to take on trust that the flags in <variable>window_definition.title_flags</variable> set up a text icon with its contents centred both vertically and horizontally. There&rsquo;s a border drawn round it (the black outline), and it has a filled background.</p>
 
 <p>With these title flags, the <variable>window_definition.title_data.text</variable> is a 12&nbsp;byte field which can hold the text of the window title. The use of <function>strncpy()</function> with no attempt to terminate a buffer over-run might seem unusual, but in this case it&rsquo;s exactly what is required. The Wimp allows for titles from zero to twelve characters in length and for text up to and including eleven characters, a zero terminator is required. When the text is exactly twelve characters long, however, <em>no</em> terminator should be used. It can feel very wrong for anyone used to always terminating copied strings, but for this specific task <function>strncpy()</function> on its own is the correct solution!</p>
 
 <code lang="c">window_definition.work_flags = wimp_BUTTON_NEVER &lt;&lt; wimp_ICON_BUTTON_TYPE_SHIFT;</code>
 
-<p>The background of the window can respond to mouse clicks, and in a similar way to the title bar, the Wimp treats it as a kind of &lsquo;pseudo-icon&rsquo; as far as configuring it is concerned. We&rsquo;ll meet <intro>icon button types</intro> in a few chapters&rsquo; time, but for now the <variable>window_definition.work_flags</variable> can safely be set to <name>wimp_BUTTON_NEVER</name>.</p>
+<p>The background of the window can respond to mouse clicks, and in a similar way to the title bar, the Wimp treats it as a kind of &lsquo;pseudo-icon&rsquo; as far as configuring it is concerned. We&rsquo;ll meet <intro>icon button types</intro> in <reference id="chap-icons-indirect"/>, but for now the <variable>window_definition.work_flags</variable> can safely be set to <name>wimp_BUTTON_NEVER</name>.</p>
 
 <code lang="c">window_definition.sprite_area = wimpspriteop_AREA;</code>
 
