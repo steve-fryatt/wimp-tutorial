@@ -226,24 +226,87 @@ static char win_icon_text[WIN_ICON_TEXT_LEN];</code>
 <p>The <code>~</code> is actually more subtle than this example suggests, however. If it&rsquo;s the first character in the data, then all of the characters which follow it are disallowed: setting the validation string to <code>&quot;A~ .&quot;</code> would allow anything except space and full stop. It also allows characters to be disallowed from a previous range, however: the validation string <code>&quot;AA-Za-z~dpu&quot;</code> would allow the letters from A to Z and a to z, <em>except</em> for d, p and u (although D, P and U would be OK).</p>
 
 <p>The character ranges are completely flexible, and there's no requirement to specify complete sets of characters. For instance, to restrict input to those characters valid in a hexadecimal number, the string <code>&quot;A0-9A-F&amp;&quot;</code> could be used. This would restrict input to the digits 0 to 9, the capital letters A to F and an ampersand.</p>
+
+<p>For completeness, the complete code for the first examplle in this section &ndash; where the icon accepted the letters A to Z, a to z and space &ndash; can be found in <reference id="dl-icons-indirect-filtered"/>.</p>
+
+<download id="dl-icons-indirect-filtered" file="FilteredWritableIcon" title="Filtering Characters in a Writable Icon" compatibility="none"/>
 </section>
 
 <section>
-<title>Icon text formatting</title>
+<title>Behavioral improvements</title>
 
-<!-- Start to write about validation strings. P, D & L. -->
+<p>If you&rsquo;re familiar with other <cite>Style Guide</cite> compliant applications, you&rsquo;ll probably have noticed that when the pointer passes over our icon it doesn&rsquo;t change shape to indicate that clicking over the field will place the caret. This is something that all applications should do for their writable icons, as it gives a visual clue that the icon can take input and makes the desktop more consistent for users.</p>
 
+<p>Fortunately it&rsquo;s something that is very easy to implement, thanks to the <name>P</name> command. This takes the name of a four-colour sprite from the Wimp pool as its data, and causes the pointer to change when it passes over any icon for which it&rsquo;s specified. The Wimp provides number of standard sprites which an application should use for the pointer whenever appropriate, including one called &ldquo;ptr_write&ldquo; which applies to writable icons. If we update the validation string to be:</p>
 
+<code lang="c">icon_definition.icon.data.indirected_text.validation = &quot;AA-Za-z ;Pptr_write&quot;;</code>
 
+<p>then not only will the icon only accept the letters A to Z and space, but the when the pointer passes over the icon it will change shape as the <cite>Style Guide</cite> requires. This can be seen in <reference id="fig-icons-indirect-ptr"/>.</p>
 
+<image id="fig-icons-indirect-ptr" file="icons-indirect-ptr.png" title="Writable icons should change the mouse pointer when it&rsquo;s over them"/>
 
+<p>Another requirement, when entering passwords or other secure information, can be to mask the characters in the icon so that they can&rsquo;t be observed by someone watching over the shoulder of the person using the computer. The <name>D</name> command allows a mask character to be specified, by including it as the data after the command. For example, to display an asterisk for each character in the icon, we could specify a validation string of <code>&quot;D*&quot;</code>; to use a dash, remembering that dashes need to be escaped in validation strings, we could use <code>&quot;D\-&quot;</code>.</p>
 
+<p>Updating the validation string as follows should now replace the text in the icon with asterisks, as seen in <reference id="fig-icons-indirect-pwd"/>, whilst leaving the pointer change and filtering intact.</p>
+
+<code lang="c">icon_definition.icon.data.indirected_text.validation = &quot;AA-Za-z ;Pptr_write;D*&quot;;</code>
+
+<p>Note that despite the display mask, the <variable>win_icon_text</variable> text buffer still contains the actual characters entered into the icon. This enables applications to handle the entry of passwords easily &ndash; although it&rsquo;s worth bearing in mind that the &lsquo;hidden&rsquo; information will still be in memory, and therefore potentially readable by malicious software.</p>
+
+<image id="fig-icons-indirect-pwd" file="icons-indirect-pwd.png" title="A display mask allows the contents of an icon to be hidden"/>
+</section>
+
+<section>
+<title>Changing the formatting</title>
+
+<p>Up to now our icon has been resolutely two-dimensional, with a simple single-pixel border around the outside. Whilst this is the default, the RISC&nbsp;OS convention has been to use a 3D appearance in windows and dialogue boxes for some time now. This aspect of an icon&rsquo;s appearance is controlled by the <name>R</name> command, which takes a numeric parameter indicating the kind of border which we require.</p>
+
+<p>The seven effects on offer are shown in <reference id="fig-icons-indirect-borders"/>, and cover the usual range of window components. Borders 1 to 4 are &lsquo;static&rsquo; ones: the <cite>Style Guide</cite> encourages the use of 2 for display fields and 4 for grouping parts of a dialogue box together. Border&nbsp;1 can be useful for creating things like column headings in tables; Border&nbsp;3 doesn&rsquo;t tend to be used that often. Although it isn&rsquo;t obvious in a screenshot, borders 5 and 6 are &lsquo;dynamic&rsquo; &ndash; they can be made to &lsquo;click&rsquo; under the mouse, and are useful for thinks like <icon>OK</icon> and <icon>Cancel</icon> buttons. Border&nbsp;7 was intended for writable icons, but never made it in to the <cite>Style Guide</cite> and so shouldn&rsquo;t be used.</p>
+
+<image id="fig-icons-indirect-borders" file="icons-indirect-borders.png" title="A range of 3D icon borders are available"/>
+
+<p>To make use of a 3D border, we can start by returning the icon to a simple <name>wimp_BUTTON_NEVER</name> button type suitable for a display field. The backgrounds of 3D icons are always <name>wimp_COLOUR_VERY_LIGHT_GREY</name> &ndash; of course they <em>can</em> be other colours, but following the <cite>Style Guide</cite> is encouraged. This results in setting the icon&rsquo;s flags as follows:</p>
+
+<code lang="c">icon_definition.icon.flags = wimp_ICON_TEXT | wimp_ICON_INDIRECTED |
+		wimp_ICON_BORDER | wimp_ICON_FILLED |
+		wimp_ICON_HCENTRED | wimp_ICON_VCENTRED |
+		(wimp_BUTTON_NEVER &lt;&lt; wimp_ICON_BUTTON_TYPE_SHIFT) |
+		(wimp_COLOUR_BLACK &lt;&lt; wimp_ICON_FG_COLOUR_SHIFT) |
+		(wimp_COLOUR_VERY_LIGHT_GREY &lt;&lt; wimp_ICON_BG_COLOUR_SHIFT);</code>
+
+<p>The icon&rsquo;s validation string can also be updated. We no longer need to control the characters which can be entered by the user since the icon isn&rsquo;t writable any more; similarly it should no longer affect the mouse pointer or use a display mask. This means that the <name>A</name>, <name>P</name> and <name>D</name> commands from the last section can be removed, to be replaced by an <name>R</name> command requesting a &lsquo;type&nbsp;2&rsquo; border:</p>
+
+<code lang="c">icon_definition.icon.data.indirected_text.validation = &quot;R2&quot;;</code>
+
+<p>If these two changes are applied to <function>win_create_icon()</function> and the code recompiled, the result should be the window seen in <reference id="fig-icons-indirect-display"/>.</p>
+
+<image id="fig-icons-indirect-display" file="icons-indirect-display.png" title="Using a type 2 border to create a display field"/>
+
+<p>There&rsquo;s one final change we can make before moving on to make our window and icon interact with the user. So far, the text that we&rsquo;ve used has fitted into the width of the icon, but what happens if it doesn&rsquo;t? First, increase the size of the buffer that we&rsquo;re allocating near the top of <file>c.win</file>.</p>
+
+<code lang="c">#define WIN_ICON_TEXT_LEN 50</code>
+
+<p>With a bit more space to play with, we can now display a longer message in the icon:</p>
+
+<code lang="c">strncpy(win_icon_text, &quot;The Quick Brown Fox Jumps Over The Lazy Dog&quot;, WIN_ICON_TEXT_LEN);</code>
+
+<p>If this code is compiled and run, the text is too long to fit in the available space and the result can be seen in <reference id="fig-icons-indirect-long"/>. The text is clipped to fit the available width but &ndash; even though the icon has the <name>wimp_ICON_HCENTRED</name> flag specified &ndash; the Wimp has right-justified the contents so that the end of the text is visible. This is intended behaviour: the aim is to ensure that the significant end of things like filenames remains visible.</p>
+
+<image id="fig-icons-indirect-long" file="icons-indirect-long.png" title="The Wimp usually clips text to fit within the icon&rsquo;s area"/>
+
+<p>However, by using the <name>L</name> command, the Wimp can be made to wrap the text on to additional lines as required. If the validation string is updated to</p>
+
+<code lang="c">icon_definition.icon.data.indirected_text.validation = &quot;R2;L&quot;;</code>
+
+<p>then the effect can be seen in <reference id="fig-icons-indirect-wrap"/>. By default, <name>L</name> takes no data; if the Nested Wimp is present, however, it can take a single number representing the required line spacing in OS&nbsp;Units. This isn&rsquo;t often that useful; should it be required, we&rsquo;ll find out more about the Nested Wimp in a later chapter.</p>
+
+<image id="fig-icons-indirect-wrap" file="icons-indirect-wrap.png" title="Icons can be made to warp the text within them"/>
+
+<p>The code of this final example can be found in <reference id="dl-icons-indirect-display"/>. It&rsquo;s a good idea to experiment with this code and that of the other examples in the chapter to make sure that everything makes sense before we move on.</p>
+
+<download id="dl-icons-indirect-display" file="WrapDisplayIcon" title="Displaying and Wrapping Text in an Icon" compatibility="none"/>
 
 <!--
-
-
-
-
 
 #define wimp_ICON_ANTI_ALIASED		((wimp_icon_flags) 0x40u)
 #define wimp_ICON_NEEDS_HELP		((wimp_icon_flags) 0x80u)

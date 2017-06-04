@@ -17,6 +17,8 @@ Chapter 15
 
 Need to go back and cover button types for windows.
 Forward reference to handling button clicks (Changing the icon's behaviour).
+Forward reference to slab-in colours for R5 and R6 borders. Also slab-in operation.
+Forward reference to identifying the version of Wimp that's in use.
 
 
 Simple Icons
