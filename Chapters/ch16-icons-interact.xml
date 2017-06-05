@@ -20,7 +20,7 @@
 <summary>Icons can make it easy for the user to interact with and control the application, if we let them.</summary>
 
 <section>
-<p>In <reference id="chap-icons-intro"/> and <reference id="chap-icons-indirect"/> we introduced the theory of getting icons displayed in a window, but so far we&rsquo;ve not considered how to let the user interact with them and provide feedback to the application. There are two ways in which this can happen: mouse clicks, and keypresses. Both are returned to our application using events, as a result of our calling <swi>Wimp_Poll</swi>.</p>
+<p>In <reference id="chap-icons-intro"/> and <reference id="chap-icons-indirect"/> we introduced the theory of getting icons displayed in a window, but so far we&rsquo;ve not considered how to let the user interact with them and provide feedback to the application. One obvious way in the desktop environment is through the user clicking on parts of the window; details of activity are returned to our application using <name>Mouse Click</name> events, as a result of our calling <swi>Wimp_Poll</swi>.</p>
 
 <p>Once again, we&rsquo;ve already met <name>Mouse Click</name> events in <reference id="chap-click"/>, when we set up the code necessary to respond to clicks on our iconbar icon. Each event comes with a <name>wimp_pointer</name> structure, holding details of the user&rsquo;s action:</p>
 
