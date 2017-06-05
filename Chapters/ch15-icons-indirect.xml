@@ -300,7 +300,7 @@ static char win_icon_text[WIN_ICON_TEXT_LEN];</code>
 
 <p>then the effect can be seen in <reference id="fig-icons-indirect-wrap"/>. By default, <name>L</name> takes no data; if the Nested Wimp is present, however, it can take a single number representing the required line spacing in OS&nbsp;Units. This isn&rsquo;t often that useful; should it be required, we&rsquo;ll find out more about the Nested Wimp in a later chapter. Support for text wrapping is fairly limited: it can&rsquo;t be used in writable icons, for example.</p>
 
-<image id="fig-icons-indirect-wrap" file="icons-indirect-wrap.png" title="Icons can be made to warp the text within them"/>
+<image id="fig-icons-indirect-wrap" file="icons-indirect-wrap.png" title="Icons can be made to wrap the text within them"/>
 
 <p>The code of this final example can be found in <reference id="dl-icons-indirect-display"/>.</p>
 
