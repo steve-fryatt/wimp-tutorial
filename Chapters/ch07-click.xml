@@ -337,12 +337,12 @@ void ibar_initialise(void);
 <download id="dl-click-ibar" file="SimpleCIBarClick" title="Responding to Clicks on the Iconbar" compatibility="none"/>
 </section>
 
-<section>
+<section id="sect-click-choose">
 <title>Being more choosy</title>
 
 <p>Normally the &lsquo;quit&rsquo; option would be in an iconbar menu, but we don&rsquo;t yet have one of those. None the less, it would be good if our application were only to quit if the click on its icon came from one of the buttons &ndash; let&rsquo;s say <mouse>Adjust</mouse>. That way, we could use the other buttons for something else.</p>
 
-<p>The <variable>*pointer</variable> parameter passed to the <function>ibar_mouse_click()</function> function that we&rsquo;ve just added is a pointer to the <name>wimp_pointer</name> structure returned from the call to <swi>Wimp_Poll</swi>. This means that it&rsquo;s actually a pointer to the <variable>blk</variable> variable defined in the <function>main_poll()</function> function, although this doesn&rsquo;t need to concern us in normal use. As far as the click handler function is concerned, the pointer supplied is simply a pointer to some data returned by the Wimp.</p>
+<p>The <variable>*pointer</variable> parameter, passed to the <function>ibar_mouse_click()</function> function that we&rsquo;ve just defined, is a pointer to the <name>wimp_pointer</name> structure returned from the call to <swi>Wimp_Poll</swi>. This means that it&rsquo;s actually a pointer to the <variable>blk</variable> variable defined in the <function>main_poll()</function> function, although this doesn&rsquo;t need to concern us in normal use. As far as the click handler function is concerned, the pointer supplied is simply a pointer to some data returned by the Wimp.</p>
 
 <p>As we&rsquo;ve already seen, the <name>wimp_pointer</name> structure contains an element called <variable>wimp_pointer.buttons</variable> within it, which uniquely identifies the button &ndash; or combination of buttons &ndash; used for the click. The codes used by the Wimp are more than a little confusing, because they can vary depending on the the type of click and what was under the pointer when it happened. For our iconbar icon, however, OSLib defines three useful values for us:</p>
 

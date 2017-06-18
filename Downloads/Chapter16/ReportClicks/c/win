@@ -28,8 +28,10 @@
 #include "oslib/wimp.h"
 #include "oslib/wimpspriteop.h"
 
+#include "sflib/event.h"
 #include "sflib/general.h"
 
+#include <stdio.h>
 #include <string.h>
 
 #include "win.h"
@@ -42,6 +44,8 @@
 
 static wimp_w win_handle;
 
+static wimp_i win_icon_handle;
+
 static int win_width, win_height;
 
 static char win_icon_text[WIN_ICON_TEXT_LEN];
@@ -49,6 +53,7 @@ static char win_icon_text[WIN_ICON_TEXT_LEN];
 /* Function Prototypes */
 
 static wimp_i win_create_icon(void);
+static void win_mouse_click(wimp_pointer *pointer);
 
 /* Window Initialisation. */
 
@@ -96,7 +101,11 @@ void win_initialise(void)
 
 	/* Create an icon. */
 
-	win_create_icon();
+	win_icon_handle = win_create_icon();
+
+	/* Register event handlers. */
+
+	event_add_window_mouse_event(win_handle, win_mouse_click);
 }
 
 /* Create an icon in a window. */
@@ -148,3 +157,15 @@ void win_open(void)
 
 	wimp_open_window((wimp_open *) &state);
 }
+
+/* Handle Mouse Click events. */
+
+static void win_mouse_click(wimp_pointer *pointer)
+{
+	snprintf(win_icon_text, WIN_ICON_TEXT_LEN, "(%d,%d), buttons=%d, window=0x%x, icon=%d",
+			pointer->pos.x, pointer->pos.y, pointer->buttons, pointer->w, pointer->i);
+	win_icon_text[WIN_ICON_TEXT_LEN - 1] = '\0';
+
+	wimp_set_icon_state(win_handle, win_icon_handle, 0, 0);
+}
+

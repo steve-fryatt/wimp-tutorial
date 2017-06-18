@@ -256,7 +256,7 @@ static char win_icon_text[WIN_ICON_TEXT_LEN];</code>
 <image id="fig-icons-indirect-pwd" file="icons-indirect-pwd.png" title="A display mask allows the contents of an icon to be hidden"/>
 </section>
 
-<section>
+<section id="sect-icons-indirect-format">
 <title>Changing the formatting</title>
 
 <p>Up to now our icon has been resolutely two-dimensional, with a simple single-pixel border around the outside. Whilst this is the default, the RISC&nbsp;OS convention has been to use a 3D appearance in windows and dialogue boxes for some time now. This aspect of an icon&rsquo;s appearance is controlled by the <name>R</name> command, which takes a numeric parameter indicating the kind of border which we require.</p>
@@ -284,7 +284,7 @@ static char win_icon_text[WIN_ICON_TEXT_LEN];</code>
 
 <p>There&rsquo;s one final change we can make before moving on to make our window and icon interact with the user. So far, the text that we&rsquo;ve used has fitted into the width of the icon, but what happens if it doesn&rsquo;t? First, increase the size of the buffer that we&rsquo;re allocating near the top of <file>c.win</file>.</p>
 
-<code lang="c">#define WIN_ICON_TEXT_LEN 50</code>
+<code lang="c">#define WIN_ICON_TEXT_LEN 100</code>
 
 <p>With a bit more space to play with, we can now display a longer message in the icon:</p>
 
