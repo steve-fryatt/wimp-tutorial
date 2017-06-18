@@ -1,0 +1,116 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+
+<!DOCTYPE xmlmanual SYSTEM "../wimp.dtd">
+
+<manual xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="xmldoc.xsd" version="1.8.6">
+
+<!-- Chapter 17
+   -
+   - Creating an Application Directory
+  -->
+
+<chapter id="chap-appdir">
+<resources>
+<images>Chapter17</images>
+<downloads>Chapter17</downloads>
+</resources>
+<filename>appdir.html</filename>
+<title>Creating an Application Directory</title>
+
+<summary>Applications on RISC&nbsp;OS usually come packaged in an application directory, and ours needs to follow suit.</summary>
+
+<section>
+<p>Before we can move on to look at sprite icons in any more detail, there&rsquo;s a glaring omission with our example application which needs to be fixed. So far, we&rsquo;ve just been compiling our code into an Absolute executable called <file>ExampleApp</file>, which we then run directly by double-clicking on it. This works, up to a point, but there are a few problems which so far we&rsquo;ve skirted around.</p>
+
+<p>Almost invariably, applications on RISC&nbsp;OS come packaged in an <intro>application directory</intro>: the familiar object in a filer window whose name starts with an exclamation mark. An application directory is just like any other directory &ndash; except that double-clicking on it doesn&rsquo;t open it up, but instead causes other things to happen.</p>
+</section>
+
+<section>
+<title>Creating an application</title>
+
+<p>Creating an application directory is surprisingly easy. First, clean the project by double-clicking on the <file>MkClean</file> TaskObey file. Next, click <mouse>Menu</mouse> over the folder, slide over <menu>New directory</menu>, enter the name &ldquo;!ExamplApp&rdquo; and press <key>Return</key>. This will create a new directory but, because the first character of the name is an exclamation mark, it automatically becomes an application directory. The project folder at this stage should look similar to that shown in <reference id="fig-appdir-folder"/>. Note that the name has been chosen to keep it within a ten character limit that still exists in some parts of the system.</p>
+
+<image id="fig-appdir-folder" file="appdir-folder.png" title="Our project, with the new application directory"/>
+
+<p>The next thing to do is to change the <file>Makefile</file> so that the Absolute file is built inside this new application directory. The <variable>COMPONENT</variable> variable sets the location of the output file, and this can be changed from <code>ExampleApp</code> to <code>!ExamplApp.!RunImage</code> as shown in <reference id="list-appdir-make"/>.</p>
+
+<code lang="makefile" id="list-appdir-make" file="Makefile" title="Updated Makefile for an application directory"># Makefile for Example App
+
+COMPONENT = !ExamplApp.!RunImage
+
+OBJS = main ibar win
+
+CINCLUDES = -IC:,OSLib:,SFLib:
+LIBS = SFLib:o.SFLib OSLib:o.OSLib32
+
+include CApp
+
+C_NO_FNAMES =
+
+# Dynamic dependencies:</code>
+
+<p>The name <file>!RunImage</file> needs a little explanation. RISC&nbsp;OS has a number of filename conventions when working with the contents of application folders, some of which are fixed within parts of the operating system itself and some of which have just grown up over the years. It&rsquo;s conventional to call the main Absolute executable inside an application <file>!RunImage</file>, and the Filer will actually make use of this by reporting the date of the <file>!RunImage</file> file when the date of the application directory itself is requested.</p>
+
+<p>It&rsquo;s worth noting before we progress that amongst the example skeleton build environments supplied with the DDE is one called &ldquo;exampleapp&rdquo;. Whilst this is for building applications, it takes a slightly different approach which is somewhat different to this one. Which one to use is a matter of personal taste, but the approach taken in this tutorial is probably the easiest to understand &ndash; as well as being suitable for most projects.</p>
+
+<p>Our new application directory can be opened up by double-clicking on it while holding down <key>Shift</key>, which should reveal an empty directory. Double-clicking on the <file>Mk</file> TaskObey file should build the application as usual &ndash; except that the resulting Absolute file will be called <file>!RunImage</file> and placed within <file>!ExamplApp</file>. This can be seen in <reference id="fig-appdir-runimage"/>.</p>
+
+<image id="fig-appdir-runimage" file="appdir-runimage.png" title="The project with the new !RunImage file in place"/>
+
+<p>It&rsquo;s not the end of the story, however, because double-clicking on the <file>!ExamplApp</file> directory <em>without</em> <key>Shift</key> held down gives an error that <file>!ExamplApp.!Run</file> can&rsquo;t be found. There&rsquo;s clearly something missing!</p>
+</section>
+
+<section>
+<title>The !Run file</title>
+
+<code lang="obey">| !Run files are normally locale-dependent, if only for the error messages
+
+RMEnsure UtilityModule 3.10 Error This application requires RISC OS 3.10 or later
+RMEnsure UtilityModule 5.00 RMEnsure CallASWI 0.03 RMLoad System:Modules.CallASWI
+RMEnsure UtilityModule 5.00 RMEnsure CallASWI 0.03 Error This app requires CallASWI 0.03 or later
+RMEnsure FPEmulator 4.03 RMLoad System:Modules.FPEmulator
+RMEnsure FPEmulator 4.03 Error This application requires FPEmulator 4.03 or later
+RMEnsure SharedCLibrary 5.17 RMLoad System:Modules.CLib
+RMEnsure SharedCLibrary 5.34 Error This application requires SharedCLibrary 5.34 or later
+
+Run &lt;Obey$Dir&gt;.!RunImage</code>
+
+
+
+<!--
+
+#define wimp_ICON_ANTI_ALIASED		((wimp_icon_flags) 0x40u)
+#define wimp_ICON_NEEDS_HELP		((wimp_icon_flags) 0x80u)
+
+#define wimp_ICON_ESG_SHIFT		(16)
+#define wimp_ICON_ESG			((wimp_icon_flags) 0x1F0000u)
+      /*shift ESG bits by Wimp_IconESGShift*/
+#define wimp_ICON_ALLOW_ADJUST		((wimp_icon_flags) 0x400u)
+
+#define wimp_ICON_SELECTED		((wimp_icon_flags) 0x200000u)
+#define wimp_ICON_SHADED		((wimp_icon_flags) 0x400000u)
+#define wimp_ICON_DELETED		((wimp_icon_flags) 0x800000u)
+
+#define wimp_ICON_FONT_HANDLE_SHIFT	(24)
+#define wimp_ICON_FONT_HANDLE		((wimp_icon_flags) 0xFF000000u)
+      /*shift Font Handle bits by Wimp_IconFontHandleShift*/
+      
+      
+
+#define wimp_BUTTON_DOUBLE_CLICK	((wimp_icon_flags) 0x5u)
+#define wimp_BUTTON_CLICK_DRAG		((wimp_icon_flags) 0x6u)
+#define wimp_BUTTON_RELEASE_DRAG	((wimp_icon_flags) 0x7u)
+#define wimp_BUTTON_DOUBLE_DRAG		((wimp_icon_flags) 0x8u)
+#define wimp_BUTTON_MENU_ICON		((wimp_icon_flags) 0x9u)
+#define wimp_BUTTON_DOUBLE_CLICK_DRAG	((wimp_icon_flags) 0xAu)
+#define wimp_BUTTON_RADIO		((wimp_icon_flags) 0xBu)
+
+
+
+-->
+
+
+
+</section>
+</chapter>
+</manual>

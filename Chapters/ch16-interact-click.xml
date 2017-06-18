@@ -1,0 +1,190 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+
+<!DOCTYPE xmlmanual SYSTEM "../wimp.dtd">
+
+<manual xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="xmldoc.xsd" version="1.8.6">
+
+<!-- Chapter 16
+   -
+   - Mouse Clicks in Windows
+  -->
+
+<chapter id="chap-interact-click">
+<resources>
+<images>Chapter16</images>
+<downloads>Chapter16</downloads>
+</resources>
+<filename>interact-click.html</filename>
+<title>Mouse Clicks in Windows</title>
+
+<summary>The mouse can make it easy for the user to interact with and control the application, if we let it.</summary>
+
+<section>
+<p>In <reference id="chap-icons-intro"/> and <reference id="chap-icons-indirect"/> we introduced the theory behind displaying icons in a window, but so far we&rsquo;ve not considered how to let the user interact with them and provide feedback to our application. In the desktop environment, one obvious way is through the user clicking on icons and other parts of the window &ndash; and that&rsquo;s what we&rsquo;ll look at now.</p>
+</section>
+
+<section>
+<title>Mouse Click events</title>
+
+<p>In keeping with other parts of the Wimp, details of mouse activity inside our window are returned to our application using <name>Mouse Click</name> events as a result of our calling <swi>Wimp_Poll</swi> &ndash; we briefly met these in <reference id="chap-click"/>, when we set up the code necessary to respond to clicks on our iconbar icon. When a <name>Mouse Click</name> event is returned, the Wimp fills the <swi>Wimp_Poll</swi> block up with a <name>wimp_pointer</name> structure which holds details of the user&rsquo;s action:</p>
+
+<code lang="c">struct wimp_pointer {
+	os_coord		pos;
+	wimp_mouse_state	buttons;
+	wimp_w			w;
+	wimp_i			i;
+};
+
+typedef struct wimp_pointer wimp_pointer;</code>
+
+<p>The structure contains four pieces of information, the first of which is the position of the mouse pointer when the click occurred. This is held in <variable>wimp_pointer.pos</variable>, which is itself an <name>os_coord</name> structure:</p>
+
+<code lang="c">struct os_coord {
+	int			x;
+	int			y;
+};
+
+typedef struct os_coord os_coord;</code>
+
+<p>This means that the <maths>x</maths> and <maths>y</maths> coordinates of the pointer can be found in <variable>wimp_pointer.pos.x</variable> and <variable>wimp_pointer.pos.y</variable> respectively; they&rsquo;re in OS&nbsp;Units, measured from the screen origin at the bottom left of the desktop. The combination of buttons which were clicked (or dragged) can be found in <variable>wimp_pointer.buttons</variable>, whilst the <name>wimp_w</name> and <name>wimp_i</name> handles of the window and icon under the pointer can be found in <variable>wimp_pointer.w</variable> and <variable>wimp_pointer.i</variable> respectively.</p>
+
+<p>We&rsquo;re going to update our application to listen out for any of these events which relate to our window, and display their details in the icon. To do that, we will need to know the <name>wimp_i</name> handle of the icon &ndash; so we start by adding a new global variable to the top of <file>c.win</file>:</p>
+
+<code lang="c">static wimp_i win_icon_handle;</code>
+
+<p>The line in the <function>win_initialise()</function> where <function>win_create_icon()</function> is called can then be updated: <function>win_create_icon()</function> returns the handle of the icon that it created, so this can be stored for future reference:</p>
+
+<code lang="c">win_icon_handle = win_create_icon();</code>
+
+<p>Back in <reference id="chap-event-driven"/>, we started to use SFLib&rsquo;s event library to process the events returned by <swi>Wimp_Poll</swi> and pass them on to the correct places. We now need to create a function to handle <name>Mouse Click</name> events relating to our window, and then let the library know about it. Following a very similar process to the one that we used to handle clicks on the iconbar icon in <reference id="chap-click"/>, we can start by adding a new function to the end of <file>c.win</file> and a corresponding function prototype at the top of the file:</p>
+
+<code lang="c">static void win_mouse_click(wimp_pointer *pointer)
+{
+	snprintf(win_icon_text, WIN_ICON_TEXT_LEN, &quot;(%d,%d), buttons=%d, window=0x%p, icon=%d&quot;,
+			pointer-&gt;pos.x, pointer-&gt;pos.y,
+			pointer-&gt;buttons,
+			(void *) pointer-&gt;w, pointer-&gt;i);
+	win_icon_text[WIN_ICON_TEXT_LEN - 1] = '\0';
+
+	wimp_set_icon_state(win_handle, win_icon_handle, 0, 0);
+}</code>
+
+<p>We want the event library to pass <name>Mouse Click</name> events on to this function whenever <variable>pointer-&gt;w</variable> contains the handle of our window. This is held in the <variable>win_handle</variable> variable, so we can register the function with the library by adding the following line to the end of the <function>win_initialise()</function> function:</p>
+
+<code lang="c">event_add_window_mouse_event(win_handle, win_mouse_click);</code>
+
+<p>We will need to remember to <code>#include &quot;sflib/event.h&quot;</code> to make the <function>event_add_window_mouse_event()</function> function available, and &ndash; since we&rsquo;re using <function>snprintf()</function> &ndash; also <code>#include &lt;stdio.h&gt;</code>. A complete set of updates can be found in <reference id="dl-interact-click-report"/>.</p>
+
+<download id="dl-interact-click-report" file="ReportClicks" title="Report Clicks over Our Window" compatibility="none"/>
+
+<p>If the code is compiled and run, it will open a window which looks identical to the one seen in <reference id="sect-icons-indirect-format"/>. If the mouse is clicked over the window and icon, however, it should be found that <mouse>Menu</mouse> clicks &ndash; and <em>only</em> <mouse>Menu</mouse> clicks &ndash; will be reported as seen in <reference id="fig-interact-click-report"/>.</p>
+
+<image id="fig-interact-click-report" file="interact-click-report.png" title="Reporting menu clicks over our window"/>
+</section>
+
+<section>
+<title>Updating the icon contents</title>
+
+<p>Before looking at what is special about the <mouse>Menu</mouse> button, let&rsquo;s start by considering what the <function>win_mouse_click()</function> is actually doing. Our application is now responding to our input in a practical way, and this is a very useful thing in itself!</p>
+
+<p>Having registered it with the event library, <function>win_mouse_click()</function> will be called when a <name>Mouse Click</name> event arrives from <swi>Wimp_Poll</swi>. Since the call to <function>event_add_window_mouse_event()</function> specified the <name>wimp_w</name> handle held in <variable>win_handle</variable>, we can be certain that <variable>pointer-&gt;w</variable> will <em>always</em> be equal to <variable>win_handle</variable> &ndash; if it isn&rsquo;t, the event library will send the event somewhere else. At present, events where <variable>pointer-&gt;w</variable> is equal to <name>wimp_ICON_BAR</name> will be delivered to the <function>ibar_mouse_click()</function> in <file>c.ibar</file> whilst events containing any other <name>wimp_w</name> handles would be discarded &ndash; with the call to <function>event_process_event()</function> in <function>main_poll()</function> returning <name>FALSE</name>. However, since our application only has the one window and an iconbar icon, there should never be any other values in <variable>pointer-&gt;w</variable>.</p>
+
+<p>Using <function>snprintf()</function>, the function writes a string describing the details held in the block into the buffer pointed to by <variable>win_icon_text</variable> and then makes sure that it&rsquo;s safely terminated by writing <code>'\0'</code> to the end. This is the memory that we&rsquo;ve used for our icon&rsquo;s indirected data, so it causes the icon&rsquo;s text to be updated. The Wimp doesn&rsquo;t continuously monitor every icon for changes, however, so it&rsquo;s necessary to request that the icon be <intro>redrawn</intro>.</p>
+
+<p>The request can be made using the <swi>Wimp_SetIconState</swi> SWI, which requires both the <name>wimp_w</name> handle of the window containing the icon <em>and</em> the <name>wimp_i</name> handle of the icon itself. Having saved the icon&rsquo;s handle in the <variable>win_icon_handle</variable> variable, these can simply be passed to the <function>wimp_set_icon_state()</function> function. The purpose of the call to this SWI should become obvious if it is commented out and the application is recompiled: the icon&rsquo;s contents will still change when <mouse>Menu</mouse> is clicked over the window, but it will not update until another window or menu is dragged over it.</p>
+
+<p>We&rsquo;ll come back to look at <swi>Wimp_SetIconState</swi> in more detail soon, but for now the final two parameters can be left as zero.</p>
+</section>
+
+<section>
+<title>Event information</title>
+
+<p>Along with the <name>wimp_w</name> handle of the window under the pointer when the click occurred, which in this case will always be the handle held in the <variable>win_handle</variable> variable, the <name>wimp_pointer</name> block contains other useful information about what happened.</p>
+
+<p>The <variable>pointer-&gt;i</variable> element of the structure contains the <name>wimp_i</name> handle of the icon under the pointer, and experimentation with the <mouse>Menu</mouse> button should show that this is 0 when the pointer is over the icon and &minus;1 when it isn&rsquo;t. Being the first &ndash; and only &ndash; icon in the window, the Wimp has allocated the icon a handle of 0, and this is what has been stored in the <variable>win_icon_handle</variable> variable. The &minus;1 indicates the window <intro>work area</intro> or &ldquo;no icon&rdquo; and if we need to test for this, OSLib helpfully provides a couple of useful definitions to make code clearer:</p>
+
+<code lang="c">#define wimp_NO_ICON		((wimp_w) 0xFFFFFFFFu)
+#define wimp_ICON_WINDOW	((wimp_i) 0xFFFFFFFFu)</code>
+
+<p>The combination of buttons which were clicked (or dragged) can be found in <variable>wimp_pointer.buttons</variable>. It&rsquo;s defined with a type of <name>wimp_mouse_state</name>, and &ndash; as we saw in <reference id="sect-click-choose"/> &ndash; OSLib defines a number of useful constants to help decipher the information. For now, the following three values will be useful:</p>
+
+<code lang="c">#define wimp_CLICK_SELECT	((wimp_mouse_state) 0x4u)
+#define wimp_CLICK_MENU		((wimp_mouse_state) 0x2u)
+#define wimp_CLICK_ADJUST	((wimp_mouse_state) 0x1u)</code>
+
+<p>Since the window is only responding to <mouse>Menu</mouse> at present, the value returned is always 2 &ndash; or <name>wimp_CLICK_MENU</name>.</p>
+</section>
+
+<section>
+<title>Getting more reaction</title>
+<p>The question is why the window only responds to <mouse>Menu</mouse> clicks? The answer is that when we set up the window&rsquo;s work area flags in <reference id="sect-window-theory-loose-ends"/>, we set them to <name>wimp_BUTTON_NEVER</name>; similarly, the icon&rsquo;s button type was also set to <name>wimp_BUTTON_NEVER</name> (after a short flirtation with <name>wimp_BUTTON_WRITE_CLICK_DRAG</name>) in <reference id="chap-icons-indirect"/>. This button type ignores mouse clicks, and never reports them to our application.</p>
+
+<p>At least, that&rsquo;s <em>almost</em> true. Due to the standard use of the <mouse>Menu</mouse> button for opening context menus on RISC&nbsp;OS, the Wimp will always pass <mouse>Menu</mouse> clicks through to the application, regardless of the object under the pointer. That&rsquo;s why <mouse>Menu</mouse> clicks are being reported: there&rsquo;s no way to switch them off.</p>
+
+<p>If we wish to receive notifications of other clicks over our icon, then we need to change its button type as set in <function>win_create_icon()</function>. If we set it to <name>wimp_BUTTON_CLICK</name>, then the Wimp will return details of <em>all</em> clicks over the icon:</p>
+
+<code lang="c">icon_definition.icon.flags = wimp_ICON_TEXT | wimp_ICON_INDIRECTED |
+		wimp_ICON_BORDER | wimp_ICON_FILLED |
+		wimp_ICON_HCENTRED | wimp_ICON_VCENTRED |
+		(wimp_BUTTON_CLICK &lt;&lt; wimp_ICON_BUTTON_TYPE_SHIFT) |
+		(wimp_COLOUR_BLACK &lt;&lt; wimp_ICON_FG_COLOUR_SHIFT) |
+		(wimp_COLOUR_VERY_LIGHT_GREY &lt;&lt; wimp_ICON_BG_COLOUR_SHIFT);</code>
+
+<p>Compile this update and run it, and it should be clear that when the pointer is over the icon, <mouse>Select</mouse>, <mouse>Menu</mouse> <em>and</em> <mouse>Adjust</mouse> clicks are reported with codes 4, 2 and 1 respectively (which we saw above are <name>wimp_CLICK_SELECT</name>, <name>wimp_CLICK_MENU</name> and <name>wimp_CLICK_ADJUST</name>). Away from the icon, however, it&rsquo;s still only <mouse>Menu</mouse> clicks which are returned.</p>
+
+<p>The Wimp can be a bit more sophisticated than this, however. Move the pointer over the centre of the icon, then click <em>and hold</em> <mouse>Select</mouse>: the coordinates in the icon should update to show the point at which the click occurred. <em>Still holding the button</em>, move the mouse pointer around within the icon&rsquo;s border: nothing changes, because <name>wimp_BUTTON_CLICK</name> returns information only once, at the start of the click.</p>
+
+<p>Now change the button type to <name>wimp_BUTTON_REPEAT</name>, recompile the code and try the same experiment again. This time, the icon updates when the button is clicked, but continues to do so until either it is released again <em>or</em> the pointer moves outside the icon. This button type provides an &lsquo;auto repeat&rsquo; functionality, keeping the application updated as long as the click is held over the icon.</p>
+
+<p>Next, change the type to <name>wimp_BUTTON_RELEASE</name> and try again. Now when the button is clicked, the icon goes black as the button is pressed (as seen in <reference id="fig-interact-click-release"/>), and then clears when the pointer moves out of the icon&rsquo;s area. This effect is the Wimp <intro>selecting</intro> the icon: something that we&rsquo;ll look at later. The details in the icon are only updated when the button is <em>released</em>, so long as the pointer is still in the icon (and hence the icon is still selected) at the time. As its name suggests, <name>wimp_BUTTON_RELEASE</name> reports back to the application when the mouse button is <em>released</em>.</p>
+
+<image id="fig-interact-click-release" file="interact-click-release.png" title="A &lsquo;release&rsquo; icon in use"/>
+
+<p>The <name>wimp_BUTTON_RELEASE</name> is an example of one of the more complex interactions that the Wimp can implement automatically for an application. It&rsquo;s really intended for things like action buttons, where the button presses at the user clicks the mouse but the action only happens when they release it &ndash; consider the operation of dialogue boxes on platforms such as Windows of Linux for an example. Sadly the RISC&nbsp;OS convention has always been to use <name>wimp_BUTTON_CLICK</name> for action buttons, so for consistency and ease of use <name>wimp_BUTTON_RELEASE</name> must remain unused &ndash; it can be seen as the close button on all windows, however!</p>
+
+<p>The final button type that we&rsquo;ll look at for now is <name>wimp_BUTTON_ALWAYS</name>. This is something like the opposite of <name>wimp_BUTTON_NEVER</name>, in that it reports <name>Mouse Click</name> events back to the application all the time that the pointer is over the icon: trying it in our icon should show that the details are updated continuously for the whole time that the pointer is over the icon. This is actually not very useful, as there are invariably better ways to achieve any of the things that it can implement. It&rsquo;s mentioned here only for completeness.</p>
+
+<p>As <reference id="sect-window-theory-loose-ends"/> hinted, some of the button types can also be applied to the window&rsquo;s work area. If we change <variable>window_definition.work_flags</variable> to <name>wimp_BUTTON_CLICK</name> in the <function>win_initialise()</function> function, then after recompiling the code <mouse>Select</mouse> and <mouse>Adjust</mouse> clicks will be reported outside of the icon as well.</p>
+
+<code lang="c">window_definition.work_flags = wimp_BUTTON_CLICK &lt;&lt; wimp_ICON_BUTTON_TYPE_SHIFT;</code>
+
+<p>An icon&rsquo;s button type always takes precedence over the window beneath it when the pointer is within the icon&rsquo;s borders. Some of the button types also behave slightly differently when applied to a window, since there&rsquo;s no concept of &lsquo;selecting&rsquo; the work area or making it writable. Before moving on, it would be a good idea to experiment with the button types that we&rsquo;ve seen so far, to ensure that their behaviour makes sense.</p>
+</section>
+
+<section>
+<title>Mouse coordinates</title>
+
+<p>When a <name>Mouse Click</name> event is returned to our application, the coordinates of the click can be found in <variable>pointer-&gt;pos.x</variable> and <variable>pointer-&gt;pos.y</variable>. They are given as absolute values in OS&nbsp;Units, measured from the bottom-left corner of the desktop. Whilst this is often useful, we often wish to know where within our window the user clicked.</p>
+
+<p>Fortunately, there&rsquo;s a simple way to get to the window position &ndash; although we do need to know the window&rsquo;s current position and scroll offsets. This information is readily available from the <swi>Wimp_GetWindowState</swi> which we met back in <reference id="chap-window-handling"/>, however, so we can amend the <function>win_mouse_click()</function> as follows to make it report work area coordinates for each click:</p>
+
+<code lang="c">static void win_mouse_click(wimp_pointer *pointer)
+{
+	int			xpos, ypos;
+	wimp_window_state	state;
+
+	state.w = win_handle;
+	wimp_get_window_state(&amp;state);
+
+	xpos = (pointer-&gt;pos.x - state.visible.x0) + state.xscroll;
+	ypos = (pointer-&gt;pos.y - state.visible.y1) + state.yscroll;
+
+	snprintf(win_icon_text, WIN_ICON_TEXT_LEN, &quot;(%d,%d), buttons=%d, window=0x%p, icon=%d&quot;,
+			xpos, ypos,
+			pointer-&gt;buttons,
+			(void *) pointer-&gt;w, pointer-&gt;i);
+	win_icon_text[WIN_ICON_TEXT_LEN - 1] = '\0';
+
+	wimp_set_icon_state(win_handle, win_icon_handle, 0, 0);
+}</code>
+
+<p>As we saw in <reference id="chap-window-theory"/>, the work area coordinates have their origin in the top-left of the window, increasing from left to right and decreasing from top to bottom. A complete set of code for this change can be dound in <reference id="dl-interact-click-coord"/>.</p>
+
+
+<download id="dl-interact-click-coord" file="MouseCoords" title="Calculating Work Area Coordinates for the Mouse" compatibility="none"/>
+
+
+<!-- TODO: Complete this explanation. -->
+</section>
+</chapter>
+</manual>

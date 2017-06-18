@@ -318,7 +318,7 @@ strncpy(window_definition.title_data.text, &quot;Hello World!&quot;, 12);</code>
 
 <code lang="c">window_definition.work_flags = wimp_BUTTON_NEVER &lt;&lt; wimp_ICON_BUTTON_TYPE_SHIFT;</code>
 
-<p>The background of the window can respond to mouse clicks, and in a similar way to the title bar, the Wimp treats it as a kind of &lsquo;pseudo-icon&rsquo; as far as configuring it is concerned. We&rsquo;ll meet <intro>icon button types</intro> in <reference id="chap-icons-indirect"/>, but for now the <variable>window_definition.work_flags</variable> can safely be set to <name>wimp_BUTTON_NEVER</name>.</p>
+<p>The background of the window can respond to mouse clicks, and in a similar way to the title bar, the Wimp treats it as a kind of &lsquo;pseudo-icon&rsquo; as far as configuring it is concerned. We&rsquo;ll meet <intro>icon button types</intro> properly in <reference id="chap-interact-click"/>, but for now the <variable>window_definition.work_flags</variable> can safely be set to <name>wimp_BUTTON_NEVER</name>.</p>
 
 <code lang="c">window_definition.sprite_area = wimpspriteop_AREA;</code>
 

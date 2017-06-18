@@ -87,7 +87,7 @@ void win_initialise(void)
 	window_definition.extent.x1 = 1200;
 	window_definition.extent.y1 = 0;
 	window_definition.title_flags = wimp_ICON_TEXT | wimp_ICON_BORDER | wimp_ICON_HCENTRED | wimp_ICON_VCENTRED | wimp_ICON_FILLED;
-	window_definition.work_flags = wimp_BUTTON_NEVER << wimp_ICON_BUTTON_TYPE_SHIFT;
+	window_definition.work_flags = wimp_BUTTON_CLICK << wimp_ICON_BUTTON_TYPE_SHIFT;
 	window_definition.sprite_area = wimpspriteop_AREA;
 	window_definition.xmin = 0;
 	window_definition.ymin = 0;
@@ -122,7 +122,7 @@ static wimp_i win_create_icon(void)
 	icon_definition.icon.flags = wimp_ICON_TEXT | wimp_ICON_INDIRECTED |
 			wimp_ICON_BORDER | wimp_ICON_FILLED |
 			wimp_ICON_HCENTRED | wimp_ICON_VCENTRED |
-			(wimp_BUTTON_NEVER << wimp_ICON_BUTTON_TYPE_SHIFT) |
+			(wimp_BUTTON_CLICK << wimp_ICON_BUTTON_TYPE_SHIFT) |
 			(wimp_COLOUR_BLACK << wimp_ICON_FG_COLOUR_SHIFT) |
 			(wimp_COLOUR_VERY_LIGHT_GREY << wimp_ICON_BG_COLOUR_SHIFT);
 
@@ -162,8 +162,17 @@ void win_open(void)
 
 static void win_mouse_click(wimp_pointer *pointer)
 {
+	int			xpos, ypos;
+	wimp_window_state	state;
+
+	state.w = win_handle;
+	wimp_get_window_state(&state);
+
+	xpos = (pointer->pos.x - state.visible.x0) + state.xscroll;
+	ypos = (pointer->pos.y - state.visible.y1) + state.yscroll;
+
 	snprintf(win_icon_text, WIN_ICON_TEXT_LEN, "(%d,%d), buttons=%d, window=0x%p, icon=%d",
-			pointer->pos.x, pointer->pos.y, pointer->buttons, (void *) pointer->w, pointer->i);
+			xpos, ypos, pointer->buttons, (void *) pointer->w, pointer->i);
 	win_icon_text[WIN_ICON_TEXT_LEN - 1] = '\0';
 
 	wimp_set_icon_state(win_handle, win_icon_handle, 0, 0);

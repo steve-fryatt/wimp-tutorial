@@ -32,11 +32,12 @@ Chapter 16
 ----------
 
 Forward reference to wimp_set_icon_state().
+Forward reference to selecting an icon.
 
 
 Application Directories
 Sprites in Icons
-Mouse Clicks (Windows & Icons)
+(Mouse Clicks (Windows & Icons))
 Changing Icons State?
 Icons in Window Definitions
 Application Resources

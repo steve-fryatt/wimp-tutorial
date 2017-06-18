@@ -49,9 +49,10 @@
 <chapter file="ch10-report2.xml"/>
 <chapter file="ch11-windows.xml"/>
 <chapter file="ch12-window-theory.xml"/>
-<chapter file="ch13-handling-windows.xml"/>
+<chapter file="ch13-window-handling.xml"/>
 <chapter file="ch14-icons-intro.xml"/>
 <chapter file="ch15-icons-indirect.xml"/>
-<chapter file="ch16-icons-interact.xml"/>
+<chapter file="ch16-interact-click.xml"/>
+<chapter file="ch17-appdir.xml"/>
 
 </manual>

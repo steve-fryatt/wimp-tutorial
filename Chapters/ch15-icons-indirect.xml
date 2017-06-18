@@ -142,7 +142,7 @@ static char win_icon_text[WIN_ICON_TEXT_LEN];</code>
 
 <p>Up to now we haven&rsquo;t been setting the button type, which means that it has been zero &ndash; or <name>wimp_BUTTON_NEVER</name> which, as its name suggests, never does anything. Icons of this type ignore the user completely, which is ideal for things like labels in a dialogue box.</p>
 
-<p>Many of the other button types require us to be able to process mouse clicks, which we won&rsquo;t be able to do until <reference id="chap-icons-interact">the next chapter</reference>. However, one type of icon which the wimp will handle for us is a <intro>writable icon</intro>: a field into which the user can type. Making the icon writable is simply a case of amending the icon flags to include an appropriate button type:</p>
+<p>Many of the other button types require us to be able to process mouse clicks, which we won&rsquo;t be able to do until <reference id="chap-interact-click">the next chapter</reference>. However, one type of icon which the wimp will handle for us is a <intro>writable icon</intro>: a field into which the user can type. Making the icon writable is simply a case of amending the icon flags to include an appropriate button type:</p>
 
 <code lang="c">icon_definition.icon.flags = wimp_ICON_TEXT | wimp_ICON_INDIRECTED |
 		wimp_ICON_BORDER | wimp_ICON_FILLED |
@@ -325,7 +325,7 @@ strncpy(window_definition.title_data.text, &quot;Hello World!&quot;, 12);</code>
 
 <p>Since the title bar is only ever going to be a text icon in the majority of applications, its data will either be held in the <variable>window_definition.title_data.text[]</variable> array or the <variable>window_definition.title_data.indirected_text</variable> structure. These both behave in exactly the same way as for any other icon.</p>
 
-<p>That&rsquo;s it for &lsquo;passive&rsquo; icons &ndash; in the <reference id="chap-icons-interact">next chapter</reference> we&rsquo;ll begin to make our window react to the user. In the meantime, it&rsquo;s a good idea to experiment with the icon code that we&rsquo;ve met so far, to make sure that everything makes sense before we move on.</p>
+<p>That&rsquo;s it for &lsquo;passive&rsquo; icons &ndash; in the <reference id="chap-interact-click">next chapter</reference> we&rsquo;ll begin to make our window react to the user. In the meantime, it&rsquo;s a good idea to experiment with the icon code that we&rsquo;ve met so far, to make sure that everything makes sense before we move on.</p>
 </section>
 </chapter>
 </manual>
