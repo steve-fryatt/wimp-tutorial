@@ -180,11 +180,10 @@ typedef struct os_coord os_coord;</code>
 
 <p>As we saw in <reference id="chap-window-theory"/>, the work area coordinates have their origin in the top-left of the window, increasing from left to right and decreasing from top to bottom. A complete set of code for this change can be dound in <reference id="dl-interact-click-coord"/>.</p>
 
-
 <download id="dl-interact-click-coord" file="MouseCoords" title="Calculating Work Area Coordinates for the Mouse" compatibility="none"/>
 
-
 <!-- TODO: Complete this explanation. -->
+
 </section>
 </chapter>
 </manual>

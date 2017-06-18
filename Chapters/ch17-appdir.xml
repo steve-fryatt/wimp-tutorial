@@ -69,7 +69,7 @@ C_NO_FNAMES =
 
 RMEnsure UtilityModule 3.10 Error This application requires RISC OS 3.10 or later
 RMEnsure UtilityModule 5.00 RMEnsure CallASWI 0.03 RMLoad System:Modules.CallASWI
-RMEnsure UtilityModule 5.00 RMEnsure CallASWI 0.03 Error This application requires CallASWI 0.03 or later
+RMEnsure UtilityModule 5.00 RMEnsure CallASWI 0.03 Error This app requires CallASWI 0.03 or later
 RMEnsure FPEmulator 4.03 RMLoad System:Modules.FPEmulator
 RMEnsure FPEmulator 4.03 Error This application requires FPEmulator 4.03 or later
 RMEnsure SharedCLibrary 5.17 RMLoad System:Modules.CLib
@@ -89,7 +89,7 @@ Run &lt;Obey$Dir&gt;.!RunImage</code>
 <p>The remaining <command>*RMEnsure</command> lines come in pairs, the first being:</p>
 
 <code lang="obey">RMEnsure UtilityModule 5.00 RMEnsure CallASWI 0.03 RMLoad System:Modules.CallASWI
-RMEnsure UtilityModule 5.00 RMEnsure CallASWI 0.03 Error This application requires CallASWI 0.03 or later</code>
+RMEnsure UtilityModule 5.00 RMEnsure CallASWI 0.03 Error This app requires CallASWI 0.03 or later</code>
 
 <p>The <command>*RMEnsure</command> against the UtilityModule ensures that this pair of commands is only executed on versions of RISC&nbsp;OS <em>older</em> than RISC&nbsp;OS&nbsp;5. The first line then uses <command>*RMEnsure</command> to check for version 0.03 or better of the CallASWI module and, if it isn&rsquo;t loaded, will attempt to <command>*RMLoad</command> it from within the System Resources folder (<file>!System</file>).</p>
 
@@ -116,6 +116,36 @@ RMEnsure SharedCLibrary 5.34 Error This application requires SharedCLibrary 5.34
 <code lang="obey">Run &lt;Obey$Dir&gt;.!RunImage</code>
 
 <p>The final line is the one which actually launches the application, using the <command>*Run</command> command. The <variable>Obey$Dir</variable> system variable is set to point to the directory containing the <file>!Run</file> file, which allows us to easily locate the application&rsquo;s <file>!RunImage</file> file.</p>
+
+<p>With this new <file>!Run</file> file in place, double-clicking on the <file>!ExamplApp</file> application directory will correctly load the application on to the iconbar. In addition, we can now be confident that all of the resources necessary for the code to run will be present. A Complete set of files for the modified project can be found in <reference id="dl-appdir-first"/>.</p>
+
+<download id="dl-appdir-first" file="AppDirectory" title="The Project Converted to use an Application Directory" compatibility="none"/>
+</section>
+
+<section>
+<title>An application sprite</title>
+
+<p>Now that we have an application directory, there&rsquo;s something else that we can add to our simple application. So far, we&rsquo;ve been relying on the &lsquo;application&rsquo; sprite from the Wimp Sprite Pool for our iconbar icon, but there&rsquo;s now somewhere to store our own alternative.</p>
+
+<p>The first thing to do is to create a suitable set of sprite files. One possibility is shown in <reference id="fig-appdir-sprites"/>, but others can easily be created using Paint or a package such as ArtWorks. An application should supply at least one &lsquo;full size&rsquo; sprite with the same name as the application directory (in our case &lsquo;!examplapp&rsquo;); it can optionally supply a second &lsquo;half size&rsquo; sprite, with the same name prefixed by &lsquo;sm&rsquo; (in our case &lsquo;sm!examplapp&rsquo;).</p>
+
+<p>The half size sprite is for use in the Filer&rsquo;s directory viewers, and is optional because if it isn&rsquo;t present, the Filer will show the full size sprite with the <name>wimp_ICON_HALF_SIZE</name> flag set (as discussed in <reference id="sect-icons-intro-sprites"/>). Supplying both sprites is desirable, because doing the scaling ourselves gives more control over the result.</p>
+
+<image id="fig-appdir-sprites" file="appdir-sprites.png" title="The sprites to use for our application"/>
+
+<p>Ideally, a modern application will also provide at least two sets of these full size and half size versions of its sprite: these are at different resolutions, and allow the Wimp to cater for different screen displays. As a minimum, an application should have a <file>!Sprites22</file> file containing designs in a &lsquo;square pixel&rsquo; mode, and a <file>!Sprites</file> file containing designs in a old &lsquo;rectangular pixel&rsquo; mode (such as Mode&nbsp;12 or Mode&nbsp;15). Optionally, a <file>!Sprites11</file> file can be supplied with larger designs for use in high-resolution modes. <reference id="table-appdir-sprite-info"/> summarises the files and their sprite sizes in pixels.</p>
+
+<table id="table-appdir-sprite-info" title="The standard application sprite sizes in pixels">
+<columns>
+<col align="centre">File Name</col>
+<col align="centre">Full Size</col>
+<col align="centre">Half Size</col>
+</columns>
+<row><col>!Sprites</col><col>32 &times; 16</col><col>16 &times; 8</col></row>
+<row><col>!Sprites22</col><col>32 &times; 32</col><col>16 &times; 16</col></row>
+<row><col>!Sprites11</col><col>64 &times; 64</col><col>32 &times; 32</col></row>
+</table>
+
 
 <!--
 

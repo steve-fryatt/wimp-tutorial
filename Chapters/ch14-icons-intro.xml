@@ -218,7 +218,7 @@ typedef union wimp_icon_data wimp_icon_data;</code>
 <p>As with a number of other, similar text buffers in other parts of the system, the Wimp treats the icon data for a non-indirected text icon a little surprisingly. If the length of the icon text is between 0 and 11 characters, it should be a <intro>control terminated string</intro> with a control character (such as a <code>'\0'</code>) after the last character. If the text is 12 characters long, however, it should be <em>unterminated</em>. This makes the behaviour of <function>strncpy()</function> ideal for populating it, because should the function reach the end of the destination buffer before it reaches the end of the string to copy, the buffer is left without a terminator.</p>
 </section>
 
-<section>
+<section id="sect-icons-intro-sprites">
 <title>Sprite icons</title>
 
 <p>If a text icon contains a piece of text, a sprite icon contains &ndash; unsurprisingly &ndash; a sprite. We&rsquo;ve already met sprite icons, in fact, as the iconbar icon that we created back in <reference id="chap-ibar"/> was one. All of the formatting options that we&rsquo;ve encountered so far apply equally to both text icons and sprite icons, so we can change our icon into a sprite icon simply by updating the <function>win_create_icon()</function> function as follows:</p>
