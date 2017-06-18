@@ -28,7 +28,7 @@
 <section>
 <title>Creating an application</title>
 
-<p>Creating an application directory is surprisingly easy. First, clean the project by double-clicking on the <file>MkClean</file> TaskObey file. Next, click <mouse>Menu</mouse> over the folder, slide over <menu>New directory</menu>, enter the name &ldquo;!ExamplApp&rdquo; and press <key>Return</key>. This will create a new directory but, because the first character of the name is an exclamation mark, it automatically becomes an application directory. The project folder at this stage should look similar to that shown in <reference id="fig-appdir-folder"/>. Note that the name has been chosen to keep it within a ten character limit that still exists in some parts of the system.</p>
+<p>Creating an application directory is surprisingly easy. First, clean the project by double-clicking on the <file>MkClean</file> TaskObey file. Next, click <mouse>Menu</mouse> over the folder, slide over <menu>New directory</menu>, enter the name &ldquo;!ExamplApp&rdquo; and press <key>Return</key>. This will create a new directory but, because the first character of the name is an exclamation mark, it automatically becomes an application directory. The project folder at this stage should look similar to that shown in <reference id="fig-appdir-folder"/>. Note that the name has been chosen to keep it within a ten character limit which still exists in some parts of the system.</p>
 
 <image id="fig-appdir-folder" file="appdir-folder.png" title="Our project, with the new application directory"/>
 
@@ -63,19 +63,59 @@ C_NO_FNAMES =
 <section>
 <title>The !Run file</title>
 
-<code lang="obey">| !Run files are normally locale-dependent, if only for the error messages
+<p>When an application directory is double-clicked, the Filer will try to execute the <file>!Run</file> file contained within it. By convention, this file is an Obey file: this means that it contains a sequence of *&nbsp;commands which will be executed by RISC&nbsp;OS. We&rsquo;re going to add the file shown in <reference id="list-appdir-run"/>.</p>
+
+<code lang="obey" id="list-appdir-run" file="!Run" title="Our application&rsquo;s !Run file">| !ExamplApp.!Run
 
 RMEnsure UtilityModule 3.10 Error This application requires RISC OS 3.10 or later
 RMEnsure UtilityModule 5.00 RMEnsure CallASWI 0.03 RMLoad System:Modules.CallASWI
-RMEnsure UtilityModule 5.00 RMEnsure CallASWI 0.03 Error This app requires CallASWI 0.03 or later
+RMEnsure UtilityModule 5.00 RMEnsure CallASWI 0.03 Error This application requires CallASWI 0.03 or later
 RMEnsure FPEmulator 4.03 RMLoad System:Modules.FPEmulator
 RMEnsure FPEmulator 4.03 Error This application requires FPEmulator 4.03 or later
 RMEnsure SharedCLibrary 5.17 RMLoad System:Modules.CLib
 RMEnsure SharedCLibrary 5.34 Error This application requires SharedCLibrary 5.34 or later
 
+WimpSlot -min 128K -max 128K
 Run &lt;Obey$Dir&gt;.!RunImage</code>
 
+<p>The file does a number of important things which, up to this point, we&rsquo;ve been ignoring whilst crossing our fingers and hoping for the best. First are a block of <command>*RMEnsure</command> which should be considered mandatory for any modern application that&rsquo;s written in C. The first line is:</p>
 
+<code lang="obey">RMEnsure UtilityModule 3.10 Error This application requires RISC OS 3.10 or later</code>
+
+<p>The <command>*RMensure</command> takes a module name and a version number and checks the system to see if that module, with the specified version or newer, is already loaded. If it isn&rsquo;t, the rest of the command is executed as a new *&nbsp;command. Here we&rsquo;re checking to see if a version of the UtilityModule is present with a version of 3.10 or better: since this module is always present in ROM and its version is the same as the installed version of RISC&nbsp;OS, this is a standard way to check the current OS version.</p>
+
+<p>Checking the OS version is a fairly blunt tool, and one which should only be considered a &lsquo;last resort&rsquo; if no better alternative is present. In this case, however, we&rsquo;re only interested in knowing that the OS version is at least RISC&nbsp;OS&nbsp;3.1 &ndash; even Acorn considered this a &lsquo;base&rsquo; version of the OS back in the mid-1990s, and many parts of modern software simply won&rsquo;t work without it. If a suitable version of the UtilityModule isn&rsquo;t present, the <command>*Error</command> command is called to warn the user and exit.</p>
+
+<p>The remaining <command>*RMEnsure</command> lines come in pairs, the first being:</p>
+
+<code lang="obey">RMEnsure UtilityModule 5.00 RMEnsure CallASWI 0.03 RMLoad System:Modules.CallASWI
+RMEnsure UtilityModule 5.00 RMEnsure CallASWI 0.03 Error This application requires CallASWI 0.03 or later</code>
+
+<p>The <command>*RMEnsure</command> against the UtilityModule ensures that this pair of commands is only executed on versions of RISC&nbsp;OS <em>older</em> than RISC&nbsp;OS&nbsp;5. The first line then uses <command>*RMEnsure</command> to check for version 0.03 or better of the CallASWI module and, if it isn&rsquo;t loaded, will attempt to <command>*RMLoad</command> it from within the System Resources folder (<file>!System</file>).</p>
+
+<p>The second line repeats the test for the CallASWI version 0.03. By now it should have been loaded by the first of the two lines, so if it still isn&rsquo;t present then it can only mean that a suitable version of the module wasn&rsquo;t found in <file>!System</file>. As before, if the requirement can&rsquo;t be met, <command>*Error</command> is used to warn the user and exit.</p>
+
+<p>The CallASWI module was introduced by Acorn with the StrongARM updates, and evolved to version 0.03 with the arrival of RISC&nbsp;OS&nbsp;5. It provides implementations of a select group of new SWI calls which are used by applications compiled from C, allowing those applications to function on older systems. The next pair of lines is very similar, except that they apply to all versions of RISC&nbsp;OS and not just those older than RISC&nbsp;OS&nbsp;5:</p>
+
+<code lang="obey">RMEnsure FPEmulator 4.03 RMLoad System:Modules.FPEmulator
+RMEnsure FPEmulator 4.03 Error This application requires FPEmulator 4.03 or later</code>
+
+<p>They check for the presence of version 4.03 of the Floating Point Emulator; since this is also essential, they again prevent the application from loading if it can&rsquo;t be found. The final pair of lines is subtlety different:</p>
+
+<code lang="obey">RMEnsure SharedCLibrary 5.17 RMLoad System:Modules.CLib
+RMEnsure SharedCLibrary 5.34 Error This application requires SharedCLibrary 5.34 or later</code>
+
+<p>Once again they test for the presence of an essential module: this time the 32-bit Shared C Library which code compiled using the DDE requires to be present. The reason for this is that it&rsquo;s dangerous to soft-load the library twice in a session, so the first line tests for the earliest soft-loadable version. The second line tests for the version which is actually required &ndash; fixing this is left as an exercise for the user, but it&rsquo;s better than potentially freezing their machine without warning!</p>
+
+<p>All of the items being tested for here should be considered bare minimums for running an application executable compiled using a modern version of the DDE, and so they should <em>always</em> be present in an application&rsquo;s <file>!Run</file> file. There are ways around some of them, but those are beyond the scope of this tutorial.</p>
+
+<code lang="obey">WimpSlot -min 128K -max 128K</code>
+
+<p>The next line uses the <command>*WimpSlot</command> command to allocate memory for the application. Up to now, the application has been getting the amount of memory allocated to Next in the Task Manager; using this method, we can ensure it receives what it actually requires. The <command>-min</command> and <command>-max</command> parameters can be a little counter intuitive: if the Next slot is less than <command>-min</command> then the memory is increased to <command>-min</command>, whilst if it is greater than <command>-max</command> then it is decreased to <command>-max</command>. In general, they two values will be set the same, so that a predictable amount of memory is allocated.</p>
+
+<code lang="obey">Run &lt;Obey$Dir&gt;.!RunImage</code>
+
+<p>The final line is the one which actually launches the application, using the <command>*Run</command> command. The <variable>Obey$Dir</variable> system variable is set to point to the directory containing the <file>!Run</file> file, which allows us to easily locate the application&rsquo;s <file>!RunImage</file> file.</p>
 
 <!--
 
