@@ -209,7 +209,7 @@ static void error_complete_block(os_error *error, char *message)
 <p>The value returned from all three functions is a standard <name>wimp_error_box_selection</name>: this means that it&rsquo;s either <name>wimp_ERROR_BOX_SELECTED_OK</name>, <name>wimp_ERROR_BOX_SELECTED_CANCEL</name> or a value counting from 3 upwards for custom buttons.</p>
 </section>
 
-<section>
+<section id="sect-report2-restructure">
 <title>Throwing it all away</title>
 
 <p>The first step towards making use of this library is &ndash; a little drastically &ndash; to delete <file>c.repbox</file> and <file>h.repbox</file> from our project and remove the reference to it in <file>Makefile</file>: they&rsquo;re going to be replaced completely. This leaves the <variable>OBJS</variable> variable to be set in <file>Makefile</file> as follows:</p>

@@ -86,6 +86,8 @@ Run &lt;Obey$Dir&gt;.!RunImage</code>
 
 <p>Checking the OS version is a fairly blunt tool, and one which should only be considered a &lsquo;last resort&rsquo; if no better alternative is present. In this case, however, we&rsquo;re only interested in knowing that the OS version is at least RISC&nbsp;OS&nbsp;3.1 &ndash; even Acorn considered this a &lsquo;base&rsquo; version of the OS back in the mid-1990s, and many parts of modern software simply won&rsquo;t work without it. If a suitable version of the UtilityModule isn&rsquo;t present, the <command>*Error</command> command is called to warn the user and exit.</p>
 
+<!-- TODO Maybe swap this around, to explain the easy middle RMEnsure first, then the first, then the last...? -->
+
 <p>The remaining <command>*RMEnsure</command> lines come in pairs, the first being:</p>
 
 <code lang="obey">RMEnsure UtilityModule 5.00 RMEnsure CallASWI 0.03 RMLoad System:Modules.CallASWI
@@ -138,14 +140,36 @@ RMEnsure SharedCLibrary 5.34 Error This application requires SharedCLibrary 5.34
 <table id="table-appdir-sprite-info" title="The standard application sprite sizes in pixels">
 <columns>
 <col align="centre">File Name</col>
+<col align="centre">Resolution</col>
 <col align="centre">Full Size</col>
 <col align="centre">Half Size</col>
 </columns>
-<row><col>!Sprites</col><col>32 &times; 16</col><col>16 &times; 8</col></row>
-<row><col>!Sprites22</col><col>32 &times; 32</col><col>16 &times; 16</col></row>
-<row><col>!Sprites11</col><col>64 &times; 64</col><col>32 &times; 32</col></row>
+<row><col>!Sprites</col><col>90 &times; 45 dpi</col><col>32 &times; 16 pixels</col><col>16 &times; 8 pixels</col></row>
+<row><col>!Sprites22</col><col>90 &times; 90 dpi</col><col>32 &times; 32 pixels</col><col>16 &times; 16 pixels</col></row>
+<row><col>!Sprites11</col><col>180 &times; 180 dpi</col><col>64 &times; 64 pixels</col><col>32 &times; 32 pixels</col></row>
 </table>
 
+<!-- TODO There needs to be lots of explanation about how stuff ends up in the Wimp Sprite Pool! -->
+
+
+</section>
+
+<section>
+<title>Our sprite on the iconbar</title>
+
+<p>Although we now have our new sprite design appearing on our application directory, we should also be using it within the application itself &ndash; not least for its iconbar icon. Fortunately, this is actually extremely simple to achieve.</p>
+
+<p>Back in <reference id="sect-report2-restructure"/>, we restructured things so that the name of the sprite used both on the iconbar and in report boxes was held in a single location. This means that using our own sprite is now just a case of amending the line near the top of <file>c.main</file> to read:</p>
+
+<code lang="c">static char *main_application_sprite = "!examplapp";</code>
+
+<p>With this change in place and compiled, our application will finally be able to install itself on the iconbar using its own sprite design.</p>
+
+
+<image id="fig-appdir-iconbar" file="appdir-iconbar.png" title="Our application finally stands out on the iconbar"/>
+
+
+<download id="dl-appdir-sprite" file="AppSprite" title="Using Our Own Application Icon" compatibility="none"/>
 
 <!--
 
