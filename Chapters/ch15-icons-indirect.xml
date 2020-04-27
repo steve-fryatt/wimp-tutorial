@@ -215,7 +215,7 @@ static char win_icon_text[WIN_ICON_TEXT_LEN];</code>
 
 <code lang="c">icon_definition.icon.data.indirected_text.validation = &quot;A0-9.\\-&quot;;</code>
 
-<p>To make sure that the - is recognised, we&rsquo;ve &lsquo;escaped&rsquo; it with a backslash &ndash; and because backslash is also a special character in C strings, we&rsquo;ve had to enter it twice to that the Wimp sees it once. Again, compile this change and try it out!</p>
+<p>To make sure that the - is recognised, we&rsquo;ve &lsquo;escaped&rsquo; it with a backslash &ndash; and because a backslash is also a special character in C strings, we&rsquo;ve had to enter it twice to that the Wimp sees it once. Again, compile this change and try it out!</p>
 
 <p>This time, something slightly odd should become apparent. We&rsquo;ve limited the valid characters to a set which contain the digits 0 to 9 along with - and . but the Wimp is still quite happy to initialise the icon with the contents &ldquo;A Longer Icon Text&rdquo;. The Wimp only applies the <name>A</name> command when the user tries to type into an icon, so as a developer we must always be careful to set icons up so that they comply with the restrictions that we&rsquo;ve applied!</p>
 
