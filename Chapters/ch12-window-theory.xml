@@ -88,7 +88,7 @@ window_definition.icon_count = 0;</code>
 	wimp_icon		icons[UNKNOWN];
 };</code>
 
-<p><!-- TODO --></p>
+<p>We&rsquo;ll work our way through the contents over the coming chapters.</p>
 </section>
 
 <section id="sect-window-theory-dims">
