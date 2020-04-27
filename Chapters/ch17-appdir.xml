@@ -95,31 +95,35 @@ RMEnsure UtilityModule 5.00 RMEnsure CallASWI 0.03 Error This app requires CallA
 
 <p>The <command>*RMEnsure</command> against the UtilityModule ensures that this pair of commands is only executed on versions of RISC&nbsp;OS <em>older</em> than RISC&nbsp;OS&nbsp;5. The first line then uses <command>*RMEnsure</command> to check for version 0.03 or better of the CallASWI module and, if it isn&rsquo;t loaded, will attempt to <command>*RMLoad</command> it from within the System Resources folder (<file>!System</file>).</p>
 
-<p>The second line repeats the test for the CallASWI version 0.03. By now it should have been loaded by the first of the two lines, so if it still isn&rsquo;t present then it can only mean that a suitable version of the module wasn&rsquo;t found in <file>!System</file>. As before, if the requirement can&rsquo;t be met, <command>*Error</command> is used to warn the user and exit.</p>
+<p>The second line repeats the test for the CallASWI version 0.03. By now it should have been loaded by the first of the two lines if required, so if it still isn&rsquo;t present then it can only mean that a suitable version of the module wasn&rsquo;t found in <file>!System</file>. As before, if the requirement can&rsquo;t be met, <command>*Error</command> is used to warn the user and exit.</p>
 
-<p>The CallASWI module was introduced by Acorn with the StrongARM updates, and evolved to version 0.03 with the arrival of RISC&nbsp;OS&nbsp;5. It provides implementations of a select group of new SWI calls which are used by applications compiled from C, allowing those applications to function on older systems. The next pair of lines is very similar, except that they apply to all versions of RISC&nbsp;OS and not just those older than RISC&nbsp;OS&nbsp;5:</p>
+<p>The CallASWI module was introduced by Acorn with the StrongARM updates, and evolved to version 0.03 with the arrival of RISC&nbsp;OS&nbsp;5. It provides implementations of a select group of new SWI calls which are used by applications compiled from C using the DDE, allowing those applications to function on older systems.</p>
+
+<p>The next pair of lines is very similar, except that they apply to all versions of RISC&nbsp;OS and not just those older than RISC&nbsp;OS&nbsp;5:</p>
 
 <code lang="obey">RMEnsure FPEmulator 4.03 RMLoad System:Modules.FPEmulator
 RMEnsure FPEmulator 4.03 Error This application requires FPEmulator 4.03 or later</code>
 
-<p>They check for the presence of version 4.03 of the Floating Point Emulator; since this is also essential, they again prevent the application from loading if it can&rsquo;t be found. The final pair of lines is subtlety different:</p>
+<p>They check for the presence of version 4.03 of the Floating Point Emulator; since this is also essential (it provides all floating point number support for C applications), the lines again prevent the application from loading if a suitable version of the module can&rsquo;t be found.</p>
+
+<p>The final pair of lines is subtlety different:</p>
 
 <code lang="obey">RMEnsure SharedCLibrary 5.17 RMLoad System:Modules.CLib
 RMEnsure SharedCLibrary 5.34 Error This application requires SharedCLibrary 5.34 or later</code>
 
-<p>Once again they test for the presence of an essential module: this time the 32-bit Shared C Library which code compiled using the DDE requires to be present. The reason for this is that it&rsquo;s dangerous to soft-load the library twice in a session, so the first line tests for the earliest soft-loadable version. The second line tests for the version which is actually required &ndash; fixing this is left as an exercise for the user, but it&rsquo;s better than potentially freezing their machine without warning!</p>
+<p>Once again they test for the presence of an essential module: this time the 32-bit Shared C Library, which provides all of the standard C libraries for code compiled using the DDE, and so must be present. The reason for the difference is that it&rsquo;s dangerous to soft-load the library twice in a session, so the first line tests for the earliest soft-loadable version. The second line tests for the version which is actually required. If this pair of lines failes, fixing it is left as an exercise for the user &ndash; but it&rsquo;s better than potentially freezing their machine without warning!</p>
 
 <p>All of the items being tested for here should be considered bare minimums for running an application executable compiled using a modern version of the DDE, and so they should <em>always</em> be present in an application&rsquo;s <file>!Run</file> file. There are ways around some of them, but those are beyond the scope of this tutorial.</p>
 
 <code lang="obey">WimpSlot -min 128K -max 128K</code>
 
-<p>The next line uses the <command>*WimpSlot</command> command to allocate memory for the application. Up to now, the application has been getting the amount of memory allocated to Next in the Task Manager; using this method, we can ensure it receives what it actually requires. The <command>-min</command> and <command>-max</command> parameters can be a little counter intuitive: if the Next slot is less than <command>-min</command> then the memory is increased to <command>-min</command>, whilst if it is greater than <command>-max</command> then it is decreased to <command>-max</command>. In general, they two values will be set the same, so that a predictable amount of memory is allocated.</p>
+<p>The next line uses the <command>*WimpSlot</command> command to allocate memory for the application. Up to now, the application has been getting the amount of memory allocated to Next in the Task Manager at the time when it is run; by specifying an amount in the <file>!Run</file> file, we can ensure it receives what it actually requires. The <command>-min</command> and <command>-max</command> parameters can be a little counter intuitive: if the Next slot is less than <command>-min</command> then the memory is increased to <command>-min</command>, whilst if it is greater than <command>-max</command> then it is decreased to <command>-max</command>. In general, they two values will be set the same, so that a predictable amount of memory is allocated.</p>
 
 <code lang="obey">Run &lt;Obey$Dir&gt;.!RunImage</code>
 
 <p>The final line is the one which actually launches the application, using the <command>*Run</command> command. The <variable>Obey$Dir</variable> system variable is set to point to the directory containing the <file>!Run</file> file, which allows us to easily locate the application&rsquo;s <file>!RunImage</file> file.</p>
 
-<p>With this new <file>!Run</file> file in place, double-clicking on the <file>!ExamplApp</file> application directory will correctly load the application on to the iconbar. In addition, we can now be confident that all of the resources necessary for the code to run will be present. A Complete set of files for the modified project can be found in <reference id="dl-appdir-first"/>.</p>
+<p>With this new <file>!Run</file> file in place, double-clicking on the <file>!ExamplApp</file> application directory will correctly load the application on to the iconbar. In addition, we can now be confident that all of the resources necessary for the code to run will be present. A complete set of files for the modified project can be found in <reference id="dl-appdir-first"/>.</p>
 
 <download id="dl-appdir-first" file="AppDirectory" title="The Project Converted to use an Application Directory" compatibility="none"/>
 </section>
@@ -127,7 +131,7 @@ RMEnsure SharedCLibrary 5.34 Error This application requires SharedCLibrary 5.34
 <section>
 <title>An application sprite</title>
 
-<p>Now that we have an application directory, there&rsquo;s something else that we can add to our simple application. So far, we&rsquo;ve been relying on the &lsquo;application&rsquo; sprite from the Wimp Sprite Pool for our iconbar icon, but there&rsquo;s now somewhere to store our own alternative.</p>
+<p>Now that we have an application directory, there&rsquo;s something else that we can add to our simple application. So far, we&rsquo;ve been relying on the &lsquo;application&rsquo; sprite from the Wimp Sprite Pool for our iconbar icon as described in <reference id="chap-ibar"/>, but now we have somewhere to store our own alternative.</p>
 
 <p>The first thing to do is to create a suitable set of sprite files. One possibility is shown in <reference id="fig-appdir-sprites"/>, but others can easily be created using Paint or a package such as ArtWorks. An application should supply at least one &lsquo;full size&rsquo; sprite with the same name as the application directory (in our case &lsquo;!examplapp&rsquo;); it can optionally supply a second &lsquo;half size&rsquo; sprite, with the same name prefixed by &lsquo;sm&rsquo; (in our case &lsquo;sm!examplapp&rsquo;).</p>
 
@@ -149,15 +153,38 @@ RMEnsure SharedCLibrary 5.34 Error This application requires SharedCLibrary 5.34
 <row><col>!Sprites11</col><col>180 &times; 180 dpi</col><col>64 &times; 64 pixels</col><col>32 &times; 32 pixels</col></row>
 </table>
 
-<!-- TODO There needs to be lots of explanation about how stuff ends up in the Wimp Sprite Pool! -->
+<p>Our application sprites can end up in the Wimp Sprite Pool through a couple of mechanisms. First, when the Filer first opens a folder containing our <file>ExamplApp</file> directory, it will check inside for a file called <file>!Boot</file> (that is, <file>!ExamplApp.!Boot</file>). If one is found, it will execute that file and then stop.</p>
 
+<p>However, we don&rsquo;t yet have a <file>!Boot</file> file: they are used for setting up things like filetypes that an application might wish to load, and we don&rsquo;t yet care about any of that. Fortunately, if no <file>!Boot</file> is found, the system will then look for a file called <file>!Sprites</file> or one of the derivatives listed above &ndash; it starts with the suffix appropriate to the current mode, then falls back to try <file>!Sprites</file> if that fails.</p>
 
+<p>If a suitable <file>!Sprites</file> (or <file>!Sprites22</file>, <file>!Sprites11</file>, or whatever) file is found, and is typed as a Sprite, then the sprites within it will be added to the Wimp Sprite Pool ready for us to use. In our case, this means that the !examplapp and sm!examplapp sprites will be available for us to use.</p>
+
+<p>It&rsquo;s also possible to explicitly load sprites into the Wimp Sprite Pool, by using the <command>*IconSprites</command> command. It&rsquo;s a good idea to do this when our application is run, just in case our sprites aren&rsquo;t already in the pool, or some other sprites with the same name are already there. We can achieve this by adding the line</p>
+
+<code lang="obey">IconSprites &lt;Obey$Dir&gt;.!Sprites</code>
+
+<p>to the <file>!Run</file> file. Just as when the system loaded a file for us, <command>*IconSprites</command> will try all of the suffied versions of the filename first, before falling back to the default. Adding this in to <reference id="list-appdir-run"/> gives the file shown in <reference id="list-appdir-run-sprites"/>.</p>
+
+<code lang="obey" id="list-appdir-run-sprites" file="!Run" title="Our application&rsquo;s !Run file with *IconSprites included">| !ExamplApp.!Run
+
+RMEnsure UtilityModule 3.10 Error This application requires RISC OS 3.10 or later
+RMEnsure UtilityModule 5.00 RMEnsure CallASWI 0.03 RMLoad System:Modules.CallASWI
+RMEnsure UtilityModule 5.00 RMEnsure CallASWI 0.03 Error This app requires CallASWI 0.03 or later
+RMEnsure FPEmulator 4.03 RMLoad System:Modules.FPEmulator
+RMEnsure FPEmulator 4.03 Error This application requires FPEmulator 4.03 or later
+RMEnsure SharedCLibrary 5.17 RMLoad System:Modules.CLib
+RMEnsure SharedCLibrary 5.34 Error This application requires SharedCLibrary 5.34 or later
+
+IconSprites &lt;Obey$Dir&gt;.!Sprites
+
+WimpSlot -min 128K -max 128K
+Run &lt;Obey$Dir&gt;.!RunImage</code>
 </section>
 
 <section>
 <title>Our sprite on the iconbar</title>
 
-<p>Although we now have our new sprite design appearing on our application directory, we should also be using it within the application itself &ndash; not least for its iconbar icon. Fortunately, this is actually extremely simple to achieve.</p>
+<p>Although we now have our new sprite design appearing on our application directory, we should also be using it within the application itself &ndash; not least for its iconbar icon. Fortunately, since the sprite is now in the Wimp Sprite Pool, this is extremely simple to achieve.</p>
 
 <p>Back in <reference id="sect-report2-restructure"/>, we restructured things so that the name of the sprite used both on the iconbar and in report boxes was held in a single location. This means that using our own sprite is now just a case of amending the line near the top of <file>c.main</file> to read:</p>
 
