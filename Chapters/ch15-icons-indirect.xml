@@ -52,7 +52,7 @@ char			text_and_sprite[12];</code>
 <p>Whilst this works, it&rsquo;s quite restrictive and doesn&rsquo;t allow for any complex messages to be displayed. There&rsquo;s also another issue: just as with windows, it isn&rsquo;t possible to change an icon&rsquo;s definition after it has been created. This means that with a simple text icon, where the text is embedded in the icon definition, it isn&rsquo;t possible to change the text once the icon has been created.</p>
 </section>
 
-<section>
+<section id="sect-icons-indirect-text">
 <title>Indirected text icons</title>
 
 <p>The difference with an indirected text icon is that the text itself is removed from the icon definition and placed into a separate buffer which is under the control of the application; a pointer to this buffer is then passed to the Wimp as part of the icon definition. Since the icon definition can&rsquo;t change, the buffer must remain in place &ndash; and not change location or size &ndash; for the lifetime of the icon. It can be more than 12 bytes in size, however &ndash; and its contents can be changed at ant time by simply writing new text to the buffer.</p>
@@ -115,7 +115,7 @@ static char win_icon_text[WIN_ICON_TEXT_LEN];</code>
 <image id="fig-icons-indirect-text" file="icons-indirect-text.png" title="Indirected text icons can hold longer messages"/>
 </section>
 
-<section>
+<section id="sect-icons-indirect-behaviour">
 <title>Changing the icon&rsquo;s behaviour</title>
 
 <p>So far, all of the icons that we have created have been &lsquo;passive&rsquo; &ndash; that is, they haven&rsquo;t interacted with the user. All icons have a <intro>button type</intro>, which defines how they behave &ndash; in a similar way to the icon colours, it&rsquo;s specified by bits 12 to 15 of the icon flags:</p>

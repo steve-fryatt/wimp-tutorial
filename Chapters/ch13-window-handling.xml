@@ -230,7 +230,7 @@ int general_mode_height(void)
 <download id="dl-handling-windows-centre" file="OpenAtCentre" title="Open the Window Centred on the Desktop" compatibility="none"/>
 </section>
 
-<section>
+<section id="sect-window-handling-info">
 <title>Getting information about a window</title>
 
 <p>Along with the information required by <function>wimp_open_window()</function>, <function>wimp_get_window_state()</function> returns the window&rsquo;s flags in the <name>wimp_window_state</name> structure. The reason for this isn&rsquo;t to remind us of how we defined the window, but because in addition to the flags discussed in the <reference id="chap-window-theory">last chapter</reference>, which we set before calling <swi>Wimp_CreateWindow</swi>, there are a group of flags which the Wimp keeps updated to tell us about the current state of the window. These can be read using <swi>Wimp_GetWindowState</swi>, and are defined in OSLib as follows:</p>

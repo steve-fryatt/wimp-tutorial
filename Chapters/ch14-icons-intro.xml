@@ -259,7 +259,7 @@ typedef union wimp_icon_data wimp_icon_data;</code>
 <image id="fig-icons-intro-half" file="icons-intro-half.png" title="The sprites in sprite icons can be shown at half size"/>
 </section>
 
-<section>
+<section id="sect-icons-intro-textsprite">
 <title>Text and sprite icons</title>
 
 <p>The final type of icon is the text and sprite icon; unfortunately, there are no prizes for guessing what this kind of icon does. It can be created by setting both the <name>wimp_ICON_TEXT</name> <em>and</em> <name>wimp_ICON_SPRITE</name> flags in the definition, like this:</p>

@@ -1,0 +1,400 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+
+<!DOCTYPE xmlmanual SYSTEM "../wimp.dtd">
+
+<manual xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="xmldoc.xsd" version="1.8.6">
+
+<!-- Chapter 18
+   -
+   - Sprite Icons and Choosing Options
+  -->
+
+<chapter id="chap-icons-sprite">
+<resources>
+<images>Chapter18</images>
+<downloads>Chapter18</downloads>
+</resources>
+<filename>spriteicons.html</filename>
+<title>Sprite Icons and Choosing Options</title>
+
+<summary>We can do more interesting things with icons when we can include sprites and group them together.</summary>
+
+<section>
+<p>Back in <reference id="sect-icons-intro-sprites"/> and <reference id="sect-icons-intro-textsprite"/> we looked as using sprites in icons, but glossed over a lot of the details. Now that we&rsquo;ve cleared up some more essential background information, we can return to the subject in a more useful way.</p>
+</section>
+
+<section>
+<title>Indirected text and sprite icons</title>
+
+<p>In <reference id="dl-icons-intro-textsprite"/>, we saw that we could create an icon containing both a sprite and some text, but were limited by the fact that both the text and the name of the sprite had to be the same. Fortunately there is a way around this, and it involves the <reference id="sect-icons-indirect-valid">validation strings</reference> that we met in <reference id="chap-icons-indirect"/>. The code that we used to create our original text and sprite icon in <reference id="sect-icons-intro-textsprite"/> looked like this:</p>
+
+<code lang="c">static wimp_i win_create_icon(void)
+{
+	wimp_icon_create icon_definition;
+
+	icon_definition.w = win_handle;
+	icon_definition.icon.extent.x0 = 100;
+	icon_definition.icon.extent.y0 = -300;
+	icon_definition.icon.extent.x1 = 300;
+	icon_definition.icon.extent.y1 = -100;
+	icon_definition.icon.flags = wimp_ICON_TEXT | wimp_ICON_SPRITE |
+			wimp_ICON_BORDER | wimp_ICON_FILLED |
+			wimp_ICON_HCENTRED | wimp_ICON_VCENTRED |
+			(wimp_COLOUR_BLACK &lt;&lt; wimp_ICON_FG_COLOUR_SHIFT) |
+			(wimp_COLOUR_WHITE &lt;&lt; wimp_ICON_BG_COLOUR_SHIFT);
+	strncpy(icon_definition.icon.data.text_and_sprite, &quot;directory&quot;, 12);
+
+	return wimp_create_icon(&amp;icon_definition);
+}</code>
+
+<p>The problem we faced was that in its non-indirected form, the icon only has the 12 bytes at <variable>icon_definition.icon.data.text_and_sprite</variable> available to us for storing both the icon text and the name of the sprite. Using the same name for both is a little limiting.</p>
+
+<p>If we change to an indirected icon, then the use of those 12 bytes changes. We saw how the space is used for indirected text icons in <reference id="sect-icons-indirect-text"/>; for text and sprite icons, OSLib defines the <variable>indirected_text_and_sprite</variable> structure within <variable>union wimp_icon_data</variable> as follows:</p>
+
+<code lang="c">struct {
+	char		*text;
+	char		*validation;
+	int		size;
+} indirected_text_and_sprite;</code>
+
+<p>Once again, we now have three fields: two pointers to external buffers (<variable>*text</variable> and <variable>*validation</variable>), and the length of the buffer pointed to by <variable>*text</variable>. To make use of this, we can update the defintion of <function>win_create_icon()</function> as follows:</p>
+
+<code lang="c">static wimp_i win_create_icon(void)
+{
+	wimp_icon_create icon_definition;
+
+	icon_definition.w = win_handle;
+	icon_definition.icon.extent.x0 = 100;
+	icon_definition.icon.extent.y0 = -144;
+	icon_definition.icon.extent.x1 = 500;
+	icon_definition.icon.extent.y1 = -100;
+	icon_definition.icon.flags = wimp_ICON_TEXT | wimp_ICON_SPRITE |
+			wimp_ICON_INDIRECTED | wimp_ICON_VCENTRED |
+			(wimp_BUTTON_NEVER &lt;&lt; wimp_ICON_BUTTON_TYPE_SHIFT) |
+			(wimp_COLOUR_BLACK &lt;&lt; wimp_ICON_FG_COLOUR_SHIFT) |
+			(wimp_COLOUR_VERY_LIGHT_GREY &lt;&lt; wimp_ICON_BG_COLOUR_SHIFT);
+
+	icon_definition.icon.data.indirected_text_and_sprite.text = win_icon_text;
+	icon_definition.icon.data.indirected_text_and_sprite.size = WIN_ICON_TEXT_LEN;
+	icon_definition.icon.data.indirected_text_and_sprite.validation = "Soptoff";
+
+	strncpy(win_icon_text, &quot;This is a useless option&quot;, WIN_ICON_TEXT_LEN);
+	win_icon_text[WIN_ICON_TEXT_LEN - 1] = '\0';
+
+	return wimp_create_icon(&amp;icon_definition);
+}</code>
+
+<p>As with previous indirected icons, we&rsquo;ve set <variable>icon_definition.icon.data.indirected_text.text</variable> to point to the <variable>win_icon_text</variable> buffer, and used <variable>icon_definition.icon.data.indirected_text.size</variable> to indicate the buffer size. The buffer itself is filled with the text &ldquo;This is a useless option&rdquo;, which will be the text that is shown in the icon.</p>
+
+<p>Instead of relying on this to also set the name of the sprite to be shown in the icon, we can instead make use of the <name>S</name> validation command, which is followed by the name of a sprite. We set <variable>icon_definition.icon.data.indirected_text.validation</variable> to the validation string <code>Soptoff</code>, which the Wimp recognises as a request to use the &ldquo;optoff&rdquo; sprite in the icon. This is another sprite that we can assume will be in the Wimp Sprite Pool, the purpose of which we&rsquo;ll come back to shortly.</p>
+
+<p>There are a couple of other changes to make to the code. We no longer wish to respond to mouse clicks on the window or icon, so we can delete the <function>win_mouse_click()</function> function and the corresponding</p>
+
+<code lang="c">event_add_window_mouse_event(win_handle, win_mouse_click);</code>
+
+<p>from within the <function>win_initialise()</function> function and change the window button type to <name>wimp_BUTTON_NEVER</name>. The modified code can be found in <reference id="dl-icons-sprite-textsprite"/>.</p>
+
+<download id="dl-icons-sprite-textsprite" file="IndirectedTextSpriteIcon" title="Using Indirected Text and Sprites in an Icon" compatibility="none"/>
+
+<p>When compiled and run, the resulting window should look familiar, as can be seen in <reference id="fig-icons-sprite-textsprite"/>. The icon won&rsquo;t be that responsive yet, but we can deal with that later!</p>
+
+<image id="fig-icons-sprite-textsprite" file="icons-sprite-textsprite.png" title="Indirection is useful for icons containing both text and a sprite"/>
+</section>
+
+<section>
+<title>A option button</title>
+
+<p>The icon that we&rsquo;ve just created looks very much like an <intro>option button</intro>: a component that applications can include in dialogue boxes to allow the user to turn something on and off. The Wimp provides a fair bit of support for these, including the dedicated sprites &ldquo;optoff&rdquo; and &ldquo;opton&rdquo; which are always in the Wimp Sprite Pool.</p>
+
+<p>At present, the icon ignores our clicks because its button type is set to <name>wimp_BUTTON_NEVER</name> as discussed in <reference id="sect-icons-indirect-behaviour"/>. Helpfully, the Wimp provides a dedicated button type for option buttons: <name>wimp_BUTTON_RADIO</name>. If we use this, then the Wimp will handle the toggling of the icon&rsquo;s state from unticked to ticked and back again when the user clicks on it.</p>
+
+<p>There&rsquo;s one other thing to consider, though: when the option is on a different sprite should be shown so that a tick appears, and the &ldquo;opton&rdquo; sprite is provided for this purpose. Once again, this has been solved for us, because the <name>S</name> validation command can actually take two comma separated sprite names. If we use <code>Soptoff,opton</code> then the sprite will change between &ldquo;optoff&rdquo; when the icon is not ticked, and &ldquo;opton&rdquo; when it is.</p>
+
+<p>Bringing this together results in the following changes to <function>win_create_icon()</function>:</p>
+
+<code lang="c">static wimp_i win_create_icon(void)
+{
+	wimp_icon_create icon_definition;
+
+	icon_definition.w = win_handle;
+	icon_definition.icon.extent.x0 = 100;
+	icon_definition.icon.extent.y0 = -144;
+	icon_definition.icon.extent.x1 = 500;
+	icon_definition.icon.extent.y1 = -100;
+	icon_definition.icon.flags = wimp_ICON_TEXT | wimp_ICON_SPRITE |
+			wimp_ICON_INDIRECTED | wimp_ICON_VCENTRED |
+			(wimp_BUTTON_RADIO &lt;&lt; wimp_ICON_BUTTON_TYPE_SHIFT) |
+			(wimp_COLOUR_BLACK &lt;&lt; wimp_ICON_FG_COLOUR_SHIFT) |
+			(wimp_COLOUR_VERY_LIGHT_GREY &lt;&lt; wimp_ICON_BG_COLOUR_SHIFT);
+
+	icon_definition.icon.data.indirected_text_and_sprite.text = win_icon_text;
+	icon_definition.icon.data.indirected_text_and_sprite.size = WIN_ICON_TEXT_LEN;
+	icon_definition.icon.data.indirected_text_and_sprite.validation = "Soptoff,opton";
+
+	strncpy(win_icon_text, &quot;This is a useless option&quot;, WIN_ICON_TEXT_LEN);
+	win_icon_text[WIN_ICON_TEXT_LEN - 1] = '\0';
+
+	return wimp_create_icon(&amp;icon_definition);
+}</code>
+
+<p>Compiling this and running it should allow the box to be ticked and unticked in the expected way. The full code can be found in <reference id="dl-icons-option-button"/>.</p>
+
+<download id="dl-icons-option-button" file="OptionButton" title="A single option button" compatibility="none"/>
+</section>
+
+<section>
+<title>Reading an icon&rsquo;s state</title>
+
+<p>If the Wimp keeps track of clicks on our option icon, then how does the application know whether or not it is ticked? In fact the <name>wimp_BUTTON_RADIO</name> button type does return clicks to the task, so we could register an event handler for <name>Mouse Click</name> events as we saw in <reference id="chap-interact-click"/> and track the changes. This isn&rsquo;t ideal, though: it&rsquo;s a lot of effort, especially if we have many such icons in our application.</p>
+
+<p>In fact, the Wimp will once again do the work for us. As hinted at above, the icon is being toggled between two states: <intro>selected</intro> and <intro>deselected</intro>. The two parameters given to the <name>S</name> validation command actually apply to the deselected and selected states respectively, and we can read the current state back from the Wimp when required. When we do this depends on the application: we might do it each time there is a click on the icon if an immediate response is required, whereas in a dialogue box, we would probably only check when the user clicks on the <icon>OK</icon> button.</p>
+
+<p>Maybe unsurprisingly, the Wimp holds the selected state of the icon in the icon flags. In a <reference id="sect-window-handling-info">similar way to window flags</reference>, icon flags contain details which can both be set by the application and read back again to identify the current situation.</p>
+
+<code lang="c">#define wimp_ICON_SELECTED	((wimp_icon_flags) 0x200000u)
+#define wimp_ICON_SHADED	((wimp_icon_flags) 0x400000u)
+#define wimp_ICON_DELETED	((wimp_icon_flags) 0x800000u)</code>
+
+<p>We can read the state back using the <swi>Wimp_GetIconState</swi> SWI, but before we do, we probably need to tidy our code up a bit so that we can add a few more icons to the window. First, we will rename the <variable>win_icon_handle</variable> and <variable>win_icon_text</variable> variables to <variable>win_radio_icon_1_handle</variable> and <variable>win_radio_icon_1_text</variable> respectively. We will also rename the <function>wimp_create_icon()</function> as <function>wimp_create_radio_icon()</function>, and amend it so that we pass a <maths>y</maths> coordinate, along with pointers to the text buffer and the desired text buffer contents, as parameters.</p>
+
+<p>We can then create a similar function, <function>win_create_info_icon()</function>, which will create an icon capable of displaying information for the user. This needs its own memory buffer, which again we can pass in as a parameter. Finally, we will re-instate the <function>win_mouse_click()</function> event handler which was deleted in the last chapter.</p>
+
+<p>Taken together, these result in the following changes to the global variables and function prototypes:</p>
+
+<code lang="c">/* Constant Values */
+
+#define WIN_ICON_TEXT_LEN 100
+
+/* Global Variables */
+
+static wimp_w win_handle;
+
+static wimp_i win_radio_icon_1_handle;
+
+static wimp_i win_info_icon_handle;
+
+static int win_width, win_height;
+
+static char win_radio_icon_1_text[WIN_ICON_TEXT_LEN];
+
+static char win_info_icon_text[WIN_ICON_TEXT_LEN];
+
+/* Function Prototypes */
+
+static wimp_i win_create_radio_icon(int ypos, char *buffer, char *text);
+static wimp_i win_create_info_icon(int ypos, char *buffer, char *text);
+static void win_mouse_click(wimp_pointer *pointer);</code>
+
+<p>The last few lines of the <function>win_initialise()</function> become:</p>
+
+<code lang="c">/* Create the icons. */
+
+win_radio_icon_1_handle = win_create_radio_icon(-100, win_radio_icon_1_text, &quot;This is a useless option&quot;);
+win_info_icon_handle = win_create_info_icon(-200, win_info_icon_text, &quot;&quot;);
+
+/* Register event handlers. */
+
+event_add_window_mouse_event(win_handle, win_mouse_click);</code>
+
+<p>Finally, for now, the two icon definition functions become:</p>
+
+<code lang="c">/* Create a radio icon in a window. */
+
+static wimp_i win_create_radio_icon(int ypos, char *buffer, char *text)
+{
+	wimp_icon_create icon_definition;
+
+	icon_definition.w = win_handle;
+	icon_definition.icon.extent.x0 = 100;
+	icon_definition.icon.extent.y0 = ypos - 44;
+	icon_definition.icon.extent.x1 = 500;
+	icon_definition.icon.extent.y1 = ypos;
+	icon_definition.icon.flags = wimp_ICON_TEXT | wimp_ICON_SPRITE |
+			wimp_ICON_INDIRECTED | wimp_ICON_VCENTRED |
+			(wimp_BUTTON_RADIO &lt;&lt; wimp_ICON_BUTTON_TYPE_SHIFT) |
+			(wimp_COLOUR_BLACK &lt;&lt; wimp_ICON_FG_COLOUR_SHIFT) |
+			(wimp_COLOUR_VERY_LIGHT_GREY &lt;&lt; wimp_ICON_BG_COLOUR_SHIFT);
+
+	icon_definition.icon.data.indirected_text_and_sprite.text = buffer;
+	icon_definition.icon.data.indirected_text_and_sprite.size = WIN_ICON_TEXT_LEN;
+	icon_definition.icon.data.indirected_text_and_sprite.validation = &quot;Soptoff,opton&quot;;
+
+	strncpy(buffer, text, WIN_ICON_TEXT_LEN);
+	buffer[WIN_ICON_TEXT_LEN - 1] = '\0';
+
+	return wimp_create_icon(&amp;icon_definition);
+}
+
+/* Create an information icon in a window. */
+
+static wimp_i win_create_info_icon(int ypos, char *buffer, char *text)
+{
+	wimp_icon_create icon_definition;
+
+	icon_definition.w = win_handle;
+	icon_definition.icon.extent.x0 = 100;
+	icon_definition.icon.extent.y0 = ypos - 44;
+	icon_definition.icon.extent.x1 = 500;
+	icon_definition.icon.extent.y1 = ypos;
+	icon_definition.icon.flags = wimp_ICON_TEXT | wimp_ICON_INDIRECTED |
+			wimp_ICON_HCENTRED | wimp_ICON_VCENTRED |
+			wimp_ICON_BORDER | wimp_ICON_FILLED |
+			(wimp_BUTTON_NEVER &lt;&lt; wimp_ICON_BUTTON_TYPE_SHIFT) |
+			(wimp_COLOUR_BLACK &lt;&lt; wimp_ICON_FG_COLOUR_SHIFT) |
+			(wimp_COLOUR_WHITE &lt;&lt; wimp_ICON_BG_COLOUR_SHIFT);
+
+	icon_definition.icon.data.indirected_text.text = buffer;
+	icon_definition.icon.data.indirected_text.size = WIN_ICON_TEXT_LEN;
+	icon_definition.icon.data.indirected_text.validation = &quot;&quot;;
+
+	strncpy(buffer, text, WIN_ICON_TEXT_LEN);
+	buffer[WIN_ICON_TEXT_LEN - 1] = '\0';
+
+	return wimp_create_icon(&amp;con_definition);
+}</code>
+
+<p>Next, we need a way to read the state of the option icon when the user clicks on it. Reading the state of an icon is done using the <swi>Wimg_GetIconState</swi>, which OSLib defines as</p>
+
+<code lang="c">extern void wimp_get_icon_state (
+	wimp_icon_state *icon_state
+);</code>
+
+<p>It takes a pointer to a block of memory, which is defined as</p>
+
+<code lang="c">struct {
+	wimp_w w;
+	wimp_i i;
+	wimp_icon icon;
+} wimp_icon_state;</code>
+
+<p>and contains the <variable>wimp_icon</variable> structure that we are already using to define icons. This means that having got an icon&rsquo;s state, we can easily read the icon data back and examine or process it as required.</p>
+
+<p>Putting this into practice, we can reinstate our <function>win_mouse_click()</function> <name>Mouse Click</name> event handler as follows:</p>
+
+<code lang="c">static void win_mouse_click(wimp_pointer *pointer)
+{
+	int			xpos, ypos;
+	wimp_icon_state		state;
+
+	state.w = win_handle;
+	state.i = win_radio_icon_1_handle;
+	wimp_get_icon_state(&amp;state);
+
+	if (state.icon.flags &amp; wimp_ICON_SELECTED)
+		snprintf(win_info_icon_text, WIN_ICON_TEXT_LEN, &quot;Option button is ticked&quot;);
+	 else
+		snprintf(win_info_icon_text, WIN_ICON_TEXT_LEN, &quot;Option button is not ticked&quot;);
+
+	win_info_icon_text[WIN_ICON_TEXT_LEN - 1] = '\0';
+
+	wimp_set_icon_state(win_handle, win_info_icon_handle, 0, 0);
+}</code>
+
+<p>First we initialise the <variable>state</variable> structure to contain the window handle and the handle of the option icon, before calling <function>wimp_get_icon_state()</function> to get the information we need from the Wimp. Finally, we can update the contents of the information icon depending on whether or not the option icon was selected and refresh it as discussed in <reference id="sect-interact-click-update"/>.</p>
+
+<p>Putting the code together results in the application found in <reference id="dl-icons-sprite-state"/>.</p>
+
+<download id="dl-icons-sprite-state" file="OptionButtonState" title="Reading the state of an option button" compatibility="none"/>
+
+<p>When compiled and run, the window should now contain an additional information field as seen in <reference id="fig-icons-sprite-state"/>. The option button will toggle as before, but now it will also report the current state in the information field below.</p>
+
+<image id="fig-icons-sprite-state" file="icons-sprite-state.png" title="We can check the current state of an option icon with the Wimp"/>
+</section>
+
+<section>
+<title>Multiple options</title>
+
+<p>In addition to simple on/off options, there is a variant of the option icon which uses multiple switches: one for each possible option. Known as <intro>radio icons</intro> because of their similarity to the tuning selection buttons on an old radio, they are also a common sight in dialogue boxes.</p>
+
+<p>As the name might suggest, the <name>wimp_BUTTON_RADIO</name> button type can also be used to implement radio icons with a few changes. First, we need to define some global variables to hold the extra icons and their text labels.</p>
+
+<code lang="c">/* Global Variables */
+
+static wimp_w win_handle;
+
+static wimp_i win_radio_icon_1_handle;
+static wimp_i win_radio_icon_2_handle;
+static wimp_i win_radio_icon_3_handle;
+
+static wimp_i win_info_icon_handle;
+
+static int win_width, win_height;
+
+static char win_radio_icon_1_text[WIN_ICON_TEXT_LEN];
+static char win_radio_icon_2_text[WIN_ICON_TEXT_LEN];
+static char win_radio_icon_3_text[WIN_ICON_TEXT_LEN];
+
+static char win_info_icon_text[WIN_ICON_TEXT_LEN];</code>
+
+<p>before creating the extra icons in <function>win_initialise()</function>:</p>
+
+<code lang="c">/* Create the icons. */
+
+win_radio_icon_1_handle = win_create_radio_icon(-100, win_radio_icon_1_text, "Option 1");
+win_radio_icon_2_handle = win_create_radio_icon(-152, win_radio_icon_2_text, "Option 2");
+win_radio_icon_3_handle = win_create_radio_icon(-204, win_radio_icon_3_text, "Option 3");
+win_info_icon_handle = win_create_info_icon(-256, win_info_icon_text, "");</code>
+
+<p>We will also need to make some changes to our icon definition, since the Wimp needs to know that we want out three icons to operate together as an <intro>exclusive selection group</intro> (or ESG). As with an icon&rsquo;s button type and colours, this is defined within the icon flags.</p>
+
+<code lang="c">#define wimp_ICON_ESG_SHIFT	(16)
+#define wimp_ICON_ESG		((wimp_icon_flags) 0x1F0000u)</code>
+
+<p>It used to be the case that five bits of the flags were set aside for the ESG, occupying bits 16 to 20, and this is still what OSLib has defined. However, in recent versions of the Wimp (where &lsquo;recent&rsquo; means &lsquo;this century&rsquo;), bit&nbsp;20 has been reallocated and only the four bits from 16 to 19 are available for the purpose. This still allows for 15 distinct groups within a window, which is probably enough; a zero ESG means that the icon is <em>not</em> part of any group.</p>
+
+<p>We can amend the icon flag definition within the <function>win_create_radio_icon()</function> function to include a non-zero ESG as follows:</p>
+
+<code lang="c">icon_definition.icon.flags = wimp_ICON_TEXT | wimp_ICON_SPRITE |
+		wimp_ICON_INDIRECTED | wimp_ICON_VCENTRED |
+		(wimp_BUTTON_RADIO &lt;&lt; wimp_ICON_BUTTON_TYPE_SHIFT) |
+		(1 &lt;&lt; wimp_ICON_ESG_SHIFT) |
+		(wimp_COLOUR_BLACK &lt;&lt; wimp_ICON_FG_COLOUR_SHIFT) |
+		(wimp_COLOUR_VERY_LIGHT_GREY &lt;&lt; wimp_ICON_BG_COLOUR_SHIFT);</code>
+
+<p>In addition, radio icons should use the &ldquo;radiooff&rdquo; and &ldquo;radioon&rdquo; sprites instead of &ldquo;optoff&rdquo; and &ldquo;opton&rdquo;, so we amend the vaidation string accordingly:</p>
+
+<code lang="c">icon_definition.icon.data.indirected_text_and_sprite.validation = "Sradiooff,radioon";</code>
+
+<p>Putting these changes together along with a simple change to the message in the <name>Mouse Click</name> event handler results in the code found in <reference id="dl-icons-sprite-radio"/>.</p>
+
+<download id="dl-icons-sprite-radio" file="RadioButton" title="A group of three radio buttons" compatibility="none"/>
+
+<p>The result when compiled should be as seen in <reference id="fig-icons-sprite-radio"/>. It should be simple to change the code in <function>win_mouse_click()</function> to report on the state of <icon>Option&nbsp;2</icon> or <icon>Option&nbsp;3</icon>.</p>
+
+<image id="fig-icons-sprite-radio" file="icons-sprite-radio.png" title="Radio buttons can operate in groups"/>
+
+<p>However, even in a simple window with just four icons, keeping track of all of the handles and memory is quickly becoming complicated and it shouldn&rsquo;t come as a surprise to learn that very few applications will do things this way. In the next chapter, we will look at a better way to design windows.</p>
+
+
+
+
+<!--
+
+#define wimp_ICON_ANTI_ALIASED		((wimp_icon_flags) 0x40u)
+#define wimp_ICON_NEEDS_HELP		((wimp_icon_flags) 0x80u)
+
+
+#define wimp_ICON_ALLOW_ADJUST		((wimp_icon_flags) 0x400u)
+
+
+#define wimp_ICON_FONT_HANDLE_SHIFT	(24)
+#define wimp_ICON_FONT_HANDLE		((wimp_icon_flags) 0xFF000000u)
+      /*shift Font Handle bits by Wimp_IconFontHandleShift*/
+      
+      
+
+#define wimp_BUTTON_DOUBLE_CLICK	((wimp_icon_flags) 0x5u)
+#define wimp_BUTTON_CLICK_DRAG		((wimp_icon_flags) 0x6u)
+#define wimp_BUTTON_RELEASE_DRAG	((wimp_icon_flags) 0x7u)
+#define wimp_BUTTON_DOUBLE_DRAG		((wimp_icon_flags) 0x8u)
+#define wimp_BUTTON_MENU_ICON		((wimp_icon_flags) 0x9u)
+#define wimp_BUTTON_DOUBLE_CLICK_DRAG	((wimp_icon_flags) 0xAu)
+#define wimp_BUTTON_RADIO		((wimp_icon_flags) 0xBu)
+
+-->
+
+
+
+</section>
+</chapter>
+</manual>

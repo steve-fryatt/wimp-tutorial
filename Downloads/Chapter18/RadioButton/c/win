@@ -1,0 +1,220 @@
+/* Copyright 2015-2020, Stephen Fryatt (info@stevefryatt.org.uk)
+ *
+ * This file is part of Wimp Programming In C:
+ *
+ *   http://www.stevefryatt.org.uk/software/
+ *
+ * Licensed under the EUPL, Version 1.1 only (the "Licence");
+ * You may not use this work except in compliance with the
+ * Licence.
+ *
+ * You may obtain a copy of the Licence at:
+ *
+ *   http://joinup.ec.europa.eu/software/page/eupl
+ *
+ * Unless required by applicable law or agreed to in
+ * writing, software distributed under the Licence is
+ * distributed on an "AS IS" basis, WITHOUT WARRANTIES
+ * OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ * See the Licence for the specific language governing
+ * permissions and limitations under the Licence.
+ */
+
+/**
+ * File: win.c
+ */
+
+#include "oslib/wimp.h"
+#include "oslib/wimpspriteop.h"
+
+#include "sflib/event.h"
+#include "sflib/general.h"
+
+#include <stdio.h>
+#include <string.h>
+
+#include "win.h"
+
+/* Constant Values */
+
+#define WIN_ICON_TEXT_LEN 100
+
+/* Global Variables */
+
+static wimp_w win_handle;
+
+static wimp_i win_radio_icon_1_handle;
+static wimp_i win_radio_icon_2_handle;
+static wimp_i win_radio_icon_3_handle;
+
+static wimp_i win_info_icon_handle;
+
+static int win_width, win_height;
+
+static char win_radio_icon_1_text[WIN_ICON_TEXT_LEN];
+static char win_radio_icon_2_text[WIN_ICON_TEXT_LEN];
+static char win_radio_icon_3_text[WIN_ICON_TEXT_LEN];
+
+static char win_info_icon_text[WIN_ICON_TEXT_LEN];
+
+/* Function Prototypes */
+
+static wimp_i win_create_radio_icon(int ypos, char *buffer, char *text);
+static wimp_i win_create_info_icon(int ypos, char *buffer, char *text);
+static void win_mouse_click(wimp_pointer *pointer);
+
+/* Window Initialisation. */
+
+void win_initialise(void)
+{
+	wimp_window window_definition;
+
+	window_definition.visible.x0 = 200;
+	window_definition.visible.y0 = 200;
+	window_definition.visible.x1 = 800;
+	window_definition.visible.y1 = 600;
+	window_definition.xscroll = 0;
+	window_definition.yscroll = 0;
+	window_definition.next = wimp_TOP;
+	window_definition.flags = wimp_WINDOW_NEW_FORMAT |
+			wimp_WINDOW_MOVEABLE | wimp_WINDOW_AUTO_REDRAW |
+			wimp_WINDOW_BOUNDED_ONCE | wimp_WINDOW_BACK_ICON |
+			wimp_WINDOW_CLOSE_ICON | wimp_WINDOW_TITLE_ICON |
+			wimp_WINDOW_TOGGLE_ICON | wimp_WINDOW_VSCROLL |
+			wimp_WINDOW_SIZE_ICON | wimp_WINDOW_HSCROLL;
+	window_definition.title_fg = wimp_COLOUR_BLACK;
+	window_definition.title_bg = wimp_COLOUR_LIGHT_GREY;
+	window_definition.work_fg = wimp_COLOUR_BLACK;
+	window_definition.work_bg = wimp_COLOUR_VERY_LIGHT_GREY;
+	window_definition.scroll_outer = wimp_COLOUR_MID_LIGHT_GREY;
+	window_definition.scroll_inner = wimp_COLOUR_VERY_LIGHT_GREY;
+	window_definition.highlight_bg = wimp_COLOUR_CREAM;
+	window_definition.extra_flags = 0;
+	window_definition.extent.x0 = 0;
+	window_definition.extent.y0 = -1200;
+	window_definition.extent.x1 = 1200;
+	window_definition.extent.y1 = 0;
+	window_definition.title_flags = wimp_ICON_TEXT | wimp_ICON_BORDER | wimp_ICON_HCENTRED | wimp_ICON_VCENTRED | wimp_ICON_FILLED;
+	window_definition.work_flags = wimp_BUTTON_NEVER << wimp_ICON_BUTTON_TYPE_SHIFT;
+	window_definition.sprite_area = wimpspriteop_AREA;
+	window_definition.xmin = 0;
+	window_definition.ymin = 0;
+	strncpy(window_definition.title_data.text, "Hello World!", 12);
+	window_definition.icon_count = 0;
+
+	win_handle = wimp_create_window(&window_definition);
+
+	win_width = window_definition.visible.x1 - window_definition.visible.x0;
+	win_height = window_definition.visible.y1 - window_definition.visible.y0;
+
+	/* Create the icons. */
+
+	win_radio_icon_1_handle = win_create_radio_icon(-100, win_radio_icon_1_text, "Option 1");
+	win_radio_icon_2_handle = win_create_radio_icon(-152, win_radio_icon_2_text, "Option 2");
+	win_radio_icon_3_handle = win_create_radio_icon(-204, win_radio_icon_3_text, "Option 3");
+	win_info_icon_handle = win_create_info_icon(-256, win_info_icon_text, "");
+
+	/* Register event handlers. */
+
+	event_add_window_mouse_event(win_handle, win_mouse_click);
+}
+
+/* Create a radio icon in a window. */
+
+static wimp_i win_create_radio_icon(int ypos, char *buffer, char *text)
+{
+	wimp_icon_create icon_definition;
+
+	icon_definition.w = win_handle;
+	icon_definition.icon.extent.x0 = 100;
+	icon_definition.icon.extent.y0 = ypos - 44;
+	icon_definition.icon.extent.x1 = 500;
+	icon_definition.icon.extent.y1 = ypos;
+	icon_definition.icon.flags = wimp_ICON_TEXT | wimp_ICON_SPRITE |
+			wimp_ICON_INDIRECTED | wimp_ICON_VCENTRED |
+			(wimp_BUTTON_RADIO << wimp_ICON_BUTTON_TYPE_SHIFT) |
+			(1 << wimp_ICON_ESG_SHIFT) |
+			(wimp_COLOUR_BLACK << wimp_ICON_FG_COLOUR_SHIFT) |
+			(wimp_COLOUR_VERY_LIGHT_GREY << wimp_ICON_BG_COLOUR_SHIFT);
+
+	icon_definition.icon.data.indirected_text_and_sprite.text = buffer;
+	icon_definition.icon.data.indirected_text_and_sprite.size = WIN_ICON_TEXT_LEN;
+	icon_definition.icon.data.indirected_text_and_sprite.validation = "Sradiooff,radioon";
+
+	strncpy(buffer, text, WIN_ICON_TEXT_LEN);
+	buffer[WIN_ICON_TEXT_LEN - 1] = '\0';
+
+	return wimp_create_icon(&icon_definition);
+}
+
+/* Create an information icon in a window. */
+
+static wimp_i win_create_info_icon(int ypos, char *buffer, char *text)
+{
+	wimp_icon_create icon_definition;
+
+	icon_definition.w = win_handle;
+	icon_definition.icon.extent.x0 = 100;
+	icon_definition.icon.extent.y0 = ypos - 44;
+	icon_definition.icon.extent.x1 = 500;
+	icon_definition.icon.extent.y1 = ypos;
+	icon_definition.icon.flags = wimp_ICON_TEXT | wimp_ICON_INDIRECTED |
+			wimp_ICON_HCENTRED | wimp_ICON_VCENTRED |
+			wimp_ICON_BORDER | wimp_ICON_FILLED |
+			(wimp_BUTTON_NEVER << wimp_ICON_BUTTON_TYPE_SHIFT) |
+			(wimp_COLOUR_BLACK << wimp_ICON_FG_COLOUR_SHIFT) |
+			(wimp_COLOUR_WHITE << wimp_ICON_BG_COLOUR_SHIFT);
+
+	icon_definition.icon.data.indirected_text.text = buffer;
+	icon_definition.icon.data.indirected_text.size = WIN_ICON_TEXT_LEN;
+	icon_definition.icon.data.indirected_text.validation = "";
+
+	strncpy(buffer, text, WIN_ICON_TEXT_LEN);
+	buffer[WIN_ICON_TEXT_LEN - 1] = '\0';
+
+	return wimp_create_icon(&icon_definition);
+}
+
+/* Open the Window. */
+
+void win_open(void)
+{
+	wimp_window_state state;
+
+	state.w = win_handle;
+	wimp_get_window_state(&state);
+
+	if (!(state.flags & wimp_WINDOW_OPEN)) {
+		state.visible.x0 = (general_mode_width() - win_width) / 2;
+		state.visible.y0 = (general_mode_height() - win_height) / 2;
+
+		state.visible.x1 = state.visible.x0 + win_width;
+		state.visible.y1 = state.visible.y0 + win_height;
+	}
+
+	state.next = wimp_TOP;
+
+	wimp_open_window((wimp_open *) &state);
+}
+
+/* Handle Mouse Click events. */
+
+static void win_mouse_click(wimp_pointer *pointer)
+{
+	int			xpos, ypos;
+	wimp_icon_state	        state;
+
+	state.w = win_handle;
+	state.i = win_radio_icon_1_handle;
+	wimp_get_icon_state(&state);
+
+	if (state.icon.flags & wimp_ICON_SELECTED)
+		snprintf(win_info_icon_text, WIN_ICON_TEXT_LEN, "Option 1 is selected");
+	 else
+		snprintf(win_info_icon_text, WIN_ICON_TEXT_LEN, "Option 1 is not selected");
+
+	win_info_icon_text[WIN_ICON_TEXT_LEN - 1] = '\0';
+
+	wimp_set_icon_state(win_handle, win_info_icon_handle, 0, 0);
+}

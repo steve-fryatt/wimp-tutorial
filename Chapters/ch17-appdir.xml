@@ -60,7 +60,7 @@ C_NO_FNAMES =
 <p>It&rsquo;s not the end of the story, however, because double-clicking on the <file>!ExamplApp</file> directory <em>without</em> <key>Shift</key> held down gives an error that <file>!ExamplApp.!Run</file> can&rsquo;t be found. There&rsquo;s clearly something missing!</p>
 </section>
 
-<section>
+<section id="chap-appdir-runfile">
 <title>The !Run file</title>
 
 <p>When an application directory is double-clicked, the Filer will try to execute the <file>!Run</file> file contained within it. By convention, this file is an Obey file: this means that it contains a sequence of *&nbsp;commands which will be executed by RISC&nbsp;OS. We&rsquo;re going to add the file shown in <reference id="list-appdir-run"/>.</p>
@@ -163,7 +163,23 @@ RMEnsure SharedCLibrary 5.34 Error This application requires SharedCLibrary 5.34
 
 <code lang="obey">IconSprites &lt;Obey$Dir&gt;.!Sprites</code>
 
-<p>to the <file>!Run</file> file. Just as when the system loaded a file for us, <command>*IconSprites</command> will try all of the suffied versions of the filename first, before falling back to the default. Adding this in to <reference id="list-appdir-run"/> gives the file shown in <reference id="list-appdir-run-sprites"/>.</p>
+<p>to the <file>!Run</file> file. Just as when the system loaded a file for us, <command>*IconSprites</command> will try all of the suffied versions of the filename first, before falling back to the default.</p>
+</section>
+
+<section>
+<title>Finding our resources</title>
+
+<p>There is one last thing that we should probably add to our <file>!Run</file> file at this stage, before moving on. We noted <reference id="chap-appdir-runfile">above</reference> that the <variable>Obey$Dir</variable> system variable was set to point to the folder containing the file, but didn&rsquo;t elaborate. In fact, this is something that the system does whenever an Obey file is executed, and it will remain set until either we reach the end of <file>!Run</file> or we call another Obey file from within it.</p>
+
+<p>This is OK for now, but could be a problem if we needed to find our <file>!ExamplApp</file> folder again later. By then, another Obey file could have been run by the system (perhaps another application has been launched by the user), and this would clearly change <variable>Obey$Dir</variable> and lose the reference that we had been relying on. To protect against this, we can set our own system variable with the value contained in <variable>Obey$Dir</variable>, so that we can always find our way back. By convention (see <reference id="chap-appdir-allocation"/> below), we can use variables which start with &ldquo;ExamplApp$&rdquo;, so we can add a line to our <file>!Run</file> file as follows:</p>
+
+<code lang="obey">Set ExamplApp$Dir &lt;Obey$Dir&gt;</code>
+
+<p>It makes sense to do this first, then use it in preference to <variable>Obey$Dir</variable> for the rest of the file. This means that we should also change the <command>*IconSprites</command> command that we added in the previous section:</p>
+
+<code lang="obey">IconSprites &lt;ExamplApp$Dir&gt;.!Sprites</code>
+
+<p>Combining these two changes into the file shown in <reference id="list-appdir-run"/> gives the file shown in <reference id="list-appdir-run-sprites"/>.</p>
 
 <code lang="obey" id="list-appdir-run-sprites" file="!Run" title="Our application&rsquo;s !Run file with *IconSprites included">| !ExamplApp.!Run
 
@@ -175,7 +191,9 @@ RMEnsure FPEmulator 4.03 Error This application requires FPEmulator 4.03 or late
 RMEnsure SharedCLibrary 5.17 RMLoad System:Modules.CLib
 RMEnsure SharedCLibrary 5.34 Error This application requires SharedCLibrary 5.34 or later
 
-IconSprites &lt;Obey$Dir&gt;.!Sprites
+Set ExamplApp$Dir &lt;Obey$Dir&gt;
+
+IconSprites &lt;ExamplApp$Dir&gt;.!Sprites
 
 WimpSlot -min 128K -max 128K
 Run &lt;Obey$Dir&gt;.!RunImage</code>
@@ -192,46 +210,39 @@ Run &lt;Obey$Dir&gt;.!RunImage</code>
 
 <p>With this change in place and compiled, our application will finally be able to install itself on the iconbar using its own sprite design.</p>
 
-
 <image id="fig-appdir-iconbar" file="appdir-iconbar.png" title="Our application finally stands out on the iconbar"/>
 
-
 <download id="dl-appdir-sprite" file="AppSprite" title="Using Our Own Application Icon" compatibility="none"/>
+</section>
 
-<!--
+<section id="chap-appdir-allocation">
+<title>A note about allocation</title>
 
-#define wimp_ICON_ANTI_ALIASED		((wimp_icon_flags) 0x40u)
-#define wimp_ICON_NEEDS_HELP		((wimp_icon_flags) 0x80u)
+<p>So far in this tutorial, we have simply named our application &ldquo;ExamplApp&rdquo; without any real consideration of the consequences. Until this chapter that&rsquo;s not been a problem, but now things have changed a bit. We&rsquo;ve added some sprites, with the names &ldquo;!examplapp&rdquo; and &ldquo;sm!examplapp&rdquo; into the Wimp Sprite Pool, and set an <variable>ExamplApp$Dir</variable> system variable.</p>
 
-#define wimp_ICON_ESG_SHIFT		(16)
-#define wimp_ICON_ESG			((wimp_icon_flags) 0x1F0000u)
-      /*shift ESG bits by Wimp_IconESGShift*/
-#define wimp_ICON_ALLOW_ADJUST		((wimp_icon_flags) 0x400u)
+<p>RISC&nbsp;OS is a very &lsquo;flat&rsquo; operating system, and there is no segregation between different applications. The Wimp Sprite Pool is just a single collection of sprites shared by all of the applications on the system, and if another application tries to call itself &ldquo;ExamplApp&rdquo; then its &ldquo;!examplapp&rdquo; and &ldquo;sm!examplapp&rdquo; sprites would clash with ours. Similarly, when that other application set the <variable>ExamplApp$Dir</variable> system variable, it would overwrite whatever value we might have previously set it to.</p>
 
-#define wimp_ICON_SELECTED		((wimp_icon_flags) 0x200000u)
-#define wimp_ICON_SHADED		((wimp_icon_flags) 0x400000u)
-#define wimp_ICON_DELETED		((wimp_icon_flags) 0x800000u)
+<p>To get around this, RISC&nbsp;OS has a system of <intro>resource allocation</intro>, which allows developers to register things like application names in a central database &ndash; which ensures that they are unique. For applications which will never leave your computer (such as our <cite>ExamplApp</cite>, one assumes), this process can be ignored. However, before sending an application to anyone else &ndash; whether that&rsquo;s emailing it to a friend or publishing it on the internet &rsquo; it is <strong>essential</strong> that the name is registsred.</p>
 
-#define wimp_ICON_FONT_HANDLE_SHIFT	(24)
-#define wimp_ICON_FONT_HANDLE		((wimp_icon_flags) 0xFF000000u)
-      /*shift Font Handle bits by Wimp_IconFontHandleShift*/
-      
-      
+<p><strong>Please do not register the &ldquo;ExamplApp&rdquo; name as shown below!</strong> The process is given as an example, but in this case the name has already been registered on your behalf!</p>
 
-#define wimp_BUTTON_DOUBLE_CLICK	((wimp_icon_flags) 0x5u)
-#define wimp_BUTTON_CLICK_DRAG		((wimp_icon_flags) 0x6u)
-#define wimp_BUTTON_RELEASE_DRAG	((wimp_icon_flags) 0x7u)
-#define wimp_BUTTON_DOUBLE_DRAG		((wimp_icon_flags) 0x8u)
-#define wimp_BUTTON_MENU_ICON		((wimp_icon_flags) 0x9u)
-#define wimp_BUTTON_DOUBLE_CLICK_DRAG	((wimp_icon_flags) 0xAu)
-#define wimp_BUTTON_RADIO		((wimp_icon_flags) 0xBu)
+<p>Fortunately, the registration process is simple. Supplied as part of the DDE is an application called <cite>Allocate</cite> &ndash; it comes in the <file>Utilities</file> folder, so if you have installed things in the standard locations it will be found inside this folder in the root of your hard disc. It allows requests for resource allocations to be assembled quickly into a form that can be emailed to the people who look after the database: once this was Acorn, but these days RISC&nbsp;OS Open are responsible for it.</p>
 
+<p>When run for the first time, <cite>Allocate</cite> will ask for some personal details (name, developer number, contact information) so that any resources allocated to you can be identified &ndash; as seen in <reference id="fig-appdir-allocate-info"/>.</p>
 
+<image id="fig-appdir-allocate-info" file="appdir-allocate-info.png" title="Entering our details into Allocate"/>
 
--->
+<p>With this complete and saved for future use, <cite>Allocate</cite> will open up a <window>List of allocations</window> window as seen in <reference id="fig-appdir-allocate-name"/>.</p>
 
+<image id="fig-appdir-allocate-name" file="appdir-allocate-name.png" title="Allocation our application name"/>
 
+<p>We need an application name reservation, so we click on <icon>Reservation</icon> and select <menu>AppName</menu> in the <icon>Type</icon> field. Enter <code>ExamplApp</code> into the <icon>Text</icon> field, and click on <icon>Add</icon>. The <window>List of allocations</window> window should update to show the allocation, as seen in <reference id="fig-appdir-allocate-result"/>. All that we now need to do is save the allocation out as a file which can be attached to an email and sent to the allocation address. See <file>!Allocate.!Help</file> for full details of the process.</p>
 
+<image id="fig-appdir-allocate-result" file="appdir-allocate-result.png" title="Saving the allocation to disc"/>
+
+<p>Getting an allocation usually takes a week or two, so don&rsquo;t leave it until the last minute if you have a release deadline looming! A name will be refused if someone else has already claimed it, so try not to pick things which are too generic and do a bit of research first. It pays to have a backup idea in case your first request turns out not to be available.</p>
+
+<p>Finally, don&rsquo;t be tempted to skip the process and release applications using unallocated resources on the basis that it can&rsquo;t hurt. The RISC&nbsp;OS system only works because its developers avoid clashes of resource allocations. It&rsquo;s much easier to get a safe name to start with than to have to change it afterwards when problems come to light, and much less likely to incur the wrath of users and other developers!</p>
 </section>
 </chapter>
 </manual>

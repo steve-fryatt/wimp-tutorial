@@ -82,7 +82,7 @@ typedef struct os_coord os_coord;</code>
 <image id="fig-interact-click-report" file="interact-click-report.png" title="Reporting menu clicks over our window"/>
 </section>
 
-<section>
+<section id="sect-interact-click-update">
 <title>Updating the icon contents</title>
 
 <p>Before looking at what is special about the <mouse>Menu</mouse> button, let&rsquo;s start by considering what the <function>win_mouse_click()</function> is actually doing. Our application is now responding to our input in a practical way, and this is a very useful thing in itself!</p>
@@ -117,7 +117,7 @@ typedef struct os_coord os_coord;</code>
 
 <section>
 <title>Getting more reaction</title>
-<p>The question is why the window only responds to <mouse>Menu</mouse> clicks? The answer is that when we set up the window&rsquo;s work area flags in <reference id="sect-window-theory-loose-ends"/>, we set them to <name>wimp_BUTTON_NEVER</name>; similarly, the icon&rsquo;s button type was also set to <name>wimp_BUTTON_NEVER</name> (after a short flirtation with <name>wimp_BUTTON_WRITE_CLICK_DRAG</name>) in <reference id="chap-icons-indirect"/>. This button type ignores mouse clicks, and never reports them to our application.</p>
+<p>The question is why the window only responds to <mouse>Menu</mouse> clicks? The answer is that when we set up the window&rsquo;s work area flags in <reference id="sect-window-theory-loose-ends"/>, we set them to <name>wimp_BUTTON_NEVER</name>; similarly, the icon&rsquo;s button type was also set to <name>wimp_BUTTON_NEVER</name> (after a short flirtation with <name>wimp_BUTTON_WRITE_CLICK_DRAG</name>) in <reference id="sect-icons-indirect-behaviour"/>. This button type ignores mouse clicks, and never reports them to our application.</p>
 
 <p>At least, that&rsquo;s <em>almost</em> true. Due to the standard use of the <mouse>Menu</mouse> button for opening context menus on RISC&nbsp;OS, the Wimp will always pass <mouse>Menu</mouse> clicks through to the application, regardless of the object under the pointer. That&rsquo;s why <mouse>Menu</mouse> clicks are being reported: there&rsquo;s no way to switch them off.</p>
 
