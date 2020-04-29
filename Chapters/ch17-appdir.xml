@@ -78,7 +78,7 @@ RMEnsure SharedCLibrary 5.34 Error This application requires SharedCLibrary 5.34
 WimpSlot -min 128K -max 128K
 Run &lt;Obey$Dir&gt;.!RunImage</code>
 
-<p>The file does a number of important things which, up to this point, we&rsquo;ve been ignoring whilst crossing our fingers and hoping for the best. First are a block of <command>*RMEnsure</command> which should be considered mandatory for any modern application that&rsquo;s written in C. The first line is:</p>
+<p>The file does a number of important things which, up to this point, we&rsquo;ve been ignoring whilst crossing our fingers and hoping for the best. First are a block of <command>*RMEnsure</command> commands which should be considered as mandatory checks before launching any modern C application. The first line is:</p>
 
 <code lang="obey">RMEnsure UtilityModule 3.10 Error This application requires RISC OS 3.10 or later</code>
 

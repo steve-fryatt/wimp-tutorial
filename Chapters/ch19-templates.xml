@@ -321,8 +321,8 @@ static int win_width, win_height;</code>
 		return;
 	}
 
-	win_width = window_definition->visible.x1 - window_definition->visible.x0;
-	win_height = window_definition->visible.y1 - window_definition->visible.y0;
+	win_width = window_definition-&gt;visible.x1 - window_definition-&gt;visible.x0;
+	win_height = window_definition-&gt;visible.y1 - window_definition-&gt;visible.y0;
 
 	win_handle = wimp_create_window(window_definition);
 	free(win_handle);
@@ -345,7 +345,7 @@ static int win_width, win_height;</code>
 	state.i = WIN_ICON_INFO;
 	wimp_get_icon_state(&amp;state);
 
-	switch (pointer->i) {
+	switch (pointer-&gt;i) {
 	case WIN_ICON_OPTION1:
 		option = 1;
 		break;
@@ -375,34 +375,6 @@ static int win_width, win_height;</code>
 <image id="fig-templates-result" file="templates-result.png" title="The application running from window templates"/>
 
 <p>Whilst there&rsquo; minimal visible difference, the code for our application is now simpler, and more maintainable. It&rsquo;s also a lot easier to design dialogue boxes in a template editor than by using code. We can now move on to tidying up some of the remaining loose ends with the radio icons, in order to make them fully <cite>Style Guide</cite> compliant.</p>
-
-<!--
-
-#define wimp_ICON_ANTI_ALIASED		((wimp_icon_flags) 0x40u)
-#define wimp_ICON_NEEDS_HELP		((wimp_icon_flags) 0x80u)
-
-
-#define wimp_ICON_ALLOW_ADJUST		((wimp_icon_flags) 0x400u)
-
-
-#define wimp_ICON_FONT_HANDLE_SHIFT	(24)
-#define wimp_ICON_FONT_HANDLE		((wimp_icon_flags) 0xFF000000u)
-      /*shift Font Handle bits by Wimp_IconFontHandleShift*/
-      
-      
-
-#define wimp_BUTTON_DOUBLE_CLICK	((wimp_icon_flags) 0x5u)
-#define wimp_BUTTON_CLICK_DRAG		((wimp_icon_flags) 0x6u)
-#define wimp_BUTTON_RELEASE_DRAG	((wimp_icon_flags) 0x7u)
-#define wimp_BUTTON_DOUBLE_DRAG		((wimp_icon_flags) 0x8u)
-#define wimp_BUTTON_MENU_ICON		((wimp_icon_flags) 0x9u)
-#define wimp_BUTTON_DOUBLE_CLICK_DRAG	((wimp_icon_flags) 0xAu)
-#define wimp_BUTTON_RADIO		((wimp_icon_flags) 0xBu)
-
--->
-
-
-
 </section>
 </chapter>
 </manual>

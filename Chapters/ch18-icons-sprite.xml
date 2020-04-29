@@ -263,11 +263,13 @@ static wimp_i win_create_info_icon(int ypos, char *buffer, char *text)
 
 <p>It takes a pointer to a block of memory, which is defined as</p>
 
-<code lang="c">struct {
+<code lang="c">struct wimp_icon_state {
 	wimp_w w;
 	wimp_i i;
 	wimp_icon icon;
-} wimp_icon_state;</code>
+};
+
+typedef struct wimp_icon_state wimp_icon_state;</code>
 
 <p>and we can see that this contains the <name>wimp_icon</name> structure that we are already using to define icons. This means that having got an icon&rsquo;s state, we can easily read the icon data back and examine or process it as required.</p>
 
