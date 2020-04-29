@@ -97,7 +97,7 @@ RMEnsure UtilityModule 5.00 RMEnsure CallASWI 0.03 Error This app requires CallA
 
 <p>The second line repeats the test for the CallASWI version 0.03. By now it should have been loaded by the first of the two lines if required, so if it still isn&rsquo;t present then it can only mean that a suitable version of the module wasn&rsquo;t found in <file>!System</file>. As before, if the requirement can&rsquo;t be met, <command>*Error</command> is used to warn the user and exit.</p>
 
-<p>The CallASWI module was introduced by Acorn with the StrongARM updates, and evolved to version 0.03 with the arrival of RISC&nbsp;OS&nbsp;5. It provides implementations of a select group of new SWI calls which are used by applications compiled from C using the DDE, allowing those applications to function on older systems.</p>
+<p>The CallASWI module was introduced by Acorn with the StrongARM updates, and evolved to version 0.03 with the arrival of RISC&nbsp;OS&nbsp;5. It provides implementations of a handful of low-level SWI calls which are used by the C runtime, allowing compiled code to function the same way on all systems.</p>
 
 <p>The next pair of lines is very similar, except that they apply to all versions of RISC&nbsp;OS and not just those older than RISC&nbsp;OS&nbsp;5:</p>
 
@@ -106,22 +106,22 @@ RMEnsure FPEmulator 4.03 Error This application requires FPEmulator 4.03 or late
 
 <p>They check for the presence of version 4.03 of the Floating Point Emulator; since this is also essential (it provides all floating point number support for C applications), the lines again prevent the application from loading if a suitable version of the module can&rsquo;t be found.</p>
 
-<p>The final pair of lines is subtlety different:</p>
+<p>The final pair of lines is subtly different:</p>
 
 <code lang="obey">RMEnsure SharedCLibrary 5.17 RMLoad System:Modules.CLib
 RMEnsure SharedCLibrary 5.34 Error This application requires SharedCLibrary 5.34 or later</code>
 
-<p>Once again they test for the presence of an essential module: this time the 32-bit Shared C Library, which provides all of the standard C libraries for code compiled using the DDE, and so must be present. The reason for the difference is that it&rsquo;s dangerous to soft-load the library twice in a session, so the first line tests for the earliest soft-loadable version. The second line tests for the version which is actually required. If this pair of lines failes, fixing it is left as an exercise for the user &ndash; but it&rsquo;s better than potentially freezing their machine without warning!</p>
+<p>Once again they test for the presence of an essential module: this time the 32-bit Shared C Library, which provides all of the standard C libraries for code compiled using the DDE, and so must be present. The reason for the difference is that it&rsquo;s dangerous to soft-load the library twice in a session, so the first line tests for the earliest soft-loadable version so that we don&rsquo;t try to soft-load a new version over an already soft-loaded one. The second line tests for the version which is actually required. If this pair of lines failes, fixing the problem is left as an exercise for the user &ndash; but it&rsquo;s better than potentially freezing their machine without warning!</p>
 
-<p>All of the items being tested for here should be considered bare minimums for running an application executable compiled using a modern version of the DDE, and so they should <em>always</em> be present in an application&rsquo;s <file>!Run</file> file. There are ways around some of them, but those are beyond the scope of this tutorial.</p>
+<p>All of the items being tested for here should be considered bare minimum requirements for running an application executable compiled using a modern version of the DDE, and the tests should <em>always</em> be present in an application&rsquo;s <file>!Run</file> file. There are ways around some of them, but those are beyond the scope of this tutorial.</p>
 
 <code lang="obey">WimpSlot -min 128K -max 128K</code>
 
-<p>The next line uses the <command>*WimpSlot</command> command to allocate memory for the application. Up to now, the application has been getting the amount of memory allocated to Next in the Task Manager at the time when it is run; by specifying an amount in the <file>!Run</file> file, we can ensure it receives what it actually requires. The <command>-min</command> and <command>-max</command> parameters can be a little counter intuitive: if the Next slot is less than <command>-min</command> then the memory is increased to <command>-min</command>, whilst if it is greater than <command>-max</command> then it is decreased to <command>-max</command>. In general, they two values will be set the same, so that a predictable amount of memory is allocated.</p>
+<p>The next line uses the <command>*WimpSlot</command> command to allocate memory for the application. Up to now, the application has been getting whatever amount of memory is currently allocated to Next in the Task Manager at the time when it is run; by specifying an amount in the <file>!Run</file> file, we can ensure it receives what it actually requires. The <command>-min</command> and <command>-max</command> parameters can be a little counter intuitive: if the Next slot is less than <command>-min</command> then the memory is increased to <command>-min</command>, whilst if it is greater than <command>-max</command> then it is decreased to <command>-max</command>. In general, the two values will be set the same, so that a predictable amount of memory is allocated.</p>
 
 <code lang="obey">Run &lt;Obey$Dir&gt;.!RunImage</code>
 
-<p>The final line is the one which actually launches the application, using the <command>*Run</command> command. The <variable>Obey$Dir</variable> system variable is set to point to the directory containing the <file>!Run</file> file, which allows us to easily locate the application&rsquo;s <file>!RunImage</file> file.</p>
+<p>The final line is the one which actually launches the application, using the <command>*Run</command> command. The <variable>Obey$Dir</variable> system variable is set by the system to point to the directory containing the <file>!Run</file> file, which allows us to easily locate the application&rsquo;s <file>!RunImage</file> file.</p>
 
 <p>With this new <file>!Run</file> file in place, double-clicking on the <file>!ExamplApp</file> application directory will correctly load the application on to the iconbar. In addition, we can now be confident that all of the resources necessary for the code to run will be present. A complete set of files for the modified project can be found in <reference id="dl-appdir-first"/>.</p>
 
@@ -153,25 +153,25 @@ RMEnsure SharedCLibrary 5.34 Error This application requires SharedCLibrary 5.34
 <row><col>!Sprites11</col><col>180 &times; 180 dpi</col><col>64 &times; 64 pixels</col><col>32 &times; 32 pixels</col></row>
 </table>
 
-<p>Our application sprites can end up in the Wimp Sprite Pool through a couple of mechanisms. First, when the Filer first opens a folder containing our <file>ExamplApp</file> directory, it will check inside for a file called <file>!Boot</file> (that is, <file>!ExamplApp.!Boot</file>). If one is found, it will execute that file and then stop.</p>
+<p>Our application sprites can end up in the Wimp Sprite Pool through a couple of mechanisms. First, when the Filer first opens a folder containing our <file>ExamplApp</file> directory, it will check inside our folder (and those of any other applications alongside it) for a file called <file>!Boot</file> (that is, <file>!ExamplApp.!Boot</file>). If one is found, it will execute that file and then stop.</p>
 
-<p>However, we don&rsquo;t yet have a <file>!Boot</file> file: they are used for setting up things like filetypes that an application might wish to load, and we don&rsquo;t yet care about any of that. Fortunately, if no <file>!Boot</file> is found, the system will then look for a file called <file>!Sprites</file> or one of the derivatives listed above &ndash; it starts with the suffix appropriate to the current mode, then falls back to try <file>!Sprites</file> if that fails.</p>
+<p>However, we don&rsquo;t have a <file>!Boot</file> file: they are used for setting up things like filetypes that an application might wish to load, and we don&rsquo;t yet care about any of that. Fortunately, if no <file>!Boot</file> is found, the system will then look for a file called <file>!Sprites</file> or one of the derivatives listed above &ndash; it starts with the suffix appropriate to the current mode, then falls back to try the simple <file>!Sprites</file> if the first option fails.</p>
 
-<p>If a suitable <file>!Sprites</file> (or <file>!Sprites22</file>, <file>!Sprites11</file>, or whatever) file is found, and is typed as a Sprite, then the sprites within it will be added to the Wimp Sprite Pool ready for us to use. In our case, this means that the !examplapp and sm!examplapp sprites will be available for us to use.</p>
+<p>If a suitable <file>!Sprites</file> (or <file>!Sprites22</file>, <file>!Sprites11</file>, or whatever) file is found, and is typed as a Sprite, then the sprites within it will be added to the Wimp Sprite Pool ready for us to use. In our case, this means that the !examplapp and sm!examplapp sprites will be loaded.</p>
 
 <p>It&rsquo;s also possible to explicitly load sprites into the Wimp Sprite Pool, by using the <command>*IconSprites</command> command. It&rsquo;s a good idea to do this when our application is run, just in case our sprites aren&rsquo;t already in the pool, or some other sprites with the same name are already there. We can achieve this by adding the line</p>
 
 <code lang="obey">IconSprites &lt;Obey$Dir&gt;.!Sprites</code>
 
-<p>to the <file>!Run</file> file. Just as when the system loaded a file for us, <command>*IconSprites</command> will try all of the suffied versions of the filename first, before falling back to the default.</p>
+<p>to the <file>!Run</file> file. Just as when the system loaded the file for us, <command>*IconSprites</command> will try all of the suffied versions of the filename first, before falling back to the default. If we did have a <file>!Boot</file> file, we would need to use <command>*IconSprites</command> within that.</p>
 </section>
 
-<section>
+<section id="sect-appdir-find-res">
 <title>Finding our resources</title>
 
 <p>There is one last thing that we should probably add to our <file>!Run</file> file at this stage, before moving on. We noted <reference id="chap-appdir-runfile">above</reference> that the <variable>Obey$Dir</variable> system variable was set to point to the folder containing the file, but didn&rsquo;t elaborate. In fact, this is something that the system does whenever an Obey file is executed, and it will remain set until either we reach the end of <file>!Run</file> or we call another Obey file from within it.</p>
 
-<p>This is OK for now, but could be a problem if we needed to find our <file>!ExamplApp</file> folder again later. By then, another Obey file could have been run by the system (perhaps another application has been launched by the user), and this would clearly change <variable>Obey$Dir</variable> and lose the reference that we had been relying on. To protect against this, we can set our own system variable with the value contained in <variable>Obey$Dir</variable>, so that we can always find our way back. By convention (see <reference id="chap-appdir-allocation"/> below), we can use variables which start with &ldquo;ExamplApp$&rdquo;, so we can add a line to our <file>!Run</file> file as follows:</p>
+<p>This is OK for now, but could be a problem if we needed to find our <file>!ExamplApp</file> folder again later. By then, another Obey file could have been run by the system (perhaps another application has been launched by the user), and this would clearly change <variable>Obey$Dir</variable> and lose the reference that we had been relying on. To protect against this, we can set our own system variable with the value contained in <variable>Obey$Dir</variable>, so that we can always find our way back. By convention (see <reference id="chap-appdir-allocation"/> below), we can create and use any variables whose names start with &ldquo;ExamplApp$&rdquo;, so we can add a line to our <file>!Run</file> file as follows:</p>
 
 <code lang="obey">Set ExamplApp$Dir &lt;Obey$Dir&gt;</code>
 
@@ -218,17 +218,17 @@ Run &lt;Obey$Dir&gt;.!RunImage</code>
 <section id="chap-appdir-allocation">
 <title>A note about allocation</title>
 
-<p>So far in this tutorial, we have simply named our application &ldquo;ExamplApp&rdquo; without any real consideration of the consequences. Until this chapter that&rsquo;s not been a problem, but now things have changed a bit. We&rsquo;ve added some sprites, with the names &ldquo;!examplapp&rdquo; and &ldquo;sm!examplapp&rdquo; into the Wimp Sprite Pool, and set an <variable>ExamplApp$Dir</variable> system variable.</p>
+<p>So far in this tutorial, we have named our application &ldquo;ExamplApp&rdquo; without any real consideration of the consequences. Until this chapter that&rsquo;s not been a problem, but now things have changed a bit. We&rsquo;ve added some sprites, with the names &ldquo;!examplapp&rdquo; and &ldquo;sm!examplapp&rdquo; into the Wimp Sprite Pool, and set an <variable>ExamplApp$Dir</variable> system variable.</p>
 
-<p>RISC&nbsp;OS is a very &lsquo;flat&rsquo; operating system, and there is no segregation between different applications. The Wimp Sprite Pool is just a single collection of sprites shared by all of the applications on the system, and if another application tries to call itself &ldquo;ExamplApp&rdquo; then its &ldquo;!examplapp&rdquo; and &ldquo;sm!examplapp&rdquo; sprites would clash with ours. Similarly, when that other application set the <variable>ExamplApp$Dir</variable> system variable, it would overwrite whatever value we might have previously set it to.</p>
+<p>RISC&nbsp;OS is a very &lsquo;flat&rsquo; operating system, and there is no segregation between different applications. The Wimp Sprite Pool is just a single collection of sprites shared by all of the applications on the system, and if another application tries to call itself &ldquo;ExamplApp&rdquo; then its &ldquo;!examplapp&rdquo; and &ldquo;sm!examplapp&rdquo; sprites would clash with ours. Similarly, when that other application set the <variable>ExamplApp$Dir</variable> system variable, it would overwrite whatever value we might have previously set the variable to.</p>
 
-<p>To get around this, RISC&nbsp;OS has a system of <intro>resource allocation</intro>, which allows developers to register things like application names in a central database &ndash; which ensures that they are unique. For applications which will never leave your computer (such as our <cite>ExamplApp</cite>, one assumes), this process can be ignored. However, before sending an application to anyone else &ndash; whether that&rsquo;s emailing it to a friend or publishing it on the internet &rsquo; it is <strong>essential</strong> that the name is registsred.</p>
+<p>To get around this, RISC&nbsp;OS has a system of <intro>resource allocation</intro>, which allows developers to register things like application names in a central database &ndash; ensuring that they are unique. For applications which will never leave your computer (such as our <cite>ExamplApp</cite>, one assumes), this process can be ignored. However, before sending an application to anyone else &ndash; whether that&rsquo;s emailing it to a friend or publishing it on the internet &ndash; it is <strong>essential</strong> that the name is registered.</p>
 
-<p><strong>Please do not register the &ldquo;ExamplApp&rdquo; name as shown below!</strong> The process is given as an example, but in this case the name has already been registered on your behalf!</p>
+<p>Fortunately, the registration process is simple. We&rsquo;re going to walk through it here for &ldquo;ExamplApp&rdquo;, but it goes without saying that <strong>you should not actually submit the registration shown below</strong>. The name &ldquo;ExamplApp&rdquo; has already been registered on your behalf!</p>
 
-<p>Fortunately, the registration process is simple. Supplied as part of the DDE is an application called <cite>Allocate</cite> &ndash; it comes in the <file>Utilities</file> folder, so if you have installed things in the standard locations it will be found inside this folder in the root of your hard disc. It allows requests for resource allocations to be assembled quickly into a form that can be emailed to the people who look after the database: once this was Acorn, but these days RISC&nbsp;OS Open are responsible for it.</p>
+<p>Supplied as part of the DDE is an application called <cite>Allocate</cite> &ndash; it comes in the <file>Utilities</file> folder, so if you have installed things in the standard locations it will be found inside this folder in the root of your hard disc. It allows requests for resource allocations to be assembled quickly into a form that can be emailed to the people who look after the database: once this was Acorn, but these days RISC&nbsp;OS Open are responsible for it. Remember that despite this, the database also includes software which is only intended for use on older 26-bit systems.</p>
 
-<p>When run for the first time, <cite>Allocate</cite> will ask for some personal details (name, developer number, contact information) so that any resources allocated to you can be identified &ndash; as seen in <reference id="fig-appdir-allocate-info"/>.</p>
+<p>When run for the first time, <cite>Allocate</cite> will ask for some personal details (name and contact information) so that any resources allocated to you can be identified &ndash; as seen in <reference id="fig-appdir-allocate-info"/>. The <icon>Dev No.</icon> field is largely obsolete in the post-Acorn world.</p>
 
 <image id="fig-appdir-allocate-info" file="appdir-allocate-info.png" title="Entering our details into Allocate"/>
 
@@ -236,9 +236,11 @@ Run &lt;Obey$Dir&gt;.!RunImage</code>
 
 <image id="fig-appdir-allocate-name" file="appdir-allocate-name.png" title="Allocation our application name"/>
 
-<p>We need an application name reservation, so we click on <icon>Reservation</icon> and select <menu>AppName</menu> in the <icon>Type</icon> field. Enter <code>ExamplApp</code> into the <icon>Text</icon> field, and click on <icon>Add</icon>. The <window>List of allocations</window> window should update to show the allocation, as seen in <reference id="fig-appdir-allocate-result"/>. All that we now need to do is save the allocation out as a file which can be attached to an email and sent to the allocation address. See <file>!Allocate.!Help</file> for full details of the process.</p>
+<p>We need an application name reservation for &ldquo;ExamplApp&rdquo;, so we click on <icon>Reservation</icon> and select <menu>AppName</menu> in the <icon>Type</icon> field. Enter <code>ExamplApp</code> into the <icon>Text</icon> field, and click on <icon>Add</icon>. The <window>List of allocations</window> window should update to show the allocation, as seen in <reference id="fig-appdir-allocate-result"/>. All that we now need to do is save the allocation out as a file which can be attached to an email and sent to the allocation address. See <file>!Allocate.!Help</file> for full details of the process.</p>
 
 <image id="fig-appdir-allocate-result" file="appdir-allocate-result.png" title="Saving the allocation to disc"/>
+
+<p>This application name reservation covers us for the <file>!ExamplApp</file> folder, the associated sprites (&ldquo;!examplapp&rdquo; and &ldquo;sm!examplapp&rdquo;) that we will put into the Wimp sprite pool, and any system variable with a name which begins with &ldquo;ExamplApp$&rdquo;.</p>
 
 <p>Getting an allocation usually takes a week or two, so don&rsquo;t leave it until the last minute if you have a release deadline looming! A name will be refused if someone else has already claimed it, so try not to pick things which are too generic and do a bit of research first. It pays to have a backup idea in case your first request turns out not to be available.</p>
 

@@ -1,0 +1,133 @@
+/* Copyright 2015-2020, Stephen Fryatt (info@stevefryatt.org.uk)
+ *
+ * This file is part of Wimp Programming In C:
+ *
+ *   http://www.stevefryatt.org.uk/software/
+ *
+ * Licensed under the EUPL, Version 1.1 only (the "Licence");
+ * You may not use this work except in compliance with the
+ * Licence.
+ *
+ * You may obtain a copy of the Licence at:
+ *
+ *   http://joinup.ec.europa.eu/software/page/eupl
+ *
+ * Unless required by applicable law or agreed to in
+ * writing, software distributed under the Licence is
+ * distributed on an "AS IS" basis, WITHOUT WARRANTIES
+ * OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ * See the Licence for the specific language governing
+ * permissions and limitations under the Licence.
+ */
+
+/**
+ * File: win.c
+ */
+
+#include "oslib/wimp.h"
+#include "oslib/wimpspriteop.h"
+
+#include "sflib/errors.h"
+#include "sflib/event.h"
+#include "sflib/general.h"
+#include "sflib/icons.h"
+#include "sflib/windows.h"
+
+#include <stdio.h>
+#include <string.h>
+
+#include "win.h"
+
+/* Constant Values */
+
+#define WIN_ICON_OPTION1 0
+#define WIN_ICON_OPTION2 1
+#define WIN_ICON_OPTION3 2
+#define WIN_ICON_INFO 3
+
+/* Global Variables */
+
+static wimp_w win_handle;
+
+static int win_width, win_height;
+
+/* Function Prototypes */
+
+static void win_mouse_click(wimp_pointer *pointer);
+
+/* Window Initialisation. */
+
+void win_initialise(void)
+{
+	wimp_window *window_definition;
+
+	/* Load and create the window. */
+
+	window_definition = windows_load_template("Main");
+	if (window_definition == NULL) {
+		error_report_error("Failed to load Main template");
+		return;
+	}
+
+	win_width = window_definition->visible.x1 - window_definition->visible.x0;
+	win_height = window_definition->visible.y1 - window_definition->visible.y0;
+
+	win_handle = wimp_create_window(window_definition);
+
+	/* Register event handlers. */
+
+	event_add_window_mouse_event(win_handle, win_mouse_click);
+}
+
+/* Open the Window. */
+
+void win_open(void)
+{
+	wimp_window_state state;
+
+	state.w = win_handle;
+	wimp_get_window_state(&state);
+
+	if (!(state.flags & wimp_WINDOW_OPEN)) {
+		state.visible.x0 = (general_mode_width() - win_width) / 2;
+		state.visible.y0 = (general_mode_height() - win_height) / 2;
+
+		state.visible.x1 = state.visible.x0 + win_width;
+		state.visible.y1 = state.visible.y0 + win_height;
+	}
+
+	state.next = wimp_TOP;
+
+	wimp_open_window((wimp_open *) &state);
+}
+
+/* Handle Mouse Click events. */
+
+static void win_mouse_click(wimp_pointer *pointer)
+{
+	wimp_icon_state		state;
+	int			option = 0;
+
+	state.w = win_handle;
+	state.i = WIN_ICON_INFO;
+	wimp_get_icon_state(&state);
+
+	switch (pointer->i) {
+	case WIN_ICON_OPTION1:
+		option = 1;
+		break;
+	case WIN_ICON_OPTION2:
+		option = 2;
+		break;
+	case WIN_ICON_OPTION3:
+		option = 3;
+		break;
+	}
+
+	snprintf(state.icon.data.indirected_text.text, state.icon.data.indirected_text.size,
+			"Option %d is selected", option);
+	state.icon.data.indirected_text.text[state.icon.data.indirected_text.size - 1] = '\0';
+
+	wimp_set_icon_state(win_handle, WIN_ICON_INFO, 0, 0);
+}

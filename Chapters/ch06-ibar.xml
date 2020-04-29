@@ -64,7 +64,7 @@
 
 </section>
 
-<section>
+<section id="sect-ibar-create">
 <title>Making the icon</title>
 <p>Icons are created using the <swi>Wimp_CreateIcon</swi> SWI, which has the following prototype in OSLib:</p>
 

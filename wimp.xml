@@ -55,5 +55,6 @@
 <chapter file="ch16-interact-click.xml"/>
 <chapter file="ch17-appdir.xml"/>
 <chapter file="ch18-icons-sprite.xml"/>
+<chapter file="ch19-templates.xml"/>
 
 </manual>
