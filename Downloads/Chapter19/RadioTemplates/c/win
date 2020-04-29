@@ -74,6 +74,7 @@ void win_initialise(void)
 	win_height = window_definition->visible.y1 - window_definition->visible.y0;
 
 	win_handle = wimp_create_window(window_definition);
+	free(win_handle);
 
 	/* Register event handlers. */
 

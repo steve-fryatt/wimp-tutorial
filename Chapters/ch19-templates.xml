@@ -325,13 +325,14 @@ static int win_width, win_height;</code>
 	win_height = window_definition->visible.y1 - window_definition->visible.y0;
 
 	win_handle = wimp_create_window(window_definition);
+	free(win_handle);
 
 	/* Register event handlers. */
 
 	event_add_window_mouse_event(win_handle, win_mouse_click);
 }</code>
 
-<p>The window template is loaded into a <name>wimp_window</name> block, which is then passed to <function>wimp_create_window()</function>. All of the complexity of the block&rsquo;s contents is now handled in a WYSIWYG way by our template editor.</p> 
+<p>The window template is loaded into a <name>wimp_window</name> block, which is then passed to <function>wimp_create_window()</function>. All of the complexity of the block&rsquo;s contents is now handled in a WYSIWYG way by our template editor. The <name>wimp_window</name> block was claimed using <function>malloc()</function> in <function>windows_load_template()</function>, so we free it after use to avoid leaking memory.</p> 
 
 <p>There is one fly in the ointment, though. Previously in <function>win_mouse_click()</function>, we had been writing the status text direct to the icon buffer using the global variable. Now we can&rsquo;t do that, because the Wimp has set up the indirected buffer somewhere in the memory that we supplied to <swi>Wimp_LoadTemplate</swi>. Instead, we will need to use a different approach:</p>
 
