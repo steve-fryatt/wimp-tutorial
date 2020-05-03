@@ -20,55 +20,55 @@
 <summary>There&rsquo;s a much easier way to design windows and icons than doing it by hand in C.</summary>
 
 <section>
-<p>Whilst it&rsquo;s possible to define all of the windows and icons within our C code, as we have been doing so far, this quickly becomes complicated. Aside from the difficulty of keeping track of the visual design of the windows, the sheer number of memory buffers for indirected icons and validation strings is soon hard to maintain.</p>
+<p>Whilst it&rsquo;s possible to define all of the windows and icons within our C code, as we have been doing so far, this quickly becomes complicated. Aside from the difficulty of keeping track of the visual design of the windows, the sheer number of memory buffers for indirected icons and validation strings is soon hard to keep track of and maintain.</p>
 
 <p>We could write a library to help us with the task, but the Wimp already contains code to do this in the form of <intro>window templates</intro>. Before our example application grows too large, now is the time to move it over to use this alternative system.</p>
 
-<p>The first thing that we will need is a <intro>template editor</intro>: an application dedicated to designing window templates. If you have come here from writing applications in BASIC, then you might already have your own favourite &ndash; there are many to choose from. Options include titles such as Dick Alstein&rsquo;s <cite>TemplEd</cite> and even Acorn&rsquo;s <cite>FormEd</cite>, but here we will be using <link href="http://www.riscos.info/index.php/WinEd">WinEd</link> from Tony Houghton and Adam Richardson. All the editors generate the same template files, so it really is a matter of personal preference.</p>
+<p>The first thing that we will need is a <intro>template editor</intro>: an application dedicated to designing window templates. If you have come here from writing applications in BASIC, then you might already have your own favourite &ndash; there are many to choose from. Options include titles such as Dick Alstein&rsquo;s <cite>TemplEd</cite> and even Acorn&rsquo;s <cite>FormEd</cite> for the purists, but here we will be using <link href="http://www.riscos.info/index.php/WinEd">WinEd</link> from Tony Houghton and Adam Richardson. All of the editors generate the same template files, so it really is a matter of personal preference.</p>
 
-<p>If you choose to use another editor, make sure that you get the window and icon details (names, numbers, flags and text buffer sizes) the same. There is a full copy of the application including templates in <reference id="dl-templates-radio"/> towards the end of the page.</p>
+<p>If you choose to use another editor to create the example templates here, make sure that you get the window and icon details (names, numbers, flags and text buffer sizes) the same. There is a full copy of the application, which includes the templates, in <reference id="dl-templates-radio"/> towards the end of the page.</p>
 </section>
 
 <section>
 <title>A new template file</title>
 
-<p>Load <cite>WinEd</cite> on to the iconbar in the usual way, and click on its icon to open a new template file browser window &ndash; as seen in <reference id="fig-templates-wined"/>. This will show all of the window definitions contained in our templates file as we build the application up.</p>
+<p>Load <cite>WinEd</cite> on to the iconbar in the conventional way, and click on its icon to open a new template file browser window &ndash; as seen in <reference id="fig-templates-wined"/>. This will show all of the window definitions contained in our templates file as we build the application up.</p>
 
 <image id="fig-templates-wined" file="templates-wined.png" title="A new, empty WinEd template file browser"/>
 
-<p>Click <mouse>Menu</mouse> over the window and slide over <menu>Create</menu> to open the <window>Create window</window> dialogue (or just click on the <icon>create window</icon> button in the toolbar). We need to give the template a name, which is used to identify the different windows when we come to load them in our application &ndash; these are largely arbitrary, so enter <code>Main</code> as this could be the main ExamplApp window (see <reference id="fig-templates-wined-new"/>). After clicking on <icon>Create</icon>, a new window called &ldquo;Main&rdquo; will appear in the WinEd browser.</p>
+<p>Click <mouse>Menu</mouse> over the window and slide over <menu>Create</menu> to open the <window>Create window</window> dialogue (or just click on the <icon>create window</icon> button in the toolbar). We need to give the template a name, which is used to identify the different windows when we come to load them in our application &ndash; these are largely arbitrary, so let&rsquo;s enter <code>Main</code> since this could be the main ExamplApp window (see <reference id="fig-templates-wined-new"/>). After clicking on <icon>Create</icon>, a new window called &ldquo;Main&rdquo; will appear in the <cite>WinEd</cite> browser.</p>
 
 <image id="fig-templates-wined-new" file="templates-wined-new.png" title="Creating a new window template"/>
 
-<p>Double-clicking on this new &ldquo;Main&rdquo; will open it for editing, along with a selection of other tool windows seen in <reference id="fig-templates-wined-windows"/>. In editing mode like this, windows always have a full set of scrollbars, along with WinEd&rsquo;s toolbar attached to the left-hand side.</p>
+<p>Double-clicking on this new &ldquo;Main&rdquo; window will open it for editing, along with a selection of other tool windows seen in <reference id="fig-templates-wined-windows"/>. In editing mode like this, windows always have a full set of scrollbars, along with <cite>WinEd</cite>&rsquo;s toolbar attached to the left-hand side.</p>
 
 <p>To the right are a couple of other useful windows. At the top is the <window>Monitor</window>, which shows the details of the window and icon under the pointer. Its toggle size icon allows it to be expanded to also show the size and position of the icon under the pointer, which is how it appears in the screenshot. Below it is the <window>Icon picker</window>, which contains a number of ready-made icons that we might wish to use in our design.</p>
 
 <image id="fig-templates-wined-windows" file="templates-wined-windows.png" title="The windows on screen when working with WinEd"/>
 
-<p>We are going to recreate the window with the three radio icons in it, as found in <reference id="dl-icons-sprite-radio"/>, so the first thing for us to do is to set the window title. Click <mouse>Menu</mouse> over the window being edited and choose <menu>Edit title...</menu> to open the <window>Edit title</window> dialogue seen in <reference id="fig-templates-wined-title"/>. The dialogue layout is the same as the one used for icons, which we&rsquo;ll meet later &ndash; this reflects that fact, which we&rsquo;ve <reference id="sect-icons-indirect-window">previously noted</reference>, that window titles are effectively cut-down icons with some options unavailable.</p>
+<p>We are going to recreate the window with the three radio icons in it, as found in <reference id="dl-icons-sprite-radio"/>, so the first thing for us to do is to set the window title. Click <mouse>Menu</mouse> over the window being edited and choose <menu>Edit title...</menu> to open the <window>Edit title</window> dialogue seen in <reference id="fig-templates-wined-title"/>. The dialogue layout is the same as the one used for icons, which we&rsquo;ll meet later &ndash; this reflects the fact, which we&rsquo;ve <reference id="sect-icons-indirect-window">previously noted</reference>, that window titles are effectively cut-down icons with some options unavailable.</p>
 
-<p>All we need to do is enter our title (which was <code>Hello World!</code> in the old window) in to the <icon>Text/sprite</icon> field. The other settings can all stay at their defaults for now, and clicking on <icon>Update</icon> will store the change. The window should update on screen immediately.</p>
+<p>All that we need to do is to enter our title (which was <code>Hello World!</code> in the old window) in to the <icon>Text/sprite</icon> field. The other settings can all stay at their defaults for now, and clicking on <icon>Update</icon> will store the change. The window should update on screen immediately.</p>
 
 <image id="fig-templates-wined-title" file="templates-wined-title.png" title="The window title can be edited easily"/>
 
-<p>Next we need to add the radio icons. There is one in the <window>Icon picker</window>, so use <mouse>Select</mouse> to drag a copy into the window being edited. This should appear as seen in <reference id="fig-templates-wined-radio1"/>.</p>
+<p>Next we need to add the radio icons. There is one in the <window>Icon picker</window>, so use <mouse>Select</mouse> to drag a copy over to the window being edited. This should appear as seen in <reference id="fig-templates-wined-radio1"/>.</p>
 
 <image id="fig-templates-wined-radio1" file="templates-wined-radio1.png" title="The first radio icon in the window"/>
 
-<p>Creating the second and third icons can be done by copying the first: hold down <key>Shift</key> and then drag it with <mouse>Select</mouse> to create a copy, then repeat the process to create another. Hovering the mouse over each should show in the <window>Monitor</window> that they have icon numbers 0, 1 and 2. If necessary, drag them around using <mouse>Select</mouse> (without <key>Shift</key> held down) so that they are in order with 0 at the top and 2 at the bottom. Don&rsquo;t worry about spacing or alignment at the moment.</p>
+<p>Creating the second and third icons can be done by copying the first one placed in the window: hold down <key>Shift</key> and then drag it with <mouse>Select</mouse> to create a copy, then repeat the process to create another. Hovering the mouse over each should show in the <window>Monitor</window> that they have icon numbers 0, 1 and 2. If necessary, drag them around using <mouse>Select</mouse> (without <key>Shift</key> held down) so that they are in order with 0 at the top and 2 at the bottom. Don&rsquo;t worry about spacing or alignment at the moment.</p>
 
-<p>Now select all three icons: this can either be done by dragging a box around them with <mouse>Select</mouse>, or by clicking on the first with <mouse>Select</mouse> and the other two with <mouse>Adjust</mouse>. Open the menu and choose <menu>Selection &ndash; Align...</menu> to open the <window>Align icons</window> dialogue seen in <reference id="fig-templates-wined-align"/>. We want to align them to the left, moving the icons without resizing them, and moving left to achieve it; click on <icon>Align</icon> to proceed.</p>
+<p>Now select all three icons: this can either be done by dragging a box around them with <mouse>Select</mouse>, or by clicking on the first with <mouse>Select</mouse> and the other two with <mouse>Adjust</mouse>. Open the menu and choose <menu>Selection &msep; Align...</menu> to open the <window>Align icons</window> dialogue seen in <reference id="fig-templates-wined-align"/>. We want to align them to the left, moving the icons without resizing them, and moving left to achieve it; click on <icon>Align</icon> to proceed.</p>
 
 <image id="fig-templates-wined-align" file="templates-wined-align.png" title="Aligning the selected icons"/>
 
-<p>Next we need to space the icons out in the window. The <cite>Style Guide</cite> requires option and radio icons to be 44 OS&nbsp;units high, which the template icons in WinEd are, and to be spaced out with gaps of 8 OS&nbsp;units between each pair. With the three icons still selected, choose <menu>Selection &ndash; Space out...</menu> from the menu to open the <window>Space out</window> dialogue seen in <reference id="fig-templates-wined-space"/>.</p>
+<p>Next we need to space the icons out in the window. The <cite>Style Guide</cite> requires option and radio icons to be 44 OS&nbsp;units high, which the template icons in <cite>WinEd</cite> already are, and to be spaced out with gaps of 8 OS&nbsp;units between each pair. With the three icons still selected, choose <menu>Selection &msep; Space out...</menu> from the menu to open the <window>Space out</window> dialogue seen in <reference id="fig-templates-wined-space"/>.</p>
 
-<p>We need to space out <icon>From top</icon>, and WinEd sets the <icon>Gap</icon> to be the default 8 OS&nbsp;units by default. Simply click <icon>Space out</icon> to arrange the icons in the window.</p>
+<p>We need to space out <icon>From top</icon>, and <cite>WinEd</cite> sets the <icon>Gap</icon> to be the required 8 OS&nbsp;units by default. Simply click <icon>Space out</icon> to arrange the icons in the window.</p>
 
 <image id="fig-templates-wined-space" file="templates-wined-space.png" title="Spacing the selected icons out"/>
 
-<p>With the icons now aligned and spaced out correctly, we can check that they&rsquo;re all still selected and drag them into the top-centre of the window. It should look a bit like <reference id="fig-templates-wined-radio3"/>.</p>
+<p>With the icons now aligned and spaced out correctly, we can check that they&rsquo;re all still selected and drag them into the top-centre of the window. Once they have been deselected, it should look a bit like <reference id="fig-templates-wined-radio3"/>.</p>
 
 <image id="fig-templates-wined-radio3" file="templates-wined-radio3.png" title="Three radio icons, neatly aligned"/>
 
@@ -78,9 +78,9 @@
 
 <image id="fig-templates-wined-display" file="templates-wined-display.png" title="Adding the display field"/>
 
-<p>So far, the icons that we have dropped into the window are visually correct but still need to be fully configured. This is very important: just as we would edit the <name>icon_definition</name> that was passed to <swi>Wimp_CreateIcon</swi> in the old program, here we need to make sure that all of the flags, indirected buffers, validation strings and so on are correct.</p>
+<p>So far, the icons that we have dropped into the window are visually correct but still need to be fully configured to match the ones that we created in our application. This is very important: just as we would edit the <name>icon_definition</name> that was passed to <swi>Wimp_CreateIcon</swi> in the old program, here we need to make sure that all of the flags, indirected buffers, validation strings and so on are correct.</p>
 
-<p>Double-click on the top radio icon (the one with an icon number of 0), to open the <window>Edit icon</window> dialogue box in <reference id="fig-templates-wined-edit-icon"/>. If we go back and check the definition used in our program, we will see that it looked like this:</p>
+<p>Double-click on the top radio icon (the one with an icon number of 0), to open the <window>Edit icon</window> dialogue box seen in <reference id="fig-templates-wined-edit-icon"/>. If we go back and check the definition used in our program, we will see that it looked like this:</p>
 
 <code lang="c">icon.extent.x0 = 100;
 icon.extent.y0 = ypos - 44;
@@ -97,13 +97,13 @@ icon.data.indirected_text_and_sprite.text = buffer;
 icon.data.indirected_text_and_sprite.size = WIN_ICON_TEXT_LEN;
 icon.data.indirected_text_and_sprite.validation = &quot;Sradiooff,radioon&quot;;</code>
 
-<p>The four values in <variable>icon.extent</variable> depend on the position of the icon in the window, and are taken care of by the more WYSIWYG aspect of WinEd.</p>
+<p>The four values in <variable>icon.extent</variable> depend on the position of the icon in the window, and are taken care of by the more WYSIWYG aspect of <cite>WinEd</cite>. This is one of the advantages to using a template editor!</p>
 
-<p>Moving on to the flags, we have <name>wimp_ICON_TEXT</name>, <name>wimp_ICON_SPRITE</name> and <name>wimp_ICON_INDIRECTED</name> set, and these correspond to the <icon>Text</icon>, <icon>Sprite</icon> and <icon>Indirected</icon> options in the <icon>Data</icon> area at the top of the dialogue; they were already ticked in WinEd&rsquo;s default icon, as there isn&rsquo;t really any other way to create a radio icon. The <name>wimp_ICON_VCENTRED</name> flag is also set, and looking at the <icon>Flags</icon> section of the dialogue, we can see that <icon>V centre</icon> is ticked.</p>
+<p>Moving on to the flags, we have <name>wimp_ICON_TEXT</name>, <name>wimp_ICON_SPRITE</name> and <name>wimp_ICON_INDIRECTED</name> set, and these correspond to the <icon>Text</icon>, <icon>Sprite</icon> and <icon>Indirected</icon> options in the <icon>Data</icon> area at the top of the dialogue; they were already ticked in <cite>WinEd</cite>&rsquo;s default icon, as there isn&rsquo;t really any other way to create a radio icon. The <name>wimp_ICON_VCENTRED</name> flag is also set, and looking at the <icon>Flags</icon> section of the dialogue, we can see that <icon>V&nbsp;centre</icon> is also ticked &ndash; again, because the <cite>WinEd</cite> icon template for a radio icon had it set.</p>
 
-<p>Of the other flags, the button type was set to <name>wimp_BUTTON_RADIO</name>; in the WinEd dialogue, <icon>Button type</icon> is also <icon>Radio</icon>. The foreground and background colours are set to <name>wimp_COLOUR_BLACK</name> and <name>wimp_COLOUR_VERY_LIGHT_GREY</name> respectively, which match the <icon>Foreground colour</icon> and <icon>Background colour</icon> fields in WinEd. The ESG was set to 1, and again, WinEd has the <icon>ESG</icon> field set to 1. This is the benefit of using icons from WinEd&rsquo;s <window>Icon picker</window>.</p>
+<p>Of the other flags, the button type was set to <name>wimp_BUTTON_RADIO</name>; in the <cite>WinEd</cite> dialogue, <icon>Button type</icon> is also <icon>Radio</icon>. The foreground and background colours are set to <name>wimp_COLOUR_BLACK</name> and <name>wimp_COLOUR_VERY_LIGHT_GREY</name> respectively, which match the <icon>Foreground colour</icon> and <icon>Background colour</icon> fields in <cite>WinEd</cite>. The ESG was set to 1, and again, <cite>WinEd</cite> has the <icon>ESG</icon> field set to 1. This is the benefit of using icons from <cite>WinEd</cite>&rsquo;s <window>Icon picker</window>.</p>
 
-<p>The remainder of the <icon>Data</icon> area needs a little more thought. The <icon>Text/sprite</icon> field at the top sets the contents of the 12 bytes of icon data for non-indirected icons, but for indirected icons it sets the value copied into the main indirected buffer. In the case of our original code, this was the value pointed to by the <variable>*text</variable> parameter, which we copied into the allocated buffer with</p>
+<p>The remainder of the <icon>Data</icon> area needs a little more thought. The <icon>Text/sprite</icon> field at the top sets the contents of the 12 bytes of icon data for non-indirected icons, but for indirected icons it sets the value copied in to the main indirected buffer. In the case of our original code, this was the value pointed to by the <variable>*text</variable> parameter, which we copied into the allocated buffer with</p>
 
 <code lang="c">strncpy(buffer, text, WIN_ICON_TEXT_LEN);
 buffer[WIN_ICON_TEXT_LEN - 1] = '\0';</code>
@@ -112,11 +112,11 @@ buffer[WIN_ICON_TEXT_LEN - 1] = '\0';</code>
 
 <code lang="c">static char win_radio_icon_1_text[WIN_ICON_TEXT_LEN];</code>
 
-<p>We set <variable>icon.data.indirected_text_and_sprite.text</variable> to the buffer pointer, and ensured that the Wimp knew the length by setting <variable>icon.data.indirected_text_and_sprite.size</variable> to the value <name>WIN_ICON_TEXT_LEN</name>.</p>
+<p>Our code set <variable>icon.data.indirected_text_and_sprite.text</variable> to the buffer pointer, and ensured that the Wimp knew the length by setting <variable>icon.data.indirected_text_and_sprite.size</variable> to the value <name>WIN_ICON_TEXT_LEN</name>.</p>
 
-<p>The Wimp will sort out the allocation (and then set <variable>icon.data.indirected_text_and_sprite.text</variable>) for us when we load the template file, so long as we tell it how much space is needed by setting <variable>icon.data.indirected_text_and_sprite.size</variable> in the templates: in WinEd, this is done with the <icon>Max text length</icon> field. In our program, we just allocated <name>WIN_ICON_TEXT_LEN</name> bytes for each buffer to keep things simple. For an icon like this radio icon, where the text will not change, we can use WinEd&rsquo;s ability to <icon>Minimise</icon> the buffer to the smallest required: in this case, 14 bytes.</p>
+<p>For this template, the Wimp will sort out the allocation for us (and then set <variable>icon.data.indirected_text_and_sprite.text</variable> accordingly) when we load the template file, so long as we tell it how much space is needed by setting <variable>icon.data.indirected_text_and_sprite.size</variable> in the templates: in <cite>WinEd</cite>, this is done with the <icon>Max text length</icon> field. In our program, we just allocated <name>WIN_ICON_TEXT_LEN</name> bytes for each buffer to keep things simple. For an icon like this radio icon, where the text will not change, we can use <cite>WinEd</cite>&rsquo;s ability to <icon>Minimise</icon> the buffer to the smallest required: in this case, 14 bytes.</p>
 
-<p>Finally, we set <name>icon.data.indirected_text_and_sprite.validation</name> to point to our validation string of &ldquo;Sradiooff,radioon&rdquo; &ndash; in WinEd, this is set using the <icon>Validation</icon> field when a validation string is required.</p>
+<p>Finally, we set <name>icon.data.indirected_text_and_sprite.validation</name> to point to our validation string of &ldquo;Sradiooff,radioon&rdquo; &ndash; in <cite>WinEd</cite>, this is set using the <icon>Validation</icon> field when a validation string is required.</p>
 
 <p>When we are happy with the settings, we can click on <icon>Update</icon> to set the values and resize the icon to suit the text that it contains; to leave the size unchanged, <icon>Don&rsquo;t resize</icon> can be used instead.</p>
 
@@ -124,19 +124,21 @@ buffer[WIN_ICON_TEXT_LEN - 1] = '\0';</code>
 
 <p>This process can be repeated for the other two radio icons, setting their <icon>Text/sprite</icon> fields to  <code>Option icon 2</code> and  <code>Option icon 3</code> respectively.</p>
 
-<p>The next icon to edit is the <icon>Comment</icon> label. As with the radio icons, the WinEd defaults are fine and we just need to change the <icon>Text/sprite</icon> field to <code>Status</code>.</p>
+<p>The next icon to edit is the <icon>Comment</icon> label. As with the radio icons, the <cite>WinEd</cite> defaults are fine and we just need to change the <icon>Text/sprite</icon> field to <code>Status</code>.</p>
 
-<p>The <icon>Display field</icon> is the last icon to edit. Again the defaults are mostly fine: the validation string is &ldquo;R2&rdquo; to give the inset shading, and the Wimp will sort out the memory allocation for us. The catch here is that our code will be changing this icon&rsquo;s contents, so the text buffer must be large enough. As with the radio icons, our code used to allocate <name>WIN_ICON_TEXT_LEN</name> bytes, which was defined as 100. We should therefore enter <code>100</code> in the <icon>Max text length</icon> field before clicking <icon>Update</icon> &ndash; don&rsquo;t click on <icon>Minimise</icon>!</p>
+<p>The <icon>Display field</icon> is the last icon to edit. Again the defaults are mostly fine: the validation string is &ldquo;R2&rdquo; to give the inset shading, and the Wimp will sort out the memory allocation for us. The catch here is that our code will be changing this icon&rsquo;s contents, so the text buffer must be large enough. As with the radio icons, our code allocated <name>WIN_ICON_TEXT_LEN</name> bytes, which was defined as 100. We can therefore enter <code>100</code> in the <icon>Max text length</icon> field before clicking <icon>Update</icon> to keep the field the same size &ndash; don&rsquo;t click on <icon>Minimise</icon>!</p>
 
-<p>With that change done, the window design is complete &ndash; and should look something like that in <reference id="fig-templates-wined-finished"/>. It is now safe to click on the close icon to close the window down.</p>
+<p>Choosing the size of any indirected buffers which can be altered by our code will invariably involve careful checking of the text which is to be written in to them, combined with an element of guesswork. So long as any routines that we use to write to them always use the length field to ovoid overflowing the allocated space, the worst that can happen is that text might appear truncated &ndash; which can be picked up during testing. We will discuss bounds checks <reference id="sect-templates-update-status">below</reference>, and more thoroughly in <reference id="chap-icons-radio"/>.</p>
+
+<p>With these changes done, the window design is complete &ndash; and should look something like that in <reference id="fig-templates-wined-finished"/>. It is now safe to click on the close icon to close the window down.</p>
 
 <image id="fig-templates-wined-finished" file="templates-wined-finished.png" title="The completed window design"/>
 
-<p>Before closing the WinEd file browser, we need to save the templates file. Open the browser menu, slide over <menu>Save</menu> and save the file as <file>Templates</file> into the <file>!ExamplApp</file> application directory. This isn&rsquo;t quite the right place to put the file, but we&rsquo;ll sort that out later on.</p>
+<p>Before closing the <cite>WinEd</cite> file browser, we need to save the templates file. Open the browser menu, slide over <menu>Save</menu> and save the file as <file>Templates</file> into the <file>!ExamplApp</file> application directory. This isn&rsquo;t quite the right place to put the file, but we&rsquo;ll sort that out later on when we have filled some more gaps in our knowledge.</p>
 </section>
 
 <section>
-<title>Loading our templates</title>
+<title>Reading our file</title>
 
 <p>Now that we have a template file, we will need to re-work our application to make use of it. The Wimp provides three SWIs to manipulate the files: <swi>Wimp_OpenTemplate</swi> to open them, <swi>Wimp_LoadTemplate</swi> to read window templates in to memory, and <swi>Wimp_CloseTemplate</swi> to close the file again afterwards. The process is slightly quirky, and it is important to note that it does not multitask: a template file should never be held open across a call to <swi>Wimp_Poll</swi>.</p>
 
@@ -180,7 +182,7 @@ extern void wimp_close_template(void);</code>
 
 <p>We do not assume that the file will open cleanly and without error, but instead call the X version of the <swi>Wimp_LoadTemplate</swi> SWI and catch any error that results. The <function>error_report_program()</function> is part of SFLib&rsquo;s errors library, which we introduced in <reference id="sect-report2-restructure"/>. This reports any error block that it is given as a <intro>program error</intro>, which is the most serious type of error recognised by the Wimp, and then exits the application. If the template file fails to load, there isn&rsquo;t much more that our application can do about it, so the best approach is simply to report what the error was and then give up.</p>
 
-<p>Finally, there is an assumption that both <function>ibar_initialise()</function> and <function>win_initialise()</function> will return, so that the call to <function>wimp_close_template()</function> can be made. This could be a problem, because <function>ibar_initialise()</function> makes a call to <function>wimp_create_icon()</function> when it creates the iconbar icon &ndash; but no attempt is made to catch any errors, despite the act of creating an icon having the potential to fail.</p>
+<p>Finally, there is an assumption that both <function>ibar_initialise()</function> and <function>win_initialise()</function> will return, so that the call to <function>wimp_close_template()</function> can be made. This could be a problem, because <function>ibar_initialise()</function> makes a call to <function>wimp_create_icon()</function> when it creates the iconbar icon &ndash; but no attempt is made to catch any errors, despite the act of creating an icon having the potential to fail. The <cite>Programmer&rsquo;s Reference Manual</cite> is clear that <swi>Wimp_CloseTemplate</swi> should <em>always</em> be called if <swi>Wimp_OpenTemplate</swi> succeeded &ndash; even if errors occur while the template file is open.</p>
 
 <p>To fix this, we can amend <function>ibar_initialise()</function> as follows:</p>
 
@@ -216,13 +218,13 @@ extern void wimp_close_template(void);</code>
 	wimp_i *i
 );</code>
 
-<p>If we were required to pass a pointer in for each return value, then this could quickly get cumbersome for SWIs which return several values that we&rsquo;re not interested in. Fortunately OSLib allows us to pass a <name>NULL</name> in any return value position, to indicate that we&rsquo;re not interested in having that value sent back to us.</p>
+<p>If we were required to pass a pointer in for each possible return value, then this could quickly get cumbersome for SWIs which return several values that we&rsquo;re not interested in. Fortunately OSLib allows us to pass a <name>NULL</name> pointer in any return value position, to indicate that we&rsquo;re not interested in having that value sent back to us.</p>
 </section>
 
 <section>
-<title>Creating windows</title>
+<title>Loading a template</title>
 
-<p>With the template file open, we now need to load the window that we designed. Loading a window template with <swi>Wimp_LoadTemplate</swi> is a two stage process, requiring us to identify how much memory is required before loading the definition in to memory. The <swi>Wimp_LoadTemplate</swi> SWI is defined by OSLib like this:</p>
+<p>With the template file open, we now need to load the window that we designed. Loading a window template with <swi>Wimp_LoadTemplate</swi> is a two stage process, requiring us to identify how much memory is required before loading the definition in to memory. The SWI is defined by OSLib like this:</p>
 
 <code lang="c">extern os_error *xwimp_load_template (
 	wimp_window *window,
@@ -236,7 +238,29 @@ extern void wimp_close_template(void);</code>
 	int *context_out
 );</code>
 
-<p>It&rsquo;s a slightly quirky SWI, so we will defer to SFLib&rsquo;s <function>windows_load_template()</function> for the hard work. This is defined as follows:</p>
+<p>It&rsquo;s a slightly quirky call, so we&rsquo;ll go through the parameters first before looking at how it gets used. To make it easier to compare to other documentation, we&rsquo;ll describe the parameters in terms of the SWI&rsquo;s registers as well as the parameters in the OSLib function.</p>
+
+<p>On entry, <name>R1</name> (which corresponds to the <variable>*window</variable> parameter) should contain a pointer to a block of memory into which the Wimp will load the <name>wimp_window</name> structure defining our window &ndash; this is what will replace the window definition that we have been using so far (as introduced in <reference id="chap-window-theory"/>). Since we don&rsquo;t know how big this block might be, we can ask the Wimp to tell us by instead passing in a value which is less than or equal to zero; OSLib defines a constant for this purpose as follows:</p>
+
+<code lang="c">#define wimp_GET_SIZE	((wimp_window *) 0x0u)</code>
+
+<p>When it loads a window template into memory, the Wimp will sort out the associated indirected icon buffers and validation strings for us, by creating them in a memory buffer and updating the <name>wimp_window</name> block so that all of the pointers work correctly. We need to supply a block of memory for this, too, and we do that in <name>R2</name> (which corresponds to the <variable>*data</variable> parameter). As with the previous block of memory, the Wimp will tell us how big the indirected data block needs to be if <name>R1</name> is less than or equal to zero.</p>
+
+<p>The Wimp will bounds-check this indirection data, so <name>R3</name> (which corresponds to the <variable>*end</variable> parameter) should point to the byte in memory <em>after</em> the last byte allocated for the workspace supplied in <name>R2</name>. The SWI will <em>not</em> bounds check the template itself as it is loaded into the buffer supplied in <name>R1</name> &ndash; which is why many template editors will tell you the size of the largest window definition.</p>
+
+<p><name>R4</name> (which corresponds to the <variable>*font_ref</variable> parameter) takes a pointer to a font reference array, in case we wish to use outline fonts in our icons. This is something that we haven&rsquo;t looked at yet, and there are actually very few places that it is even useful to do so these days; fortunately, we can pass &minus;1 to indicate that no fonts are required. OSLib defines a constant for this:</p>
+
+<code lang="c">#define wimp_NO_FONTS	((byte *) 0xFFFFFFFFu)</code>
+
+<p>To tell the SWI which template we wish to load, <name>R5</name> (which corresponds to the <variable>*name</variable> parameter) points to a buffer holding the template name. The <cite>Programmer&rsquo;s Reference Manual</cite> notes that this should be 12 bytes and word-aligned, but in practice this is only the case if we use a wildcard in the name: the Wimp will then write the full name of the template found into the buffer before the SWI returns.</p>
+
+<p>Finally, <name>R6</name> (which corresponds to the <variable>context</variable> parameter) indicates the position in the file at which the SWI should start searching for our template. The templates in the file are treated as if numbered sequentially starting from one, so to search the whole file we should always pass zero in this parameter. If we were using a wildcard in the template name, we could use the returned context in another call in order to continue searching through the file; when the returned context is zero, we know that the end of the file has been reached.</p>
+
+<p>On exit from the SWI, <name>R6</name> will be updated to contain the index into the file at which the template was found (the &ldquo;context&rdquo;); if the template is not found, the returned value will remain zero. We can supply a pointer to a variable to take this value in the <variable>*context_out</variable> parameter, and since it is the only way to check that our template <em>was</em> found, it is important that we do!</p>
+
+<p>The values in <name>R1</name> and <name>R2</name> will be updated by the SWI on exit, too; if we asked for the buffer sizes by setting <variable>*window</variable> to <name>wimp_GET_SIZE</name> on entry, then this is how we read the sizes back. We can provide pointers to two integer variables in the <variable>*used</variable> and <variable>*data_used</variable> parameters to retrieve them.</p>
+
+<p>There&rsquo;s quite a lot of work to do with <swi>Wimp_LoadTemplate</swi>, so we will defer to SFLib&rsquo;s <function>windows_load_template()</function> to implement it. This is defined as follows:</p>
 
 <code lang="c">wimp_window *windows_load_template(char *name)
 {
@@ -282,11 +306,13 @@ extern void wimp_close_template(void);</code>
 	return window_def;
 }</code>
 
-<p>The process is in three parts. We begin by calling <swi>Wimp_LoadTemplate</swi> to ask the Wimp how much memory we will need in order to load the window template. Two blocks are required: the first will hold the <name>wimp_window</name> block, which will replace the window definition that we have been using so far (as introduced in <reference id="chap-window-theory"/>). The second will hold all of the indirected buffers and validation strings used by the window and its icons.</p>
+<p>The process is in three parts. We begin by calling <swi>Wimp_LoadTemplate</swi> to ask the Wimp how much memory we will need for each of the two buffers in order to load the window template. As discussed above, the call returns the size of the two blocks in bytes, in the two variables <variable>def_size</variable> and <variable>ind_size</variable> respectively. If anything goes wrong, then either an <variable>error</variable> pointer will be returned or the <variable>context</variable> will be zero. In either case, <function>windows_load_template()</function> will return <name>NULL</name>.</p>
 
-<p>The call returns the size of the two blocks in bytes, in the two variables <variable>def_size</variable> and <variable>ind_size</variable> respectively. If anything goes wrong, then either an <variable>error</variable> pointer will be returned or the <variable>context</variable> will be zero. If the required window template is found, then <variable>context</variable> will indicate its position in the file, counting up from 1 for the first window; 0, therefore, means &ldquo;not found&rdquo;. In either case, <function>windows_load_template()</function> will return <name>NULL</name>.</p>
+<p>The next step is to claim the two memory blocks with <function>malloc()</function>, using the sizes provided by the SWI &ndash; again returning <name>NULL</name> if either allocation fails. Finally, <swi>Wimp_LoadTemplate</swi> is called for a second time, this time being given the two blocks of memory to load the template and indirected data in to. The Wimp will load the window definition, then set up all of the memory buffers and validation strings for us. Once more, any error results in the memory being freed and <name>NULL</name> being returned by <function>windows_load_template()</function>.</p>
+</section>
 
-<p>The next step is to claim the two memory blocks using <function>malloc()</function>, again returning <name>NULL</name> if either allocation fails. Finally, <swi>Wimp_LoadTemplate</swi> is called for a second time, this time being given the two blocks of memory to use. The Wimp will load the window definition, then set up all of the memory buffers and validation strings for us. Once more, any error results in the memory being freed and <name>NULL</name> being returned by <function>windows_load_template()</function>.</p>
+<section>
+<title>Creating the window</title>
 
 <p>If everything worked as expected, then a pointer to the <name>wimp_window</name> block is returned by <function>windows_load_template()</function>. This is the same as the one that we have been creating by hand in <function>win_initialise()</function>, except that all of the icons definitions are included at the end &ndash; just as we hinted could be done back in <reference id="sect-window-theory-loose-ends"/>. This means that <swi>Wimp_CreateWindow</swi> will create all of the icons at the same time as the window, instead of our having to call <swi>Wimp_CreateIcon</swi> for each one &ndash; less work for us!</p>
 
@@ -332,9 +358,15 @@ static int win_width, win_height;</code>
 	event_add_window_mouse_event(win_handle, win_mouse_click);
 }</code>
 
-<p>The window template is loaded into a <name>wimp_window</name> block, which is then passed to <function>wimp_create_window()</function>. All of the complexity of the block&rsquo;s contents is now handled in a WYSIWYG way by our template editor. The <name>wimp_window</name> block was claimed using <function>malloc()</function> in <function>windows_load_template()</function>, so we free it after use to avoid leaking memory.</p> 
+<p>The window template is loaded into a <name>wimp_window</name> block, which is then passed to <function>wimp_create_window()</function>. All of the complexity of the block&rsquo;s contents is now handled in a WYSIWYG way by our template editor, instead of having to change the values in the <name>wimp_window</name> structure by hand. The <name>wimp_window</name> block was claimed using <function>malloc()</function> in <function>windows_load_template()</function>, so we free it after use to avoid leaking memory.</p>
 
-<p>There is one fly in the ointment, though. Previously in <function>win_mouse_click()</function>, we had been writing the status text direct to the icon buffer using the global variable. Now we can&rsquo;t do that, because the Wimp has set up the indirected buffer somewhere in the memory that we supplied to <swi>Wimp_LoadTemplate</swi>. Instead, we will need to use a different approach:</p>
+<p>As an aside, having the icon definitions contained the window definition means that the icon count referred to in <reference id="sect-window-theory-loose-ends"/> and stored in <variable>window_definition-&gt;icon_count</variable> will now be greater than zero: in fact, it should be 5, to reflect that the window contains five icons with handles 0 to 4. The icon definitions themselves appear as an array of <name>wimp_icon</name> blocks, which can be accessed through <variable>window_definition-&gt;icons[]</variable>.</p>
+</section>
+
+<section id="sect-templates-update-status">
+<title>Updating the status field</title>
+
+<p>There is still one fly in the ointment. Previously in <function>win_mouse_click()</function>, we had been writing the status text direct to the icon buffer using the global variable. Now we can&rsquo;t do that, because the Wimp has set up the indirected buffer somewhere in the memory that we supplied to <swi>Wimp_LoadTemplate</swi> and we don&rsquo;t know the address. Instead, we will need to use a different approach:</p>
 
 <code lang="c">static void win_mouse_click(wimp_pointer *pointer)
 {
@@ -364,11 +396,11 @@ static int win_width, win_height;</code>
 	wimp_set_icon_state(win_handle, WIN_ICON_INFO, 0, 0);
 }</code>
 
-<p>We now use <function>wimp_get_icon_state()</function> to read the icon details, which includes the <name>wimp_icon_data</name> structure which holds both the address and the size of the indirected buffer. We can then write to this, safely bounds-checking the text to suit the size set in our template editor.</p>
+<p>We now use <function>wimp_get_icon_state()</function> to read the icon details, which includes the <name>wimp_icon_data</name> structure holding both the address and the size of the indirected buffer. We can then write to this, safely bounds-checking the text to suit the size set in our template editor.</p>
 
-<p>The full code, along with the template file that we created in WinEd, can be found in <reference id="dl-templates-radio"/>.</p>
+<p>The full code, along with the template file that we created in <cite>WinEd</cite>, can be found in <reference id="dl-templates-radio"/>.</p>
 
-<download id="dl-templates-radio" file="RadioTemplates" title="The radio icon app using window templates" compatibility="none"/>
+<download id="dl-templates-radio" file="RadioTemplates" title="The Application Using Window Templates" compatibility="none"/>
 
 <p>When run, the application should look something like that in <reference id="fig-templates-result"/>.</p>
 

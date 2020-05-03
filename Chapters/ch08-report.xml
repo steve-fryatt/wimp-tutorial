@@ -222,7 +222,7 @@ void repbox_message(char *message);
 #define wimp_ERROR_BOX_CATEGORY_PROGRAM		((wimp_error_box_flags) 0x3u)
 #define wimp_ERROR_BOX_CATEGORY_QUESTION	((wimp_error_box_flags) 0x4u)</code>
 
-<p>A value of 0 is the &lsquo;default&lsquo; (or &lsquo;non-classified&rsquo;, as the PRM refers to it) report, with values 1 to 4 being &lsquo;Information&rsquo;, &lsquo;Error&rsquo;, &lsquo;Program Error&rsquo; and &lsquo;Question&rsquo; respectively. Finally, a shift value is defined, to tell us how far those four constants need to be shifted in order to locate them correctly in the value passed to <variable>flags</variable>:</p>
+<p>A value of 0 is the &lsquo;default&lsquo; (or &lsquo;non-classified&rsquo;, as the <cite>Programmer&rsquo;s Reference Manual</cite> refers to it) report, with values 1 to 4 being &lsquo;Information&rsquo;, &lsquo;Error&rsquo;, &lsquo;Program Error&rsquo; and &lsquo;Question&rsquo; respectively. Finally, a shift value is defined, to tell us how far those four constants need to be shifted in order to locate them correctly in the value passed to <variable>flags</variable>:</p>
 
 <code lang="c">#define wimp_ERROR_BOX_CATEGORY_SHIFT		(9)</code>
 

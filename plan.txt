@@ -34,6 +34,10 @@ Chapter 16
 Forward reference to wimp_set_icon_state().
 Forward reference to selecting an icon.
 
+Chapter 21
+----------
+
+Forward reference to filename lengths in poll blocks.
 
 Application Directories
 Sprites in Icons

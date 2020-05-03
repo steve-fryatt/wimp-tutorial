@@ -86,7 +86,7 @@
 
 <p>As with previous indirected icons, we&rsquo;ve set <variable>icon_definition.icon.data.indirected_text.text</variable> to point to the <variable>win_icon_text</variable> buffer, and used <variable>icon_definition.icon.data.indirected_text.size</variable> to indicate the buffer size. The buffer itself is filled with the text &ldquo;This is a useless option&rdquo;, which will be the text that is shown in the icon.</p>
 
-<p>Instead of relying on this to also set the name of the sprite to be shown in the icon, we can instead make use of the <name>S</name> validation command, which is followed by the name of a sprite. We set <variable>icon_definition.icon.data.indirected_text.validation</variable> to the validation string <code>Soptoff</code>, which the Wimp recognises as a request to use the &ldquo;optoff&rdquo; sprite in the icon. This is another sprite that we can assume will be in the Wimp Sprite Pool; its intended purpose should become clear shortly.</p>
+<p>Instead of relying on this to also give the Wimp the name of the sprite to be shown in the icon, we can instead make use of the <name>S</name> validation command, which is followed by the name of a sprite. We set <variable>icon_definition.icon.data.indirected_text.validation</variable> to the validation string <code>Soptoff</code>, which the Wimp recognises as a request to use the &ldquo;optoff&rdquo; sprite in the icon. This is another sprite that we can assume will be in the Wimp Sprite Pool; its intended purpose should become clear shortly.</p>
 
 <p>There are a couple of other changes to make to the code. We no longer wish to respond to mouse clicks on the window or icon, so we can delete the <function>win_mouse_click()</function> function and the corresponding</p>
 
@@ -139,7 +139,7 @@
 
 <p>Compiling this and running it should allow the box to be ticked and unticked in the expected way. The full code can be found in <reference id="dl-icons-option-button"/>.</p>
 
-<download id="dl-icons-option-button" file="OptionButton" title="A single option button" compatibility="none"/>
+<download id="dl-icons-option-button" file="OptionButton" title="A Single Option Button" compatibility="none"/>
 </section>
 
 <section>
@@ -157,9 +157,9 @@
 
 <p>Along with a <name>wimp_ICON_SELECTED</name> flag, there are two further flags which allow an icon to be <intro>shaded</intro> (&ldquo;greyed out&rdquo; in more common RISC&nbsp;OS parlance) and <intro>deleted</intro>. The latter can be used to hide icons and reveal them only when required, althrough care needs to be taken since deleted icons will be overwritten if <swi>Wimp_CreateIcon</swi> is used.</p>
 
-<p>We can read the state back using the <swi>Wimp_GetIconState</swi> SWI, but before we do, we probably need to tidy our code up a bit so that we can add a few more icons to the window. First, we will rename the <variable>win_icon_handle</variable> and <variable>win_icon_text</variable> variables to <variable>win_radio_icon_1_handle</variable> and <variable>win_radio_icon_1_text</variable> respectively. We will also rename the <function>wimp_create_icon()</function> as <function>wimp_create_radio_icon()</function>, and amend it so that we pass a <maths>y</maths> coordinate, along with pointers to the text buffer and the desired text buffer contents, as parameters.</p>
+<p>We can read the state of an icon back using the <swi>Wimp_GetIconState</swi> SWI, but before we do, we probably need to tidy our code up a bit so that we can add a few more icons to the window. First, we will rename the <variable>win_icon_handle</variable> and <variable>win_icon_text</variable> variables to <variable>win_radio_icon_1_handle</variable> and <variable>win_radio_icon_1_text</variable> respectively. We will also rename the <function>wimp_create_icon()</function> as <function>wimp_create_radio_icon()</function>, and amend it so that we pass a <maths>y</maths> coordinate, along with pointers to the text buffer and the desired text buffer contents, as parameters.</p>
 
-<p>We can then create a similar function, <function>win_create_info_icon()</function>, which will create an icon capable of displaying information for the user. This needs its own memory buffer, which again we can pass in as a parameter. Finally, we will re-instate the <function>win_mouse_click()</function> event handler which was deleted in the last chapter.</p>
+<p>We can then create a similar function, <function>win_create_info_icon()</function>, which will create an icon capable of displaying information for the user. This needs its own memory buffer, which again we can pass in as a parameter. Finally, we will re-instate the <function>win_mouse_click()</function> event handler which was deleted earlier in the chapter.</p>
 
 <p>Taken together, these result in the following changes to the global variables and function prototypes:</p>
 
@@ -255,7 +255,7 @@ static wimp_i win_create_info_icon(int ypos, char *buffer, char *text)
 	return wimp_create_icon(&amp;con_definition);
 }</code>
 
-<p>Next, we need a way to read the state of the option icon when the user clicks on it. Reading the state of an icon is done using the <swi>Wimg_GetIconState</swi>, which OSLib defines as</p>
+<p>Next, we need a way to read the state of the option icon when the user clicks on it. Reading the state of an icon is done using the <swi>Wimp_GetIconState</swi>, which OSLib defines as</p>
 
 <code lang="c">extern void wimp_get_icon_state (
 	wimp_icon_state *icon_state
@@ -297,7 +297,7 @@ typedef struct wimp_icon_state wimp_icon_state;</code>
 
 <p>Putting the code together results in the application found in <reference id="dl-icons-sprite-state"/>.</p>
 
-<download id="dl-icons-sprite-state" file="OptionButtonState" title="Reading the state of an option button" compatibility="none"/>
+<download id="dl-icons-sprite-state" file="OptionButtonState" title="Reading the State of an Option Button" compatibility="none"/>
 
 <p>When compiled and run, the window should now contain an additional information field as seen in <reference id="fig-icons-sprite-state"/>. The option button will toggle as before, but now it will also report the current state in the information field below.</p>
 
@@ -309,7 +309,7 @@ typedef struct wimp_icon_state wimp_icon_state;</code>
 
 <p>In addition to simple on/off options, there is a variant of the option icon which uses multiple switches: one for each possible option. Known as <intro>radio icons</intro> because of their similarity to the tuning selection buttons on an old radio, they are also a common sight in dialogue boxes.</p>
 
-<p>As the name might suggest, the <name>wimp_BUTTON_RADIO</name> button type can also be used to implement radio icons with a few changes. First, we need to define some global variables to hold the extra icons and their text labels.</p>
+<p>As the name might suggest, the <name>wimp_BUTTON_RADIO</name> button type that we&rsquo;re already using will also implement radio icons. First, we need to define some global variables to hold the extra icons and their text labels.</p>
 
 <code lang="c">/* Global Variables */
 
@@ -343,7 +343,7 @@ win_info_icon_handle = win_create_info_icon(-256, win_info_icon_text, "");</code
 <code lang="c">#define wimp_ICON_ESG_SHIFT	(16)
 #define wimp_ICON_ESG		((wimp_icon_flags) 0x1F0000u)</code>
 
-<p>It used to be the case that five bits of the flags were set aside for the ESG, occupying bits 16 to 20, and this is still what OSLib has defined. However, in recent versions of the Wimp (where &lsquo;recent&rsquo; means &lsquo;this century&rsquo;), bit&nbsp;20 has been reallocated and only the four bits from 16 to 19 are available for the purpose. This still allows for 15 distinct groups within a window, which is probably more than enough; a zero ESG means that the icon is <em>not</em> part of any group.</p>
+<p>It used to be the case that five bits of the flags were set aside for the ESG, occupying bits 16 to 20, and this is still what OSLib has defined. However, in recent versions of the Wimp (where &lsquo;recent&rsquo; means &lsquo;this century&rsquo;), bit&nbsp;20 has been reallocated and only the four bits from 16 to 19 are available for the purpose. This still allows for 15 distinct groups within a window, which is probably more than enough; a zero ESG, which is what all of our previous icons have defaulted to, means that the icon is <em>not</em> part of any group.</p>
 
 <p>We can amend the icon flag definition within the <function>win_create_radio_icon()</function> function to include a non-zero ESG as follows:</p>
 
@@ -358,7 +358,7 @@ win_info_icon_handle = win_create_info_icon(-256, win_info_icon_text, "");</code
 
 <code lang="c">icon_definition.icon.data.indirected_text_and_sprite.validation = "Sradiooff,radioon";</code>
 
-<p>In addition to these changes, we will also need to update the <name>Mouse Click</name> event handler, so that it can recognise the three distinct options now available. We could read the state of each icon individually using <swi>Wimp_GetIconState</swi> as we did with the single option icon, and this might still be the best option in a dialogue box when we&rsquo;re reading the state some time after the user has set it up. However, in this case, we want to react immediately and can therefore use the fact that with radio icons in an ESG, the last icon to be clicked by the user is guaranteed to be selected</p>
+<p>In addition to these changes, we will also need to update the <name>Mouse Click</name> event handler, so that it can recognise the three distinct options now available. We could read the state of each icon individually using <swi>Wimp_GetIconState</swi> as we did with the single option icon, and this might still be the best option in a dialogue box when we&rsquo;re reading the state some time after the user has set it up. However, in this case, we want to react immediately and can therefore use the fact that with radio icons in an ESG, the last icon to be clicked by the user is almost guaranteed to be selected.</p>
 
 <p>This makes the following alternative approach possible:</p>
 
@@ -376,15 +376,15 @@ win_info_icon_handle = win_create_info_icon(-256, win_info_icon_text, "");</code
 	wimp_set_icon_state(win_handle, win_info_icon_handle, 0, 0);
 }</code>
 
-<p>In fact this isn&rsquo;t perfect, as there are a few holes in the way that the Wimp handles ESGs, but it&rsquo;s OK for now. We will return to look at the niggles later, but the full code as it stands can be found in <reference id="dl-icons-sprite-radio"/>.</p>
+<p>In fact this isn&rsquo;t perfect, as there are a few holes in the way that the Wimp handles ESGs, but it&rsquo;s OK for now. We will return to look at the niggles in <reference id="chap-icons-radio"/> (and ensure that the selection guarantee promised above becomes true), but the full code as it stands can be found in <reference id="dl-icons-sprite-radio"/>.</p>
 
-<download id="dl-icons-sprite-radio" file="RadioButton" title="A group of three radio buttons" compatibility="none"/>
+<download id="dl-icons-sprite-radio" file="RadioButton" title="A Group of Three Radio Buttons" compatibility="none"/>
 
 <p>The result when compiled should be as seen in <reference id="fig-icons-sprite-radio"/>.</p>
 
 <image id="fig-icons-sprite-radio" file="icons-sprite-radio.png" title="Radio buttons can operate in groups"/>
 
-<p>However, even in a simple window with just four icons, keeping track of all of the handles and memory is quickly becoming complicated &ndash; so it shouldn&rsquo;t come as a surprise to learn that very few applications will do things this way. In the next chapter, we will look at a better way to design windows before attempting to do much more with the code.</p>
+<p>However, even in a simple window with just four icons, keeping track of all of the handles and memory is quickly becoming complicated &ndash; so it shouldn&rsquo;t come as a surprise to learn that very few applications will do things this way. In the next chapter, before dealing with those niggles, we will look at a better way to design windows and icons.</p>
 </section>
 </chapter>
 </manual>

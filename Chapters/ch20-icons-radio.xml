@@ -28,7 +28,9 @@
 <section>
 <title>Pre-selecting radio icons</title>
 
-<p>When our application first starts up, none of the three radio icons are selected. Whilst not actually harmful, it isn&rsquo;t great from a user interface perspective &ndash; and it would be a much more significant issue were the window a dialogue box attempting to convey the current state of whatever the icons controlled! We could, in fact, save the selected state of one of the icons in the window template, so that it is selected when the window is loaded into our application, but this isn&rsquo;t a good way to go. Aside from anything else, it wouldn&rsquo;t help with the dialogue box, which is a much more likely scenario than our contrived example.</p>
+<p>When our application first starts up, none of the three radio icons are selected. Whilst not actually harmful, it isn&rsquo;t great from a user interface perspective &ndash; and it would be a much more significant issue were the window a dialogue box attempting to convey the current state of whatever the icons controlled!</p>
+
+<p>We could, in fact, save the selected state of one of the icons in the window template, so that it is pre-selected when the window is loaded into our application. This isn&rsquo;t a good way to go, however: aside from anything else, it wouldn&rsquo;t help with the dialogue box, where we need to select whichever icon reflects the currently-configured state of the application. Instead, it&rsquo;s better to select the required icon when the window opens.</p>
 
 <p>After an icon has been created by <swi>Wimp_CreateWindow</swi> or <swi>Wimp_CreateIcon</swi>, we can change some &ndash; but not all &ndash; of the contents of the <name>wimp_icon</name> structure.</p>
 
@@ -72,7 +74,7 @@ typedef struct wimp_set_icon_state_block wimp_set_icon_state_block;</code>
 
 <code lang="c">new_flags = (old_flags &amp; (~clear_bits)) ^ eor_bits;</code>
 
-<p>Whilst this might not look completely intuitive, it actually allows us to perform some fairly complex operations on the icon flags in a single call. The full set of operations which can be acrried out on each flag bit are shown in <reference id="table-icons-radio-set-state"/>.</p>
+<p>Whilst this might not look intuitive, it allows us to perform some fairly complex operations on the icon flags in a single call. The full set of operations which can be carried out on each flag bit are shown in <reference id="table-icons-radio-set-state"/>.</p>
 
 <table id="table-icons-radio-set-state" title="The operations which can be carried out by Wimp_SetIconState">
 <columns>
@@ -90,14 +92,16 @@ typedef struct wimp_set_icon_state_block wimp_set_icon_state_block;</code>
 
 <code lang="c">wimp_set_icon_state(win_handle, WIN_ICON_OPTION1, wimp_ICON_SELECTED, wimp_ICON_SELECTED);</code>
 
-<p>to the end of the <function>win_initialise()</function> function. For a complete belt-and-braces approach, which is always a good idea, we can then deselect the other two in a similar way:</p>
+<p>to the end of the <function>win_initialise()</function> function. Having the <name>wimp_ICON_SELECTED</name> bit set in both <name>eor_bits</name> and <name>clear_bits</name> puts us into the &ldquo;Set flag&rdquo; row of the table. For a complete belt-and-braces approach, which is always a good idea, we can then deselect the other two in a similar way:</p>
 
 <code lang="c">wimp_set_icon_state(win_handle, WIN_ICON_OPTION2, 0, wimp_ICON_SELECTED);
 wimp_set_icon_state(win_handle, WIN_ICON_OPTION3, 0, wimp_ICON_SELECTED);</code>
 
+<p>In this case, <name>wimp_ICON_SELECTED</name> is clear in <name>eor_bits</name> and set in <name>clear_bits</name>, which puts us into the &ldquo;Clear flag&rdquo; row of the table.</p>
+
 <p>The updated code can be found in <reference id="dl-icons-radio-preset"/>.</p>
 
-<download id="dl-icons-radio-preset" file="PresetRadioIcons" title="Setting up the icon state on loading" compatibility="none"/>
+<download id="dl-icons-radio-preset" file="PresetRadioIcons" title="Setting Up the Icon State on Loading" compatibility="none"/>
 </section>
 
 <section>
@@ -116,17 +120,17 @@ wimp_set_icon_state(win_handle, WIN_ICON_OPTION3, 0, wimp_ICON_SELECTED);</code>
 
 <p>We&rsquo;re checking that the mouse button was indeed <mouse>Adjust</mouse>, and also that the click was on one of the radio icons (if <variable>option</variable> has been set to a value greater than zero), to make sure that we don&rsquo;t inadvertantly try to set the state of another icon in the window at some stage in the future. The changes can be found in <reference id="dl-icons-radio-adjust"/>.</p>
 
-<download id="dl-icons-radio-adjust" file="AdjustRadioIcons" title="Handling Adjust clicks on radio icons" compatibility="none"/>
+<download id="dl-icons-radio-adjust" file="AdjustRadioIcons" title="Handling Adjust Clicks on Radio Icons" compatibility="none"/>
 
 <p>Whilst we&rsquo;re on the subject of <mouse>Adjust</mouse> clicks on radio icons, there&rsquo;s one more piece of Wimp functionality to mention. In amongst the icon flags is one that we haven&rsquo;t yet covered:</p>
 
 <code lang="c">#define wimp_ICON_ALLOW_ADJUST	((wimp_icon_flags) 0x400u)</code>
 
-<p>If this is set on an icon within an ESG, clicking with <mouse>Adjust</mouse> on it will not deselect any other icons within the group which are currently selected &ndash; allowing multiple options to be selected at once.</p>
+<p>If this is set for an icon within an ESG, clicking with <mouse>Adjust</mouse> on it will not deselect any other icons within the group which are currently selected &ndash; allowing multiple options to be selected at once.</p>
 
-<p>It&rsquo;s easy to experiment with this by editing the window templates: in WinEd, the required option is called <icon>Allow adjust</icon>. For completeness, the change can be found in <reference id="dl-icons-radio-multi"/>, although it is only the <file>!ExamplApp.Templates</file> file which has changed from <reference id="dl-icons-radio-adjust"/>.</p> 
+<p>It&rsquo;s easy to experiment with this by editing the window templates: in <cite>WinEd</cite>, the required option is called <icon>Allow adjust</icon>. For completeness, the change can be found in <reference id="dl-icons-radio-multi"/>, although it is only the <file>!ExamplApp.Templates</file> file which has changed from <reference id="dl-icons-radio-adjust"/>.</p> 
 
-<download id="dl-icons-radio-multi" file="MultiRadioIcons" title="Adjust can select several radio icons" compatibility="none"/>
+<download id="dl-icons-radio-multi" file="MultiRadioIcons" title="Adjust Can Select Several Radio Icons" compatibility="none"/>
 </section>
 
 <section>
@@ -144,15 +148,15 @@ wimp_set_icon_state(win_handle, WIN_ICON_OPTION3, 0, wimp_ICON_SELECTED);</code>
 
 <p>The window and icon handles are what we would expect, and identify the icon to be looked after. The <variable>complete</variable> parameter controls whether or not the window&rsquo;s <name>Mouse Click</name> event handler will be called to report clicks on the icon: if set to <name>TRUE</name>, handling of the event will be considered to be complete, and clicks will not be reported to the application.</p>
 
-<p>To use this approach in our application, we can remove the code that we added to the <function>win_mouse_click()</function> event handler, and replace it with the following three lines in the <function>win_initialise()</function> function:</p>
+<p>To use this approach in our application, we can remove the code that we added to the <function>win_mouse_click()</function> event handler in the previous section, and replace it with the following three lines in the <function>win_initialise()</function> function:</p>
 
 <code lang="c">event_add_window_icon_radio(win_handle, WIN_ICON_OPTION1, FALSE);
 event_add_window_icon_radio(win_handle, WIN_ICON_OPTION2, FALSE);
 event_add_window_icon_radio(win_handle, WIN_ICON_OPTION3, FALSE);</code>
 
-<p>We have set <variable>complete</variable> to <name>FALSE</name>, since we do still wish to receive <name>Mouse Click</name> events for these icons. The changes to the code can be found in <reference id="dl-icons-radio-sflib"/>.</p> 
+<p>We have set <variable>complete</variable> to <name>FALSE</name>, since we do still wish to receive <name>Mouse Click</name> events for these icons in order to be able to update the status field. The changes to the code can be found in <reference id="dl-icons-radio-sflib"/>.</p> 
 
-<download id="dl-icons-radio-sflib" file="SFLibRadioIcons" title="Using SFLib to handle Adjust clicks" compatibility="none"/>
+<download id="dl-icons-radio-sflib" file="SFLibRadioIcons" title="Using SFLib to Handle Adjust Clicks" compatibility="none"/>
 </section>
 
 <section>
@@ -188,7 +192,7 @@ event_add_window_icon_radio(win_handle, WIN_ICON_OPTION3, FALSE);</code>
 	wimp_set_icon_state(win_handle, WIN_ICON_INFO, 0, 0);
 }</code>
 
-<p>Changing the text within an icon is a fairly common thing to need to do, so SFLib contains a collection of functions in its icons library to support this. Aside from minimising code duplication, the functions also perform a number of sanity checks on the icon flags and data before proceeding in order to be as sure as they can be that they aren&rsquo;t going to write over something that they shouldn&rsquo;t.</p>
+<p>Changing the text within an icon is a fairly common thing to need to do, so SFLib contains a collection of functions in its icons library to support this. Aside from minimising code duplication, the functions also perform a number of sanity checks on the icon flags and data before proceeding, in order to be as sure as they can be that they aren&rsquo;t going to write over something that they shouldn&rsquo;t.</p>
 
 <p>One useful function is <function>icons_printf()</function>, which is defined along the lines of the familiar <function>printf()</function> as follows:</p>
 
@@ -221,17 +225,17 @@ event_add_window_icon_radio(win_handle, WIN_ICON_OPTION3, FALSE);</code>
 	wimp_set_icon_state(win_handle, WIN_ICON_INFO, 0, 0);
 }</code>
 
-<p>Not only is this simpler than the original, but there are also more sanity checks taking place before the data is written. Like most string copying functions in SFLib, the termination of over-length strings is handled as standard &ndash; meaning that we don&rsquo;t need to write <code>'\0'</code> to the end of the buffer in order to be sure that over-length strings get terinated properly.</p>
+<p>Not only is this simpler than the original, but there are also more sanity checks taking place before the data is written. Like most string copying functions in SFLib, the termination of over-length strings is handled as standard &ndash; meaning that we don&rsquo;t need to write <code>'\0'</code> to the end of the buffer in order to be sure that over-length strings get teriminated properly.</p>
 
 <p>A full version of the updated code can be found in <reference id="dl-icons-radio-printf"/>.</p>
 
-<download id="dl-icons-radio-printf" file="SFLibIconsPrintf" title="Using icons_printf() to write to the icon" compatibility="none"/>
+<download id="dl-icons-radio-printf" file="SFLibIconsPrintf" title="Using icons_printf() to Write to the Icon" compatibility="none"/>
 </section>
 
 <section>
 <title>Opening the window</title>
 
-<p>One other area where we are duplication code that SFLib can provide is in the <function>win_open()</function> function. The need to set up a window block for <swi>Wimp_OpenWindow</swi> by calling <swi>Wimp_GetWindowState</swi> is a common one when writing Wimp software: it arises every time an application opens a window on screen. The window library in SFLib provides some useful functions for this, including <function>windows_open_centred_on_screen()</function>.</p>
+<p>One other area where we are duplicating code that SFLib can provide is in the <function>win_open()</function> function. The need to set up a window block for <swi>Wimp_OpenWindow</swi> by calling <swi>Wimp_GetWindowState</swi> is a common one when writing Wimp software: it arises every time an application opens a window up on screen for the first time. The window library in SFLib provides some useful functions for this, including <function>windows_open_centred_on_screen()</function>.</p>
 
 <code lang="c">void windows_open_centred_on_screen(
 	wimp_w w
@@ -246,7 +250,7 @@ event_add_window_icon_radio(win_handle, WIN_ICON_OPTION3, FALSE);</code>
 
 <p>We can also lose the global <variable>win_width</variable> and <variable>win_height</variable> variables, since <function>windows_open_centred_on_screen()</function> handles this for us. The further simplified code can be found in <reference id="dl-icons-radio-open"/>.</p>
 
-<download id="dl-icons-radio-open" file="SFLibWindowsOpen" title="Using the library to open the window" compatibility="none"/>
+<download id="dl-icons-radio-open" file="SFLibWindowsOpen" title="Using the Library to Open the Window" compatibility="none"/>
 
 <p>This chapter has been fairly &lsquo;bitty&rsquo;, but &ndash; as promised &ndash; we&rsquo;ve tidied up those loose ends. In the next chapter we will finish our look at icons with more details of the sprite-only variant.</p>
 </section>

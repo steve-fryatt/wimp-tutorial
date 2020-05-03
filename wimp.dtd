@@ -1,6 +1,9 @@
+<!ENTITY ge "&amp;ge;">
 <!ENTITY ldquo "&amp;ldquo;">
+<!ENTITY le "&amp;le;">
 <!ENTITY lsquo "&amp;lsquo;">
 <!ENTITY minus "&amp;minus;">
+<!ENTITY msep "&amp;msep;">
 <!ENTITY nbsp "&amp;nbsp;">
 <!ENTITY ndash "&amp;ndash;">
 <!ENTITY rdquo "&amp;rdquo;">
