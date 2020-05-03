@@ -163,7 +163,7 @@ RMEnsure SharedCLibrary 5.34 Error This application requires SharedCLibrary 5.34
 
 <p>However, we don&rsquo;t have a <file>!Boot</file> file: they are used for setting up things like filetypes that an application might wish to load, and we don&rsquo;t yet care about any of that. Fortunately, if no <file>!Boot</file> is found, the system will then go on to look for a file called <file>!Sprites</file> or one of the derivatives listed above &ndash; it starts with the suffix appropriate to the current mode, then falls back to try the simple <file>!Sprites</file> if the first option fails.</p>
 
-<p>If a suitable <file>!Sprites</file> (or <file>!Sprites22</file>, <file>!Sprites11</file>, or whatever) file is found, and is typed as a Sprite, then the sprites within it will be added to the Wimp Sprite Pool ready for us to use. In our case, this means that the !examplapp and sm!examplapp sprites will be loaded.</p>
+<p>If a suitable <file>!Sprites</file> (or <file>!Sprites22</file>, <file>!Sprites11</file>, or whatever) file is found, and is typed as &ldquo;Sprite&rdquo;, then the sprites within it will be added to the Wimp Sprite Pool ready for us to use. In our case, this means that the !examplapp and sm!examplapp sprites will be loaded.</p>
 
 <p>It&rsquo;s also possible to explicitly load sprites into the Wimp Sprite Pool, by using the <command>*IconSprites</command> command. It&rsquo;s a good idea to do this when our application is run, just in case our sprites aren&rsquo;t already in the pool, or some other sprites with the same name are already there. We can achieve this by adding the line</p>
 
