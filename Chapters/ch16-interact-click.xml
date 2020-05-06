@@ -93,7 +93,7 @@ typedef struct os_coord os_coord;</code>
 
 <p>The request can be made using the <swi>Wimp_SetIconState</swi> SWI, which requires both the <name>wimp_w</name> handle of the window containing the icon <em>and</em> the <name>wimp_i</name> handle of the icon itself. Having saved the icon&rsquo;s handle in the <variable>win_icon_handle</variable> variable, these can simply be passed to the <function>wimp_set_icon_state()</function> function. The purpose of the call to this SWI should become obvious if it is commented out and the application is recompiled: the icon&rsquo;s contents will still change when <mouse>Menu</mouse> is clicked over the window, but it will not update until another window or menu is dragged over it.</p>
 
-<p>We&rsquo;ll come back to look at <swi>Wimp_SetIconState</swi> in more detail soon, but for now the final two parameters can be left as zero.</p>
+<p>We&rsquo;ll come back to look at <swi>Wimp_SetIconState</swi> in more detail in <reference id="sect-icons-radio-set"/>, but for now the final two parameters can be left as zero.</p>
 </section>
 
 <section>
@@ -136,7 +136,7 @@ typedef struct os_coord os_coord;</code>
 
 <p>Now change the button type to <name>wimp_BUTTON_REPEAT</name>, recompile the code and try the same experiment again. This time, the icon updates when the button is clicked, but continues to do so until either it is released again <em>or</em> the pointer moves outside the icon. This button type provides an &lsquo;auto repeat&rsquo; functionality, keeping the application updated as long as the click is held over the icon.</p>
 
-<p>Next, change the type to <name>wimp_BUTTON_RELEASE</name> and try again. Now when the button is clicked, the icon goes black as the button is pressed (as seen in <reference id="fig-interact-click-release"/>), and then clears when the pointer moves out of the icon&rsquo;s area. This effect is the Wimp <intro>selecting</intro> the icon: something that we&rsquo;ll look at later. The details in the icon are only updated when the button is <em>released</em>, so long as the pointer is still in the icon (and hence the icon is still selected) at the time. As its name suggests, <name>wimp_BUTTON_RELEASE</name> reports back to the application when the mouse button is <em>released</em>.</p>
+<p>Next, change the type to <name>wimp_BUTTON_RELEASE</name> and try again. Now when the button is clicked, the icon goes black as the button is pressed (as seen in <reference id="fig-interact-click-release"/>), and then clears when the pointer moves out of the icon&rsquo;s area. This effect is the Wimp <intro>selecting</intro> the icon: something that we&rsquo;ll look at in <reference id="sect-icons-sprite-get"/>. The details in the icon are only updated when the button is <em>released</em>, so long as the pointer is still in the icon (and hence the icon is still selected) at the time. As its name suggests, <name>wimp_BUTTON_RELEASE</name> reports back to the application when the mouse button is <em>released</em>.</p>
 
 <image id="fig-interact-click-release" file="interact-click-release.png" title="A &lsquo;release&rsquo; icon in use"/>
 

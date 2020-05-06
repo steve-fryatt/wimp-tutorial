@@ -137,12 +137,12 @@
 	return wimp_create_icon(&amp;icon_definition);
 }</code>
 
-<p>Compiling this and running it should allow the box to be ticked and unticked in the expected way. The full code can be found in <reference id="dl-icons-option-button"/>.</p>
+<p>Compiling this and running it should allow the box to be ticked and unticked in the expected way. The full code can be found in <reference id="dl-icons-sprite-option-button"/>.</p>
 
-<download id="dl-icons-option-button" file="OptionButton" title="A Single Option Button" compatibility="none"/>
+<download id="dl-icons-sprite-option-button" file="OptionButton" title="A Single Option Button" compatibility="none"/>
 </section>
 
-<section>
+<section id="sect-icons-sprite-get">
 <title>Reading an icon&rsquo;s state</title>
 
 <p>If the Wimp keeps track of clicks on our option icon, then how does the application know whether or not it is ticked? In fact the <name>wimp_BUTTON_RADIO</name> button type does return clicks to the task, so we could register an event handler for <name>Mouse Click</name> events as we saw in <reference id="chap-interact-click"/> and track the changes. This isn&rsquo;t ideal, though: it&rsquo;s a lot of effort, especially if we have many such icons in our application.</p>

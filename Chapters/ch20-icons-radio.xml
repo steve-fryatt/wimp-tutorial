@@ -25,7 +25,7 @@
 <p>We will also move some of the items that we are currently implementing in our application over to use SFLib&rsquo;s functionality, which will simplify the code further.</p>
 </section>
 
-<section>
+<section id="sect-icons-radio-set">
 <title>Pre-selecting radio icons</title>
 
 <p>When our application first starts up, none of the three radio icons are selected. Whilst not actually harmful, it isn&rsquo;t great from a user interface perspective &ndash; and it would be a much more significant issue were the window a dialogue box attempting to convey the current state of whatever the icons controlled!</p>

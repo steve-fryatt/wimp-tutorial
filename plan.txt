@@ -9,8 +9,6 @@ Chapter 12
 ----------
 
 Finish text at the end of the introduction block. (marked TODO).
-Forward reference to sprite areas and sprite icons.
-
 
 Chapter 13
 ----------
@@ -28,19 +26,11 @@ Forward reference to slab-in colours for R5 and R6 borders. Also slab-in operati
 Forward reference to identifying the version of Wimp that's in use.
 
 
-Chapter 16
-----------
-
-Forward reference to wimp_set_icon_state().
-Forward reference to selecting an icon.
-
 Chapter 21
 ----------
 
 Forward reference to filename lengths in poll blocks.
 
-Application Directories
-Sprites in Icons
 (Mouse Clicks (Windows & Icons))
 Changing Icons State?
 Icons in Window Definitions
@@ -56,6 +46,9 @@ Data Transfer Protocol
 Loading & Saving
 Global Clipboard
 Multiple Documents
+Toolbars and their Icons
+Dislogue boxes, action buttons, etc.
+Drag and drop.
 
 
 
