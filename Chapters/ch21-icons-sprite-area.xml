@@ -34,7 +34,7 @@
 
 <p>We have chosen to create three sprites, called &ldquo;square&rdquo;, &ldquo;circle&rdquo; and &ldquo;triangle&rdquo;. To keep things simple, the actual graphic in each sprite reflects its name as much as possible.</p>
 
-<p>Just as with the application sprites that we created in <reference id="sect-appdir-sprites"/>, we will need a number of different sets of images to cater for different screen modes. There is a file called <file>Sprites22</file> which contains three sprites sized at 150 &times; 150 pixels in a square pixel mode. Larger designs for high resolution modes are in <file>Sprites11</file>, and these are 300 &times; 300 pixels. Finally, for backwards compatibility, <file>Sprites</file> contains images at 150 &times; 75 pixels, created in an old rectangular pixel mode. The colour depth doen&rsquo;t really matter, but to balance having useful colours available to us with widest compatibility, we have used 256 colour sprites with no palette. The background in each image has been masked out. All of the sprites will occupy 300 &times; 300 OS&nbsp;units in their target modes.</p>
+<p>Just as with the application sprites that we created in <reference id="sect-appdir-sprites"/>, we will need a number of different sets of images to cater for different screen modes. There is a file called <file>Sprites22</file> which contains three sprites sized at 150 &times; 150 pixels in a square pixel mode. Larger designs for high resolution modes are in <file>Sprites11</file>, and these are 300 &times; 300 pixels. Finally, for backwards compatibility, <file>Sprites</file> contains images at 150 &times; 75 pixels, created in an old rectangular pixel mode. The colour depth doesn&rsquo;t really matter, but to balance having useful colours available to us with widest compatibility, we have used 256 colour sprites with no palette. The background in each image has been masked out. All of the sprites will occupy 300 &times; 300 OS&nbsp;units in their target modes.</p>
 
 <p>The images here were all created using <cite>ArtWorks</cite>, with the sprites saved out through its bitmap export option; the rectangular pixel mode sprites in <file>Sprites</file> were generated from the square pixel ones in <file>Sprites22</file> using <cite>ChangeFSI</cite>. The files will all be in the download below, or you can create your own to the same specification in your favourite bitmap editor.</p>
 
@@ -52,7 +52,7 @@
 
 <image id="fig-sprite-area-template1" file="sprite-area-template1.png" title="Removing the display field icons from the template"/>
 
-<p>We will need an icon to hold a sprite from our file, and once again we can use from from the <window>Icon picker</window> as a starting point. The file icon is intended as the start point for drags from save dialogues, but it&rsquo;s a simple sprite-only icon: drag one in to the window as shown in <reference id="fig-sprite-area-template2"/>.</p>
+<p>We will need an icon to hold a sprite from our file, and once again we can use one from the <window>Icon picker</window> as a starting point. The file icon is intended as the origin for drags from save dialogues, but it&rsquo;s a simple sprite-only icon: drag one in to the window as shown in <reference id="fig-sprite-area-template2"/>.</p>
 
 <image id="fig-sprite-area-template2" file="sprite-area-template2.png" title="Adding a sprite-only icon to the template"/>
 
@@ -88,7 +88,7 @@
 
 <image id="fig-sprite-area-drag-radio" file="sprite-area-drag-radio.png" title="Moving the radio icons down below the sprite"/>
 
-<p>The icons now fall outside of the window area, so we need to enlarge this. This can be done by simply dragging the window&rsquo;s resize button in the usual way, but we can also calculate the size that we need and enter the numbers by hand for a more exact result. Click <mouse>Menu</mouse> over it and choosing <menu>Visible area...</menu> to open the <window>Visible area</window> dialogue seen in <reference id="fig-sprite-area-visible"/>.</p>
+<p>The icons now fall outside of the window area, so we need to enlarge this. This can be done by simply dragging the window&rsquo;s resize button in the usual way, but we can also calculate the size that we need and enter the numbers by hand for a more exact result. Click <mouse>Menu</mouse> over the window and choose <menu>Visible area...</menu> to open the <window>Visible area</window> dialogue seen in <reference id="fig-sprite-area-visible"/>.</p>
 
 <p>We only want to change the width and height of the window, to fit symmetrically around the icons. The value in the <icon>Width</icon> field should be the width of the sprite icon (300 OS&nbsp;units), plus a margin of 20 OS&nbsp;units to the left and right: 340 OS&nbsp;units in total. The height is a little more tricky, but if we enlarge the window enough to see all three radio icons, then hover over the bottom one, we should (if the rearrangement above worked OK) see that its left hand edge is at 28 OS&nbsp;units and its bottom edge is at &minus;488 OS&nbsp;units. To give the same space at the sides and below, subtract 28 from &minus;488 to give &minus;516 and enter the absolute value of this in the <icon>Height</icon> field.</p>
 
