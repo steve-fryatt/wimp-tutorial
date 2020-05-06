@@ -62,7 +62,6 @@ Multiple Documents
 <!--
 
 #define wimp_ICON_ANTI_ALIASED		((wimp_icon_flags) 0x40u)
-#define wimp_ICON_NEEDS_HELP		((wimp_icon_flags) 0x80u)
 
 
 

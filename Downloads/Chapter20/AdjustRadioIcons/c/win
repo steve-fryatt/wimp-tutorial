@@ -26,7 +26,6 @@
  */
 
 #include "oslib/wimp.h"
-#include "oslib/wimpspriteop.h"
 
 #include "sflib/errors.h"
 #include "sflib/event.h"

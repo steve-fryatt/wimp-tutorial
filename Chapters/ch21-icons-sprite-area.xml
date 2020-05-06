@@ -1,0 +1,515 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+
+<!DOCTYPE xmlmanual SYSTEM "../wimp.dtd">
+
+<manual xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="xmldoc.xsd" version="1.8.6">
+
+<!-- Chapter 20
+   -
+   - Sprite Icons and Areas
+  -->
+
+<chapter id="chap-sprite-area">
+<resources>
+<images>Chapter21</images>
+<downloads>Chapter21</downloads>
+</resources>
+<filename>sprite-area.html</filename>
+<title>Sprite Icons and Areas</title>
+
+<summary>Sprites don&rsquo;t need text in them, and we can do more if we escape the Wimp Sprite Pool.</summary>
+
+<section>
+<p>Up to this point in our exploration, all of the sprite icons that we&rsquo;ve used have taken their sprites from the Wimp Sprite Pool. In many cases this is a valid thing to do: where a sprite is one that is provided by the Wimp for all applications to use, or where we provide a sprite that other applications might need to use (for example our application sprite, and the icons for any filetypes that we might register). However, as we saw in <reference id="chap-appdir-allocation"/>, any sprites that we add to the pool need to have their names covered by a name allocation &ndash; and for many sprites that we might wish to use in our icons, there won&rsquo;t be a valid reason for requesting one.</p>
+
+<p>Fortunately, there&rsquo;s another option: to create our own sprite area and store our sprites in this. There are several advantages to this approach, in addition to not polluting the namespace in the Wimp Sprite Pool. The memory allocated to our own area can be freed when our application exits, whereas sprites that we add to the Wimp Sprite Pool are stuck there consuming space until the machine is rebooted. There is no risk of name clashes, or of our affecting (not to mention being affected <em>by</em>) other applications.</p>
+</section>
+
+<section>
+<title>Make some sprites</title>
+
+<p>Before we can use a sprite area in our application, we&rsquo;ll need some sprites to load in to it. Normally these would be driven by some sort of need in the application &ndash; such as toolbar icons &ndash; but since we don&rsquo;t yet have such a need yet, we&rsquo;ll go for some shapes instead. The files can be seen in <reference id="fig-sprite-area-files"/>.</p>
+
+<image id="fig-sprite-area-files" file="sprite-area-files.png" title="The sprites that we will use for our sprite area!"/>
+
+<p>We have chosen to create three sprites, called &ldquo;square&rdquo;, &ldquo;circle&rdquo; and &ldquo;triangle&rdquo;. To keep things simple, the actual graphic in each sprite reflects its name as much as possible.</p>
+
+<p>Just as with the application sprites that we created in <reference id="sect-appdir-sprites"/>, we will need a number of different sets of images to cater for different screen modes. There is a file called <file>Sprites22</file> which contains three sprites sized at 150 &times; 150 pixels in a square pixel mode. Larger designs for high resolution modes are in <file>Sprites11</file>, and these are 300 &times; 300 pixels. Finally, for backwards compatibility, <file>Sprites</file> contains images at 150 &times; 75 pixels, created in an old rectangular pixel mode. The colour depth doen&rsquo;t really matter, but to balance having useful colours available to us with widest compatibility, we have used 256 colour sprites with no palette. The background in each image has been masked out. All of the sprites will occupy 300 &times; 300 OS&nbsp;units in their target modes.</p>
+
+<p>The images here were all created using <cite>ArtWorks</cite>, with the sprites saved out through its bitmap export option; the rectangular pixel mode sprites in <file>Sprites</file> were generated from the square pixel ones in <file>Sprites22</file> using <cite>ChangeFSI</cite>. The files will all be in the download below, or you can create your own to the same specification in your favourite bitmap editor.</p>
+
+<p>The three files should be saved into the <file>!ExamplApp</file> directory, which should now have the contents shown in <reference id="fig-sprite-area-folder"/> (there might also be a <file>!RunImage</file> file in here, unless <file>MkClean</file> has been used).</p>
+
+<image id="fig-sprite-area-folder" file="sprite-area-folder.png" title="Once complete, the sprite files should be saved in the application directory"/>
+</section>
+
+<section>
+<title>Updating the templates</title>
+
+<p>Now that we have some sprites, we will need to update our window template to make use of them. Load the <file>!ExamplApp.Templates</file> file back into a template editor (we will again be using <cite>WinEd</cite> for the description here), and open the &ldquo;Main&rdquo; window for editing (<mouse>Shift</mouse> double-click on it in <cite>WinEd</cite>).</p>
+
+<p>We&rsquo;re going to get rid of the status display field, which is icon numbers 3 and 4 at the bottom of the window, just leaving the radio icons at the top. Select both icons (click <mouse>Select</mouse> on one and <mouse>Adjust</mouse> on the other, or drag <mouse>Select</mouse> around them both), then click <mouse>Menu</mouse> over them and choose <menu>Selection &msep; Delete</menu>. This should leave the window looking a bit like <reference id="fig-sprite-area-template1"/>.</p>
+
+<image id="fig-sprite-area-template1" file="sprite-area-template1.png" title="Removing the display field icons from the template"/>
+
+<p>We will need an icon to hold a sprite from our file, and once again we can use from from the <window>Icon picker</window> as a starting point. The file icon is intended as the start point for drags from save dialogues, but it&rsquo;s a simple sprite-only icon: drag one in to the window as shown in <reference id="fig-sprite-area-template2"/>.</p>
+
+<image id="fig-sprite-area-template2" file="sprite-area-template2.png" title="Adding a sprite-only icon to the template"/>
+
+<p>Double-click on the sprite icon to open its <window>Edit icon</window> dialogue as shown in <reference id="fig-sprite-area-edit-icon"/>.</p>
+
+<p>We need the icon to be an indirected sprite icon, so tick <icon>Indirected</icon> along with <icon>Sprite</icon>. Sprite names can be up to 12 characters, so allowing for a terminator we need to set <icon>Max text length</icon> to be 13. There is no validation string for indirected sprite icons, as we will see shortly.</p>
+
+<p>For editing the template, it would be useful if we could see one of the sprites that we have designed in the icon, so replace &ldquo;file_fff&rdquo; in the <icon>Text/sprite</icon> field with <code>square</code>. Being square, this sprite will best fill the icon on screen.</p>
+
+<p>We don&rsquo;t want the icon responding to the mouse, so set <icon>Button type</icon> to &ldquo;Never&rdquo;. The flags should be updated so that only <icon>H&nbsp;centre</icon> and <icon>V&nbsp;centre</icon> are ticked, although ticking <icon>Border</icon> will make it clearer where the icon sits in the window template while we&rsquo;re editing it. With the changes made, click on <icon>Don&rsquo;t resize</icon> to set them.</p>
+
+<image id="fig-sprite-area-edit-icon" file="sprite-area-edit-icon.png" title="Editing the details of our new sprite icon"/>
+
+<p>Depending on how <cite>WinEd</cite> is configured, and where the <file>Templates</file> file was saved on disc, then the icon will either start to display the square sprite that we designed above, or will disappear completely. The sprite is <em>not</em> in the Wimp Sprite Pool, so we might not expect it to be available to our icon within <cite>WinEd</cite>. However, if the <file>Templates</file> file is being edited in-situ within the <file>!ExamplApp</file> folder and the sprite files described above have already been saved there as well, and if the <icon>Auto-load sprites</icon> option is set in <cite>WinEd</cite>&rsquo;s choices, then <cite>WinEd</cite> will notice the <file>Sprites</file> files and load the appropriate one into an internal user sprite area for us when it loads the template file. If a suitable sprite file is not loaded, then dragging the correct one to any <cite>WinEd</cite> window will cause it to be loaded.</p>
+
+<p>One thing to notice is that at present, dragging other windows or menus over the square icon will result in some strange redraw artefacts. This is because the sprite is 300 &times; 300 OS&nbsp;units, whilst the icon is only 68 &times; 68; the Wimp isn&rsquo;t very good at clipping oversized sprites, and these redraw errors are a tell-tale sign that we need to size the icon correctly to match the sprite. We could do it by dragging the corner with <mouse>Adjust</mouse>, but since we want to make it the size of the sprite, we are better off asking <cite>WinEd</cite> to do it for us.</p>
+
+<p>Click <mouse>Menu</mouse> over the icon and choose <menu>Icon 3 &msep; Resize...</menu> to open the <window>Resize icon</window> window shown in <reference id="fig-sprite-area-resize"/>. Clicking on <icon>Both</icon> to minimise both width and height will set the icon to the correct size for the sprite.</p>
+
+<image id="fig-sprite-area-resize" file="sprite-area-resize.png" title="Setting the size of the icon"/>
+
+<p>The sprite icon will now be the correct size for the sprite, but it will still be positioned wherever it was originally dropped &ndash; most likely obscuring the radio icons and partially out of sight. We can drag it around using <mouse>Select</mouse>, but it would be good to accurately position it at the top of the window &ndash; which we can do using the <window>Icon coordinates</window> dialogue. Select the icon, click <mouse>Menu</mouse> over it and choose <menu>Icon 3 &msep; Coordinates...</menu> to open it, as seen in <reference id="fig-sprite-area-coordinates"/>.</p>
+
+<p>We will position the icon so that it is 20 OS&nbsp;units from the top-left of the window. Enter 20 in the <icon>Left</icon> field and &minus;20 in the <icon>Top</icon> field (remember that the work area coordinates usually <reference id="sect-window-theory-dims"> count down from zero at the top of the window</reference>). The <icon>Width</icon> and <icon>Height</icon> should both be 300 OS&nbsp;units as a result of resizing the icon to fit the sprite &ndash; if not, check the sprite design! With the numbers set, click on <icon>Move</icon> to adjust the icon.</p>
+
+<image id="fig-sprite-area-coordinates" file="sprite-area-coordinates.png" title="Setting the display field coordinates"/>
+
+<p>This change will result in the sprite icon overlaying the three radio icons as seen in <reference id="fig-sprite-area-template3"/>, so now we need to move the radio icons out of the way, towards the bottom of the window. To select them, it will be necessary to click to the right of the sprite icon, or drag a box around their right-hand ends as shown in <reference id="fig-sprite-area-template3"/>. If the sprite icon does get selected, an <mouse>Adjust</mouse> click over it will deselect it again.</p>
+
+<image id="fig-sprite-area-template3" file="sprite-area-template3.png" title="Selecting the radio icons"/>
+
+<p>To move the three radio icons down below the sprite, we can pick the selected group up and drag them around. If they are picked up over the top icon of the three (number 0), then the <window>Monitor</window> will show the position of that icon. Since the sprite icon is 300 OS&nbsp;units high, with a margin of 20 OS&nbsp;units above it, leaving a similar margin below will result in the top edge of the top radio icon needing to be &minus;340 OS&nbsp;units from the top of the window. With the icons at the size they are in the supplied template file, they will be roughly centred in our design if the left-hand edge is at 36 OS&nbsp;units. This can be seen in <reference id="fig-sprite-area-drag-radio"/>.</p>
+
+<image id="fig-sprite-area-drag-radio" file="sprite-area-drag-radio.png" title="Moving the radio icons down below the sprite"/>
+
+<p>The icons now fall outside of the window area, so we need to enlarge this. This can be done by simply dragging the window&rsquo;s resize button in the usual way, but we can also calculate the size that we need and enter the numbers by hand for a more exact result. Click <mouse>Menu</mouse> over it and choosing <menu>Visible area...</menu> to open the <window>Visible area</window> dialogue seen in <reference id="fig-sprite-area-visible"/>.</p>
+
+<p>We only want to change the width and height of the window, to fit symmetrically around the icons. The value in the <icon>Width</icon> field should be the width of the sprite icon (300 OS&nbsp;units), plus a margin of 20 OS&nbsp;units to the left and right: 340 OS&nbsp;units in total. The height is a little more tricky, but if we enlarge the window enough to see all three radio icons, then hover over the bottom one, we should (if the rearrangement above worked OK) see that its left hand edge is at 28 OS&nbsp;units and its bottom edge is at &minus;488 OS&nbsp;units. To give the same space at the sides and below, subtract 28 from &minus;488 to give &minus;516 and enter the absolute value of this in the <icon>Height</icon> field.</p>
+
+<image id="fig-sprite-area-visible" file="sprite-area-visible.png" title="Setting the visible area of the window"/>
+
+<p>Clicking on <icon>Move</icon> to set the changes will result in the window looking similar to that shown in <reference id="fig-sprite-area-template4"/>.</p>
+
+<image id="fig-sprite-area-template4" file="sprite-area-template4.png" title="The window after the visible area has been adjusted"/>
+
+<p>Looking at the window now, the scroll bars are still showing that the work area is bigger than the visible area. We can tidy this up by shrinking the work area down, which we do using the <window>work area</window> dialogue; click <mouse>Menu</mouse> over the window and choose <menu>Work area...</menu> to open the dialogue shown in <reference id="fig-sprite-area-work-area"/>.</p>
+
+<p>We can shrink the work area down by clicking on <icon>Minimise</icon> in the <icon>Work area</icon> section. Click on <icon>Update</icon> to apply the changes.</p>
+
+<image id="fig-sprite-area-work-area" file="sprite-area-work-area.png" title="Minimising the work area of the window"/>
+
+<p>The final thing to do is to edit the labels on the three radio icons, so that number 0 reads &ldquo;Circle&rdquo;, number 1 reads &ldquo;Square&rdquo; and number 2 reads &ldquo;Triangle&rdquo;. This can be done by double-clicking on each in turn to open the <window>Edit icon</window> dialogue, changing the value in the <icon>Text/sprite</icon> field, using <icon>Minimise</icon> to reduce memory useage, and clicking on <icon>Update</icon>.</p>
+
+<p>When complete, the window should look like the one in <reference id="fig-sprite-area-template5"/>. Close it, and save the template file.</p>
+
+<image id="fig-sprite-area-template5" file="sprite-area-template5.png" title="The finished window"/>
+</section>
+
+<section>
+<title>Loading a sprite file</title>
+
+<p>Now that we have some sprites and a template to use them, we need a way to load the images into a user sprite area. A little surprisingly, there is no way to do this in a single operation, but it&rsquo;s fairly straightforward to create a new, empty area and then load a sprite file into it. Since this is something that many applications will need to do, SFLib provides the <function>resources_load_user_sprite_area()</function> within its resources library to save duplicating effort. Since we will be using this, it&rsquo;s worth looking at how it works before treating it as a black box.</p>
+
+<p>The code is shown here, and there&rsquo;s a fair bit to unpick:</p>
+
+<code lang="c">osspriteop_area *resources_load_user_sprite_area(char *file)
+{
+	int			size;
+	bits			type;
+	fileswitch_object_type	object;
+	osspriteop_area		*area;
+	char			*suffix, full_file[RESOURCES_MAX_FILENAME];
+	os_error		*error;
+
+	if (file == NULL)
+		return NULL;
+
+	/* Identify the current mode sprite suffix. */
+
+	suffix = wimpreadsysinfo_sprite_suffix();
+	snprintf(full_file, RESOURCES_MAX_FILENAME, &quot;%s%s&quot;, file, suffix);
+	full_file[RESOURCES_MAX_FILENAME - 1] = '\0';
+
+	/* Check for a suffixed sprite file. */
+
+	object = osfile_read_stamped_no_path(full_file, NULL, NULL, &amp;size, NULL, &amp;type);
+
+	/* If not found, check for an un-suffixed sprite file. */
+
+	if (object != fileswitch_IS_FILE || type != osfile_TYPE_SPRITE) {
+		strncpy(full_file, file, RESOURCES_MAX_FILENAME);
+		full_file[RESOURCES_MAX_FILENAME - 1] = '\0';
+		object = osfile_read_stamped_no_path(full_file, NULL, NULL, &amp;size, NULL, &amp;type);
+	}
+
+	/* If neither found, exit. */
+
+	if (object != fileswitch_IS_FILE || type != osfile_TYPE_SPRITE)
+		return NULL;
+
+	/* Allocate the sprite area memory. */
+
+	size += sizeof(int);
+	area = malloc(size);
+	if (area == NULL)
+		return NULL;
+
+	/* Initialise the sprite area. */
+
+	area->size = size;
+	area->first = 16;
+
+	/* Load the sprite file into the area. */
+
+	error = xosspriteop_load_sprite_file(osspriteop_USER_AREA, area, full_file);
+	if (error != NULL) {
+		free(area);
+		return NULL;
+	}
+
+	return area;
+}</code>
+
+<p>The first thing that we need to do is to identify which filename suffix, if any, is applicable to the current screen mode. This is something that the Wimp does for us when we use the <command>*IconSprites</command> command, as we saw in <reference id="sect-appdir-sprites"/>, but fortunately it also makes its internal code available to us through the <swi>Wimp_ReadSysInfo</swi> SWI. As its name suggests, this is a fairly generic SWI which returns many useful pieces of information depending on a reason code supplied in <name>R0</name> on entry. Exactly what can be queried will depend on the version of the Wimp which is running, but the sprite suffix is available using reason code 2 from RISC&nbsp;OS 3.1 onwards.</p>
+
+<p>As with other SWIs which use reason codes, OSLib generates a function for each code and includes them in a separate header file &ndash; in the case of <swi>Wimp_ReadSysInfo</swi>, we will need to include <file>oslib/wimpreadsysinfo.h</file> in addition to <file>oslib/wimp.h</file> (and a look at <file>sflib/resources.c</file> will show that does exactly this). The <function>wimpreadsysinfo_sprite_suffix()</function> function is defined as</p>
+
+<code lang="c">extern char *wimpreadsysinfo_sprite_suffix(void);</code>
+
+<p>and simply returns a pointer to a <name>NULL</name> terminated suffix string, such as &ldquo;11&rdquo; or &ldquo;22&rdquo;.</p>
+
+<p>This suffix is then added to the supplied filename, writing it into the <variable>full_file</variable> buffer claimed from the stack. <name>RESOURCES_MAX_FILENAME</name> is chosen to be 1024 bytes, which limits filenames to 1023 characters plus a terminator. This isn&rsquo;t ideal, but buffer overruns are caught and terminated cleanly so the worst that will happen is that a very long filename will be truncated and any file that it points to won&rsquo;t be found. Remembering that the Wimp&rsquo;s own API limits filenames to 212 bytes (something which we will discover later on when we look at drag and drop), the extra complexity of handling longer names on RISC&nbsp;OS isn&rsquo;t justified. What <em>is</em> important is to set the length limits via constants, so that they can easily be extended with a simple re-compile should circumstances ever change.</p>
+
+<p>Having built a candidate filename, we use <swi>OS_File</swi> with reason code 23 to read the catalogue information for a stamped object using &ldquo;no path&rdquo;. For those unfamiliar with it, <swi>OS_File</swi> is a fairly generic OS routine which can do many useful things with objects on disc. It takes a reason code in <name>R0</name>, and depending on what that code is, will save blocks of memory to file, delete or rename files, set filetypes, create directories and much else besides. Four reason codes, from 20 to 23, allow us to read the catalogue data for an object whose name is pointed to by <name>R1</name>, with some variations as listed in <reference id="table-icons-sprite-osfile"/>.</p>
+
+<table id="table-icons-sprite-osfile" title="Different options for locating objects with OS_File 20-23">
+<columns>
+<col align="centre">R0</col>
+<col align="left">Filename</col>
+</columns>
+<row><col>20</col><col>Prepend the path in the <variable>&lt;File$Path&gt;</variable> system variable to the name pointed to by <name>R1</name></col></row>
+<row><col>21</col><col>Prepend the path pointed to by <name>R4</name> to the name pointed to by <name>R1</name></col></row>
+<row><col>22</col><col>Prepend the path in the system variable whose name is pointed to by <name>R4</name> to the name pointed to by <name>R1</name></col></row>
+<row><col>23</col><col>Use the name pointed to by <name>R1</name> unaltered</col></row>
+</table>
+
+<p>In our case, we already have a full filename in our buffer, so we don&rsquo;t want <swi>OS_File</swi> to mess around with it in any way &ndash; this means we use reason code 23. In OSLib, this becomes <function>osfile_read_stamped_no_path()</function>, which is defined in <file>oslib/osfile.h</file> as:</p>
+
+<code lang="c">extern fileswitch_object_type osfile_read_stamped_no_path(
+	char const *file_name,
+	bits *load_addr,
+	bits *exec_addr,
+	int *size,
+	fileswitch_attr *attr,
+	bits *file_type
+);</code>
+
+<p>Since we&rsquo;ve specified that we don&rsquo;t want <name>R4</name> to modify the filename, OSLib doesn&rsquo;t give acess to the register: the call simply takes a pointer to the full name in <variable>*file_name</variable>, and returns information about the file in the locations pointed to by all of the other parameters. The value returned is the Fileswitch object type, defined by OSLib as:</p>
+
+<code lang="c">typedef int fileswitch_object_type;
+
+#define fileswitch_NOT_FOUND	((fileswitch_object_type) 0x0u)
+#define fileswitch_IS_FILE	((fileswitch_object_type) 0x1u)
+#define fileswitch_IS_DIR	((fileswitch_object_type) 0x2u)
+#define fileswitch_IS_IMAGE	((fileswitch_object_type) 0x3u)</code>
+
+<p>This indicates whether the supplied filename pointed to an object on disc and, if it did, what sort of thing was pointed to. This isn&rsquo;t a RISC&nbsp;OS filetype, but something lower-level: <name>fileswitch_IS_FILE</name> indicates a file, while <name>fileswitch_IS_DIR</name> indicates a directory and <name>fileswitch_IS_IMAGE</name> indicates a file which is handled by an <intro>Image Filing System</intro> and therefore looks like a directory. If the object didn&rsquo;t exist at all, <name>fileswitch_NOT_FOUND</name> is returned.</p>
+
+<p>The RISC&nbsp;OS filetype is returned to us if we supply a pointer to a suitable variable in the <variable>*file_type</variable> parameter. In OSLib, <name>bits</name> is just an <name>unsigned int</name>, and we get back a conventional filetype or some additional magic numbers outside of the range <code>0x000u</code> to <code>0xfffu</code> to indicate &ldquo;directory&rdquo;, &ldquo;application directory&rdquo; or &ldquo;untyped&rdquo; (ie. a file with load and execution addresses).</p>
+
+<p>We&rsquo;re only interested in objects which are files and have a type of &ldquo;Sprite&rdquo;, or <code>0xff9u</code>. OSLib conveniently defines a number of possible types in <file>oslib/osfile.h</file>, and alongside the magic numbers mentioned above we can find several common system types including</p>
+
+<code lang="c">#define osfile_TYPE_SPRITE	0xFF9u</code>
+
+<p>Using the constant makes it clear what we&rsquo;re doing in the code. Armed with this information, we can test for the presence of a sprite file with the suffixed name, then fall back to the unsuffixed name if that fails. If neither file exists, we can give up and return <name>NULL</name> to the client.</p>
+
+<p>If a sprite file was found, then we can move on to create a sprite area from it. RISC&nbsp;OS offers us no call to do this in one operation, but we <em>can</em> load a sprite file into an existing area using <swi>OS_SpriteOp</swi> with reason code 10. Since a sprite area is in fact just a sprite file with an extra four-byte word in front to give the size of the area, we first need to allocate enough memory to hold the file that we&rsquo;ve found plus this extra word. We passed <function>osfile_read_stamped_no_path()</function> a pointer to the <variable>size</variable> variable so that it could return the size of the file; it only remains to add space for the extra word and then allocate the memory using <function>malloc()</function>.</p>
+
+<p>If the memory was allocated OK, then the area can be initialised as an empty sprite area by storing the size in <variable>area-&gt;size</variable> and initialising the offset to the first sprite in the area &ndash; which is offset 16 for an empty area &ndash; in <variable>area-&gt;first</variable>. The area is now ready to be given to <swi>OS_SpriteOp</swi> 10. Since this is another SWI which takes a reason code in <name>R0</name>, OSLib defines the necessary interface in <file>oslib/osspriteop.h</file> &ndash; including:</p>
+
+<code lang="c">extern void osspriteop_load_sprite_file(
+	osspriteop_flags flags,
+	osspriteop_area *area,
+	char const *file_name
+);
+
+extern os_error *xosspriteop_load_sprite_file(
+	osspriteop_flags flags,
+	osspriteop_area *area,
+	char const *file_name
+);</code>
+
+<p>Unlike the other reason code SWIs that we&rsquo;ve just met, OSLib&rsquo;s interface to <swi>OS_SpriteOp</swi> differs a bit because the reason code also contains some flags to indicate what sprite area we intend to use &ndash; we have a choice of the <intro>System Sprite Area</intro> or a user sprite area. This means that we must still pass the flags in the <variable>flags</variable> parameter, and these are defined as</p>
+
+<code lang="c">#define osspriteop_SYSTEM_AREA	((osspriteop_flags) 0x0u)
+#define osspriteop_USER_AREA	((osspriteop_flags) 0x100u)
+#define osspriteop_NAME		((osspriteop_flags) 0x100u)
+#define osspriteop_PTR		((osspriteop_flags) 0x200u)</code>
+
+<p>We need a user sprite area here (the System Sprite Area, which is <em>not</em> the same thing as the Wimp Sprite Pool, dates back to Arthur and is deprecated in normal use on RISC&nbsp;OS), and so we pass the pointer to it in to the <variable>*area</variable> parameter. Finally, the pointer to the filename is passed in the <variable>*file_name</variable> parameter. If an error occurs, we free the memory again and return <name>NULL</name>; otherwise we return a pointer to the sprite area containing the requested file.</p>
+
+<p>For completeness, the other two <swi>OS_SpriteOp</swi> flags (<name>osspriteop_NAME</name> and <name>osspriteop_PTR</name>) allow us to choose how to address sprites within a user sprite area. Since <function>osspriteop_load_sprite_file()</function> is one of the <swi>OS_SpriteOp</swi> reason codes which operates on whole sprite areas and not individual sprites, the distinction isn&rsquo;t important and it is therefore clearer to use the <name>osspriteop_USER_AREA</name> version of the flag. It&rsquo;s not uncommon for OSLib to offer multiple definitions for the same constant when the meaning within RISC&nbsp;OS is potentially ambiguous.</p>
+</section>
+
+<section>
+<title>Updating our code</title>
+
+<p>So far, there has been a lot of theory in this chapter; let&rsquo;s start to update our code, and see something in action! After remembering to</p>
+
+<code lang="c">#include "oslib/osspriteop.h"
+#include "sflib/resources.h"</code>
+
+<p>at the top of <file>h.main</file>, we can update <function>main_initialise()</function> to read as follows:</p>
+
+<code lang="c">static void main_initialise(void)
+{
+	os_error	*error;
+	osspriteop_area	*sprites;
+
+	wimp_initialise(wimp_VERSION_RO3, main_application_name, NULL, NULL);
+
+	error_initialise(main_application_name, main_application_sprite, NULL);
+
+	event_add_message_handler(message_QUIT, EVENT_MESSAGE_INCOMING, main_message_quit);
+
+	/* Load the application sprites. */
+
+	sprites = resources_load_user_sprite_area(&quot;&lt;ExamplApp$Dir&gt;.Sprites&quot;);
+	if (sprites == NULL)
+		error_report_fatal(&quot;Failed to load application Sprites&quot;);
+
+	/* Open the templates file. */
+
+	error = xwimp_open_template(&quot;&lt;ExamplApp$Dir&gt;.Templates&quot;);
+	if (error != NULL)
+		error_report_program(error);
+
+	/* Initialise the program modules. */
+
+	ibar_initialise(main_application_sprite);
+	win_initialise(sprites);
+
+	/* Close the templates file. */
+
+	wimp_close_template();
+}</code>
+
+<p>The changes are fairly minimal: we load the sprite file into a new area and record its address in the <variable>*sprite</variable> pointer, then pass the value as a new parameter to the <function>win_initialise()</function> function.</p>
+
+<p>If <function>resources_load_user_sprite_area()</function> returns <name>NULL</name>, we report it as a fatal error and exit. The <function>error_report_fatal()</function> from SFLib&rsquo;s error library is similar to <function>error_report_program()</function> which we met in <reference id="chap-templates"/>, in that it reports an error as a program error and exits the application. The only difference is that it takes a textual message and not a pointer to an <name>os_error</name> struct.</p>
+
+<p>We need to make a number of changes to <file>c.win</file>, again starting with</p>
+
+<code lang="c">#include "oslib/osspriteop.h"</code>
+
+<p>The first thing we need to do is bring the icon handle constants up to date with the window template:</p>
+
+<code lang="c">/* Constant Values */
+
+#define WIN_ICON_OPT_CIRCLE 0
+#define WIN_ICON_OPT_SQUARE 1
+#define WIN_ICON_OPT_TRIANGLE 2
+#define WIN_ICON_SHAPE 3</code>
+
+<p>Next, we will create some code to set the shape in the icon. An enum can be defined at the top of the file to identify the shape that we want.</p>
+
+<code lang="c">/* Display Shapes */
+
+enum win_shape {
+	WIN_SHAPE_NONE,
+	WIN_SHAPE_SQUARE,
+	WIN_SHAPE_CIRCLE,
+	WIN_SHAPE_TRIANGLE
+};</code>
+
+<p>This can then be used as a parameter to a new function to update the icon.</p>
+
+<code lang="c">static void win_set_shape(enum win_shape shape)
+{
+	char *sprite = NULL;
+
+	switch (shape) {
+	case WIN_SHAPE_SQUARE:
+		sprite = &quot;square&quot;;
+		break;
+	case WIN_SHAPE_CIRCLE:
+		sprite = &quot;circle&quot;;
+		break;
+	case WIN_SHAPE_TRIANGLE:
+		sprite = &quot;triangle&quot;;
+		break;
+	}
+
+	if (sprite == NULL)
+		return;
+
+	icons_printf(win_handle, WIN_ICON_SHAPE, &quot;%s&quot;, sprite);
+	wimp_set_icon_state(win_handle, WIN_ICON_SHAPE, 0, 0);
+}</code>
+
+<p>Creating the <function>win_set_shape()</function> allows us to call the code from multiple places, whilst not having to duplicate the sprite names. If we ever changed these, or added more shapes to the file, there is only one place which needs to be updated. The <function>win_mouse_click()</function> event handler can now be updated, so that it calls <function>win_set_shape()</function> instead of accessing the display icon directly.</p>
+
+<code lang="c">static void win_mouse_click(wimp_pointer *pointer)
+{
+	enum win_shape shape = WIN_SHAPE_NONE;
+
+	switch (pointer-&gt;i) {
+	case WIN_ICON_OPT_CIRCLE:
+		shape = WIN_SHAPE_CIRCLE;
+		break;
+	case WIN_ICON_OPT_SQUARE:
+		shape = WIN_SHAPE_SQUARE;
+		break;
+	case WIN_ICON_OPT_TRIANGLE:
+		shape = WIN_SHAPE_TRIANGLE;
+		break;
+	}
+
+	if (shape != WIN_SHAPE_NONE)
+		win_set_shape(shape);
+}</code>
+</section>
+
+<section>
+<title>Indirected sprite icons</title>
+
+<p>We have already looked at indirected text icons in <reference id="sect-icons-indirect-text"/> and indirected text and sprite icons in <reference id="chap-icons-sprite"/>; the third type of indirected icon is the indirected sprite icon, which is what we created in our window template to hold the sprite of the shape.</p>
+
+<p>For indirected sprite icons, the use of the 12 bytes of icon data changes a little and OSLib defines the <name>indirected_sprite</name> structure within <name>union wimp_icon_data</name> as follows:</p>
+
+<code lang="c">struct {
+	osspriteop_id	id;
+	osspriteop_area	*area;
+	int		size;
+} indirected_sprite;</code>
+
+<p>Unlike the other two indirected icons, indirected sprite icons do not have a validation string pointer. Instead, that part of the block contains the <variable>*area</variable> pointer, which tells the Wimp where the sprite can be found. If it is set to 1, the sprite can be found in the Wimp Sprite Pool &ndash; and OSLib defines a <name>wimpspriteop_AREA</name> constant for us to use.</p> 
+
+<code lang="c">#define wimpspriteop_AREA	((osspriteop_area *) 0x1u)</code>
+
+<p>Alternatively, the pointer can be set to point to our own private sprite area &ndash; in which case, the Wimp will use our area to find the sprite.</p>
+
+<p>The other two parts of the structure might seem a bit confusing on first sight. The <variable>size</variable> variable should be familiar, but instead of a pointer to a text buffer, we have an <name>osspriteop_id</name> variable called <variable>id</variable>. This is OSLib struggling to keep up with the multiple ways that the system can use the sprite data.</p>
+
+<p>We mentioned in passing earlier that <swi>OS_SpriteOp</swi> had two options for addressing sprites: <name>osspriteop_NAME</name> and <name>osspriteop_PTR</name>. It can either take a pointer to a sprite name, in which case the sprites in an area will be searched until a match is found, or it can be given a pointer direct to the sprite in memory. The <name>osspriteop_id</name> type is how OSLib handles this pointer with a dual personality: it is a pointer to <em>either</em> a sprite name <em>or</em> a sprite. Which it is will depend on the flags passed to the <swi>OS_SpriteOp</swi> call.</p>
+
+<p>In the case of indirected sprite data, the Wimp uses the value stored in <variable>size</variable> to identify the intended meaning of the value stored in <variable>id</variable>. If the size is zero, then the value in <variable>id</variable> is assumed to be a sprite pointer, and <swi>OS_SpriteOp</swi> will be called appropriately. If the value is greater than zero, then the value in <variable>id</variable> is taken to be a pointer to a buffer holding a sprite name, and <variable>size</variable> is the number of bytes allocated to the buffer &ndash; just like any other indirected icon, in fact.</p>
+
+<p>In fact, if an icon is indirected, then so long as <variable>size</variable> is greater than zero, it is safe to treat the first entry in the indirected data structure (whether this is <variable>*text</variable> or <variable>id</variable>) as a pointer to a memory buffer of length <variable>size</variable> bytes. This is how <function>win_set_shape()</function>, which we defined above, can use <function>icons_printf()</function> for writing to the name buffer.</p>
+
+<p>It only remains to update <function>win_initialise()</function>, remembering that we will also need to amend its prototype in <file>h.win</file> to match.</p>
+
+<code lang="c">void win_initialise(osspriteop_area *sprites)
+{
+	wimp_window	*window_definition;
+	wimp_icon	*icons;
+
+	/* Load and create the window. */
+
+	window_definition = windows_load_template(&quot;Main&quot;);
+	if (window_definition == NULL) {
+		error_report_error(&quot;Failed to load Main template&quot;);
+		return;
+	}
+
+	icons = window_definition-&gt;icons;
+
+	icons[WIN_ICON_SHAPE].data.indirected_sprite.area = sprites;
+
+	win_handle = wimp_create_window(window_definition);
+	free(win_handle);
+
+	/* Register event handlers. */
+
+	event_add_window_mouse_event(win_handle, win_mouse_click);
+
+	event_add_window_icon_radio(win_handle, WIN_ICON_OPT_CIRCLE, FALSE);
+	event_add_window_icon_radio(win_handle, WIN_ICON_OPT_SQUARE, FALSE);
+	event_add_window_icon_radio(win_handle, WIN_ICON_OPT_TRIANGLE, FALSE);
+
+	/* Initialise the radio icons. */
+
+	wimp_set_icon_state(win_handle, WIN_ICON_OPT_CIRCLE, wimp_ICON_SELECTED, wimp_ICON_SELECTED);
+	wimp_set_icon_state(win_handle, WIN_ICON_OPT_SQUARE, 0, wimp_ICON_SELECTED);
+	wimp_set_icon_state(win_handle, WIN_ICON_OPT_TRIANGLE, 0, wimp_ICON_SELECTED);
+
+	win_set_shape(WIN_SHAPE_CIRCLE);
+}</code>
+
+<p>We need to store the address of our sprite area in the definition for the <name>WIN_ICON_SHAPE</name> icon before the whole window definition is passed to <function>wimp_create_window()</function>, and we can find this through the <variable>window_definition-&gt;icons[]</variable> array &ndash; as we alluded to back in <reference id="chap-templates"/>. It&rsquo;s worth remembering that template editors <em>should</em> set this value to <name>wimpspriteop_AREA</name> when saving their files, but this might not always be guaranteed.</p>
+
+<p>Finally, we set the state of the three radio icons, and pre-set the shape for a circle to match using <function>win_set_shape()</function>.</p>
+</section>
+
+<section>
+<title>Building our application</title>
+
+<p>Compiling the code and running it should result in a window like the one in <reference id="fig-sprite-area-app"/>, but attempting to use it will reveal a problem. Selecting the square is fine, but the other two shapes leave traces of their predecessor around the edges of the image. This is due to the masked background of the images: the Wimp cuts as many corners as it can when redrawing icons, and assumes that sprites will not contain masked areas.</p>
+
+<image id="fig-sprite-area-app" file="sprite-area-app.png" title="The application in use"/>
+
+<p>Depending on your template editor, there might also be a second problem: the square and circle display correctly, but the triangle does not. If the editor has minimised the size of the sprite name buffer to suit &ldquo;square&rdquo;, then &ldquo;circle&rdquo; will also fit but the longer &ldquo;triangle&rdquo; will not. This behaviour appears to show up in some versions of <cite>WinEd</cite>, so it is worth being aware of.</p>
+
+<p>To resolve the first issue, we can tell the Wimp that the icon needs to be fully redrawn instead of simply plotting the new sprite over the top of the old, by setting the <name>wimp_ICON_NEEDS_HELP</name> flag.</p>
+
+<code lang="c">#define wimp_ICON_NEEDS_HELP	((wimp_icon_flags) 0x80u)</code>
+
+<p>Load the <file>Templates</file> file back into your text editor, and open the Main window template. In <cite>WinEd</cite>, double-click on the square icon to open its <window>Edit icon</window> dialogue.</p>
+
+<p>To deal with the possible buffer truncation problem first, change the contents of the <icon>Text/sprite</icon> field. We could enter &ldquo;triangle&rdquo; as the longest sprite name, or we could enter &ldquo;123456789012&rdquo; to reserve the full 12 characters. The latter option will result in the sprite disappearing (since there is no &ldquo;123456789012&rdquo; sprite), but avoids us having to remember to change the template file if we add a shape with a longer name in the future!</p>
+
+<p>To set the <name>wimp_ICON_NEEDS_HELP</name> flag, ensure that <icon>Needs help</icon> is ticked. With the dialogue as shown in <reference id="fig-sprite-area-reedit-icon"/>, click <icon>Update</icon> to store the changes, close the template and save the file.</p>
+
+<image id="fig-sprite-area-reedit-icon" file="sprite-area-reedit-icon.png" title="The changes to the shape icon definition"/>
+
+<p>The full set of code, sprites and templates can be found in <reference id="dl-sprite-area-chooser"/>.</p>
+
+<download id="dl-sprite-area-chooser" file="ShapeChooser" title="Choosing Shapes With Indirected Sprite Icons" compatibility="none"/>
+</section>
+
+<section>
+<title>Window sprite areas</title>
+
+<p>Whilst we can now ask the Wimp to use our own sprite area for an indirected sprite-only icon, what about the other icons in a window? The answer is that, in just the same way that we can provide a pointer to a sprite area for an individual icon, we can also set one for the whole window. This will then apply to all icons, unless they set their own pointer.</p>
+
+<p>When we met the <name>wimp_window</name> structure in <reference id="sect-window-theory-loose-ends"/>, we briefly mentioned the <variable>window_definition.sprite_area</variable> pointer and set it to <name>wimpspriteop_AREA</name> &ndash; which, as we have now seen, made the Wimp use the Wimp Sprite Pool for all of the icons. <swi>Wimp_LoadTemplate</swi> also sets this location to <name>wimpspriteop_AREA</name> as it loads a window definition in to memory, regardless of what might be in the templates file: a dodgy pointer could cause the application to crash as the window is opened.</p>
+
+<p>To try this out, we could add a couple of new sprites, named &ldquo;radiooff&rdquo; and &ldquo;radioon&ldquo;, to our three <file>!ExamplApp.Sprites</file> files, and then amend the code in <function>win_initialise()</function> so that it sets <variable>window_definition-&gt;sprite_area</variable> to our sprite area.</p>
+
+<code lang="c">/* Load and create the window. */
+
+window_definition = windows_load_template(&quot;Main&quot;);
+if (window_definition == NULL) {
+	error_report_error(&quot;Failed to load Main template&quot;);
+	return;
+}
+
+icons = window_definition-&gt;icons;
+
+icons[WIN_ICON_SHAPE].data.indirected_sprite.area = sprites;
+
+window_definition-&gt;sprite_area = sprites;
+
+win_handle = wimp_create_window(window_definition);
+free(win_handle);</code>
+
+<p>Compiling this should result in the window looking as shown in <reference id="fig-sprite-area-window"/>. The full code and sprites can be found in <reference id="dl-sprite-area-window"/>.</p>
+
+<image id="fig-sprite-area-window" file="sprite-area-window.png" title=""/>
+
+<download id="dl-sprite-area-window" file="WindowSpriteArea" title="Setting the Window Sprite Area" compatibility="none"/>
+
+<p>It should be possible to comment out the line which sets the window&rsquo;s sprite area and recompile the code, after which the radio icons should go back to the standard RISC&nbsp;OS images.</p>
+
+<p>One point worth highlighting is that if a window is using a private sprite area, the Wimp will still fall back to check the Wimp Sprite Pool if the required sprites are not found within the private area. This doesn&rsquo;t appear to be documented anywhere, but has certainly been the case since RISC&nbsp;OS&nbsp;4. Try leaving the amended code from <reference id="dl-sprite-area-window"/> in place, but delete the &ldquo;radiooff&rdquo; and &ldquo;radioon&ldquo; sprites from all three <file>!ExamplApp.Sprites</file> files &ndash; you should see the standard designs return.</p>
+
+<p>We should be clear that this is <em>not</em> a recommendation to change standard parts of the RISC&nbsp;OS interface within an application! We&rsquo;ll now be losing these changes from our application code, before moving on to look at another part of the Wimp completely.</p>
+</section>
+</chapter>
+</manual>

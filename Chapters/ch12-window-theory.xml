@@ -322,7 +322,7 @@ strncpy(window_definition.title_data.text, &quot;Hello World!&quot;, 12);</code>
 
 <code lang="c">window_definition.sprite_area = wimpspriteop_AREA;</code>
 
-<p>If we&rsquo;re using sprites in the window, we have the option of specifying a <variable>window_definition.sprite_area</variable> pointer to allow the Wimp to locate them for us. We&rsquo;re not, so for now we can just set this to the default of <name>wimpspriteop_AREA</name> &ndash; we&rsquo;ll look at this properly when we come to consider sprites in icons.</p>
+<p>If we&rsquo;re using sprites in the window, we have the option of specifying a <variable>window_definition.sprite_area</variable> pointer to allow the Wimp to locate them for us. We&rsquo;re not, so for now we can just set this to the default of <name>wimpspriteop_AREA</name> &ndash; we&rsquo;ll look at this properly when we come to consider <reference id="chap-sprite-area">sprites in icons</reference>.</p>
 
 <code lang="c">window_definition.icon_count = 0</code>
 
