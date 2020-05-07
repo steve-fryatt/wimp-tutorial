@@ -423,7 +423,7 @@ enum win_shape {
 	icons[WIN_ICON_SHAPE].data.indirected_sprite.area = sprites;
 
 	win_handle = wimp_create_window(window_definition);
-	free(win_handle);
+	free(window_definition);
 
 	/* Register event handlers. */
 
@@ -503,7 +503,7 @@ icons[WIN_ICON_SHAPE].data.indirected_sprite.area = sprites;
 window_definition-&gt;sprite_area = sprites;
 
 win_handle = wimp_create_window(window_definition);
-free(win_handle);</code>
+free(window_definition);</code>
 
 <p>Compiling this should result in the window looking as shown in <reference id="fig-sprite-area-window"/>. The full code and sprites can be found in <reference id="dl-sprite-area-window"/>.</p>
 

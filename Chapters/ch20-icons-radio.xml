@@ -133,7 +133,7 @@ wimp_set_icon_state(win_handle, WIN_ICON_OPTION3, 0, wimp_ICON_SELECTED);</code>
 <download id="dl-icons-radio-multi" file="MultiRadioIcons" title="Adjust Can Select Several Radio Icons" compatibility="none"/>
 </section>
 
-<section>
+<section id="sect-icons-radio-sflib">
 <title>Making use of SFLib</title>
 
 <p>One potential problem with the fix for <menu>Adjust</menu> clicks on the radio icons that we implemented in the previous section is that it requires us to have a <name>Mouse Click</name> event handler in place for them. Whilst we do have one in our application, this might not always be the case: unless a change in state should trigger another action (such as a display update, or shading part of a dialogue box), it could be better to leave the Wimp to handle the user interaction until we are ready to read the settings back. Additionally, whilst simple, the code would have to be duplicated every single time we use radio icons in a window.</p>

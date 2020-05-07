@@ -1,0 +1,102 @@
+/* Copyright 2015-2020, Stephen Fryatt (info@stevefryatt.org.uk)
+ *
+ * This file is part of Wimp Programming In C:
+ *
+ *   http://www.stevefryatt.org.uk/software/
+ *
+ * Licensed under the EUPL, Version 1.1 only (the "Licence");
+ * You may not use this work except in compliance with the
+ * Licence.
+ *
+ * You may obtain a copy of the Licence at:
+ *
+ *   http://joinup.ec.europa.eu/software/page/eupl
+ *
+ * Unless required by applicable law or agreed to in
+ * writing, software distributed under the Licence is
+ * distributed on an "AS IS" basis, WITHOUT WARRANTIES
+ * OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ * See the Licence for the specific language governing
+ * permissions and limitations under the Licence.
+ */
+
+/**
+ * File: ibar.c
+ */
+
+#include "oslib/wimp.h"
+#include "sflib/debug.h"
+#include "sflib/errors.h"
+#include "sflib/event.h"
+
+#include <string.h>
+
+#include "ibar.h"
+
+#include "main.h"
+#include "menu.h"
+#include "win.h"
+
+/* Global Variables. */
+
+static wimp_menu *ibar_menu;
+
+/* Function Prototypes. */
+
+static void ibar_mouse_click(wimp_pointer *pointer);
+
+/* Iconbar Initialisation. */
+
+void ibar_initialise(char *sprite)
+{
+	os_error *error;
+	wimp_icon_create icon_bar;
+
+	/* Iconbar Menu. */
+
+	ibar_menu = menu_create("Example", 3);
+	if (ibar_menu == NULL) {
+		error_report_error("Failed to create Iconbar Menu");
+		return;
+	}
+
+	menu_entry(ibar_menu, 0, "Info", NULL);
+	menu_entry(ibar_menu, 1, "Help", NULL);
+	menu_entry(ibar_menu, 2, "Quit", NULL);
+
+	/* Iconbar Icon. */
+
+	icon_bar.w = wimp_ICON_BAR_RIGHT;
+	icon_bar.icon.extent.x0 = 0;
+	icon_bar.icon.extent.y0 = 0;
+	icon_bar.icon.extent.x1 = 68;
+	icon_bar.icon.extent.y1 = 68;
+	icon_bar.icon.flags = wimp_ICON_SPRITE | (wimp_BUTTON_CLICK << wimp_ICON_BUTTON_TYPE_SHIFT);
+	strncpy(icon_bar.icon.data.sprite, sprite, osspriteop_NAME_LIMIT);
+
+	error = xwimp_create_icon(&icon_bar, NULL);
+	if (error != NULL) {
+		error_report_error(error->errmess);
+		return;
+	}
+
+	event_add_window_mouse_event(wimp_ICON_BAR, ibar_mouse_click);
+}
+
+/* Mouse Click event handler */
+
+static void ibar_mouse_click(wimp_pointer *pointer)
+{
+	switch (pointer->buttons) {
+	case wimp_CLICK_SELECT:
+		win_open();
+		break;
+	case wimp_CLICK_MENU:
+		wimp_create_menu(ibar_menu, pointer->pos.x - 64, 228);
+		break;
+	case wimp_CLICK_ADJUST:
+		main_quit_flag = TRUE;
+		break;
+	}
+}

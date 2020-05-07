@@ -85,7 +85,7 @@ void win_initialise(osspriteop_area *sprites)
 	window_definition->sprite_area = sprites;
 
 	win_handle = wimp_create_window(window_definition);
-	free(win_handle);
+	free(window_definition);
 
 	/* Register event handlers. */
 

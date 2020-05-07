@@ -311,7 +311,7 @@ extern void wimp_close_template(void);</code>
 <p>The next step is to claim the two memory blocks with <function>malloc()</function>, using the sizes provided by the SWI &ndash; again returning <name>NULL</name> if either allocation fails. Finally, <swi>Wimp_LoadTemplate</swi> is called for a second time, this time being given the two blocks of memory to load the template and indirected data in to. The Wimp will load the window definition, then set up all of the memory buffers and validation strings for us. Once more, any error results in the memory being freed and <name>NULL</name> being returned by <function>windows_load_template()</function>.</p>
 </section>
 
-<section>
+<section id="sect-templates-create-win">
 <title>Creating the window</title>
 
 <p>If everything worked as expected, then a pointer to the <name>wimp_window</name> block is returned by <function>windows_load_template()</function>. This is the same as the one that we have been creating by hand in <function>win_initialise()</function>, except that all of the icons definitions are included at the end &ndash; just as we hinted could be done back in <reference id="sect-window-theory-loose-ends"/>. This means that <swi>Wimp_CreateWindow</swi> will create all of the icons at the same time as the window, instead of our having to call <swi>Wimp_CreateIcon</swi> for each one &ndash; less work for us!</p>
@@ -351,7 +351,7 @@ static int win_width, win_height;</code>
 	win_height = window_definition-&gt;visible.y1 - window_definition-&gt;visible.y0;
 
 	win_handle = wimp_create_window(window_definition);
-	free(win_handle);
+	free(window_definition);
 
 	/* Register event handlers. */
 
