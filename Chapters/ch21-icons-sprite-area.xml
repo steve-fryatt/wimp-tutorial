@@ -444,6 +444,12 @@ enum win_shape {
 
 <p>We need to store the address of our sprite area in the definition for the <name>WIN_ICON_SHAPE</name> icon before the whole window definition is passed to <function>wimp_create_window()</function>, and we can find this through the <variable>window_definition-&gt;icons[]</variable> array &ndash; as we alluded to back in <reference id="chap-templates"/>. It&rsquo;s worth remembering that template editors <em>should</em> set this value to <name>wimpspriteop_AREA</name> when saving their files, but this might not always be guaranteed.</p>
 
+<p>One point to note is that we&rsquo;re assigning the address of <variable>window_definition-&gt;icons</variable> to the <variable>icons</variable> pointer, before using this to access the icon definition. This prevents the compiler from noticing that OSLib has defined <variable>window_definition-&gt;icons[]</variable> to have a length of 1, as discussed in <reference id="chap-window-theory"/> &ndash; if we did the more direct</p>
+
+<code lang="c">window_definition-&gt;icons[WIN_ICON_SHAPE].data.indirected_sprite.area = sprites;</code>
+
+<p>then Norcroft will trace back to the definition of <name>wimp_window</name> and issue a warning about a possible &ldquo;out-of-bound offset 3 in address&rdquo;. This would be reasonable &ndash; if unhelpful &ndash; since the compiler can&rsquo;t know that the memory pointed to by <variable>window_definition</variable> is actually a definition containing four icons.</p>
+
 <p>Finally, we set the state of the three radio icons, and pre-set the shape for a circle to match using <function>win_set_shape()</function>.</p>
 </section>
 

@@ -94,7 +94,9 @@ window_definition.icon_count = 0;</code>
 
 <p>This is a little odd, because we don&rsquo;t know how long the array might be, but is in line with the way that <intro>flexible arrays</intro> were handled in the days of C90. The arrival of the C99 standard gave us a proper implementation, but OSLib&rsquo;s heritage leaves us with this &lsquo;hack&rsquo;.</p>
 
-<p>For the example code here, this doesn&rsquo;t matter too much: when we declare the <variable>window_definition</variable> variable, we get an array with one entry at the end of the structure, which we won&rsquo;t actually be using anyway. As we&rsquo;ll see, it&rsquo;s very rare to declare <name>wimp_window</name> variables in code &ndash; pointers to blocks are far more common.</p>
+<p>For the example code here, this doesn&rsquo;t matter too much: when we declare the <variable>window_definition</variable> variable, we simply get an array with one entry at the end of the structure, which in this case we won&rsquo;t actually be using anyway. In fact, as we&rsquo;ll see, it&rsquo;s very rare to declare <name>wimp_window</name> variables in code &ndash; pointers to blocks are far more common.</p>
+
+<p>More significant is the fact that this approach to defining an array of unknown length can trip up the C compiler, causing it to issue a warning of a possible &ldquo;out-of-bound offset&rdquo; when accessing members of the <variable>icons[]</variable> array. These will need to be ignored, unless the code can be written in such a way as to avoid them being generated.</p>
 
 </section>
 
