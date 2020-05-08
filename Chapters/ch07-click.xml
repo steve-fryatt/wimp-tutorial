@@ -93,7 +93,7 @@ while (!main_quit_flag) {
 
 typedef union wimp_block wimp_block;</code>
 
-<p>The <code>switch</code> code looks inside the <name>message</name> part of the union when either <name>User_Message</name> or <name>User_Message_Recorded</name> is received; in a similar way, when a <name>Mouse Click</name> event is received, it needs to look inside <name>pointer</name> instead. It&rsquo;s worth re-iterating here that <name>wimp_block</name> is a union because all of these different pieces of data share the same 256&nbsp;byte chunk of memory that is passed to <swi>Wimp_Poll</swi>: how the block is filled by the Wimp before the SWI returns will depend on the reason code being used. Each time it returns, what was in the block before is overwritten.</p>
+<p>The <code>switch</code> code looks inside the <variable>message</variable> part of the union when either <name>User_Message</name> or <name>User_Message_Recorded</name> is received; in a similar way, when a <name>Mouse Click</name> event is received, it needs to look inside <variable>pointer</variable> instead. It&rsquo;s worth re-iterating here that <name>wimp_block</name> is a union because all of these different pieces of data share the same 256&nbsp;byte chunk of memory that is passed to <swi>Wimp_Poll</swi>: how the block is filled by the Wimp before the SWI returns will depend on the reason code being used. Each time it returns, what was in the block before is overwritten.</p>
 
 <p>OSLib defines <name>wimp_pointer</name> as</p>
 

@@ -1,0 +1,206 @@
+/* Copyright 2020, Stephen Fryatt (info@stevefryatt.org.uk)
+ *
+ * This file is part of Wimp Programming In C:
+ *
+ *   http://www.stevefryatt.org.uk/software/
+ *
+ * Licensed under the EUPL, Version 1.1 only (the "Licence");
+ * You may not use this work except in compliance with the
+ * Licence.
+ *
+ * You may obtain a copy of the Licence at:
+ *
+ *   http://joinup.ec.europa.eu/software/page/eupl
+ *
+ * Unless required by applicable law or agreed to in
+ * writing, software distributed under the Licence is
+ * distributed on an "AS IS" basis, WITHOUT WARRANTIES
+ * OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ * See the Licence for the specific language governing
+ * permissions and limitations under the Licence.
+ */
+
+/**
+ * File: menu.c
+ */
+
+#include "oslib/wimp.h"
+
+#include "sflib/event.h"
+#include "sflib/menus.h"
+
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "menu.h"
+
+/* Global Variables. */
+
+static wimp_menu *menu_current_menu = NULL;
+
+static void (*menu_current_callback)(wimp_menu *menu, wimp_selection *selection) = NULL;
+
+/* Function Prototypes. */
+
+static osbool menu_message_menus_deleted(wimp_message *message);
+
+/* Menu Initialisation. */
+
+void menu_initialise(void)
+{
+	event_add_message_handler(message_MENUS_DELETED, EVENT_MESSAGE_INCOMING, menu_message_menus_deleted);
+}
+
+/* Menu Creation. */
+
+wimp_menu *menu_create(char *title, int entries)
+{
+	wimp_menu	*menu = NULL;
+	wimp_menu_entry	*entry = NULL;
+	char		*buffer = NULL;
+	int		len, size;
+
+	/* A menu must have one entry. */
+
+	if (entries < 1)
+		return NULL;
+
+	/* Allocate the menu definition block. */
+
+	size = wimp_SIZEOF_MENU(entries);
+
+	menu = malloc(size);
+	if (menu == NULL)
+		return NULL;
+
+	/* Set up the menu title. */
+
+	len = strlen(title);
+	if (len > 12)
+		buffer = malloc(len + 1);
+
+	if (buffer != NULL) {
+		strncpy(buffer, title, len);
+		buffer[len] = '\0';
+		menu->title_data.indirected_text.text = buffer;
+	} else {
+		strncpy(menu->title_data.text, title, 12);
+	}
+
+	/* Set up the remainder of the menu header. */
+
+	menu->title_fg = wimp_COLOUR_BLACK;
+	menu->title_bg = wimp_COLOUR_LIGHT_GREY;
+	menu->work_fg = wimp_COLOUR_BLACK;
+	menu->work_bg = wimp_COLOUR_WHITE;
+	menu->width = 16;
+	menu->height = wimp_MENU_ITEM_HEIGHT;
+	menu->gap = wimp_MENU_ITEM_GAP;
+
+	/* Initialise the menu entries. */
+
+	entry = menu->entries;
+
+	while (entries-- > 0) {
+		entry->menu_flags = (entries > 0) ? 0 : wimp_MENU_LAST;
+		entry->sub_menu = NULL;
+		entry->icon_flags = wimp_ICON_TEXT | wimp_ICON_FILLED |
+				(wimp_COLOUR_BLACK << wimp_ICON_FG_COLOUR_SHIFT) |
+				(wimp_COLOUR_WHITE << wimp_ICON_BG_COLOUR_SHIFT);
+		strncpy(entry->data.text, "", 12);
+
+		entry++;
+	}
+
+	/* Set the title indirection flag. */
+
+	if (buffer != NULL)
+		menu->entries[0].menu_flags |= wimp_MENU_TITLE_INDIRECTED;
+
+	return menu;
+}
+
+/* Menu Entry Configuration. */
+
+void menu_entry(wimp_menu *menu, int entry, char *text, wimp_menu *sub_menu)
+{
+	wimp_menu_entry *definition = NULL;
+	char		*buffer = NULL;
+	int		len, width;
+
+	if (menu == NULL || text == NULL)
+		return;
+
+	/* Update the menu entry definition. */
+
+	definition = menu->entries + entry;
+
+	/* Set up the menu text. */
+
+	len = strlen(text);
+	if (len > 12)
+		buffer = malloc(len + 1);
+
+	if (buffer != NULL) {
+		strncpy(buffer, text, len);
+		buffer[len] = '\0';
+		definition->data.indirected_text.text = text;
+		definition->data.indirected_text.validation = "";
+		definition->data.indirected_text.size = len + 1;
+		definition->icon_flags |= wimp_ICON_INDIRECTED;
+	} else {
+		strncpy(definition->data.text, text, 12);
+	}
+
+	definition->sub_menu = sub_menu;
+
+	/* Recalculate the menu width. */
+
+	width = (16 * strlen(text)) + 16;
+	if (width > menu->width)
+		menu->width = width;
+}
+
+/* Menu Selection event handler. */
+
+void menu_process_event(wimp_selection *selection)
+{
+	if (menu_current_callback != NULL && selection != NULL)
+		menu_current_callback(menu_current_menu, selection);
+
+	/* Clear our saved menu details. */
+
+	menu_current_menu = NULL;
+	menu_current_callback = NULL;
+}
+
+/* Message_MenusDeleted event handler. */
+
+static osbool menu_message_menus_deleted(wimp_message *message)
+{
+	wimp_full_message_menus_deleted *deleted = (wimp_full_message_menus_deleted *) message;
+
+	/* Check that the deleted menu is ours. */
+
+	if (deleted == NULL || deleted->menu != menu_current_menu)
+		return FALSE;
+
+	/* Clear our saved menu details. */
+
+	menu_current_menu = NULL;
+	menu_current_callback = NULL;
+
+	return TRUE;
+}
+
+/* Open an iconbar menu. */
+
+void menu_open_ibar(wimp_menu *menu, wimp_pointer *pointer, void (*callback)(wimp_menu *menu, wimp_selection *selection))
+{
+	menu_current_menu = menu;
+	menu_current_callback = callback;
+
+	menus_create_iconbar_menu(menu, pointer);
+}

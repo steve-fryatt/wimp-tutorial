@@ -22,7 +22,7 @@
 <section>
 <p>Before we can move on to look at sprite icons in any more detail, there&rsquo;s a glaring omission with our example application which needs to be fixed. So far, we&rsquo;ve just been compiling our code into an Absolute executable called <file>ExampleApp</file>, which we then run directly by double-clicking on it. This works, up to a point, but there are a few problems which so far we&rsquo;ve skirted around.</p>
 
-<p>Almost invariably, applications on RISC&nbsp;OS come packaged in an <intro>application directory</intro>: the familiar object in a filer window whose name starts with an exclamation mark. An application directory is just like any other directory &ndash; except that double-clicking on it doesn&rsquo;t open it up, but instead causes other things to happen.</p>
+<p>Almost invariably, applications on RISC&nbsp;OS come packaged in an <intro>application directory</intro>: the familiar object in a Filer window whose name starts with an exclamation mark. An application directory is just like any other directory &ndash; except that double-clicking on it doesn&rsquo;t open it up, but instead causes other things to happen.</p>
 </section>
 
 <section>

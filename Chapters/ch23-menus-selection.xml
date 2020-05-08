@@ -1,0 +1,332 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+
+<!DOCTYPE xmlmanual SYSTEM "../wimp.dtd">
+
+<manual xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="xmldoc.xsd" version="1.8.6">
+
+<!-- Chapter 23
+   -
+   - Menu Selections
+  -->
+
+<chapter id="chap-menus-selection">
+<resources>
+<images>Chapter23</images>
+<downloads>Chapter23</downloads>
+</resources>
+<filename>menus-selection.html</filename>
+<title>Menu Selections</title>
+
+<summary>Menus aren&rsquo;t a lot of use if we can&rsquo;t see the selections made by the user!</summary>
+
+<section>
+<p>In the <reference id="chap-menus-intro">last chapter</reference> we introduced the concept of menus, and added an iconbar menu to our application. On the way, we implemented a <window>program information</window> window and a button to take users to our website &ndash; but the menu itself remained unable to pass on details of selections made by the user.</p>
+
+<p>It is now time to look at the <name>Menu Selection</name> event, and investigate how we might allow our application to start to respond to it.</p>
+</section>
+
+<section>
+<title>The menu selection event</title>
+
+<p>Details of selections from menus, as with all other information from the Wimp, are returned from calls made to <swi>Wimp_Poll</swi> in our <function>main_poll()</function> function. They arrive with a reason code of <name>wimp_MENU_SELECTION</name>, and the <name>wimp_block</name> filled in by the SWI contains data in the <variable>selection</variable> part of the union.</p>
+
+<code lang="c">union wimp_block {
+	wimp_draw	redraw;
+	wimp_open	open;
+	wimp_close	close;
+	wimp_leaving	leaving;
+	wimp_entering	entering;
+	wimp_pointer	pointer;
+	wimp_dragged	dragged;
+	wimp_key	key;
+	wimp_selection	selection;
+	wimp_scroll	scroll;
+	wimp_caret	caret;
+	wimp_pollword	pollword;
+	wimp_message	message;
+	byte		reserved[256];
+};
+
+typedef union wimp_block wimp_block;</code>
+
+<p>OSLib defines <name>wimp_selection</name> as follows:</p>
+
+<code lang="c">
+struct wimp_selection {
+	int	items[9];
+};
+
+typedef struct wimp_selection wimp_selection;</code>
+
+<p>Compared to the other blocks returned by <swi>Wimp_Poll</swi>, this block is quite basic. The <variable>items[]</variable> array contains a series of menu entry indexes which track through the menu tree to the selection, before being terminated by &minus;1. An example might help, so take a look at <reference id="fig-menus-selection-example"/>.</p>
+
+<image id="fig-menus-selection-example" file="menus-selection-example.png" title="A three level menu selection"/>
+
+<p>If the highlighted item were returned as a menu selection to our application, the block would contain the values shown in <reference id="table-menus-selection-example"/>.</p>
+
+<table id="table-menus-selection-example" title="The values returned in the Wimp_Poll block">
+<columns>
+<col align="centre">Block Location</col>
+<col align="centre">Value</col>
+<col align="centre">Menu Entry</col>
+</columns>
+<row><col><variable>items[0]</variable></col><col>1</col><col>Help</col></row>
+<row><col><variable>items[1]</variable></col><col>0</col><col>Mode</col></row>
+<row><col><variable>items[2]</variable></col><col>3</col><col>Email</col></row>
+<row><col><variable>items[3]</variable></col><col>&minus;1</col><col></col></row>
+</table>
+
+<p>Note that the event data from the Wimp contains no information about <em>which</em> menu the selection came from. If our application had more than one menu, such as one over its window and one on the iconbar, or used the same menu in several places, it would be up to us to remember which menu was open and what context it was opened in.</p>
+</section>
+
+<section>
+<title>Menu event dispatch</title>
+
+<p>There are many different ways that we could implement a scheme for tracking our application&rsquo;s menus and working out where <name>wimp_MENU_SELECTION</name> events need to be delivered to. We&rsquo;ll go for something relatively simple, and create two global variables in <file>c.menu</file> which can be used to remember menu activity:</p>
+
+<code lang="c">/* Global Variables. */
+
+static wimp_menu *menu_current_menu = NULL;
+
+static void (*menu_current_callback)(wimp_menu *menu, wimp_selection *selection) = NULL;</code>
+
+<p>The first is a simple pointer to a <name>wimp_menu</name> structure, which we will use to track the menu that is currently open on screen. The second, <variable>menu_current_callback</variable>, is a pointer to a function which takes pointers to a <name>wimp_menu</name> structure and a <name>wimp_selection</name> structure: we will use this to hold the details of a function to which the details of the next <name>wimp_MENU_SELECTION</name> event should be sent.</p>
+
+<p>So that our code can set these values, we will create a new function in <file>c.menu</file> to open an iconbar menu on screen.</p>
+
+<code lang="c">void menu_open_ibar(wimp_menu *menu, wimp_pointer *pointer,
+		void (*callback)(wimp_menu *menu, wimp_selection *selection))
+{
+	menu_current_menu = menu;
+	menu_current_callback = callback;
+
+	menus_create_iconbar_menu(menu, pointer);
+}</code>
+
+<p>To use this function for creating a menu, we will need to pass it a pointer to the <name>wimp_menu</name> structure holding the menu, a pointer to a <name>wimp_pointer</name> structure holding details of where the mouse was clicked, <em>and</em> a pointer to a function which will be sent details of the <name>wimp_selection</name> structure when the user makes a selection.</p>
+
+<p>The code sets the two global variables up, then calls a function defined in SFLib&rsquo;s menus library to create the menu. Instead of hard-coding the menu position as we did in the last chapter, <function>menus_create_iconbar_menu()</function> counts up the number of entries and separators in the menu and works out the correct vertical offset to apply such that the bottom of the menu is 96 OS&nbsp;units from the base of the screen. It&rsquo;s more work to write, but won&rsquo;t need to be changed whenever we add an item to our menu!</p>
+
+<code lang="c">wimp_menu *menus_create_iconbar_menu(wimp_menu *menu, wimp_pointer *pointer)
+{
+	int entry = 0, entries = 0, lines = 0;
+
+	if (menu == NULL || pointer == NULL)
+		return NULL;
+
+	do {
+		entries++;
+		if ((menu-&gt;entries[entry].menu_flags &amp; wimp_MENU_SEPARATE) != 0)
+			lines++;
+	} while ((menu-&gt;entries[entry++].menu_flags &amp; wimp_MENU_LAST) == 0);
+
+	if (xwimp_create_menu(menu, pointer-&gt;pos.x - 64,
+			96 + (entries * (menu-&gt;height + menu-&gt;gap)) + (lines * wimp_MENU_ITEM_SEPARATION)) != NULL)
+		return NULL;
+
+	return menu;
+}</code>
+
+<p>We can now change the code in <file>c.ibar</file> which responds to <mouse>Menu</mouse> clicks on the iconbar. Instead of calling <function>wimp_create_menu()</function> directly, <function>ibar_mouse_click()</function> will now call our new <function>menu_open_ibar()</function> instead.</p>
+
+<code lang="c">static void ibar_mouse_click(wimp_pointer *pointer)
+{
+	switch (pointer-&gt;buttons) {
+	case wimp_CLICK_SELECT:
+		win_open();
+		break;
+	case wimp_CLICK_MENU:
+		menu_open_ibar(ibar_menu, pointer, ibar_menu_selection);
+		break;
+	case wimp_CLICK_ADJUST:
+		main_quit_flag = TRUE;
+		break;
+	}
+}</code>
+
+<p>This passes the same <variable>ibar_menu</variable> and <variable>pointer</variable> variables that we used perviously to derive the parameters for <function>wimp_create_menu()</function>, but also passes a pointer to a new <function>ibar_menu_selection()</function>. We can define this as follows:</p>
+
+<code lang="c">static void ibar_menu_selection(wimp_menu *menu, wimp_selection *selection)
+{
+	switch (selection-&gt;items[0]) {
+	case IBAR_MENU_QUIT:
+		main_quit_flag = TRUE;
+		break;
+	}
+}</code>
+
+<p>There is very little to this code, and it should be familiar from the other user input decoding that we have done. Since the menu is a single level, we can switch on the first menu entry, and for now we will only implement the <menu>Quit</menu> option.</p>
+
+<p>We now need some code to direct incoming <name>wimp_MENU_SELECTION</name> events, and this can be achieved with the following function in <file>c.menu</file>:</p>
+
+<code lang="c">void menu_process_event(wimp_selection *selection)
+{
+	if (menu_current_callback != NULL &amp;&amp; selection != NULL)
+		menu_current_callback(menu_current_menu, selection);
+
+	/* Clear our saved menu details. */
+
+	menu_current_menu = NULL;
+	menu_current_callback = NULL;
+}</code>
+
+<p>If the <variable>menu_current_callback</variable> pointer is not <name>NULL</name>, and the event data pointer in <variable>selection</variable> is not <name>NULL</name>, the callback function is called. The pointer to the event data is passed through, along with the <name>wimp_menu</name> pointer that was supplied when the menu was opened.</p>
+
+<p>When the user selects an item from a menu, the Wimp will close the menu structure, which means that the two pointers that we hold (<variable>menu_current_menu</variable> and <variable>menu_current_callback</variable>) no longer have any purpose. We reset them both to <name>NULL</name>, so that they don&rsquo;t accidentally get used in the future. This leaves a question, though: what happens if the menu closes <em>without</em> the user making a selection?</p>
+
+<p>The answer is that the Wimp will send our task a <name>Message_MenusDeleted</name> to inform us that the menu is no longer visible. We can register a message handler for this as follows:</p>
+
+<code lang="c">void menu_initialise(void)
+{
+	event_add_message_handler(message_MENUS_DELETED, EVENT_MESSAGE_INCOMING, menu_message_menus_deleted);
+}
+
+static osbool menu_message_menus_deleted(wimp_message *message)
+{
+	wimp_full_message_menus_deleted *deleted = (wimp_full_message_menus_deleted *) message;
+
+	/* Check that the deleted menu is ours. */
+
+	if (deleted == NULL || deleted-&gt;menu != menu_current_menu)
+		return FALSE;
+
+	/* Clear our saved menu details. */
+
+	menu_current_menu = NULL;
+	menu_current_callback = NULL;
+
+	return TRUE;
+}</code>
+
+<p>So far, the only message that we have looked at is <name>Message_Quit</name>, which our task receives if it must quit immediately, and its somewhat abrupt nature meant that there was no additional information supplied within the <name>wimp_message</name> block. It&rsquo;s more usual for messages to contain information, however, and <name>Message_MenusDeleted</name> is no exception.</p>
+
+<p>To get at this data, we start by casting the generic pointer to a <name>wimp_message</name> structure which is passed in the <variable>message</variable> parameter into a more specific pointer to a <name>wimp_full_message_menus_deleted</name> structure. We saw back in <reference id="chap-moving-to-c"/> that <name>wimp_message</name> is defined by OSLib as follows:</p>
+
+<code lang="c">struct wimp_message {
+	int	size;
+	wimp_t	sender;
+	int	my_ref;
+	int	your_ref;
+	bits	action;
+	byte	reserved[236];
+};
+
+typedef struct wimp_message wimp_message;</code>
+
+<p>These are the bare minimum set of fields that a message will contain, but depending on what the message actually is, some or all of those 236 reserved bytes could contain additional data which is specific to that message type. In the case of <name>Message_MenusDeleted</name>, OSLib defines two structures:</p>
+
+<code lang="c">struct wimp_message_menus_deleted {
+	wimp_menu	*menu;
+};
+
+typedef struct wimp_message_menus_deleted wimp_message_menus_deleted;
+
+struct wimp_full_message_menus_deleted {
+	int		size;
+	wimp_t		sender;
+	int		my_ref;
+	int		your_ref;
+	bits		action;
+	wimp_menu	*menu;
+};
+
+typedef struct wimp_full_message_menus_deleted wimp_full_message_menus_deleted;</code>
+
+<p>The first, <name>wimp_message_menus_deleted</name>, contains only the fields specific to the <name>Message_MenusDeleted</name> message, while the second, <name>wimp_full_message_menus_deleted</name>, contains all of the fields which appear in the message. This is a pattern followed throughout OSLib&rsquo;s Wimp message support; usually, when casting an incoming <name>wimp_message</name> pointer to another type, it will be the variant which begins with <name>wimp_full_message_</name> that is required.</p>
+
+<p>The <variable>*menu</variable> pointer in the message gives the menu block that the Wimp is closing, so we check that this matches the block that we have saved in <variable>menu_current_menu</variable> and, if it does, clear the stored values. As with the icon-level event handler that we met in <reference id ="sect-menus-into-website"/>, the message handler returns <name>TRUE</name> if the menu handles matched, to indicate that it was able to use the message details. If they did not match, it returns <name>FALSE</name> so that the message can be passed on to any other interested parties within our application which might be listening.</p>
+
+<p>The full set of changes can be found in <reference id="dl-menus-selection-selections"/>. When compiled and run, it should finally be possible to quit our application from its iconbar menu!</p>
+
+<download id="dl-menus-selection-selections" file="MenuSelections" title="Finally the Application can be Quit from the Menu" compatibility="none"/>
+</section>
+
+<section>
+<title>Adjust clicks in menus</title>
+
+<p>While the working iconbar menu is a big step forward, there is one small oddity. Try clicking on the unimplemented <menu>Info</menu> or <menu>Help...</menu> entries, and the menu will close &ndash; even if <mouse>Adjust</mouse> is used. The <cite>Style Guide</cite>, and convention, require that menus should remain on screen if selections are made with <mouse>Adjust</mouse>, but it&rsquo;s another part of the menu interface that Acorn left for applications to implement.</p>
+
+<p>Fortunately, it is fairly simple to implement the use of <mouse>Adjust</mouse>. All that we need to do is to check the button used to make the selection, by calling <swi>Wimp_GetPointerInfo</swi>, then call <swi>Wimp_CreateMenu</swi> again with a pointer to the same <name>wimp_menu</name> block if <mouse>Adjust</mouse> was used. The Wimp will recognise that it is the same menu, and will re-open it in the same position.</p>
+
+<p>To make this work, we can update the <function>menu_process_event()</function> as follows:</p>
+
+<code lang="c">void menu_process_event(wimp_selection *selection)
+{
+	wimp_pointer	pointer;
+	os_error	*error;
+
+	/* Read the mouse button used to make the selection. */
+
+	error = xwimp_get_pointer_info(&amp;pointer);
+	if (error != NULL)
+		pointer.buttons = wimp_CLICK_SELECT;
+
+	/* Call the client back with the selection info. */
+
+	if (menu_current_callback != NULL &amp;&amp; selection != NULL)
+		menu_current_callback(menu_current_menu, selection);
+
+	/* Either re-open the menu on Adjust, or clear the saved details. */
+
+	if (menu_current_menu != NULL &amp;&amp; pointer.buttons == wimp_CLICK_ADJUST) {
+		xwimp_create_menu(menu_current_menu, 0, 0);
+	} else {
+		menu_current_menu = NULL;
+		menu_current_callback = NULL;
+	}
+}</code>
+
+<p>If an error occurs whilst reading the mouse state, we don&rsquo;t bother failing &ndash; instead we just assume that <mouse>Select</mouse> was used. The full code can be found in <reference id="dl-menus-selection-adjust"/>.</p>
+
+<download id="dl-menus-selection-adjust" file="MenuAdjust" title="Adjust Clicks Hold the Menu Open" compatibility="none"/>
+</section>
+
+<section>
+<title>The application help</title>
+
+<p>Alongside the <menu>Info</menu> and <menu>Quit</menu> entries, our iconbar menu contains a <menu>Help...</menu> entry. This is standard practice, which is strongly encouraged by the <cite>Style Guide</cite>, and should allow the user to access our application&rsquo;s documentation.</p>
+
+<p>RISC&nbsp;OS has always expected an application to contain a file called <file>!Help</file> within its application folder, which in our case would be <file>!ExamplApp.!Help</file>: this is <command>*Filer_Run</command> by the Filer when a user selects <menu>App. '!ExamplApp' &msep; Help</menu> from the Filer menu as seen in <reference id="fig-menus-selection-filer"/>.</p>
+
+<image id="fig-menus-selection-filer" file="menus-selection-filer.png" title="The Filer has always offered a way to access application help"/>
+
+<p>The easiest way to implement our own <menu>Help...</menu> entry is for us to <command>*Filer_Run</command> the same file: this way, we only need to keep one file up to date, and can make whatever arrangements we like for it to launch a text file, a <cite>StrongHelp</cite> manual, an HTML document or whatever we choose. To do this, we can update <function>ibar_menu_selection()</function> as follows:</p>
+
+<code lang="c">static void ibar_menu_selection(wimp_menu *menu, wimp_selection *selection)
+{
+	os_error *error;
+
+	switch (selection-&gt;items[0]) {
+	case IBAR_MENU_HELP:
+		error = xos_cli(&quot;%Filer_Run &lt;ExamplApp$Dir&gt;.!Help&quot;);
+		if (error != NULL)
+		error_report_os_error(error, wimp_ERROR_BOX_OK_ICON);
+		break;
+	case IBAR_MENU_QUIT:
+		main_quit_flag = TRUE;
+		break;
+	}
+}</code>
+
+<p>Obviously we now need to ensure that the <file>!ExamplApp.!Help</file> exists, and to show the principle we have included a very simple text file.</p>
+
+<p>Before we wrap up the code into a final download, there is one small piece of tidying up remaining. Now that our application can be quit from its iconbar menu, there is no need for <menu>Adjust</menu> clicks on its iconbar icon to have the same effect. We can therefore remove the <name>wimp_CLICK_ADJUST</name> clause from the switch statement in <function>ibar_mouse_click()</function>, as shown here.</p>
+
+<code lang="c">static void ibar_mouse_click(wimp_pointer *pointer)
+{
+	switch (pointer-&gt;buttons) {
+	case wimp_CLICK_SELECT:
+		win_open();
+		break;
+	case wimp_CLICK_MENU:
+		menu_open_ibar(ibar_menu, pointer, ibar_menu_selection);
+		break;
+	}
+}</code>
+
+<p>With these changes, our ExamplApp is at last starting to look like a normal RISC&nbsp;OS application. The full code can be found in <reference id="dl-menus-selection-help"/>.</p>
+
+<download id="dl-menus-selection-help" file="MenuHelp" title="The Help Menu Entry Works" compatibility="none"/>
+</section>
+</chapter>
+</manual>

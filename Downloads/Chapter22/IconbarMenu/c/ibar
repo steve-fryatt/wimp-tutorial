@@ -42,6 +42,12 @@
 
 static wimp_menu *ibar_menu;
 
+/* Iconbar Menu Entries. */
+
+#define IBAR_MENU_INFO 0
+#define IBAR_MENU_HELP 1
+#define IBAR_MENU_QUIT 2
+
 /* Function Prototypes. */
 
 static void ibar_mouse_click(wimp_pointer *pointer);
@@ -61,9 +67,9 @@ void ibar_initialise(char *sprite)
 		return;
 	}
 
-	menu_entry(ibar_menu, 0, "Info", NULL);
-	menu_entry(ibar_menu, 1, "Help", NULL);
-	menu_entry(ibar_menu, 2, "Quit", NULL);
+	menu_entry(ibar_menu, IBAR_MENU_INFO, "Info", NULL);
+	menu_entry(ibar_menu, IBAR_MENU_HELP, "Help...", NULL);
+	menu_entry(ibar_menu, IBAR_MENU_QUIT, "Quit", NULL);
 
 	/* Iconbar Icon. */
 

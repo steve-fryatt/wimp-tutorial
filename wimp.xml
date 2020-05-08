@@ -59,5 +59,6 @@
 <chapter file="ch20-icons-radio.xml"/>
 <chapter file="ch21-icons-sprite-area.xml"/>
 <chapter file="ch22-menus-intro.xml"/>
+<chapter file="ch23-menus-selection.xml"/>
 
 </manual>

@@ -1,0 +1,157 @@
+/* Copyright 2015-2020, Stephen Fryatt (info@stevefryatt.org.uk)
+ *
+ * This file is part of Wimp Programming In C:
+ *
+ *   http://www.stevefryatt.org.uk/software/
+ *
+ * Licensed under the EUPL, Version 1.1 only (the "Licence");
+ * You may not use this work except in compliance with the
+ * Licence.
+ *
+ * You may obtain a copy of the Licence at:
+ *
+ *   http://joinup.ec.europa.eu/software/page/eupl
+ *
+ * Unless required by applicable law or agreed to in
+ * writing, software distributed under the Licence is
+ * distributed on an "AS IS" basis, WITHOUT WARRANTIES
+ * OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ * See the Licence for the specific language governing
+ * permissions and limitations under the Licence.
+ */
+
+/**
+ * File: win.c
+ */
+
+#include "oslib/osspriteop.h"
+#include "oslib/wimp.h"
+
+#include "sflib/errors.h"
+#include "sflib/event.h"
+#include "sflib/icons.h"
+#include "sflib/windows.h"
+
+#include <stdio.h>
+#include <string.h>
+
+#include "win.h"
+
+/* Constant Values */
+
+#define WIN_ICON_OPT_CIRCLE 0
+#define WIN_ICON_OPT_SQUARE 1
+#define WIN_ICON_OPT_TRIANGLE 2
+#define WIN_ICON_SHAPE 3
+
+/* Display Shapes */
+
+enum win_shape {
+	WIN_SHAPE_NONE,
+	WIN_SHAPE_SQUARE,
+	WIN_SHAPE_CIRCLE,
+	WIN_SHAPE_TRIANGLE
+};
+
+/* Global Variables */
+
+static wimp_w win_handle;
+
+/* Function Prototypes */
+
+static void win_mouse_click(wimp_pointer *pointer);
+static void win_set_shape(enum win_shape shape);
+
+/* Window Initialisation. */
+
+void win_initialise(osspriteop_area *sprites)
+{
+	wimp_window	*window_definition;
+	wimp_icon	*icons;
+
+	/* Load and create the window. */
+
+	window_definition = windows_load_template("Main");
+	if (window_definition == NULL) {
+		error_report_error("Failed to load Main template");
+		return;
+	}
+
+	icons = window_definition->icons;
+
+	icons[WIN_ICON_SHAPE].data.indirected_sprite.area = sprites;
+
+	win_handle = wimp_create_window(window_definition);
+	free(window_definition);
+
+	/* Register event handlers. */
+
+	event_add_window_mouse_event(win_handle, win_mouse_click);
+
+	event_add_window_icon_radio(win_handle, WIN_ICON_OPT_CIRCLE, FALSE);
+	event_add_window_icon_radio(win_handle, WIN_ICON_OPT_SQUARE, FALSE);
+	event_add_window_icon_radio(win_handle, WIN_ICON_OPT_TRIANGLE, FALSE);
+
+	/* Initialise the radio icons. */
+
+	wimp_set_icon_state(win_handle, WIN_ICON_OPT_CIRCLE, wimp_ICON_SELECTED, wimp_ICON_SELECTED);
+	wimp_set_icon_state(win_handle, WIN_ICON_OPT_SQUARE, 0, wimp_ICON_SELECTED);
+	wimp_set_icon_state(win_handle, WIN_ICON_OPT_TRIANGLE, 0, wimp_ICON_SELECTED);
+
+	win_set_shape(WIN_SHAPE_CIRCLE);
+}
+
+/* Open the Window. */
+
+void win_open(void)
+{
+	windows_open_centred_on_screen(win_handle);
+}
+
+/* Handle Mouse Click events. */
+
+static void win_mouse_click(wimp_pointer *pointer)
+{
+	enum win_shape shape = WIN_SHAPE_NONE;
+
+	switch (pointer->i) {
+	case WIN_ICON_OPT_CIRCLE:
+		shape = WIN_SHAPE_CIRCLE;
+		break;
+	case WIN_ICON_OPT_SQUARE:
+		shape = WIN_SHAPE_SQUARE;
+		break;
+	case WIN_ICON_OPT_TRIANGLE:
+		shape = WIN_SHAPE_TRIANGLE;
+		break;
+	}
+
+	if (shape != WIN_SHAPE_NONE)
+		win_set_shape(shape);
+}
+
+/* Set the shape being displayed. */
+
+static void win_set_shape(enum win_shape shape)
+{
+	char *sprite = NULL;
+
+	switch (shape) {
+	case WIN_SHAPE_SQUARE:
+		sprite = "square";
+		break;
+	case WIN_SHAPE_CIRCLE:
+		sprite = "circle";
+		break;
+	case WIN_SHAPE_TRIANGLE:
+		sprite = "triangle";
+		break;
+	}
+
+	if (sprite == NULL)
+		return;
+
+	icons_printf(win_handle, WIN_ICON_SHAPE, "%s", sprite);
+	wimp_set_icon_state(win_handle, WIN_ICON_SHAPE, 0, 0);
+}

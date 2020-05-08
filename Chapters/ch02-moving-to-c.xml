@@ -312,7 +312,7 @@ typedef union wimp_block wimp_block;</code>
 
 <code lang="bbcbasic">IF b%!16 = 0 THEN quit% = TRUE</code>
 
-<p>Hopefully it should be fair to say that the version in OSLib is clearer: there&rsquo;s no need to remember offsets into blocks of data, or the &ldquo;magic numbers&rdquo; which correspond to events and messages (clearly one could define constant variables in BASIC, but there&rsquo;s soon a speed penalty).</p>
+<p>It should be fair to say that the version in OSLib is clearer: there&rsquo;s no need to remember offsets into blocks of data, or the &ldquo;magic numbers&rdquo; which correspond to events and messages (clearly one could define constant variables in BASIC, but there&rsquo;s soon a speed penalty).</p>
 
 <p>As soon as <message>Message_Quit</message> is detected, the <variable>quit</variable> is set to <name>TRUE</name> &ndash; which will cause the <code>while</code> loop to terminate.</p>
 </section>

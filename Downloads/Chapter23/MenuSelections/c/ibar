@@ -30,6 +30,7 @@
 #include "sflib/errors.h"
 #include "sflib/event.h"
 #include "sflib/windows.h"
+#include "sflib/url.h"
 
 #include <string.h>
 
@@ -56,6 +57,8 @@ static wimp_menu *ibar_menu;
 /* Function Prototypes. */
 
 static void ibar_mouse_click(wimp_pointer *pointer);
+static osbool ibar_proginfo_web_click(wimp_pointer *pointer);
+static void ibar_menu_selection(wimp_menu *menu, wimp_selection *selection);
 
 /* Iconbar Initialisation. */
 
@@ -76,6 +79,8 @@ void ibar_initialise(char *sprite)
 
 	prog_info = wimp_create_window(window_definition);
 	free(window_definition);
+
+	event_add_window_icon_click(prog_info, IBAR_PROGINFO_ICON_WEB, ibar_proginfo_web_click);
 
 	/* Iconbar Menu. */
 
@@ -117,9 +122,32 @@ static void ibar_mouse_click(wimp_pointer *pointer)
 		win_open();
 		break;
 	case wimp_CLICK_MENU:
-		wimp_create_menu(ibar_menu, pointer->pos.x - 64, 228);
+		menu_open_ibar(ibar_menu, pointer, ibar_menu_selection);
 		break;
 	case wimp_CLICK_ADJUST:
+		main_quit_flag = TRUE;
+		break;
+	}
+}
+
+/* Program Info Mouse Click event handler */
+
+static osbool ibar_proginfo_web_click(wimp_pointer *pointer)
+{
+	url_launch("http://www.stevefryatt.org.uk/docs/wimp/");
+
+	if (pointer->buttons == wimp_CLICK_SELECT)
+		wimp_create_menu((wimp_menu *) -1, 0, 0);
+
+	return TRUE;
+}
+
+/* Menu Selection event handler. */
+
+static void ibar_menu_selection(wimp_menu *menu, wimp_selection *selection)
+{
+	switch (selection->items[0]) {
+	case IBAR_MENU_QUIT:
 		main_quit_flag = TRUE;
 		break;
 	}
