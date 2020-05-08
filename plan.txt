@@ -50,6 +50,9 @@ Toolbars and their Icons
 Dislogue boxes, action buttons, etc.
 Drag and drop.
 
+Keypresses
+Scrolling
+Writable Icons
 
 
 <!--
@@ -75,3 +78,10 @@ Drag and drop.
 #define wimp_BUTTON_RADIO		((wimp_icon_flags) 0xBu)
 
 -->
+
+
+#define wimp_MENU_TICKED                        ((wimp_menu_flags) 0x1u)
+#define wimp_MENU_SEPARATE                      ((wimp_menu_flags) 0x2u)
+#define wimp_MENU_WRITABLE                      ((wimp_menu_flags) 0x4u)
+#define wimp_MENU_GIVE_WARNING                  ((wimp_menu_flags) 0x8u)
+#define wimp_MENU_SUB_MENU_WHEN_SHADED          ((wimp_menu_flags) 0x10u)

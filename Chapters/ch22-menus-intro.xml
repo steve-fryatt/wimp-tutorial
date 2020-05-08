@@ -24,7 +24,7 @@
 
 <image id="fig-menus-intro-menus" file="menus-intro-menus.png" title="The main menu in Zap is a good example of the genre"/>
 
-<p>The implementation of menus in RISC&nbsp;OS has always seemed a little odd compared to the rest of the Wimp: there is almost a feeling of &lsquo;afterthought&rsquo; about them, with many fairly fundamental aspects left up to the application developer. This may well account for the number of third-party libraries which have appeared over the years to help support the use of menus, not to mention Acorn&rsquo;s Toolbox &ndash; and SFLib is no exception.</p>
+<p>The implementation of menus in RISC&nbsp;OS has always seemed a little odd compared to the rest of the Wimp: there is almost a feeling of &lsquo;afterthought&rsquo; about them, with many fairly fundamental aspects left up to the application developer. This may well account for the number of third-party libraries which have appeared over the years to help support the use of menus, not to mention Acorn&rsquo;s Toolbox &ndash; and SFLib is no exception to this.</p>
 
 <p>Whilst this tutorial covers the use of SFLib, at least part of its intention is to detail the underlying functionality of the Wimp. For this reason, we will start by putting together our own menu implementation using just the tools that Wimp gives us. Once we have understood things work, we will then be ready to go back and see what SFLib can do to help.</p>
 </section>
@@ -61,7 +61,7 @@ struct wimp_menu_entry {
 
 <p>In a similar way to the <name>wimp_window</name> structure, <name>wimp_menu</name> consists of a menu header followed by an array of <name>wimp_menu_entry</name> structures. Once again, OSLib defines the size of this array to be <name>UNKNOWN</name>, which actually turns out to be &ldquo;1&rdquo; &ndash; as we saw in <reference id="chap-window-theory"/>, this was a way to make flexible arrays work within the confines of the C90 standard.</p>
 
-<p>This causes us a problem, though. With windows, the ability to add icons using the <swi>Wimp_CreateIcon</swi> SWI enabled us to ignore the array of icon definitions at the end of the <name>wimp_window</name> structure until we were ready to load the contents in from a template file. This made it possible to define a variable of the <name>wimp_window</name> type and simply ignore the single icon definition that was included at the end of the array.</p>
+<p>This causes us a problem, though. With windows, the ability to add icons using the <swi>Wimp_CreateIcon</swi> SWI enabled us to ignore the array of icon definitions at the end of the <name>wimp_window</name> structure until we were ready to load the contents in from a template file. This made it possible to define a variable of the <name>wimp_window</name> type and simply ignore the single icon definition that was included in the array at the end.</p>
 
 <p>With menus, there&rsquo;s no equivalent Wimp routine for adding entries to a definition &ndash; which means that we&rsquo;re going to need to allocate enough memory to hold both the header and all of the entries that our menu will contain. There are a few ways to achieve this, but probably the easiest is to use <function>malloc()</function> for claiming the space that we need.</p>
 
@@ -281,7 +281,7 @@ menu_entry(ibar_menu, IBAR_MENU_QUIT, &quot;Quit&quot;, NULL);</code>
 
 <p>where <name>wimp_MENU_ITEM_HEIGHT</name> is 44 OS&nbsp;units, <name>wimp_MENU_ITEM_GAP</name> is 0 OS&nbsp;units and <name>wimp_MENU_ITEM_SEPARATION</name> is 24 OS&nbsp;units. Hard-coding the value is not ideal, but it will do for now!</p>
 
-<p>If we put all of the changes together, remembering to update the <file>Makefile</file> so that <variable>OBJS</variable> includes the new <file>menu</file>, and compile them, the resulting application should respond to <mouse>Menu</mouse> clicks on the iconbar, as seen in <reference id="fig-menus-intro-ibar"/>. It&rsquo;s incomplete, and none of the entries work, but it&rsquo;s a start!</p>
+<p>If we put all of the changes together, remembering to update the <file>Makefile</file> so that <variable>OBJS</variable> includes the new <file>menu</file> file, and compile them, the resulting application should respond to <mouse>Menu</mouse> clicks on the iconbar, as seen in <reference id="fig-menus-intro-ibar"/>. It&rsquo;s incomplete, and none of the entries work, but it&rsquo;s a start!</p>
 
 <image id="fig-menus-intro-ibar" file="menus-intro-ibar.png" title="Our application finally has an iconbar menu!"/>
 
@@ -305,7 +305,7 @@ menu_entry(ibar_menu, IBAR_MENU_QUIT, &quot;Quit&quot;, NULL);</code>
 
 <p>Before closing the window, we need to make some changes to its design details: as a dialogue box linked to a menu, there are some specific requirements that we must meet. Click <mouse>Menu</mouse> over the window and choose <menu>Edit window...</menu> to open the <window>Edit window</window> dialogue.</p>
 
-<p>As we saw back in <reference id="sect-window-theory-appearance"/>, we can turn off parts of the window furniture that we don&rsquo;t want on our dialogue. As part of a menu, the <em>only</em> tool that we want is the title bar, so untick all of the other switches in the <icon>Tools</icon> section. Also, as a dialogue box in a menu, the title bar should never change colour to indicate input focus: we achieve this by changing the <icon>Input focus</icon> colour from 12 to 2 (which is the same as the default <icon>Title B.</icon> colour).</p>
+<p>As we saw back in <reference id="sect-window-theory-appearance"/>, we can turn off the bits of the window furniture that we don&rsquo;t want on our dialogue. As part of a menu, the <em>only</em> tool that we want is the title bar, so untick all of the other switches in the <icon>Tools</icon> section. Also, as a dialogue box in a menu, the title bar should never change colour to indicate input focus: we achieve this by changing the <icon>Input focus</icon> colour from 12 to 2 (which is the same as the default <icon>Title B.</icon> colour).</p>
 
 <p>With the options as shown in <reference id="fig-menus-intro-proginfo-edit"/>, click on <icon>Update</icon> to store the changes.</p>
 
