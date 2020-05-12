@@ -243,7 +243,7 @@ menu_entry(win_shape_menu, WIN_MENU_SHAPE_SQUARE, &quot;Square&quot;, NULL);</co
 
 <p>If the application is compiled and run, the result should be as seen in <reference id="fig-menus-popup-ticks"/> &ndash; opening the menu and selecting different shapes with both <mouse>Select</mouse> and <mouse>Adjust</mouse> should reveal that the selection is both initialised correctly and updated when the selection changes, even if the menu remains open.</p>
 
-<p>This works because we call <function>win_set_shape_menu()</function> from the <function>win_set_shape()</function> function, which in turn is called to initialise the shape and then called again from the <function>win_menu_selection()</function> event handler whenever the shape changes. The <file>c.menu</file> code calls the handler <em>before</em> using <swi>Wimp_CreateMenu</swi> to re-open the menu on an <mouse>Adjust</mouse> click, to the tick will be moved by our code before the menu is recreated by the Wimp.</p>
+<p>This works because we call <function>win_set_shape_menu()</function> from the <function>win_set_shape()</function> function, which in turn is called to initialise the shape and then called again from the <function>win_menu_selection()</function> event handler whenever the shape changes. The <file>c.menu</file> code calls the handler <em>before</em> using <swi>Wimp_CreateMenu</swi> to re-open the menu on an <mouse>Adjust</mouse> click, so the tick will be moved by our code before the menu is recreated by the Wimp.</p>
 
 <p>Things are made a little easier for our code because we know that the only way that the shape can change is through the user making a selection from the pop-up menu. If this was not the case (such as if there were still radio icons in the window with the same purpose), then we would need to be careful that any change made in other ways also updated the menu &ndash; or updated the menu before it was initially opened. We will return to look at these options in a later chapter.</p>
 
@@ -255,7 +255,7 @@ menu_entry(win_shape_menu, WIN_MENU_SHAPE_SQUARE, &quot;Square&quot;, NULL);</co
 
 <p>In addition to allowing applications to tick menu entries, the Wimp provides a means of shading them if they are not applicable or can not be selected for some reason. This is done in a similar way to adding a tick, but since the shading is controlled through the standard icon flags, a menu entry is shaded if the <name>wimp_ICON_SHADED</name> flag is set in the <variable>icon_flags</variable> field of the <name>wimp_menu_entry</name> structure. Again, the fact that <swi>Wimp_CreateMenu</swi> works directly from the memory structure means that changes are easy to make.</p>
 
-<p>SFLib provides a <function>menus_shade_entry()</function> function to change the state of the <name>wimp_ICON_SHADED</name> flag for a menu entry. It should be passed a pointer to the <name>wimp_menu</name> structure containing the menu definition, the index of the menu entry, and either <name>TRUE</name> to shade the entry or <name>FALSE</name> to remove one. As with the <function>menus_tick_entry()</function> function, there is no bounds check done on the <variable>entry</variable> parameter.</p>
+<p>SFLib provides a <function>menus_shade_entry()</function> function to change the state of the <name>wimp_ICON_SHADED</name> flag for a menu entry. It should be passed a pointer to the <name>wimp_menu</name> structure containing the menu definition, the index of the menu entry, and either <name>TRUE</name> to shade the entry or <name>FALSE</name> to enable it. As with the <function>menus_tick_entry()</function> function, there is no bounds check done on the <variable>entry</variable> parameter.</p>
 
 <code lang="c">void menus_shade_entry(wimp_menu *menu, int entry, osbool shade)
 {
@@ -268,7 +268,7 @@ menu_entry(win_shape_menu, WIN_MENU_SHAPE_SQUARE, &quot;Square&quot;, NULL);</co
 		menu-&gt;entries[entry].icon_flags &amp;= ~wimp_ICON_SHADED;
 }</code>
 
-<p>Using the function to shade menu entries is straight-forward. Using a contrived example to demonstrate, suppose we wished to enforce a rule that after selecting a square, the user could only select a circle. We could do this by updating <function>win_set_shape_menu()</function> so that in addition to setting the various ticks, it also calls the <function>menus_shade_entry()</function> to shade the <menu>Triangle</menu> entry when required.</p>
+<p>Using the function to shade menu entries is straight-forward. Taking a slightly contrived example, suppose that we wished to enforce a rule that after selecting a square, the user could only select a circle. We could do this by updating <function>win_set_shape_menu()</function> so that in addition to setting the various ticks, it also calls the <function>menus_shade_entry()</function> to shade the <menu>Triangle</menu> entry when required.</p>
 
 <code lang="c">static void win_set_shape_menu(enum win_shape shape)
 {
@@ -287,7 +287,7 @@ menu_entry(win_shape_menu, WIN_MENU_SHAPE_SQUARE, &quot;Square&quot;, NULL);</co
 
 <image id="fig-menus-popup-shade" file="menus-popup-shade.png" title="Menu entries can be shaded to prevent the user choosing them"/>
 
-<p>Note that it would be up to our application to ensure that a menu entry isn&rsquo;t both ticked and shaded, unless such a combination proved to be valid in a specific context, and the code above meets this requirement.</p>
+<p>Note that it is up to our application to ensure that a menu entry isn&rsquo;t both ticked and shaded, unless such a combination proved to be valid in a specific context, and the code above meets this requirement.</p>
 
 <download id="dl-menus-popup-shade" file="MenuShade" title="Shading Menu Entries" compatibility="none"/>
 </section>
@@ -361,7 +361,7 @@ wimp_set_icon_state(win_handle, WIN_ICON_SHAPE_FIELD, 0, 0);</code>
 	}
 }</code>
 
-<p>A number of parameters are requires, starting with a pointer to the <name>wimp_menu</name> definition for the pop-up menu and the index of the selection. These are followed by the <name>wimp_w</name> handle of the window containing the pop-up menu field associated with the menu, and the <name>wimp_i</name> handle of the icon.</p>
+<p>A number of parameters are required, starting with a pointer to the <name>wimp_menu</name> definition for the pop-up menu and the index of the selection. These are followed by the <name>wimp_w</name> handle of the window containing the pop-up menu field associated with the menu, and the <name>wimp_i</name> handle of the icon.</p>
 
 <p>The <function>win_set_shape_menu()</function> function that we defined back in <reference id="sect-menus-popup-ticks"/> had a call to <function>menus_tick_entry()</function> for each entry in the menu, setting the tick according to the shape that was selected. This worked but, to follow a general theme, it wasn&rsquo;t very expandable: if we added more entries to the menu, by adding more shapes, then the <function>win_set_shape_menu()</function> function would have needed to be updated to include more tests.</p>
 
