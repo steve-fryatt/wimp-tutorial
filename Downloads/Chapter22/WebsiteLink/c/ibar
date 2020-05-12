@@ -40,10 +40,6 @@
 #include "menu.h"
 #include "win.h"
 
-/* Global Variables. */
-
-static wimp_menu *ibar_menu;
-
 /* Program Info Window Icons. */
 
 #define IBAR_PROGINFO_ICON_WEB 8
@@ -53,6 +49,10 @@ static wimp_menu *ibar_menu;
 #define IBAR_MENU_INFO 0
 #define IBAR_MENU_HELP 1
 #define IBAR_MENU_QUIT 2
+
+/* Global Variables. */
+
+static wimp_menu *ibar_menu;
 
 /* Function Prototypes. */
 

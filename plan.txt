@@ -10,6 +10,7 @@ Chapter 12
 
 Finish text at the end of the introduction block. (marked TODO).
 
+
 Chapter 13
 ----------
 
@@ -31,9 +32,16 @@ Chapter 21
 
 Forward reference to filename lengths in poll blocks.
 
+
+Chapter 24
+----------
+
+Forward reference to "menu prepare" events in SFLib.
+
+
+
 (Mouse Clicks (Windows & Icons))
 Changing Icons State?
-Icons in Window Definitions
 Application Resources
 Templates
 
@@ -80,7 +88,6 @@ Writable Icons
 -->
 
 
-#define wimp_MENU_TICKED                        ((wimp_menu_flags) 0x1u)
 #define wimp_MENU_SEPARATE                      ((wimp_menu_flags) 0x2u)
 #define wimp_MENU_WRITABLE                      ((wimp_menu_flags) 0x4u)
 #define wimp_MENU_GIVE_WARNING                  ((wimp_menu_flags) 0x8u)

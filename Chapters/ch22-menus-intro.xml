@@ -218,15 +218,15 @@ struct wimp_menu_entry {
 
 <p>Now that we have a means to create menus in our application, we can add something that has been missing since the start of this tutorial: an iconbar menu. Opening the <file>c.ibar</file> source file, we can <code>#include</code> <file>menu.h</file>, add a global variable and define some constants at the top of the file:</p>
 
-<code lang="c">/* Global Variables. */
-
-static wimp_menu *ibar_menu;
-
-/* Iconbar Menu Entries. */
+<code lang="c">/* Iconbar Menu Entries. */
 
 #define IBAR_MENU_INFO 0
 #define IBAR_MENU_HELP 1
-#define IBAR_MENU_QUIT 2</code>
+#define IBAR_MENU_QUIT 2
+
+/* Global Variables. */
+
+static wimp_menu *ibar_menu;</code>
 
 <p>You might already have noticed a difference from the way that we implemented our window in <file>c.win</file>. There, the <name>wimp_window</name> structure was only needed for long enough that it could be passed to <swi>Wimp_CreateWindow</swi>; at that point, we got a <name>wimp_w</name> window handle back, and the full <name>wimp_window</name> structure could be discarded. This meant that the global variable used to keep track of the window had the type <name>wimp_w</name>.</p>
 
@@ -273,7 +273,7 @@ menu_entry(ibar_menu, IBAR_MENU_QUIT, &quot;Quit&quot;, NULL);</code>
 	int y
 );</code>
 
-<p>It takes three functions: a pointer to the <name>wimp_menu</name> structure holding the menu to be shown, and the <maths>x</maths> and <maths>y</maths> coordinates of the top-left corner of the menu (excluding the title bar), in OS&nbsp;units.</p>
+<p>It takes three parameters: a pointer to the <name>wimp_menu</name> structure holding the menu to be shown, and the <maths>x</maths> and <maths>y</maths> coordinates of the top-left corner of the menu (excluding the title bar), in OS&nbsp;units relative to the screen origin in the bottom left corner of the display.</p>
 
 <p>The coordinates are interesting, as we seem to have used some magic numbers. The <maths>x</maths> position is derived from the requirement that menus always open 64 OS&nbsp;units to the left of the point where the mouse click was recorded, which arrived in the click event data as <variable>pointer-&gt;pos.x</variable>. The <maths>y</maths> position comes from the requirement that all iconbar menus open with the <em>bottom</em> edge 96 OS&nbsp;units from the base of the screen. In our case, this is</p>
 
@@ -299,7 +299,7 @@ menu_entry(ibar_menu, IBAR_MENU_QUIT, &quot;Quit&quot;, NULL);</code>
 
 <p>The design guidelines for a <window>program information</window> window are fairly strict, so there&rsquo;s limited room for creativity. We will need four information fields, so select the <icon>Comment</icon> and <icon>Display field</icon> from the <window>Icon picker</window> and drag them into our new window. We will also want to include a <icon>Website</icon> button to allow the user to visit our web page for more details, so drag the <icon>Cancel</icon> button over from the <window>Icon picker</window>.</p>
 
-<p>All of the icons have the correct configurations, so it is just the text which needs to be changed in each case. With the title set and the visible area adjusted, the result should be similar to that shown in <reference id="fig-menus-intro-proginfo-templ"/>.</p>
+<p>All of the icons have the correct configurations, so it is just the text which needs to be changed in each case. With the title set and the visible area adjusted, the result should be similar to that shown in <reference id="fig-menus-intro-proginfo-templ"/>. The icon numbers are not too important, except for the number of the <icon>Website</icon> button which we will be assuming is number 8 &ndash; this will be the case if it was the last icon to be added to the template. If it is not, then clicking <mouse>Menu</mouse> over the icon and sliding over <menu>Icon &msep; Renumber &msep;</menu> will lead to the <window>Renumber icon</window> dialogue box; enter <code>8</code> into the field and click on <icon>Renumber</icon>.</p>
 
 <image id="fig-menus-intro-proginfo-templ" file="menus-intro-proginfo-templ.png" title="A template for the program information window"/>
 

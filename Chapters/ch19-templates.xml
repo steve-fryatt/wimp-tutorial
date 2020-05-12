@@ -56,7 +56,9 @@
 
 <image id="fig-templates-wined-radio1" file="templates-wined-radio1.png" title="The first radio icon in the window"/>
 
-<p>Creating the second and third icons can be done by copying the first one placed in the window: hold down <key>Shift</key> and then drag it with <mouse>Select</mouse> to create a copy, then repeat the process to create another. Hovering the mouse over each should show in the <window>Monitor</window> that they have icon numbers 0, 1 and 2. If necessary, drag them around using <mouse>Select</mouse> (without <key>Shift</key> held down) so that they are in order with 0 at the top and 2 at the bottom. Don&rsquo;t worry about spacing or alignment at the moment.</p>
+<p>Creating the second and third icons can be done by copying the first one placed in the window: hold down <key>Shift</key> and then drag it with <mouse>Select</mouse> to create a copy, then repeat the process to create another. Hovering the mouse over each should show in the <window>Monitor</window> that they have icon numbers 0, 1 and 2, as seen in <reference id="fig-templates-wined-radio2"/>. If necessary, drag them around using <mouse>Select</mouse> (without <key>Shift</key> held down) so that they are in order with 0 at the top and 2 at the bottom. Don&rsquo;t worry about spacing or alignment at the moment.</p>
+
+<image id="fig-templates-wined-radio2" file="templates-wined-radio2.png" title="Hovering over the icons will show their numbers in the Monitor"/>
 
 <p>Now select all three icons: this can either be done by dragging a box around them with <mouse>Select</mouse>, or by clicking on the first with <mouse>Select</mouse> and the other two with <mouse>Adjust</mouse>. Open the menu and choose <menu>Selection &msep; Align...</menu> to open the <window>Align icons</window> dialogue seen in <reference id="fig-templates-wined-align"/>. We want to align them to the left, moving the icons without resizing them, and moving left to achieve it; click on <icon>Align</icon> to proceed.</p>
 
@@ -72,7 +74,7 @@
 
 <image id="fig-templates-wined-radio3" file="templates-wined-radio3.png" title="Three radio icons, neatly aligned"/>
 
-<p>We now need to add the display field below the radio icons. Again, the <window>Icon picker</window> comes to our aid: select the <icon>Display field</icon> at the top by clicking with <mouse>Select</mouse>, then add in the <icon>Comment</icon> to its left by clicking with <mouse>Adjust</mouse>. Drag the resulting pair of icons across into our window, and drop it roughly centrally below the radio icons, something like <reference id="fig-templates-wined-display"/>. If you need to move them, select them both and drag them around together. Hovering over the icons should show that the <icon>Display field</icon> is icon number 3 while the <icon>Comment</icon> is icon number 4.</p>
+<p>We now need to add the display field below the radio icons. Again, the <window>Icon picker</window> comes to our aid: select the <icon>Display field</icon> at the top by clicking with <mouse>Select</mouse>, then add in the <icon>Comment</icon> to its left by clicking with <mouse>Adjust</mouse>. Drag the resulting pair of icons across into our window, and drop it roughly centrally below the radio icons, something like <reference id="fig-templates-wined-display"/>. If you need to move them, select them both and drag them around together. Hovering over the icons should show that the <icon>Display field</icon> is icon number 3 while the <icon>Comment</icon> is icon number 4, as seen in the screenshot.</p>
 
 <p>We&rsquo;ve added a label for the field (the <icon>Comment</icon>), because with window templates there is little reason not to do so. Up to now, we would have had to create another icon using some dedicated C code, and looked after memory allocations; here, the Wimp will sort most of it out for us when the templates are loaded into the application.</p>
 
@@ -318,7 +320,7 @@ extern void wimp_close_template(void);</code>
 
 <p>To update <file>c.win</file>, we can first delete the prototypes and definitions for <function>win_create_radio_icon()</function> and <function>win_create_info_icon()</function>. We are no longer creating our icons by hand, so these functions are unnenecssary. We can also delete the definition of <name>WIN_ICON_TEXT_LEN</name>, and replace it with the following definitions:</p>
 
-<code lang="c">/* Constant Values */
+<code lang="c">/* Main Window Icons. */
 
 #define WIN_ICON_OPTION1 0
 #define WIN_ICON_OPTION2 1

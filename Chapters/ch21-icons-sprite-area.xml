@@ -468,7 +468,7 @@ enum win_shape {
 
 <p>Load the <file>Templates</file> file back into your text editor, and open the Main window template. In <cite>WinEd</cite>, double-click on the square icon to open its <window>Edit icon</window> dialogue.</p>
 
-<p>To deal with the possible buffer truncation problem first, change the contents of the <icon>Text/sprite</icon> field. We could enter &ldquo;triangle&rdquo; as the longest sprite name, or we could enter &ldquo;123456789012&rdquo; to reserve the full 12 characters. The latter option will result in the sprite disappearing (since there is no &ldquo;123456789012&rdquo; sprite), but avoids us having to remember to change the template file if we add a shape with a longer name in the future!</p>
+<p>To deal with the possible buffer truncation problem first, change the contents of the <icon>Text/sprite</icon> field. We could enter &ldquo;triangle&rdquo; as the longest sprite name, or we could enter &ldquo;square&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&rdquo; with six spaces after the name to reserve the full 12 characters. The latter option gives us the best of both worlds, since the spaces at the end of the sprite name are ignored by <swi>OS_SpriteOp</swi>. We will be overwriting the name with a properly terminated one when our application initialises the icon, anyway.</p>
 
 <p>To set the <name>wimp_ICON_NEEDS_HELP</name> flag, ensure that <icon>Needs help</icon> is ticked. With the dialogue as shown in <reference id="fig-sprite-area-reedit-icon"/>, click <icon>Update</icon> to store the changes, close the template and save the file.</p>
 

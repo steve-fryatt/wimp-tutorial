@@ -1,0 +1,194 @@
+/* Copyright 2015-2020, Stephen Fryatt (info@stevefryatt.org.uk)
+ *
+ * This file is part of Wimp Programming In C:
+ *
+ *   http://www.stevefryatt.org.uk/software/
+ *
+ * Licensed under the EUPL, Version 1.1 only (the "Licence");
+ * You may not use this work except in compliance with the
+ * Licence.
+ *
+ * You may obtain a copy of the Licence at:
+ *
+ *   http://joinup.ec.europa.eu/software/page/eupl
+ *
+ * Unless required by applicable law or agreed to in
+ * writing, software distributed under the Licence is
+ * distributed on an "AS IS" basis, WITHOUT WARRANTIES
+ * OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ * See the Licence for the specific language governing
+ * permissions and limitations under the Licence.
+ */
+
+/**
+ * File: win.c
+ */
+
+#include "oslib/osspriteop.h"
+#include "oslib/wimp.h"
+
+#include "sflib/errors.h"
+#include "sflib/event.h"
+#include "sflib/icons.h"
+#include "sflib/menus.h"
+#include "sflib/windows.h"
+
+#include <stdio.h>
+#include <string.h>
+
+#include "win.h"
+#include "menu.h"
+
+/* Main Window Icons. */
+
+#define WIN_ICON_SHAPE 0
+#define WIN_ICON_SHAPE_POPUP 1
+#define WIN_ICON_SHAPE_FIELD 2
+
+/* Shapes Menu Entries. */
+
+#define WIN_MENU_SHAPE_CIRCLE 0
+#define WIN_MENU_SHAPE_TRIANGLE 1
+#define WIN_MENU_SHAPE_SQUARE 2
+
+/* Display Shapes */
+
+enum win_shape {
+	WIN_SHAPE_NONE,
+	WIN_SHAPE_SQUARE,
+	WIN_SHAPE_CIRCLE,
+	WIN_SHAPE_TRIANGLE
+};
+
+/* Global Variables */
+
+static wimp_w win_handle;
+static wimp_menu *win_shape_menu;
+
+/* Function Prototypes */
+
+static void win_mouse_click(wimp_pointer *pointer);
+static void win_menu_selection(wimp_menu *menu, wimp_selection *selection);
+static void win_set_shape_menu(enum win_shape shape);
+static void win_set_shape(enum win_shape shape);
+
+/* Window Initialisation. */
+
+void win_initialise(osspriteop_area *sprites)
+{
+	wimp_window	*window_definition;
+	wimp_icon	*icons;
+
+	/* Load and create the window. */
+
+	window_definition = windows_load_template("Main");
+	if (window_definition == NULL) {
+		error_report_error("Failed to load Main template");
+		return;
+	}
+
+	icons = window_definition->icons;
+
+	icons[WIN_ICON_SHAPE].data.indirected_sprite.area = sprites;
+
+	win_handle = wimp_create_window(window_definition);
+	free(window_definition);
+
+	/* Shapes Menu. */
+
+	win_shape_menu = menu_create("Shapes", 3);
+	if (win_shape_menu == NULL) {
+		error_report_error("Failed to create Shapes Menu");
+		return;
+	}
+
+	menu_entry(win_shape_menu, WIN_MENU_SHAPE_CIRCLE, "Circle", NULL);
+	menu_entry(win_shape_menu, WIN_MENU_SHAPE_TRIANGLE, "Triangle", NULL);
+	menu_entry(win_shape_menu, WIN_MENU_SHAPE_SQUARE, "Square", NULL);
+
+	/* Register event handlers. */
+
+	event_add_window_mouse_event(win_handle, win_mouse_click);
+
+	/* Initialise the window contents. */
+
+	win_set_shape(WIN_SHAPE_SQUARE);
+}
+
+/* Open the Window. */
+
+void win_open(void)
+{
+	windows_open_centred_on_screen(win_handle);
+}
+
+/* Handle Mouse Click events. */
+
+static void win_mouse_click(wimp_pointer *pointer)
+{
+	if (pointer->i == WIN_ICON_SHAPE_POPUP && pointer->buttons == wimp_CLICK_SELECT)
+		menu_open_popup(win_shape_menu, pointer, win_menu_selection);
+}
+
+/* Menu Selection event handler. */
+
+static void win_menu_selection(wimp_menu *menu, wimp_selection *selection)
+{
+	switch (selection->items[0]) {
+	case WIN_MENU_SHAPE_CIRCLE:
+		win_set_shape(WIN_SHAPE_CIRCLE);
+		break;
+	case WIN_MENU_SHAPE_TRIANGLE:
+		win_set_shape(WIN_SHAPE_TRIANGLE);
+		break;
+	case WIN_MENU_SHAPE_SQUARE:
+		win_set_shape(WIN_SHAPE_SQUARE);
+		break;
+	}
+}
+
+/* Set the Shape Pop-Up Menu state. */
+
+static void win_set_shape_menu(enum win_shape shape)
+{
+	menus_tick_entry(win_shape_menu, WIN_MENU_SHAPE_CIRCLE,
+			shape == WIN_SHAPE_CIRCLE);
+	menus_tick_entry(win_shape_menu, WIN_MENU_SHAPE_TRIANGLE,
+			shape == WIN_SHAPE_TRIANGLE);
+	menus_tick_entry(win_shape_menu, WIN_MENU_SHAPE_SQUARE,
+			shape == WIN_SHAPE_SQUARE);
+}
+
+/* Set the shape being displayed. */
+
+static void win_set_shape(enum win_shape shape)
+{
+	char *sprite = NULL, *name = NULL;
+
+	switch (shape) {
+	case WIN_SHAPE_SQUARE:
+		sprite = "square";
+		name = "Square";
+		break;
+	case WIN_SHAPE_CIRCLE:
+		sprite = "circle";
+		name = "Circle";
+		break;
+	case WIN_SHAPE_TRIANGLE:
+		sprite = "triangle";
+		name = "Triangle";
+		break;
+	}
+
+	if (sprite == NULL)
+		return;
+
+	icons_printf(win_handle, WIN_ICON_SHAPE, "%s", sprite);
+	wimp_set_icon_state(win_handle, WIN_ICON_SHAPE, 0, 0);
+
+	icons_printf(win_handle, WIN_ICON_SHAPE_FIELD, "%s", name);
+	wimp_set_icon_state(win_handle, WIN_ICON_SHAPE_FIELD, 0, 0);
+
+	win_set_shape_menu(shape);
+}

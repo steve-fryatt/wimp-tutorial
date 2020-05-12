@@ -60,5 +60,6 @@
 <chapter file="ch21-icons-sprite-area.xml"/>
 <chapter file="ch22-menus-intro.xml"/>
 <chapter file="ch23-menus-selection.xml"/>
+<chapter file="ch24-menus-popup.xml"/>
 
 </manual>

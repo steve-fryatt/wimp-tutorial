@@ -37,7 +37,7 @@
 
 #include "win.h"
 
-/* Constant Values */
+/* Main Window Icons. */
 
 #define WIN_ICON_OPTION1 0
 #define WIN_ICON_OPTION2 1

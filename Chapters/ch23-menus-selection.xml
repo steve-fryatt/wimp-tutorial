@@ -300,7 +300,7 @@ typedef struct wimp_full_message_menus_deleted wimp_full_message_menus_deleted;<
 	case IBAR_MENU_HELP:
 		error = xos_cli(&quot;%Filer_Run &lt;ExamplApp$Dir&gt;.!Help&quot;);
 		if (error != NULL)
-		error_report_os_error(error, wimp_ERROR_BOX_OK_ICON);
+			error_report_os_error(error, wimp_ERROR_BOX_OK_ICON);
 		break;
 	case IBAR_MENU_QUIT:
 		main_quit_flag = TRUE;

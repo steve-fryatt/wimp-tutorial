@@ -1,0 +1,395 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+
+<!DOCTYPE xmlmanual SYSTEM "../wimp.dtd">
+
+<manual xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="xmldoc.xsd" version="1.8.6">
+
+<!-- Chapter 24
+   -
+   - Pop-Up Menus and Other Features
+  -->
+
+<chapter id="chap-menus-popup">
+<resources>
+<images>Chapter24</images>
+<downloads>Chapter24</downloads>
+</resources>
+<filename>menus-popup.html</filename>
+<title>Pop-Up Menus and Other Features</title>
+
+<summary>Pop-up menus provide a compact alternative to radio icons, and also allow us to show off some more menu features.</summary>
+
+<section>
+<p>In addition to conventional menus accessed by the <mouse>Menu</mouse> button on the mouse, RISC&nbsp;OS allows for the use of <intro>pop-up menus</intro> in dialogue boxes. Whilst technically the same, they behave in a specific way and are usually used to replace groups of radio icons in dialogue boxes. An example from SciCalc&rsquo;s <window>Calculator choices</window> can be seen in <reference id="fig-menus-popup-scicalc"/>.</p>
+
+<image id="fig-menus-popup-scicalc" file="menus-popup-scicalc.png" title="Pop-up menus in use within the SciCalc Choices dialogue"/>
+
+<p>In terms of implementation, a pop-menu is simply a display field icon and label of the kind that we have met already, with a pop-up menu button to their right. A standard menu contains the options which can be selected &ndash; it is up to the application to watch for <mouse>Select</mouse> clicks on the pop-up menu button, then open a menu in the appropriate place and with the currently selected item ticked. When the user makes a new selection, it is also up to the application to update the contents of the display field. In fact, the Wimp will do very little for us at all!</p>
+
+<p>The three radio icons in our main window, which we use to choose a shape for display, would be good candidates for replacement with a pop-up menu &ndash; especially if we ever plan to add any more shapes to our application. In this chapter, we will investigate how this can be done.</p>
+</section>
+
+<section>
+<title>Updating the templates</title>
+
+<p>The first step towards implementing our pop-up menu is to update the window template so that it contains the icons needed for a <intro>pop-up menu field</intro>. Load <file>!ExamplApp.Templates</file> into a template editor, and open the &ldquo;Main&rdquo; template. Delete the three radio icons from the window.</p>
+
+<p>In many template editors, this should automatically renumber the sprite icon containing the square to be icon 0 because there are no other icons left in the window. If it does not, then use the renumbering facility to change the value; in <cite>WinEd</cite>, click <mouse>Menu</mouse> over the icon, slide over <menu>Icon &msep; Renumber &msep;</menu> to the <window>Renumber icon</window> dialogue box, enter <code>0</code> into the field and click on <icon>Renumber</icon>. The icon number can be found by hovering the mouse over the icon and looking at the <window>Monitor</window>, as seen in <reference id="fig-menus-popup-renumber"/>.</p>
+
+<image id="fig-menus-popup-renumber" file="menus-popup-renumber.png" title="The icon with the square sprite should be number 0"/>
+
+<p>We can now add a pop-up menu field below the square. Select the <icon>Display field</icon> in the <window>Icon picker</window>, add in the <icon>Comment</icon> to its left with an <mouse>Adjust</mouse> click, then also include the pop-up menu button to its right with another <mouse>Adjust</mouse> click. The three icons can then be dragged over to the window template as a single selection, and placed below the square.</p>
+
+<p>The text in the label can be changed from &ldquo;Comment&rdquo; to &ldquo;Shape&rdquo; in the usual way, and with a bit of rearranging and adjusting of the window&rsquo;s work area extents (using the <window>Work area</window> dialogue that we met in <reference id="chap-sprite-area"/>), we should end up with a result similar to that seen in <reference id="fig-menus-popup-template"/>. The icons should be numbered such that the pop-up menu icon is number 1, the display field is number 2 and the label is number 3 &ndash; this should be how <cite>WinEd</cite> will number them from the <window>Icon picker</window> anyway.</p>
+
+<image id="fig-menus-popup-template" file="menus-popup-template.png" title="Updating our window template for a pop-up menu"/>
+
+<p>It&rsquo;s worth having a look at the pop-up menu icon (number 1) before we move on, because it uses a combination of options that we haven&rsquo;t yet met. The button has a type of <name>wimp_BUTTON_CLICK</name> so that clicks are reported back to our application through the usual <name>Mouse Click</name> event. It uses a pair of standard sprites from the Wimp Sprite Pool &ndash; &ldquo;gright&rdquo; and &ldquo;pgright&rdquo; &ndash; which are supplied by the system for this purpose and represent raised and pressed versions of a pop-up menu button. The name comes from history: the original RISC&nbsp;OS&nbsp;3.1 design was a flat, grey arrow which pointed to the right; the &ldquo;p&rdquo; is a standard convention which indicates &ldquo;pressed&rdquo;.</p>
+
+<p>Despite containing only a sprite, the icon is configured for indirected text and sprite but the text field is left as an empty string. This allows a validation string to be specified, because the effect that we are after can only be achieved through the use of validation commands. The <name>S</name> command that we met in <reference id="chap-icons-sprite"/> is used to specify the two sprites, whilst the <name>R</name> command from <reference id="sect-icons-indirect-format"/> is used to make the icon a 3D &lsquo;clickable&rsquo; button which responds to the mouse. The icon has no border, however (the <name>wimp_ICON_BORDER</name> flag is <em>not</em> set), so no 3D border is plotted; when the button &lsquo;clicks&rsquo;, the only effect seen by the user is the sprite changing from unselected to selected and back again. The complete validation string is <code>R5;Sgright,pgright</code>.</p>
+
+<p>With the design updated, close the window and save the changes to the templates file.</p>
+</section>
+
+<section id="sect-menus-popup-code">
+<title>Adding some code</title>
+
+<p>To implement our new pop-up menu, there are a few things that we will need to add to our code &ndash; not least a way to open the menu in the correct place on screen. In the <reference id="chap-menus-selection">previous chapter</reference> we implemented the <function>menu_open_ibar()</function> function, but this was coded specifically for handling the positioning of iconbar menus and the requirements for pop-up menus are very different.</p>
+
+<p>Following the same naming and parameter format, we can add a new <function>menu_open_popup()</function> to <file>c.menu</file> as follows (with the appropriate prototype in <file>h.menu</file>):</p>
+
+<code lang="c">void menu_open_popup(wimp_menu *menu, wimp_pointer *pointer,
+		void (*callback)(wimp_menu *menu, wimp_selection *selection))
+{
+	menu_current_menu = menu;
+	menu_current_callback = callback;
+
+	menus_create_popup_menu(menu, pointer);
+}</code>
+
+<p>As with <function>menu_open_ibar()</function>, this sets the global variables used to track the currently open menu, before using SFLib&rsquo;s <function>menus_create_popup_menu()</function> function to put the menu on to the screen. The code that SFLib uses is this:</p>
+
+<code lang="c">wimp_menu *menus_create_popup_menu(wimp_menu *menu, wimp_pointer *pointer)
+{
+	wimp_window_state	window;
+	wimp_icon_state		icon;
+
+	if (menu == NULL || pointer == NULL)
+		return NULL;
+
+	window.w = pointer-&gt;w;
+	if (xwimp_get_window_state(&amp;window) != NULL)
+		return NULL;
+
+	icon.w = pointer-&gt;w;
+	icon.i = pointer-&gt;i;
+	if (xwimp_get_icon_state(&amp;icon) != NULL)
+		return NULL;
+
+	if (xwimp_create_menu(menu, window.visible.x0 + icon.icon.extent.x1 - window.xscroll,
+			window.visible.y1 + icon.icon.extent.y1 - window.yscroll) != NULL)
+		return NULL;
+
+	return menu;
+}</code>
+
+<p>This is a little more complex than positioning an iconbar menu. The <cite>Style Guide</cite> states that a pop-up menu must &ldquo;appear immediately to the right of the button the user clicked on to display it&rdquo;, so the mouse coordinates in the <name>wimp_pointer</name> structure supplied by the <name>Mouse Click</name> event are of little use to us. The structure also contains the <name>wimp_w</name> and <name>wimp_i</name> handles of the button that was clicked on, but we don&rsquo;t know where that button is on screen.</p>
+
+<p>The routine starts by calling <swi>Wimp_GetWindowState</swi> to find the scroll offsets of the window and the coordinates of its visible area relative to the screen origin, before calling <swi>Wimp_GetIconState</swi> to retrieve the location of the target icon in terms of the window&rsquo;s work area. Now that we know where the icon is within its window, and also where that window is on screen, we can combine the two pieces of information to work out where the icon is relative to the screen origin.</p>
+
+<p>For the horizontal coordinate, the position of the right-hand edge of the icon relative to the screen origin can be calculated by adding the position of the left-hand edge of the window&rsquo;s visible area relative to the screen origin to the position of the right-hand edge of the icon relative to the window&rsquo;s work area. If the window has been scrolled horizontally then this will move the icon towards the screen origin, but we can take account of this by subtracting the horizontal scroll offset. This can be seen graphically in <reference id="fig-menus-popup-position"/>.</p>
+
+<p>The calculation for the vertical coordinate is similar, except that as we saw in <reference id="sect-window-theory-dims"/>, the Wimp conventionally stores the vertical positions of icons as negative values referenced to the top of the window&rsquo;s work area. This makes the calculation the same as for the horizontal position: the position of the icon relative to the screen origin is calculated by taking the position of the top edge of the window&rsquo;s visible area relative to the screen origin and adding the (negative) position of the top of the icon relative to the window&rsquo;s work area. If the window has been scrolled vertically then this will move the icon away from the screen origin, but once again we can take account of this by subtracting the (negative) vertical scroll offset. Again, this can be seen graphically in <reference id="fig-menus-popup-position"/>.</p>
+
+<image id="fig-menus-popup-position" file="menus-popup-position.png" title="Calculating the position of a pop-up menu"/>
+
+<p>With a means of opening a pop-up menu in place, we can update the <file>c.win</file> file to make use of it. We will begin by updating the constant definitions at the top of the file, to reflect both the changes to the icons in the window template and the new menu that we will be creating:</p>
+
+<code lang="c">/* Main Window Icons. */
+
+#define WIN_ICON_SHAPE 0
+#define WIN_ICON_SHAPE_POPUP 1
+#define WIN_ICON_SHAPE_FIELD 2
+
+/* Shapes Menu Entries. */
+
+#define WIN_MENU_SHAPE_CIRCLE 0
+#define WIN_MENU_SHAPE_TRIANGLE 1
+#define WIN_MENU_SHAPE_SQUARE 2</code>
+
+<p>We will also need a global variable to hold a pointer to our menu definition, alongside that holding our window handle.</p>
+
+<code lang="c">/* Global Variables */
+
+static wimp_w win_handle;
+static wimp_menu *win_shape_menu;</code>
+
+<p>The <function>win_initialise()</function> function sees some changes. After loading the window template, we will need to create the new shapes menu using a similar approach to that taken with the iconbar menu in <reference id="chap-menus-intro"/>.</p>
+
+<code lang="c">/* Shapes Menu. */
+
+win_shape_menu = menu_create(&quot;Shapes&quot;, 3);
+if (win_shape_menu == NULL) {
+	error_report_error(&quot;Failed to create Shapes Menu&quot;);
+	return;
+}
+
+menu_entry(win_shape_menu, WIN_MENU_SHAPE_CIRCLE, &quot;Circle&quot;, NULL);
+menu_entry(win_shape_menu, WIN_MENU_SHAPE_TRIANGLE, &quot;Triangle&quot;, NULL);
+menu_entry(win_shape_menu, WIN_MENU_SHAPE_SQUARE, &quot;Square&quot;, NULL);</code>
+
+<p>This will give us a menu with three entries: one for each of the shapes that we have at our disposal. Finally, we can remove the code that we had for configuring the radio icons, leaving us with just the call to <function>win_set_shape()</function> from the original code.</p>
+
+<p>The code that we used to handle the radio icons in <function>win_mouse_click()</function> can be removed, to be replaced by code to detect <mouse>Select</mouse> clicks on the new pop-up menu icon and open the pop-up menu.</p>
+
+<code lang="c">static void win_mouse_click(wimp_pointer *pointer)
+{
+	if (pointer-&gt;i == WIN_ICON_SHAPE_POPUP &amp;&amp; pointer-&gt;buttons == wimp_CLICK_SELECT)
+		menu_open_popup(win_shape_menu, pointer, win_menu_selection);
+}</code>
+
+<p>The code which was selecting the required shape based on clicks on the radio icons can be converted into a <name>Menu Selection</name> event handler in <function>win_menu_selection()</function>.</p>
+
+<code lang="c">static void win_menu_selection(wimp_menu *menu, wimp_selection *selection)
+{
+	switch (selection-&gt;items[0]) {
+	case WIN_MENU_SHAPE_CIRCLE:
+		win_set_shape(WIN_SHAPE_CIRCLE);
+		break;
+	case WIN_MENU_SHAPE_TRIANGLE:
+		win_set_shape(WIN_SHAPE_TRIANGLE);
+		break;
+	case WIN_MENU_SHAPE_SQUARE:
+		win_set_shape(WIN_SHAPE_SQUARE);
+		break;
+	}
+}</code>
+
+<p>Finally, our <function>win_set_shape()</function> can be extended so that it updates the pop-up menu field as well as changing the shape being displayed.</p>
+
+<code lang="c">static void win_set_shape(enum win_shape shape)
+{
+	char *sprite = NULL, *name = NULL;
+
+	switch (shape) {
+	case WIN_SHAPE_SQUARE:
+		sprite = &quot;square&quot;;
+		name = &quot;Square&quot;;
+		break;
+	case WIN_SHAPE_CIRCLE:
+		sprite = &quot;circle&quot;;
+		name = &quot;Circle&quot;;
+		break;
+	case WIN_SHAPE_TRIANGLE:
+		sprite = &quot;triangle&quot;;
+		name = &quot;Triangle&quot;;
+		break;
+	}
+
+	if (sprite == NULL)
+		return;
+
+	icons_printf(win_handle, WIN_ICON_SHAPE, &quot;%s&quot;, sprite);
+	wimp_set_icon_state(win_handle, WIN_ICON_SHAPE, 0, 0);
+
+	icons_printf(win_handle, WIN_ICON_SHAPE_FIELD, &quot;%s&quot;, name);
+	wimp_set_icon_state(win_handle, WIN_ICON_SHAPE_FIELD, 0, 0);
+}</code>
+
+<p>When run, we should find that our application has a functioning pop-up menu as seen in <reference id="fig-menus-popup-menu"/>.</p>
+
+<image id="fig-menus-popup-menu" file="menus-popup-menu.png" title="Our pop-up menu field allows shapes to be selected"/>
+
+<p>This isn&rsquo;t a completely satisfactory solution, for a couple of reasons: it blurs the boundary between the icon with the square in it and the pop-up menu used to choose the shape, and there seem to be a lot of copies of the shape names dotted around in the code as string constants. We&rsquo;ll deal with these worries later on, though &ndash; for the time being, the code can be found in <reference id="dl-menus-popup-menu"/>.</p>
+
+<download id="dl-menus-popup-menu" file="PopupMenu" title="A Pop-Up Menu Implementation" compatibility="none"/>
+</section>
+
+<section id="sect-menus-popup-ticks">
+<title>Ticking menu entries</title>
+
+<p>One obvious thing that is wrong with our example is that it doesn&rsquo;t indicate the currently selected item with a tick in the pop-up menu. This is a fairly standard requirement, at least for menus where there is a direct relationship between entries in the menu and the pop-up menu field to which it is attached.</p>
+
+<p>An entry in a menu will be displayed with a tick to the side if the <name>wimp_MENU_TICKED</name> flag is set in the <variable>menu_flags</variable> field of the <name>wimp_menu_entry</name> structure. Changing its state is easier than making similar changes to an icon&rsquo;s flags, because as we&rsquo;ve already seen, the Wimp works directly from the <name>wimp_menu</name> structure in memory when displaying menus. So long as we have updated the flags in the structure before calling <swi>Wimp_CreateMenu</swi>, the changes will take effect as required.</p>
+
+<p>The actual changes to the flags require some bitwise calculations, so SFLib provides a <function>menus_tick_entry()</function> function to set the state of an entry&rsquo;s <name>wimp_MENU_TICKED</name> flag. It should be passed a pointer to the <name>wimp_menu</name> structure containing the menu definition, the index of the menu entry, and either <name>TRUE</name> to add a tick or <name>FALSE</name> to remove one. Note that there is no bounds checking on the value passed to <variable>entry</variable>!</p>
+
+<code lang="c">void menus_tick_entry(wimp_menu *menu, int entry, osbool tick)
+{
+	if (menu == NULL)
+		return;
+
+	if (tick)
+		menu-&gt;entries[entry].menu_flags |= wimp_MENU_TICKED;
+	else
+		menu-&gt;entries[entry].menu_flags &amp;= ~wimp_MENU_TICKED;
+}</code>
+
+<p>Armed with this function, we can write a new <function>win_set_shape_menu()</function> function to update the ticks in the menu. Unlike the radio icons, where the Wimp ensured that only one was selected at any time, with a menu we must go to each entry in turn and explicitly tick or un-tick it.</p>
+
+<code lang="c">static void win_set_shape_menu(enum win_shape shape)
+{
+	menus_tick_entry(win_shape_menu, WIN_MENU_SHAPE_CIRCLE,
+			shape == WIN_SHAPE_CIRCLE);
+	menus_tick_entry(win_shape_menu, WIN_MENU_SHAPE_TRIANGLE,
+			shape == WIN_SHAPE_TRIANGLE);
+	menus_tick_entry(win_shape_menu, WIN_MENU_SHAPE_SQUARE,
+			shape == WIN_SHAPE_SQUARE);
+}</code>
+
+<p>We can now call this new function from the end of the <function>win_set_shape()</function> function, and the menu will be set up every time the shape changes. The code can be found in <reference id="dl-menus-popup-ticks"/>.</p>
+
+<download id="dl-menus-popup-ticks" file="MenuTicks" title="Ensuring That Pop-Up Menu Entries are Ticked" compatibility="none"/>
+
+<p>If the application is compiled and run, the result should be as seen in <reference id="fig-menus-popup-ticks"/> &ndash; opening the menu and selecting different shapes with both <mouse>Select</mouse> and <mouse>Adjust</mouse> should reveal that the selection is both initialised correctly and updated when the selection changes, even if the menu remains open.</p>
+
+<p>This works because we call <function>win_set_shape_menu()</function> from the <function>win_set_shape()</function> function, which in turn is called to initialise the shape and then called again from the <function>win_menu_selection()</function> event handler whenever the shape changes. The <file>c.menu</file> code calls the handler <em>before</em> using <swi>Wimp_CreateMenu</swi> to re-open the menu on an <mouse>Adjust</mouse> click, to the tick will be moved by our code before the menu is recreated by the Wimp.</p>
+
+<p>Things are made a little easier for our code because we know that the only way that the shape can change is through the user making a selection from the pop-up menu. If this was not the case (such as if there were still radio icons in the window with the same purpose), then we would need to be careful that any change made in other ways also updated the menu &ndash; or updated the menu before it was initially opened. We will return to look at these options in a later chapter.</p>
+
+<image id="fig-menus-popup-ticks" file="menus-popup-ticks.png" title="A tick in the pop-up menu shows the current selection"/>
+</section>
+
+<section>
+<title>Shading entries</title>
+
+<p>In addition to allowing applications to tick menu entries, the Wimp provides a means of shading them if they are not applicable or can not be selected for some reason. This is done in a similar way to adding a tick, but since the shading is controlled through the standard icon flags, a menu entry is shaded if the <name>wimp_ICON_SHADED</name> flag is set in the <variable>icon_flags</variable> field of the <name>wimp_menu_entry</name> structure. Again, the fact that <swi>Wimp_CreateMenu</swi> works directly from the memory structure means that changes are easy to make.</p>
+
+<p>SFLib provides a <function>menus_shade_entry()</function> function to change the state of the <name>wimp_ICON_SHADED</name> flag for a menu entry. It should be passed a pointer to the <name>wimp_menu</name> structure containing the menu definition, the index of the menu entry, and either <name>TRUE</name> to shade the entry or <name>FALSE</name> to remove one. As with the <function>menus_tick_entry()</function> function, there is no bounds check done on the <variable>entry</variable> parameter.</p>
+
+<code lang="c">void menus_shade_entry(wimp_menu *menu, int entry, osbool shade)
+{
+	if (menu == NULL)
+		return;
+
+	if (shade)
+		menu-&gt;entries[entry].icon_flags |= wimp_ICON_SHADED;
+	else
+		menu-&gt;entries[entry].icon_flags &amp;= ~wimp_ICON_SHADED;
+}</code>
+
+<p>Using the function to shade menu entries is straight-forward. Using a contrived example to demonstrate, suppose we wished to enforce a rule that after selecting a square, the user could only select a circle. We could do this by updating <function>win_set_shape_menu()</function> so that in addition to setting the various ticks, it also calls the <function>menus_shade_entry()</function> to shade the <menu>Triangle</menu> entry when required.</p>
+
+<code lang="c">static void win_set_shape_menu(enum win_shape shape)
+{
+	menus_tick_entry(win_shape_menu, WIN_MENU_SHAPE_CIRCLE,
+			shape == WIN_SHAPE_CIRCLE);
+	menus_tick_entry(win_shape_menu, WIN_MENU_SHAPE_TRIANGLE,
+			shape == WIN_SHAPE_TRIANGLE);
+	menus_tick_entry(win_shape_menu, WIN_MENU_SHAPE_SQUARE,
+			shape == WIN_SHAPE_SQUARE);
+
+	menus_shade_entry(win_shape_menu, WIN_MENU_SHAPE_TRIANGLE,
+			shape == WIN_SHAPE_SQUARE);
+}</code>
+
+<p>When run, this will result in the <menu>Triangle</menu> entry becoming unavailable if the current shape is a square, as seen in <reference id="fig-menus-popup-shade"/>. The code is avaulable in <reference id="dl-menus-popup-shade"/>.</p>
+
+<image id="fig-menus-popup-shade" file="menus-popup-shade.png" title="Menu entries can be shaded to prevent the user choosing them"/>
+
+<p>Note that it would be up to our application to ensure that a menu entry isn&rsquo;t both ticked and shaded, unless such a combination proved to be valid in a specific context, and the code above meets this requirement.</p>
+
+<download id="dl-menus-popup-shade" file="MenuShade" title="Shading Menu Entries" compatibility="none"/>
+</section>
+
+<section>
+<title>Reading menu texts</title>
+
+<p>We mentioned in <reference id="sect-menus-popup-code"/> that there was a bit of duplication going on as far as string constants in our code was concerned. Specifically, we defined the pop-up menu entries in the <function>win_initialise()</function> function:</p>
+
+<code lang="c">menu_entry(win_shape_menu, WIN_MENU_SHAPE_CIRCLE, &quot;Circle&quot;, NULL);
+menu_entry(win_shape_menu, WIN_MENU_SHAPE_TRIANGLE, &quot;Triangle&quot;, NULL);
+menu_entry(win_shape_menu, WIN_MENU_SHAPE_SQUARE, &quot;Square&quot;, NULL);</code>
+
+<p>However, we then went on to set the text in the pop-up menu field in the <function>win_set_shape()</function> function by specifying the constants again (the code for updating the sprite icon has been removed):</p>
+
+<code lang="c">char *name = NULL;
+
+switch (shape) {
+case WIN_SHAPE_SQUARE:
+	name = &quot;Square&quot;;
+	break;
+case WIN_SHAPE_CIRCLE:
+	name = &quot;Circle&quot;;
+	break;
+case WIN_SHAPE_TRIANGLE:
+	name = &quot;Triangle&quot;;
+	break;
+}
+
+icons_printf(win_handle, WIN_ICON_SHAPE_FIELD, &quot;%s&quot;, name);
+wimp_set_icon_state(win_handle, WIN_ICON_SHAPE_FIELD, 0, 0);</code>
+
+<p>This works, and in fact the compiler may well optimise out the extra string constants when it compiles the code. It isn&rsquo;t great code, however, and it would be neater if we only defined the text in one place. One possible solution would be to read the text from the appropriate pop-up menu entry when updating the pop-up menu field.</p>
+
+<p>Reading a menu text sounds simple, but it isn't quite as straight-forward as it might seem. For non-indirected menu entries, the text is held in the 12 bytes of icon data within the <name>wimp_menu_entry</name> structure, but if the entry is indirected then we need to look in the location indicated by the pointer stored at this address. SFLib provides a function to return a pointer to the text, in the form of <function>menus_get_text_addr()</function>.</p>
+
+<code lang="c">char *menus_get_text_addr(wimp_menu *menu, int entry)
+{
+	if (menu == NULL)
+		return NULL;
+
+	if (menu-&gt;entries[entry].icon_flags &amp; wimp_ICON_INDIRECTED)
+		return menu-&gt;entries[entry].data.indirected_text.text;
+	else
+		return menu-&gt;entries[entry].data.text;
+}</code>
+
+<p>This function takes a pointer to the <name>wimp_menu</name> structure and the index of the menu entry for which we require the text, and returns a pointer to the string (or <name>NULL</name> if we pass it a <name>NULL</name> menu pointer). We could use this to update our <function>win_set_shape_menu()</function> function, but instead we will take a slightly different route and create a new <function>menu_set_popup_menu()</function> function in <file>c.menu</file> as follows:</p>
+
+<code lang="c">void menu_set_popup_menu(wimp_menu *menu, int selection, wimp_w window, wimp_i icon)
+{
+	wimp_menu_entry	*entries = NULL;
+	int		entry = 0;
+
+	if (menu == NULL)
+		return;
+
+	/* Set the ticks on the menu entries. */
+
+	entries = menu-&gt;entries;
+
+	do {
+		menus_tick_entry(menu, entry, selection == entry);
+	} while (!(entries[entry++].menu_flags &amp; wimp_MENU_LAST));
+
+	/* Update the pop-up menu field to the current selection. */
+
+	if (selection &gt;= 0 &amp;&amp; selection &lt; entry) {
+		icons_strncpy(window, icon, menus_get_text_addr(menu, selection));
+		wimp_set_icon_state(window, icon, 0, 0);
+	}
+}</code>
+
+<p>A number of parameters are requires, starting with a pointer to the <name>wimp_menu</name> definition for the pop-up menu and the index of the selection. These are followed by the <name>wimp_w</name> handle of the window containing the pop-up menu field associated with the menu, and the <name>wimp_i</name> handle of the icon.</p>
+
+<p>The <function>win_set_shape_menu()</function> function that we defined back in <reference id="sect-menus-popup-ticks"/> had a call to <function>menus_tick_entry()</function> for each entry in the menu, setting the tick according to the shape that was selected. This worked but, to follow a general theme, it wasn&rsquo;t very expandable: if we added more entries to the menu, by adding more shapes, then the <function>win_set_shape_menu()</function> function would have needed to be updated to include more tests.</p>
+
+<p>In contrast, the new function contains a <code>do while</code> loop which steps through all of the entries in the <name>wimp_menu</name> structure, setting the ticked state of each depending on whether its index matches the selection. This will work unaltered with a menu of any length.</p>
+
+<p>Once the ticks have been set correctly, the function moves on to find a pointer to the text of the menu entry, and uses this to update the contents of the pop-up menu field icon given the the third and fourth parameters. The check that <variable>selection</variable> is at least zero and less than <variable>entry</variable> ensures that we don&rsquo;t attempt to find a string pointer from outside of the array of <name>wimp_menu_entry</name> structures.</p>
+
+<p>Returning to <file>c.win</file>, we can change the definition of <function>win_set_shape_menu()</function> so that it takes the menu selection as an <name>int</name> parameter instead of taking the shape in the form of an <name>enum win_shape</name>. It can then call <function>menu_set_popup_menu()</function> to do the hard work.</p>
+
+<code lang="c">static void win_set_shape_menu(int selection)
+{
+	menu_set_popup_menu(win_shape_menu, selection, win_handle, WIN_ICON_SHAPE_FIELD);
+}</code>
+
+<p>Next, we will move the call to our new <function>win_set_shape_menu()</function> function from <function>win_set_shape()</function> to the end of the <function>win_menu_selection()</function> event handler, and use the selection supplied by the Wimp:</p>
+
+<code lang="c">win_set_shape_menu(selection->items[0]);</code>
+
+<p>To ensure that the pop-up menu and its field are correctly initialised on start-up, we will need to add a call to <function>win_set_shape_menu()</function> from the <function>win_initialise()</function>, at the same time that we call <function>win_set_shape()</function>.</p>
+
+<code lang="c">win_set_shape(WIN_SHAPE_SQUARE);
+win_set_shape_menu(WIN_MENU_SHAPE_SQUARE);</code>
+
+<p>When compiled and run, there should be no changes to the user experience compared to the application that we saw previously in <reference id="fig-menus-popup-ticks"/>. It should be seen that the code to update the pop-up menu is a lot more generic than it was before &ndash; in fact, we now have a function which will update <em>any</em> pop-up menu that follows our design guidelines.</p>
+
+<p>The full code can be found in <reference id="dl-menus-popup-generic"/>.</p>
+
+<download id="dl-menus-popup-generic" file="PopupGeneric" title="Using Generic Pop-Up Menu Code" compatibility="none"/>
+</section>
+</chapter>
+</manual>
