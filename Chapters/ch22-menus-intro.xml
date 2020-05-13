@@ -65,9 +65,9 @@ struct wimp_menu_entry {
 
 <p>With menus, there&rsquo;s no equivalent Wimp routine for adding entries to a definition &ndash; which means that we&rsquo;re going to need to allocate enough memory to hold both the header and all of the entries that our menu will contain. There are a few ways to achieve this, but probably the easiest is to use <function>malloc()</function> for claiming the space that we need.</p>
 
-<p>To do this, we will define a new <function>menu_create()</function> function. There is going to be a fair bit of new code related to menus, so we will add a new <file>c.menu</file> source file and the corresponding <file>h.menu</file> header to keep it all together.</p>
+<p>To do this, we will define a new <function>menu_create()</function> function shown in <reference id="list-menus-intro-create"/>. There is going to be a fair bit of new code related to menus, so we will add a new <file>c.menu</file> source file and the corresponding <file>h.menu</file> header to keep it all together.</p>
 
-<code lang="c">wimp_menu *menu_create(char *title, int entries)
+<code id="list-menus-intro-create" lang="c" title="The new menu_create() function">wimp_menu *menu_create(char *title, int entries)
 {
 	wimp_menu	*menu = NULL;
 	wimp_menu_entry	*entry = NULL;
@@ -165,9 +165,9 @@ struct wimp_menu_entry {
 
 <p>There is one final menu flag to consider at this stage. If the menu title was made indirected above, then the <name>wimp_MENU_TITLE_INDIRECTED</name> flag must be set in the first entry of the menu. We do this at the end of the function, after initialising all of the flags, if the <variable>buffer</variable> pointer is not <name>NULL</name>.</p>
 
-<p>With <function>menu_create()</function> defined, we can move on to define a second function called <function>menu_entry()</function>, which will allow us to configure one of our blank menu entries.</p>
+<p>With <function>menu_create()</function> defined, we can move on to define a second function called <function>menu_entry()</function> as shown in <reference id="list-menus-intro-entry"/>, which will allow us to configure one of our blank menu entries.</p>
 
-<code lang="c">void menu_entry(wimp_menu *menu, int entry, char *text, wimp_menu *sub_menu)
+<code id="list-menus-intro-entry" lang="c" title="The new menu_entry() function">void menu_entry(wimp_menu *menu, int entry, char *text, wimp_menu *sub_menu)
 {
 	wimp_menu_entry *definition = NULL;
 	char		*buffer = NULL;
@@ -216,9 +216,9 @@ struct wimp_menu_entry {
 <section>
 <title>An iconbar menu</title>
 
-<p>Now that we have a means to create menus in our application, we can add something that has been missing since the start of this tutorial: an iconbar menu. Opening the <file>c.ibar</file> source file, we can <code>#include</code> <file>menu.h</file>, add a global variable and define some constants at the top of the file:</p>
+<p>Now that we have a means to create menus in our application, we can add something that has been missing since the start of this tutorial: an iconbar menu. Opening the <file>c.ibar</file> source file, we can <code>#include</code> <file>menu.h</file>, add a global variable and define some constants at the top of the file as seen in <reference id="list-menus-intro-const"/>.</p>
 
-<code lang="c">/* Iconbar Menu Entries. */
+<code id="list-menus-intro-const" lang="c" title="The constants and global variables for the menu">/* Iconbar Menu Entries. */
 
 #define IBAR_MENU_INFO 0
 #define IBAR_MENU_HELP 1
@@ -232,9 +232,9 @@ static wimp_menu *ibar_menu;</code>
 
 <p>In contrast, menus have no such handle allocated to them by the Wimp. Unlike its window counterpart, the <swi>Wimp_CreateMenu</swi> SWI takes a <name>wimp_menu</name> block, creates a menu and displays it on screen in one operation. Whereas the <name>wimp_w</name> value returned by <swi>Wimp_CreateWindow</swi> is the window handle, if there is anything known as a &ldquo;menu handle&rdquo;, it is the pointer to the <name>wimp_menu</name> structure.</p>
 
-<p>With the global variable in place, we can add a few lines to the <function>ibar_initialise()</function> function as follows:</p>
+<p>With the global variable in place, we can add a few lines to the <function>ibar_initialise()</function> function as shown in <reference id="list-menus-intro-def"/>.</p>
 
-<code lang="c">/* Iconbar Menu. */
+<code id="list-menus-intro-def" lang="c" title="Defining the iconbar menu">/* Iconbar Menu. */
 
 ibar_menu = menu_create(&quot;Example&quot;, 3);
 if (ibar_menu == NULL) {
@@ -248,9 +248,9 @@ menu_entry(ibar_menu, IBAR_MENU_QUIT, &quot;Quit&quot;, NULL);</code>
 
 <p>The <function>menu_create()</function> function is called to allocate the memory required for the menu and set up the menu structure; if it fails, the initialisation ends. Next, <function>menu_entry()</function> is called three times to create the standard iconbar menu of a simple application.</p>
 
-<p>After all this, getting the menu on to screen is quite simple, and involves a small change to the <function>ibar_mouse_click()</function> event handler:</p>
+<p>After all this, getting the menu on to screen is quite simple, and involves a small change to the <function>ibar_mouse_click()</function> event handler as shown in <reference id="list-menus-intro-click"/>.</p>
 
-<code lang="c">static void ibar_mouse_click(wimp_pointer *pointer)
+<code id="list-menus-intro-click" lang="c" title="Updates to the Mouse Click event handler">static void ibar_mouse_click(wimp_pointer *pointer)
 {
 	switch (pointer-&gt;buttons) {
 	case wimp_CLICK_SELECT:
@@ -317,17 +317,17 @@ menu_entry(ibar_menu, IBAR_MENU_QUIT, &quot;Quit&quot;, NULL);</code>
 
 <p>With the new window design complete, remember to save the changes to the template file.</p>
 
-<p>Making use of the new window template is fairly simple, and requires few additions to our code. First, we can define the important icon handles from the template file at the top of the file:</p>
+<p>Making use of the new window template is fairly simple, and requires few additions to our code. First, we can define the important icon handles from the template file at the top of the file, as shown in <reference id="list-menus-intro-info-const"/>.</p>
 
-<code lang="c">/* Program Info Window Icons. */
+<code id="list-menus-intro-info-const" lang="c" title="The program information window icon constants">/* Program Info Window Icons. */
 
 #define IBAR_PROGINFO_ICON_WEB 8</code>
 
 <p>This value is correct for the template file as included in <reference id="dl-menus-intro-proginfo"/>, but if you have designed your own template then you will need to check that it matches the handle of the <icon>Website</icon> button.</p>
 
-<p>We are already opening the window templates while the application initialises, so the file is open when <function>ibar_initialise()</function> is called. We can therefore add the following additional lines to that function, before the menu is set up:</p>
+<p>We are already opening the window templates while the application initialises, so the file is open when <function>ibar_initialise()</function> is called. We can therefore add the following additional lines to that function, before the menu is set up as shown in <reference id="list-menus-intro-info-create"/>.</p>
 
-<code lang="c">/* Program Info Window. */
+<code id="list-menus-intro-info-create" lang="c" title="Creating the program information window">/* Program Info Window. */
 
 window_definition = windows_load_template(&quot;ProgInfo&quot;);
 if (window_definition == NULL) {
@@ -340,9 +340,9 @@ free(window_definition);</code>
 
 <p>If this looks familiar, that&rsquo;s because it is the same code that we used in <reference id="sect-templates-create-win"/> to create the main window template in <function>win_initialise()</function>.</p>
 
-<p>All that the Wimp requires to link a dialogue box into a menu structure is for us to store the <name>wimp_w</name> handle for the chosen window in the <variable>sub_menu</variable> field of the appropriate <name>wimp_menu_entry</name>. Now that we have the window handle for the <window>program information</window> window in <variable>prog_info</variable>, we can update the call to <function>menu_entry()</function> which creates the <menu>Info</menu> entry:</p>
+<p>All that the Wimp requires to link a dialogue box into a menu structure is for us to store the <name>wimp_w</name> handle for the chosen window in the <variable>sub_menu</variable> field of the appropriate <name>wimp_menu_entry</name>. Now that we have the window handle for the <window>program information</window> window in <variable>prog_info</variable>, we can update the call to <function>menu_entry()</function> which creates the <menu>Info</menu> entry as shown in <reference id="list-menus-intro-info-link"/>.</p>
 
-<code lang="c">menu_entry(ibar_menu, IBAR_MENU_INFO, &quot;Info&quot;, (wimp_menu *) prog_info);</code>
+<code id="list-menus-intro-info-link" lang="c" title="Linking the program information dialogue">menu_entry(ibar_menu, IBAR_MENU_INFO, &quot;Info&quot;, (wimp_menu *) prog_info);</code>
 
 <p>It is necessary to cast the <name>wimp_w</name> to a pointer to a <name>wimp_menu</name>, but that is what the Wimp expects. The full code can be found in <reference id="dl-menus-intro-proginfo"/>, and the result can be seen in <reference id="fig-menus-intro-proginfo"/>.</p>
 
@@ -356,9 +356,9 @@ free(window_definition);</code>
 
 <p>Before moving on to make our menu respond to the user, we should probably make the <icon>Website</icon> button do something useful and for this, we will need a <name>Mouse Click</name> event handler to respond to clicks on the button. Since there is only one button in the window, we will define an <intro>icon-level handler</intro> for it instead of creating a <intro>window-level handler</intro> for the whole <window>program information</window> window. The main advantage is that the event dispatcher will check the icon handle for us, and only call our code if the click was on the icon that we specified.</p>
 
-<p>We met the concept of window- and icon-level event handlers, which are part of SFLib&rsquo;s event library, in <reference id="sect-icons-radio-sflib"/>.</p>
+<p>We met the concept of window- and icon-level event handlers, which are part of SFLib&rsquo;s event library, in <reference id="sect-icons-radio-sflib"/>. To define one to handle clicks on the <icon>Website</icon> button will require the code shown in <reference id="list-menus-intro-click-handle"/>.</p>
 
-<code lang="c">static osbool ibar_proginfo_web_click(wimp_pointer *pointer)
+<code id="list-menus-intro-click-handle" lang="c" title="An icon-level handler for clicks on the Website button">static osbool ibar_proginfo_web_click(wimp_pointer *pointer)
 {
 	url_launch(&quot;http://www.stevefryatt.org.uk/docs/wimp/&quot;);
 
@@ -374,9 +374,9 @@ free(window_definition);</code>
 
 <p>Having launched the URL and optionally closed the menu structure, there isn&rsquo;t much else to do. As a result, the handler will return <name>TRUE</name>, to indicate that it considers the event handling to be complete &ndash; what this means was explained in more detail when we introduced icon-level handlers in <reference id="sect-icons-radio-sflib"/>.</p>
 
-<p>All that remains now is to register the handler, which we do in <function>ibar_initialise()</function> using the line:</p>
+<p>All that remains now is to register the handler, which we do in <function>ibar_initialise()</function> using the line shown in <reference id="list-menus-intro-click-reg"/>.</p>
 
-<code lang="c">event_add_window_icon_click(prog_info, IBAR_PROGINFO_ICON_WEB, ibar_proginfo_web_click);</code>
+<code id="list-menus-intro-click-reg" lang="c" title="Registering the icon-level event handler">event_add_window_icon_click(prog_info, IBAR_PROGINFO_ICON_WEB, ibar_proginfo_web_click);</code>
 
 <p>The <function>event_add_window_icon_click()</function> is defined as</p>
 

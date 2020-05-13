@@ -56,9 +56,9 @@
 
 <p>To implement our new pop-up menu, there are a few things that we will need to add to our code &ndash; not least a way to open the menu in the correct place on screen. In the <reference id="chap-menus-selection">previous chapter</reference> we implemented the <function>menu_open_ibar()</function> function, but this was coded specifically for handling the positioning of iconbar menus and the requirements for pop-up menus are very different.</p>
 
-<p>Following the same naming and parameter format, we can add a new <function>menu_open_popup()</function> to <file>c.menu</file> as follows (with the appropriate prototype in <file>h.menu</file>):</p>
+<p>Following the same naming and parameter format, we can add a new <function>menu_open_popup()</function> to <file>c.menu</file> as shown in <reference id="list-menus-popup-open"/> (with the appropriate prototype in <file>h.menu</file>):</p>
 
-<code lang="c">void menu_open_popup(wimp_menu *menu, wimp_pointer *pointer,
+<code id="list-menus-popup-open" lang="c" title="A function to open a pop-up menu">void menu_open_popup(wimp_menu *menu, wimp_pointer *pointer,
 		void (*callback)(wimp_menu *menu, wimp_selection *selection))
 {
 	menu_current_menu = menu;
@@ -67,9 +67,9 @@
 	menus_create_popup_menu(menu, pointer);
 }</code>
 
-<p>As with <function>menu_open_ibar()</function>, this sets the global variables used to track the currently open menu, before using SFLib&rsquo;s <function>menus_create_popup_menu()</function> function to put the menu on to the screen. The code that SFLib uses is this:</p>
+<p>As with <function>menu_open_ibar()</function>, this sets the global variables used to track the currently open menu, before using SFLib&rsquo;s <function>menus_create_popup_menu()</function> function to put the menu on to the screen. The code that SFLib uses is shown in <reference id="list-menus-popup-sflib"/>.</p>
 
-<code lang="c">wimp_menu *menus_create_popup_menu(wimp_menu *menu, wimp_pointer *pointer)
+<code id="list-menus-popup-sflib" lang="c" title="The code used by SFLib to position a pop-up menu">wimp_menu *menus_create_popup_menu(wimp_menu *menu, wimp_pointer *pointer)
 {
 	wimp_window_state	window;
 	wimp_icon_state		icon;
@@ -103,9 +103,9 @@
 
 <image id="fig-menus-popup-position" file="menus-popup-position.png" title="Calculating the position of a pop-up menu"/>
 
-<p>With a means of opening a pop-up menu in place, we can update the <file>c.win</file> file to make use of it. We will begin by updating the constant definitions at the top of the file, to reflect both the changes to the icons in the window template and the new menu that we will be creating:</p>
+<p>With a means of opening a pop-up menu in place, we can update the <file>c.win</file> file to make use of it. We will begin by updating the constant definitions at the top of the file as shown in <reference id="list-menus-popup-const"/>, to reflect both the changes to the icons in the window template and the new menu that we will be creating.</p>
 
-<code lang="c">/* Main Window Icons. */
+<code id="list-menus-popup-const" lang="c" title="The revised icon and menu entry constants">/* Main Window Icons. */
 
 #define WIN_ICON_SHAPE 0
 #define WIN_ICON_SHAPE_POPUP 1
@@ -117,16 +117,16 @@
 #define WIN_MENU_SHAPE_TRIANGLE 1
 #define WIN_MENU_SHAPE_SQUARE 2</code>
 
-<p>We will also need a global variable to hold a pointer to our menu definition, alongside that holding our window handle.</p>
+<p>We will also need the global variable shown in <reference id="list-menus-popup-vars"/> to hold a pointer to our menu definition, alongside that holding our window handle.</p>
 
-<code lang="c">/* Global Variables */
+<code id="list-menus-popup-vars" lang="c" title="The global variable to hold the pop-up menu struct pointer">/* Global Variables */
 
 static wimp_w win_handle;
 static wimp_menu *win_shape_menu;</code>
 
-<p>The <function>win_initialise()</function> function sees some changes. After loading the window template, we will need to create the new shapes menu using a similar approach to that taken with the iconbar menu in <reference id="chap-menus-intro"/>.</p>
+<p>The <function>win_initialise()</function> function sees some changes. After loading the window template, we will need to create the new shapes menu as shown in <reference id="list-menus-popup-def"/>, using a similar approach to that taken with the iconbar menu in <reference id="chap-menus-intro"/>.</p>
 
-<code lang="c">/* Shapes Menu. */
+<code id="list-menus-popup-def" lang="c" title="Creating the new pop-up menu data">/* Shapes Menu. */
 
 win_shape_menu = menu_create(&quot;Shapes&quot;, 3);
 if (win_shape_menu == NULL) {
@@ -140,17 +140,17 @@ menu_entry(win_shape_menu, WIN_MENU_SHAPE_SQUARE, &quot;Square&quot;, NULL);</co
 
 <p>This will give us a menu with three entries: one for each of the shapes that we have at our disposal. Finally, we can remove the code that we had for configuring the radio icons, leaving us with just the call to <function>win_set_shape()</function> from the original code.</p>
 
-<p>The code that we used to handle the radio icons in <function>win_mouse_click()</function> can be removed, to be replaced by code to detect <mouse>Select</mouse> clicks on the new pop-up menu icon and open the pop-up menu.</p>
+<p>The code that we used to handle the radio icons in <function>win_mouse_click()</function> can be removed, to be replaced by the code in <reference id="list-menus-popup-click"/> to detect <mouse>Select</mouse> clicks on the new pop-up menu icon and open the pop-up menu.</p>
 
-<code lang="c">static void win_mouse_click(wimp_pointer *pointer)
+<code id="list-menus-popup-click" lang="c" title="The updated Mouse Click event handler">static void win_mouse_click(wimp_pointer *pointer)
 {
 	if (pointer-&gt;i == WIN_ICON_SHAPE_POPUP &amp;&amp; pointer-&gt;buttons == wimp_CLICK_SELECT)
 		menu_open_popup(win_shape_menu, pointer, win_menu_selection);
 }</code>
 
-<p>The code which was selecting the required shape based on clicks on the radio icons can be converted into a <name>Menu Selection</name> event handler in <function>win_menu_selection()</function>.</p>
+<p>The code which was selecting the required shape based on clicks on the radio icons can be converted into a <name>Menu Selection</name> event handler in <function>win_menu_selection()</function>, shown in <reference id="list-menus-popup-select"/>.</p>
 
-<code lang="c">static void win_menu_selection(wimp_menu *menu, wimp_selection *selection)
+<code id="list-menus-popup-select" lang="c" title="The new Menu Selection event handler">static void win_menu_selection(wimp_menu *menu, wimp_selection *selection)
 {
 	switch (selection-&gt;items[0]) {
 	case WIN_MENU_SHAPE_CIRCLE:
@@ -165,9 +165,9 @@ menu_entry(win_shape_menu, WIN_MENU_SHAPE_SQUARE, &quot;Square&quot;, NULL);</co
 	}
 }</code>
 
-<p>Finally, our <function>win_set_shape()</function> can be extended so that it updates the pop-up menu field as well as changing the shape being displayed.</p>
+<p>Finally, our <function>win_set_shape()</function> can be extended as shown in <reference id="list-menus-popup-set-shape"/> so that it updates the pop-up menu field as well as changing the shape being displayed.</p>
 
-<code lang="c">static void win_set_shape(enum win_shape shape)
+<code id="list-menus-popup-set-shape" lang="c" title="Updating win_set_shape() to fill the pop-up menu field">static void win_set_shape(enum win_shape shape)
 {
 	char *sprite = NULL, *name = NULL;
 
@@ -212,9 +212,9 @@ menu_entry(win_shape_menu, WIN_MENU_SHAPE_SQUARE, &quot;Square&quot;, NULL);</co
 
 <p>An entry in a menu will be displayed with a tick to the side if the <name>wimp_MENU_TICKED</name> flag is set in the <variable>menu_flags</variable> field of the <name>wimp_menu_entry</name> structure. Changing its state is easier than making similar changes to an icon&rsquo;s flags, because as we&rsquo;ve already seen, the Wimp works directly from the <name>wimp_menu</name> structure in memory when displaying menus. So long as we have updated the flags in the structure before calling <swi>Wimp_CreateMenu</swi>, the changes will take effect as required.</p>
 
-<p>The actual changes to the flags require some bitwise calculations, so SFLib provides a <function>menus_tick_entry()</function> function to set the state of an entry&rsquo;s <name>wimp_MENU_TICKED</name> flag. It should be passed a pointer to the <name>wimp_menu</name> structure containing the menu definition, the index of the menu entry, and either <name>TRUE</name> to add a tick or <name>FALSE</name> to remove one. Note that there is no bounds checking on the value passed to <variable>entry</variable>!</p>
+<p>The actual changes to the flags require some bitwise calculations, so SFLib provides the <function>menus_tick_entry()</function> function shown in <reference id="list-menus-popup-sflib-tick"/> to set the state of an entry&rsquo;s <name>wimp_MENU_TICKED</name> flag. It should be passed a pointer to the <name>wimp_menu</name> structure containing the menu definition, the index of the menu entry, and either <name>TRUE</name> to add a tick or <name>FALSE</name> to remove one. Note that there is no bounds checking on the value passed to <variable>entry</variable>!</p>
 
-<code lang="c">void menus_tick_entry(wimp_menu *menu, int entry, osbool tick)
+<code id="list-menus-popup-sflib-tick" lang="c" title="SFLib's routine for ticking a menu entry">void menus_tick_entry(wimp_menu *menu, int entry, osbool tick)
 {
 	if (menu == NULL)
 		return;
@@ -225,9 +225,9 @@ menu_entry(win_shape_menu, WIN_MENU_SHAPE_SQUARE, &quot;Square&quot;, NULL);</co
 		menu-&gt;entries[entry].menu_flags &amp;= ~wimp_MENU_TICKED;
 }</code>
 
-<p>Armed with this function, we can write a new <function>win_set_shape_menu()</function> function to update the ticks in the menu. Unlike the radio icons, where the Wimp ensured that only one was selected at any time, with a menu we must go to each entry in turn and explicitly tick or un-tick it.</p>
+<p>Armed with this function, we can write a new <function>win_set_shape_menu()</function> function as shown in <reference id="list-menus-popup-ticks"/> to update the ticks in the menu. Unlike the radio icons, where the Wimp ensured that only one was selected at any time, with a menu we must go to each entry in turn and explicitly tick or un-tick it.</p>
 
-<code lang="c">static void win_set_shape_menu(enum win_shape shape)
+<code id="list-menus-popup-ticks" lang="c" title="Setting the state of the pop-up menu ticks">static void win_set_shape_menu(enum win_shape shape)
 {
 	menus_tick_entry(win_shape_menu, WIN_MENU_SHAPE_CIRCLE,
 			shape == WIN_SHAPE_CIRCLE);
@@ -255,9 +255,9 @@ menu_entry(win_shape_menu, WIN_MENU_SHAPE_SQUARE, &quot;Square&quot;, NULL);</co
 
 <p>In addition to allowing applications to tick menu entries, the Wimp provides a means of shading them if they are not applicable or can not be selected for some reason. This is done in a similar way to adding a tick, but since the shading is controlled through the standard icon flags, a menu entry is shaded if the <name>wimp_ICON_SHADED</name> flag is set in the <variable>icon_flags</variable> field of the <name>wimp_menu_entry</name> structure. Again, the fact that <swi>Wimp_CreateMenu</swi> works directly from the memory structure means that changes are easy to make.</p>
 
-<p>SFLib provides a <function>menus_shade_entry()</function> function to change the state of the <name>wimp_ICON_SHADED</name> flag for a menu entry. It should be passed a pointer to the <name>wimp_menu</name> structure containing the menu definition, the index of the menu entry, and either <name>TRUE</name> to shade the entry or <name>FALSE</name> to enable it. As with the <function>menus_tick_entry()</function> function, there is no bounds check done on the <variable>entry</variable> parameter.</p>
+<p>SFLib provides the <function>menus_shade_entry()</function> function shown in <reference id="list-menus-popup-sflib-shade"/> to change the state of the <name>wimp_ICON_SHADED</name> flag for a menu entry. It should be passed a pointer to the <name>wimp_menu</name> structure containing the menu definition, the index of the menu entry, and either <name>TRUE</name> to shade the entry or <name>FALSE</name> to enable it. As with the <function>menus_tick_entry()</function> function, there is no bounds check done on the <variable>entry</variable> parameter.</p>
 
-<code lang="c">void menus_shade_entry(wimp_menu *menu, int entry, osbool shade)
+<code id="list-menus-popup-sflib-shade" lang="c" title="SFLib's routine for shading a menu entry">void menus_shade_entry(wimp_menu *menu, int entry, osbool shade)
 {
 	if (menu == NULL)
 		return;
@@ -268,9 +268,9 @@ menu_entry(win_shape_menu, WIN_MENU_SHAPE_SQUARE, &quot;Square&quot;, NULL);</co
 		menu-&gt;entries[entry].icon_flags &amp;= ~wimp_ICON_SHADED;
 }</code>
 
-<p>Using the function to shade menu entries is straight-forward. Taking a slightly contrived example, suppose that we wished to enforce a rule that after selecting a square, the user could only select a circle. We could do this by updating <function>win_set_shape_menu()</function> so that in addition to setting the various ticks, it also calls the <function>menus_shade_entry()</function> to shade the <menu>Triangle</menu> entry when required.</p>
+<p>Using the function to shade menu entries is straight-forward. Taking a slightly contrived example, suppose that we wished to enforce a rule that after selecting a square, the user could only select a circle. We could do this by updating <function>win_set_shape_menu()</function> as shown in <reference id="list-menus-popup-shade"/> so that in addition to setting the various ticks, it also calls the <function>menus_shade_entry()</function> to shade the <menu>Triangle</menu> entry when required.</p>
 
-<code lang="c">static void win_set_shape_menu(enum win_shape shape)
+<code id="list-menus-popup-shade" lang="c" title="Shading a menu entry">static void win_set_shape_menu(enum win_shape shape)
 {
 	menus_tick_entry(win_shape_menu, WIN_MENU_SHAPE_CIRCLE,
 			shape == WIN_SHAPE_CIRCLE);
@@ -322,9 +322,9 @@ wimp_set_icon_state(win_handle, WIN_ICON_SHAPE_FIELD, 0, 0);</code>
 
 <p>This works, and in fact the compiler may well optimise out the extra string constants when it compiles the code. It isn&rsquo;t great code, however, and it would be neater if we only defined the text in one place. One possible solution would be to read the text from the appropriate pop-up menu entry when updating the pop-up menu field.</p>
 
-<p>Reading a menu text sounds simple, but it isn't quite as straight-forward as it might seem. For non-indirected menu entries, the text is held in the 12 bytes of icon data within the <name>wimp_menu_entry</name> structure, but if the entry is indirected then we need to look in the location indicated by the pointer stored at this address. SFLib provides a function to return a pointer to the text, in the form of <function>menus_get_text_addr()</function>.</p>
+<p>Reading a menu text sounds simple, but it isn't quite as straight-forward as it might seem. For non-indirected menu entries, the text is held in the 12 bytes of icon data within the <name>wimp_menu_entry</name> structure, but if the entry is indirected then we need to look in the location indicated by the pointer stored at this address. SFLib provides a function to return a pointer to the text, in the form of <function>menus_get_text_addr()</function> seen in <reference id="list-menus-popup-sflib-read"/>.</p>
 
-<code lang="c">char *menus_get_text_addr(wimp_menu *menu, int entry)
+<code id="list-menus-popup-sflib-read" lang="c" title="SFLib's routine for reading the addres of a menu text">char *menus_get_text_addr(wimp_menu *menu, int entry)
 {
 	if (menu == NULL)
 		return NULL;
@@ -335,9 +335,9 @@ wimp_set_icon_state(win_handle, WIN_ICON_SHAPE_FIELD, 0, 0);</code>
 		return menu-&gt;entries[entry].data.text;
 }</code>
 
-<p>This function takes a pointer to the <name>wimp_menu</name> structure and the index of the menu entry for which we require the text, and returns a pointer to the string (or <name>NULL</name> if we pass it a <name>NULL</name> menu pointer). We could use this to update our <function>win_set_shape_menu()</function> function, but instead we will take a slightly different route and create a new <function>menu_set_popup_menu()</function> function in <file>c.menu</file> as follows:</p>
+<p>This function takes a pointer to the <name>wimp_menu</name> structure and the index of the menu entry for which we require the text, and returns a pointer to the string (or <name>NULL</name> if we pass it a <name>NULL</name> menu pointer). We could use this to update our <function>win_set_shape_menu()</function> function, but instead we will take a slightly different route and create a new <function>menu_set_popup_menu()</function> function in <file>c.menu</file> as shown in <reference id="list-menus-popup-set-popup"/>.</p>
 
-<code lang="c">void menu_set_popup_menu(wimp_menu *menu, int selection, wimp_w window, wimp_i icon)
+<code id="list-menus-popup-set-popup" lang="c" title="A new routine to set the ticks in any pop-up menu">void menu_set_popup_menu(wimp_menu *menu, int selection, wimp_w window, wimp_i icon)
 {
 	wimp_menu_entry	*entries = NULL;
 	int		entry = 0;
@@ -369,20 +369,20 @@ wimp_set_icon_state(win_handle, WIN_ICON_SHAPE_FIELD, 0, 0);</code>
 
 <p>Once the ticks have been set correctly, the function moves on to find a pointer to the text of the menu entry, and uses this to update the contents of the pop-up menu field icon given the the third and fourth parameters. The check that <variable>selection</variable> is at least zero and less than <variable>entry</variable> ensures that we don&rsquo;t attempt to find a string pointer from outside of the array of <name>wimp_menu_entry</name> structures.</p>
 
-<p>Returning to <file>c.win</file>, we can change the definition of <function>win_set_shape_menu()</function> so that it takes the menu selection as an <name>int</name> parameter instead of taking the shape in the form of an <name>enum win_shape</name>. It can then call <function>menu_set_popup_menu()</function> to do the hard work.</p>
+<p>Returning to <file>c.win</file>, we can change the definition of <function>win_set_shape_menu()</function> so that it takes the menu selection as an <name>int</name> parameter instead of taking the shape in the form of an <name>enum win_shape</name>. It can then call <function>menu_set_popup_menu()</function> to do the hard work, as shown in <reference id="list-menus-popup-new-set"/>.</p>
 
-<code lang="c">static void win_set_shape_menu(int selection)
+<code id="list-menus-popup-new-set" lang="c" title="The slimmed-down win_set_shape_menu() function">static void win_set_shape_menu(int selection)
 {
 	menu_set_popup_menu(win_shape_menu, selection, win_handle, WIN_ICON_SHAPE_FIELD);
 }</code>
 
-<p>Next, we will move the call to our new <function>win_set_shape_menu()</function> function from <function>win_set_shape()</function> to the end of the <function>win_menu_selection()</function> event handler, and use the selection supplied by the Wimp:</p>
+<p>Next, we will move the call to our new <function>win_set_shape_menu()</function> function from <function>win_set_shape()</function> to the end of the <function>win_menu_selection()</function> event handler, and use the selection supplied by the Wimp as shown in <reference id="list-menus-popup-new-select"/>.</p>
 
-<code lang="c">win_set_shape_menu(selection->items[0]);</code>
+<code id="list-menus-popup-new-select" lang="c" title="Updating the menu on a selection">win_set_shape_menu(selection->items[0]);</code>
 
-<p>To ensure that the pop-up menu and its field are correctly initialised on start-up, we will need to add a call to <function>win_set_shape_menu()</function> from the <function>win_initialise()</function>, at the same time that we call <function>win_set_shape()</function>.</p>
+<p>To ensure that the pop-up menu and its field are correctly initialised on start-up, we will need to add a call to <function>win_set_shape_menu()</function> from the <function>win_initialise()</function> as shown in <reference id="list-menus-popup-new-init"/>, at the same time that we call <function>win_set_shape()</function>.</p>
 
-<code lang="c">win_set_shape(WIN_SHAPE_SQUARE);
+<code id="list-menus-popup-new-init" lang="c" title="Initialising the menu and shape icon">win_set_shape(WIN_SHAPE_SQUARE);
 win_set_shape_menu(WIN_MENU_SHAPE_SQUARE);</code>
 
 <p>When compiled and run, there should be no changes to the user experience compared to the application that we saw previously in <reference id="fig-menus-popup-ticks"/>. It should be seen that the code to update the pop-up menu is a lot more generic than it was before &ndash; in fact, we now have a function which will update <em>any</em> pop-up menu that follows our design guidelines.</p>

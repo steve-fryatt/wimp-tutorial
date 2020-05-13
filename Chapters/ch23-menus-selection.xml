@@ -82,9 +82,9 @@ typedef struct wimp_selection wimp_selection;</code>
 <section>
 <title>Menu event dispatch</title>
 
-<p>There are many different ways that we could implement a scheme for tracking our application&rsquo;s menus and working out where <name>wimp_MENU_SELECTION</name> events need to be delivered to. We&rsquo;ll go for something relatively simple, and create two global variables in <file>c.menu</file> which can be used to remember menu activity:</p>
+<p>There are many different ways that we could implement a scheme for tracking our application&rsquo;s menus and working out where <name>wimp_MENU_SELECTION</name> events need to be delivered to. We&rsquo;ll go for something relatively simple, and create the two global variables shown in <reference id="list-menus-selection-vars"/> within <file>c.menu</file> which can be used to remember menu activity:</p>
 
-<code lang="c">/* Global Variables. */
+<code id="list-menus-selection-vars" lang="c" title="Global variables to track the current menu">/* Global Variables. */
 
 static wimp_menu *menu_current_menu = NULL;
 
@@ -92,9 +92,9 @@ static void (*menu_current_callback)(wimp_menu *menu, wimp_selection *selection)
 
 <p>The first is a simple pointer to a <name>wimp_menu</name> structure, which we will use to track the menu that is currently open on screen. The second, <variable>menu_current_callback</variable>, is a pointer to a function which takes pointers to a <name>wimp_menu</name> structure and a <name>wimp_selection</name> structure: we will use this to hold the details of a function to which the details of the next <name>wimp_MENU_SELECTION</name> event should be sent.</p>
 
-<p>So that our code can set these values, we will create a new function in <file>c.menu</file> to open an iconbar menu on screen.</p>
+<p>So that our code can set these values, we will create a new function in <file>c.menu</file> to open an iconbar menu on screen, as shown in <reference id="list-menus-selection-open"/>.</p>
 
-<code lang="c">void menu_open_ibar(wimp_menu *menu, wimp_pointer *pointer,
+<code id="list-menus-selection-open" lang="c" title="A function to open an iconbar menu">void menu_open_ibar(wimp_menu *menu, wimp_pointer *pointer,
 		void (*callback)(wimp_menu *menu, wimp_selection *selection))
 {
 	menu_current_menu = menu;
@@ -105,9 +105,9 @@ static void (*menu_current_callback)(wimp_menu *menu, wimp_selection *selection)
 
 <p>To use this function for creating a menu, we will need to pass it a pointer to the <name>wimp_menu</name> structure holding the menu, a pointer to a <name>wimp_pointer</name> structure holding details of where the mouse was clicked, <em>and</em> a pointer to a function which will be sent details of the <name>wimp_selection</name> structure when the user makes a selection.</p>
 
-<p>The code sets the two global variables up, then calls a function defined in SFLib&rsquo;s menus library to create the menu. Instead of hard-coding the menu position as we did in the last chapter, <function>menus_create_iconbar_menu()</function> counts up the number of entries and separators in the menu and works out the correct vertical offset to apply such that the bottom of the menu is 96 OS&nbsp;units from the base of the screen. It&rsquo;s more work to write, but won&rsquo;t need to be changed whenever we add an item to our menu!</p>
+<p>The code sets the two global variables up, then calls the function shown in <reference id="list-menus-selection-sflib"/> &ndash; which is defined in SFLib&rsquo;s menus library &ndash; to create the menu. Instead of hard-coding the menu position as we did in the last chapter, <function>menus_create_iconbar_menu()</function> counts up the number of entries and separators in the menu and works out the correct vertical offset to apply such that the bottom of the menu is 96 OS&nbsp;units from the base of the screen. It&rsquo;s more work to write, but won&rsquo;t need to be changed whenever we add an item to our menu!</p>
 
-<code lang="c">wimp_menu *menus_create_iconbar_menu(wimp_menu *menu, wimp_pointer *pointer)
+<code id="list-menus-selection-sflib" lang="c" title="The code used by SFLib to position an iconbar menu">wimp_menu *menus_create_iconbar_menu(wimp_menu *menu, wimp_pointer *pointer)
 {
 	int entry = 0, entries = 0, lines = 0;
 
@@ -127,9 +127,9 @@ static void (*menu_current_callback)(wimp_menu *menu, wimp_selection *selection)
 	return menu;
 }</code>
 
-<p>We can now change the code in <file>c.ibar</file> which responds to <mouse>Menu</mouse> clicks on the iconbar. Instead of calling <function>wimp_create_menu()</function> directly, <function>ibar_mouse_click()</function> will now call our new <function>menu_open_ibar()</function> instead.</p>
+<p>We can now change the code in <file>c.ibar</file> which responds to <mouse>Menu</mouse> clicks on the iconbar as shown in <reference id="list-menus-selection-ibar-click"/>. Instead of calling <function>wimp_create_menu()</function> directly, <function>ibar_mouse_click()</function> will now call our new <function>menu_open_ibar()</function> instead.</p>
 
-<code lang="c">static void ibar_mouse_click(wimp_pointer *pointer)
+<code id="list-menus-selection-ibar-click" lang="c" title="Updating the iconbar Mouse Click event handler">static void ibar_mouse_click(wimp_pointer *pointer)
 {
 	switch (pointer-&gt;buttons) {
 	case wimp_CLICK_SELECT:
@@ -144,9 +144,9 @@ static void (*menu_current_callback)(wimp_menu *menu, wimp_selection *selection)
 	}
 }</code>
 
-<p>This passes the same <variable>ibar_menu</variable> and <variable>pointer</variable> variables that we used perviously to derive the parameters for <function>wimp_create_menu()</function>, but also passes a pointer to a new <function>ibar_menu_selection()</function>. We can define this as follows:</p>
+<p>This passes the same <variable>ibar_menu</variable> and <variable>pointer</variable> variables that we used perviously to derive the parameters for <function>wimp_create_menu()</function>, but also passes a pointer to a new <function>ibar_menu_selection()</function>. We can define this as shown in <reference id="list-menus-selection-ibar-menu"/>.</p>
 
-<code lang="c">static void ibar_menu_selection(wimp_menu *menu, wimp_selection *selection)
+<code id="list-menus-selection-ibar-menu" lang="c" title="The new iconbar Menu Selection event handler">static void ibar_menu_selection(wimp_menu *menu, wimp_selection *selection)
 {
 	switch (selection-&gt;items[0]) {
 	case IBAR_MENU_QUIT:
@@ -157,9 +157,9 @@ static void (*menu_current_callback)(wimp_menu *menu, wimp_selection *selection)
 
 <p>There is very little to this code, and it should be familiar from the other user input decoding that we have done. Since the menu is a single level, we can switch on the first menu entry, and for now we will only implement the <menu>Quit</menu> option.</p>
 
-<p>We now need some code to direct incoming <name>wimp_MENU_SELECTION</name> events, and this can be achieved with the following function in <file>c.menu</file>:</p>
+<p>We now need some code to direct incoming <name>wimp_MENU_SELECTION</name> events, and this can be achieved by adding the function shown in <reference id="list-menus-selection-menu-event"/> to <file>c.menu</file>:</p>
 
-<code lang="c">void menu_process_event(wimp_selection *selection)
+<code id="list-menus-selection-menu-event" lang="c" title="Handling the incoming Menu Selection events from the Wimp">void menu_process_event(wimp_selection *selection)
 {
 	if (menu_current_callback != NULL &amp;&amp; selection != NULL)
 		menu_current_callback(menu_current_menu, selection);
@@ -174,9 +174,9 @@ static void (*menu_current_callback)(wimp_menu *menu, wimp_selection *selection)
 
 <p>When the user selects an item from a menu, the Wimp will close the menu structure, which means that the two pointers that we hold (<variable>menu_current_menu</variable> and <variable>menu_current_callback</variable>) no longer have any purpose. We reset them both to <name>NULL</name>, so that they don&rsquo;t accidentally get used in the future. This leaves a question, though: what happens if the menu closes <em>without</em> the user making a selection?</p>
 
-<p>The answer is that the Wimp will send our task a <name>Message_MenusDeleted</name> to inform us that the menu is no longer visible. We can register a message handler for this as follows:</p>
+<p>The answer is that the Wimp will send our task a <name>Message_MenusDeleted</name> to inform us that the menu is no longer visible. We can register a message handler for this using the code in <reference id="list-menus-selection-menu-deleted"/>.</p>
 
-<code lang="c">void menu_initialise(void)
+<code id="list-menus-selection-menu-deleted" lang="c" title="Handling Message_MenusDeleted messages">void menu_initialise(void)
 {
 	event_add_message_handler(message_MENUS_DELETED, EVENT_MESSAGE_INCOMING, menu_message_menus_deleted);
 }
@@ -248,9 +248,9 @@ typedef struct wimp_full_message_menus_deleted wimp_full_message_menus_deleted;<
 
 <p>Fortunately, it is fairly simple to implement the use of <mouse>Adjust</mouse>. All that we need to do is to check the button used to make the selection, by calling <swi>Wimp_GetPointerInfo</swi>, then call <swi>Wimp_CreateMenu</swi> again with a pointer to the same <name>wimp_menu</name> block if <mouse>Adjust</mouse> was used. The Wimp will recognise that it is the same menu, and will re-open it in the same position.</p>
 
-<p>To make this work, we can update the <function>menu_process_event()</function> as follows:</p>
+<p>To make this work, we can update the <function>menu_process_event()</function> as shown in <reference id="list-menus-selection-adjust"/>.</p>
 
-<code lang="c">void menu_process_event(wimp_selection *selection)
+<code id="list-menus-selection-adjust" lang="c" title="Handling Adjust clicks on menu entries">void menu_process_event(wimp_selection *selection)
 {
 	wimp_pointer	pointer;
 	os_error	*error;
@@ -290,9 +290,9 @@ typedef struct wimp_full_message_menus_deleted wimp_full_message_menus_deleted;<
 
 <image id="fig-menus-selection-filer" file="menus-selection-filer.png" title="The Filer has always offered a way to access application help"/>
 
-<p>The easiest way to implement our own <menu>Help...</menu> entry is for us to <command>*Filer_Run</command> the same file: this way, we only need to keep one file up to date, and can make whatever arrangements we like for it to launch a text file, a <cite>StrongHelp</cite> manual, an HTML document or whatever we choose. To do this, we can update <function>ibar_menu_selection()</function> as follows:</p>
+<p>The easiest way to implement our own <menu>Help...</menu> entry is for us to <command>*Filer_Run</command> the same file: this way, we only need to keep one file up to date, and can make whatever arrangements we like for it to launch a text file, a <cite>StrongHelp</cite> manual, an HTML document or whatever we choose. To do this, we can update <function>ibar_menu_selection()</function> as shown in <reference id="list-menus-selection-help"/>.</p>
 
-<code lang="c">static void ibar_menu_selection(wimp_menu *menu, wimp_selection *selection)
+<code id="list-menus-selection-help" lang="c" title="Adding the Help... entry to the Menu Selection event handler">static void ibar_menu_selection(wimp_menu *menu, wimp_selection *selection)
 {
 	os_error *error;
 
@@ -310,9 +310,9 @@ typedef struct wimp_full_message_menus_deleted wimp_full_message_menus_deleted;<
 
 <p>Obviously we now need to ensure that the <file>!ExamplApp.!Help</file> exists, and to show the principle we have included a very simple text file.</p>
 
-<p>Before we wrap up the code into a final download, there is one small piece of tidying up remaining. Now that our application can be quit from its iconbar menu, there is no need for <menu>Adjust</menu> clicks on its iconbar icon to have the same effect. We can therefore remove the <name>wimp_CLICK_ADJUST</name> clause from the switch statement in <function>ibar_mouse_click()</function>, as shown here.</p>
+<p>Before we wrap up the code into a final download, there is one small piece of tidying up remaining. Now that our application can be quit from its iconbar menu, there is no need for <menu>Adjust</menu> clicks on its iconbar icon to have the same effect. We can therefore remove the <name>wimp_CLICK_ADJUST</name> clause from the switch statement in <function>ibar_mouse_click()</function>, as shown in <reference id="list-menus-selection-ibar-noadjust"/>.</p>
 
-<code lang="c">static void ibar_mouse_click(wimp_pointer *pointer)
+<code id="list-menus-selection-ibar-noadjust" lang="c" title="The iconbar Mouse Click event handler with Adjust removed">static void ibar_mouse_click(wimp_pointer *pointer)
 {
 	switch (pointer-&gt;buttons) {
 	case wimp_CLICK_SELECT:

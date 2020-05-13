@@ -116,9 +116,9 @@
 
 <p>Now that we have some sprites and a template to use them, we need a way to load the images into a user sprite area. A little surprisingly, there is no way to do this in a single operation, but it&rsquo;s fairly straightforward to create a new, empty area and then load a sprite file into it. Since this is something that many applications will need to do, SFLib provides the <function>resources_load_user_sprite_area()</function> within its resources library to save duplicating effort. Since we will be using this, it&rsquo;s worth looking at how it works before treating it as a black box.</p>
 
-<p>The code is shown here, and there&rsquo;s a fair bit to unpick:</p>
+<p>The code is shown in <reference id="list-icons-sprite-area-sflib"/>, and there&rsquo;s a fair bit to unpick.</p>
 
-<code lang="c">osspriteop_area *resources_load_user_sprite_area(char *file)
+<code id="list-icons-sprite-area-sflib" lang="c" title="SFLib's routine to load sprites into a sprite area">osspriteop_area *resources_load_user_sprite_area(char *file)
 {
 	int			size;
 	bits			type;
@@ -265,9 +265,9 @@ extern os_error *xosspriteop_load_sprite_file(
 <code lang="c">#include "oslib/osspriteop.h"
 #include "sflib/resources.h"</code>
 
-<p>at the top of <file>h.main</file>, we can update <function>main_initialise()</function> to read as follows:</p>
+<p>at the top of <file>h.main</file>, we can update <function>main_initialise()</function> to the code seen in <reference id="list-icons-sprite-area-main"/>.</p>
 
-<code lang="c">static void main_initialise(void)
+<code id="list-icons-sprite-area-main" lang="c" title="The changes to the main_initialise() function">static void main_initialise(void)
 {
 	os_error	*error;
 	osspriteop_area	*sprites;
@@ -308,18 +308,18 @@ extern os_error *xosspriteop_load_sprite_file(
 
 <code lang="c">#include "oslib/osspriteop.h"</code>
 
-<p>The first thing we need to do is bring the icon handle constants up to date with the window template:</p>
+<p>The first thing we need to do is bring the icon handle constants up to date with the window template, as shown in <reference id="list-icons-sprite-area-const"/>.</p>
 
-<code lang="c">/* Constant Values */
+<code id="list-icons-sprite-area-const" lang="c" title="The new icon handle constants">/* Constant Values */
 
 #define WIN_ICON_OPT_CIRCLE 0
 #define WIN_ICON_OPT_SQUARE 1
 #define WIN_ICON_OPT_TRIANGLE 2
 #define WIN_ICON_SHAPE 3</code>
 
-<p>Next, we will create some code to set the shape in the icon. An enum can be defined at the top of the file to identify the shape that we want.</p>
+<p>Next, we will create some code to set the shape in the icon. An enum can be defined at the top of the file to identify the shape that we want, as seen in <reference id="list-icons-sprite-area-enum"/>.</p>
 
-<code lang="c">/* Display Shapes */
+<code id="list-icons-sprite-area-enum" lang="c" title="The possible shapes listed in an enum">/* Display Shapes */
 
 enum win_shape {
 	WIN_SHAPE_NONE,
@@ -328,9 +328,9 @@ enum win_shape {
 	WIN_SHAPE_TRIANGLE
 };</code>
 
-<p>This can then be used as a parameter to a new function to update the icon.</p>
+<p>This can then be used as a parameter to a new function, shown in <reference id="list-icons-sprite-area-set"/> to update the icon.</p>
 
-<code lang="c">static void win_set_shape(enum win_shape shape)
+<code id="list-icons-sprite-area-set" lang="c" title="A function to select the current shape">static void win_set_shape(enum win_shape shape)
 {
 	char *sprite = NULL;
 
@@ -353,9 +353,9 @@ enum win_shape {
 	wimp_set_icon_state(win_handle, WIN_ICON_SHAPE, 0, 0);
 }</code>
 
-<p>Creating the <function>win_set_shape()</function> allows us to call the code from multiple places, whilst not having to duplicate the sprite names. If we ever changed these, or added more shapes to the file, there is only one place which needs to be updated. The <function>win_mouse_click()</function> event handler can now be updated, so that it calls <function>win_set_shape()</function> instead of accessing the display icon directly.</p>
+<p>Creating the <function>win_set_shape()</function> allows us to call the code from multiple places, whilst not having to duplicate the sprite names. If we ever changed these, or added more shapes to the file, there is only one place which needs to be updated. The <function>win_mouse_click()</function> event handler can now be updated as shown in <reference id="list-icons-sprite-area-click"/>, so that it calls <function>win_set_shape()</function> instead of accessing the display icon directly.</p>
 
-<code lang="c">static void win_mouse_click(wimp_pointer *pointer)
+<code id="list-icons-sprite-area-click" lang="c" title="The updated Mouse Click event handler">static void win_mouse_click(wimp_pointer *pointer)
 {
 	enum win_shape shape = WIN_SHAPE_NONE;
 
@@ -403,9 +403,9 @@ enum win_shape {
 
 <p>In fact, if an icon is indirected, then so long as <variable>size</variable> is greater than zero, it is safe to treat the first entry in the indirected data structure (whether this is <variable>*text</variable> or <variable>id</variable>) as a pointer to a memory buffer of length <variable>size</variable> bytes. This is how <function>win_set_shape()</function>, which we defined above, can use <function>icons_printf()</function> for writing to the name buffer.</p>
 
-<p>It only remains to update <function>win_initialise()</function>, remembering that we will also need to amend its prototype in <file>h.win</file> to match.</p>
+<p>It only remains to update <function>win_initialise()</function> as seen in <reference id="list-icons-sprite-area-init"/>, remembering that we will also need to amend its prototype in <file>h.win</file> to match.</p>
 
-<code lang="c">void win_initialise(osspriteop_area *sprites)
+<code id="list-icons-sprite-area-init" lang="c" title="The changes required to initialise our icon">void win_initialise(osspriteop_area *sprites)
 {
 	wimp_window	*window_definition;
 	wimp_icon	*icons;
@@ -486,9 +486,9 @@ enum win_shape {
 
 <p>When we met the <name>wimp_window</name> structure in <reference id="sect-window-theory-loose-ends"/>, we briefly mentioned the <variable>window_definition.sprite_area</variable> pointer and set it to <name>wimpspriteop_AREA</name> &ndash; which, as we have now seen, made the Wimp use the Wimp Sprite Pool for all of the icons. <swi>Wimp_LoadTemplate</swi> also sets this location to <name>wimpspriteop_AREA</name> as it loads a window definition in to memory, regardless of what might be in the templates file: a dodgy pointer could cause the application to crash as the window is opened.</p>
 
-<p>To try this out, we could add a couple of new sprites, named &ldquo;radiooff&rdquo; and &ldquo;radioon&ldquo;, to our three <file>!ExamplApp.Sprites</file> files, and then amend the code in <function>win_initialise()</function> so that it sets <variable>window_definition-&gt;sprite_area</variable> to our sprite area.</p>
+<p>To try this out, we could add a couple of new sprites, named &ldquo;radiooff&rdquo; and &ldquo;radioon&ldquo;, to our three <file>!ExamplApp.Sprites</file> files, and then amend the code in <function>win_initialise()</function> to that shown in <reference id="list-icons-sprite-area-win-area"/> so that it sets <variable>window_definition-&gt;sprite_area</variable> to our sprite area.</p>
 
-<code lang="c">/* Load and create the window. */
+<code id="list-icons-sprite-area-win-area" lang="c" title="Setting the window sprite area">/* Load and create the window. */
 
 window_definition = windows_load_template(&quot;Main&quot;);
 if (window_definition == NULL) {

@@ -88,13 +88,13 @@ typedef struct wimp_set_icon_state_block wimp_set_icon_state_block;</code>
 <row><col>1</col><col>1</col><col>Set flag</col></row>
 </table>
 
-<p>In order to select the first radio icon, we can simply add</p>
+<p>In order to select the first radio icon, we can simply add the code in <reference id="list-icons-radio-set"/> to the end of the <function>win_initialise()</function> function.</p>
 
-<code lang="c">wimp_set_icon_state(win_handle, WIN_ICON_OPTION1, wimp_ICON_SELECTED, wimp_ICON_SELECTED);</code>
+<code id="list-icons-radio-set" lang="c" title="Selecting the chosen radio icon">wimp_set_icon_state(win_handle, WIN_ICON_OPTION1, wimp_ICON_SELECTED, wimp_ICON_SELECTED);</code>
 
-<p>to the end of the <function>win_initialise()</function> function. Having the <name>wimp_ICON_SELECTED</name> bit set in both <name>eor_bits</name> and <name>clear_bits</name> puts us into the &ldquo;Set flag&rdquo; row of the table. For a complete belt-and-braces approach, which is always a good idea, we can then deselect the other two in a similar way:</p>
+<p> Having the <name>wimp_ICON_SELECTED</name> bit set in both <name>eor_bits</name> and <name>clear_bits</name> puts us into the &ldquo;Set flag&rdquo; row of the table. For a complete belt-and-braces approach, which is always a good idea, we can then deselect the other two in a similar way using the code in <reference id="list-icons-radio-clear"/>.</p>
 
-<code lang="c">wimp_set_icon_state(win_handle, WIN_ICON_OPTION2, 0, wimp_ICON_SELECTED);
+<code id="list-icons-radio-clear" lang="c" title="Clearing the unwanted radio icons">wimp_set_icon_state(win_handle, WIN_ICON_OPTION2, 0, wimp_ICON_SELECTED);
 wimp_set_icon_state(win_handle, WIN_ICON_OPTION3, 0, wimp_ICON_SELECTED);</code>
 
 <p>In this case, <name>wimp_ICON_SELECTED</name> is clear in <name>eor_bits</name> and set in <name>clear_bits</name>, which puts us into the &ldquo;Clear flag&rdquo; row of the table.</p>
@@ -113,9 +113,9 @@ wimp_set_icon_state(win_handle, WIN_ICON_OPTION3, 0, wimp_ICON_SELECTED);</code>
 
 <p>There is, a little surprisingly, no way to fix this within the Wimp. Allowing all of the options to be turned off could be valid on some cases, but when it isn&rsquo;t, the Wimp leaves it up to the developer to enforce the rule.</p>
 
-<p>Fortunately there&rsquo;s a fairly simple fix: in the <function>win_mouse_click()</function> event handler, we can use <swi>Wimp_SetIconState</swi> to force the radio icon to be selected if it was clicked on with <mouse>Adjust</mouse>.</p>
+<p>Fortunately there&rsquo;s a fairly simple fix: in the <function>win_mouse_click()</function> event handler, we can use <swi>Wimp_SetIconState</swi> to force the radio icon to be selected if it was clicked on with <mouse>Adjust</mouse> as seen in <reference id="list-icons-radio-adjust"/>.</p>
 
-<code lang="c">if ((pointer-&gt;buttons == wimp_CLICK_ADJUST) &amp;&amp; (option &gt; 0))
+<code id="list-icons-radio-adjust" lang="c" title="Catching Adjust clicks on the radio icons">if ((pointer-&gt;buttons == wimp_CLICK_ADJUST) &amp;&amp; (option &gt; 0))
 	wimp_set_icon_state(win_handle, pointer-&gt;i, wimp_ICON_SELECTED, wimp_ICON_SELECTED);</code>
 
 <p>We&rsquo;re checking that the mouse button was indeed <mouse>Adjust</mouse>, and also that the click was on one of the radio icons (if <variable>option</variable> has been set to a value greater than zero), to make sure that we don&rsquo;t inadvertantly try to set the state of another icon in the window at some stage in the future. The changes can be found in <reference id="dl-icons-radio-adjust"/>.</p>
@@ -154,9 +154,9 @@ wimp_set_icon_state(win_handle, WIN_ICON_OPTION3, 0, wimp_ICON_SELECTED);</code>
 
 <p>The window and icon handles are what we would expect, and identify the icon to be looked after. The <variable>complete</variable> parameter controls whether or not the radio icon handler will report the handling of the event to be complete, which as described above will determine whether the event gets passed on to any other event handlers.</p>
 
-<p>To use this approach in our application, we can remove the code that we added to the <function>win_mouse_click()</function> event handler in the previous section, and replace it with the following three lines in the <function>win_initialise()</function> function:</p>
+<p>To use this approach in our application, we can remove the code that we added to the <function>win_mouse_click()</function> event handler in the previous section, and replace it with the three lines from <reference id="list-icons-radio-sflib"/> in the <function>win_initialise()</function> function:</p>
 
-<code lang="c">event_add_window_icon_radio(win_handle, WIN_ICON_OPTION1, FALSE);
+<code id="list-icons-radio-sflib" lang="c" title="Registeing the radio icons with the event library">event_add_window_icon_radio(win_handle, WIN_ICON_OPTION1, FALSE);
 event_add_window_icon_radio(win_handle, WIN_ICON_OPTION2, FALSE);
 event_add_window_icon_radio(win_handle, WIN_ICON_OPTION3, FALSE);</code>
 
@@ -209,9 +209,9 @@ event_add_window_icon_radio(win_handle, WIN_ICON_OPTION3, FALSE);</code>
 	...
 );</code>
 
-<p>This function takes the usual <function>printf()</function> parameters, prefixed by the target window and icon handles. By using it, we can reduce the event handler down to the following code:</p>
+<p>This function takes the usual <function>printf()</function> parameters, prefixed by the target window and icon handles. By using it, we can reduce the event handler down to the code in <reference id="list-icons-radio-printf"/>.</p>
 
-<code lang="c">static void win_mouse_click(wimp_pointer *pointer)
+<code id="list-icons-radio-printf" lang="c" title="Using SFLib's icons_printf() to update the icon">static void win_mouse_click(wimp_pointer *pointer)
 {
 	int option = 0;
 
