@@ -1,0 +1,213 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+
+<!DOCTYPE xmlmanual SYSTEM "../wimp.dtd">
+
+<manual xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="xmldoc.xsd" version="1.8.6">
+
+<!-- Chapter 25
+   -
+   - Doing Some Useful Work
+  -->
+
+<chapter id="chap-some-work">
+<resources>
+<images>Chapter25</images>
+<downloads>Chapter25</downloads>
+</resources>
+<filename>some-work.html</filename>
+<title>Doing Some Useful Work</title>
+
+<summary>Before we completely finish with the subject of menus, let&rsquo;s stop to make our application do something slightly useful.</summary>
+
+<section>
+<p>We&rsquo;ve now covered two special types of menu &ndash; the <reference id="chap-menus-intro">iconbar menu</reference> and <reference id="chap-menus-popup">pop-up menu</reference> &ndash; but have yet to look at the simplest type: one that opens over a window following a click with the <mouse>Menu</mouse> button.</p>
+
+<p>We will correct that omission soon, but first we will use some of our new-found knowledge to lay the foundations for our small application to so something useful. With the ability to select from a range of shapes, we could perhaps use it to do some simple geometric calculations &ndash; and now would be a good time to implement the first stages of that.</p>
+</section>
+
+<section>
+<title>Updating the templates</title>
+
+<p>As ever, the first thing that we need to do is to update the window templates to include some new icons. Load <file>!ExamplApp.Templates</file> into your template editor, then open the &ldquo;Main&rdquo; window. As ever, we will be using <cite>WinEd</cite> in the description that follows.</p>
+
+<p>We are going to add two new display fields, as seen in <reference id="fig-some-work-window"/>. Expand the work area downwards, then drag a couple of display fields and labels across from the <window>Icon picker</window> into the positions shown.</p>
+
+<p>If the work is done in <cite>WinEd</cite>, then the icons will be numbered 4 and 5 for the <icon>Sides</icon> display field and label respectively, then 6 and 7 for the <icon>Internal angles</icon> display field and label. These will be the numbers that we will use in our code below.</p>
+
+<p>Close the window and save the changes to the templates file.</p>
+
+<image id="fig-some-work-window" file="some-work-window.png" title="The window with two new result fields included"/>
+</section>
+
+<section>
+<title>Adding a calculator</title>
+
+<p>In order to be able to complete our two new fields, we will need some way to identify the number of sides for each of our shapes, and to calculate their internal angles. It&rsquo;s usually a good idea to separate the code which does the actual work from the code which handles theuser interface, so we will add another source file called <file>c.calc</file> and its associated header file <file>h.calc</file>. It will ne necessary to update the <variable>OBJS</variable> list in the <file>Makefile</file> to include a reference to it.</p>
+
+<code lang="makefile">OBJS = calc main menu ibar win</code>
+
+<p>The new file will be a self-contained module for calculating simple geometry for the shapes that we are using. The main code can be seen in <reference id="code-some-work-calc"/>, and the <file>h.calc</file> file defines the following enum.</p>
+
+<code lang="c">/* Display Shapes */
+
+enum calc_shape {
+	CALC_SHAPE_NONE,
+	CALC_SHAPE_SQUARE,
+	CALC_SHAPE_CIRCLE,
+	CALC_SHAPE_TRIANGLE
+};</code>
+
+<p>The <name>enum calc_shape</name> will replace the <name>enum win_shape</name> which was previously defined in <file>c.win</file>.</p>
+
+<code id="code-some-work-calc" lang="c" file="c.calc" title="The new calculation module">/* Constants. */
+
+#define CALC_BUFFER_LENGTH 32
+#define CALC_FORMAT_LENGTH 8
+
+/* Global Variables. */
+
+static enum calc_shape calc_current_shape = CALC_SHAPE_NONE;
+
+static int calc_current_sides = 0;
+
+static int calc_current_places = 0;
+
+static char calc_buffer[CALC_BUFFER_LENGTH];
+
+static char calc_format[CALC_FORMAT_LENGTH];
+
+/* Calculation Initialisation. */
+
+void calc_initialise(void)
+{
+	calc_set_format(2);
+	calc_set_shape(CALC_SHAPE_NONE);
+}
+
+/* Shape Selection. */
+
+void calc_set_shape(enum calc_shape shape)
+{
+	calc_current_shape = shape;
+
+	switch (shape) {
+	case CALC_SHAPE_CIRCLE:
+		calc_current_sides = 1;
+		break;
+	case CALC_SHAPE_TRIANGLE:
+		calc_current_sides = 3;
+		break;
+	case CALC_SHAPE_SQUARE:
+		calc_current_sides = 4;
+		break;
+	default:
+		calc_current_sides = 0;
+		break;
+	}
+}
+
+/* Set the formatting of results. */
+
+void calc_set_format(int places)
+{
+	if (places &gt;= 0 &amp;&amp; places &lt;= 5) {
+		calc_current_places = places;
+		string_printf(calc_format, CALC_FORMAT_LENGTH, &quot;%%.%df&quot;, places);
+	}
+}
+
+/* Get the decimal places. */
+
+int calc_get_places(void)
+{
+	return calc_current_places;
+}
+
+/* The number of sides. */
+
+char *calc_get_sides(void)
+{
+	if (calc_current_sides &gt; 1) {
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, &quot;%d&quot;, calc_current_sides);
+	} else {
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, &quot;n/a&quot;);
+	}
+
+	return calc_buffer;
+}
+
+/* The internal angle. */
+
+char *calc_get_internal_angle(void)
+{
+	double angle;
+
+	if (calc_current_sides &gt; 2) {
+		angle = ((calc_current_sides - 2.0) * 180.0) / calc_current_sides;
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, calc_format, angle);
+	} else {
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, &quot;n/a&quot;);
+	}
+
+	return calc_buffer;
+}</code>
+
+<p>The code starts with some global constants and variables, which between them provide storage for the current shape and formatting choices. There are two buffers: one to hold the most recently generated output text, and the other to hold a <function>printf()</function> format string.</p>
+
+<p>The <function>calc_initialise()</function> function needs to be called from <function>main_initialise()</function> in order to set up the variables and buffers to some sensible defaults, after which <function>calc_set_shape()</function> and <function>calc_set_format()</function> can be used to choose the active shape and set the number of decimal places used when displaying numbers. The configured number of decimal places can be read back using the <function>calc_get_places()</function> function.</p>
+
+<p>The other two functions are <function>calc_get_sides()</function> and <function>calc_get_internal_angle()</function>, which return a pointer to the output buffer having written a suitable string into it given the current shape. To avoid getting into geometric arguments, this will be &ldquo;n/a&rdquo; for the circle, and the calculated values for the triangle ans square.</p>
+
+<p>We can now modify the <function>win_set_shape()</function> in <file>c.win</file> so that it makes use of the new facilities:</p>
+
+<code lang="c">static void win_set_shape(enum calc_shape shape)
+{
+	char *sprite = NULL, *text = NULL;
+
+	/* Update the graphic. */
+
+	switch (shape) {
+	case CALC_SHAPE_SQUARE:
+		sprite = &quot;square&quot;;
+		break;
+	case CALC_SHAPE_CIRCLE:
+		sprite = &quot;circle&quot;;
+		break;
+	case CALC_SHAPE_TRIANGLE:
+		sprite = &quot;triangle&quot;;
+		break;
+	}
+
+	if (sprite != NULL) {
+		icons_printf(win_handle, WIN_ICON_SHAPE, &quot;%s&quot;, sprite);
+		wimp_set_icon_state(win_handle, WIN_ICON_SHAPE, 0, 0);
+	}
+
+	/* Change the shape. */
+
+	calc_set_shape(shape);
+
+	/* Perform the static calculations */
+
+	text = calc_get_sides();
+	if (text != NULL) {
+		icons_strncpy(win_handle, WIN_ICON_SIDES_FIELD, text);
+		wimp_set_icon_state(win_handle, WIN_ICON_SIDES_FIELD, 0, 0);
+	}
+
+	text = calc_get_internal_angle();
+	if (text != NULL) {
+		icons_strncpy(win_handle, WIN_ICON_INT_ANGLE_FIELD, text);
+		wimp_set_icon_state(win_handle, WIN_ICON_INT_ANGLE_FIELD, 0, 0);
+	}
+}</code>
+
+<p>The function now takes a parameter of the new <name>enum calc_shape</name> type, so the calls made to it will need to be updated accordingly.</p>
+
+<p>When compiled and run, our application window should look similar to that shown in <reference id="fig-some-work-calcs"/>.</p>
+
+<image id="fig-some-work-calcs" file="some-work-calcs.png" title="The application can now show some information about the displayed shape"/>
+
+</section>
+</chapter>
+</manual>

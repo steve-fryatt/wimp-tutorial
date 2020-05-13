@@ -389,7 +389,7 @@ enum win_shape {
 	int		size;
 } indirected_sprite;</code>
 
-<p>Unlike the other two indirected icons, indirected sprite icons do not have a validation string pointer. Instead, that part of the block contains the <variable>*area</variable> pointer, which tells the Wimp where the sprite can be found. If it is set to 1, the sprite can be found in the Wimp Sprite Pool &ndash; and OSLib defines a <name>wimpspriteop_AREA</name> constant for us to use.</p> 
+<p>Unlike the other two types of indirected icon, indirected sprite icons do not have a validation string pointer. Instead, that part of the block contains the <variable>*area</variable> pointer, which tells the Wimp where the sprite can be found. If it is set to 1, the sprite can be found in the Wimp Sprite Pool &ndash; and OSLib defines a <name>wimpspriteop_AREA</name> constant for us to use.</p> 
 
 <code lang="c">#define wimpspriteop_AREA	((osspriteop_area *) 0x1u)</code>
 

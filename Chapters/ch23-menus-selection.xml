@@ -118,7 +118,7 @@ static void (*menu_current_callback)(wimp_menu *menu, wimp_selection *selection)
 		entries++;
 		if ((menu-&gt;entries[entry].menu_flags &amp; wimp_MENU_SEPARATE) != 0)
 			lines++;
-	} while ((menu-&gt;entries[entry++].menu_flags &amp; wimp_MENU_LAST) == 0);
+	} while (!(menu-&gt;entries[entry++].menu_flags &amp; wimp_MENU_LAST));
 
 	if (xwimp_create_menu(menu, pointer-&gt;pos.x - 64,
 			96 + (entries * (menu-&gt;height + menu-&gt;gap)) + (lines * wimp_MENU_ITEM_SEPARATION)) != NULL)

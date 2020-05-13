@@ -161,20 +161,17 @@ static void win_set_shape_menu(int selection)
 
 static void win_set_shape(enum win_shape shape)
 {
-	char *sprite = NULL, *name = NULL;
+	char *sprite = NULL;
 
 	switch (shape) {
 	case WIN_SHAPE_SQUARE:
 		sprite = "square";
-		name = "Square";
 		break;
 	case WIN_SHAPE_CIRCLE:
 		sprite = "circle";
-		name = "Circle";
 		break;
 	case WIN_SHAPE_TRIANGLE:
 		sprite = "triangle";
-		name = "Triangle";
 		break;
 	}
 
