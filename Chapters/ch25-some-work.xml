@@ -185,9 +185,9 @@ char *calc_get_internal_angle(void)
 
 <p>The other two functions are <function>calc_get_sides()</function> and <function>calc_get_internal_angle()</function>, which return a pointer to the output buffer having written a suitable string into it given the current shape. To avoid getting into geometric arguments, this will be &ldquo;n/a&rdquo; for the circle, and the calculated values for the triangle ans square.</p>
 
-<p>We can now modify the <function>win_set_shape()</function> in <file>c.win</file> so that it makes use of the new facilities:</p>
+<p>We can now modify the <function>win_set_shape()</function> in <file>c.win</file> as shown in <reference id="list-some-work-set-shape"/>, so that it makes use of the new facilities.</p>
 
-<code lang="c">static void win_set_shape(enum calc_shape shape)
+<code id="list-some-work-set-shape" lang="c" title="Upodating the data fields">static void win_set_shape(enum calc_shape shape)
 {
 	char *sprite = NULL, *text = NULL;
 
