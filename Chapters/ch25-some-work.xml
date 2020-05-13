@@ -22,7 +22,7 @@
 <section>
 <p>We&rsquo;ve now covered two special types of menu &ndash; the <reference id="chap-menus-intro">iconbar menu</reference> and <reference id="chap-menus-popup">pop-up menu</reference> &ndash; but have yet to look at the simplest type: one that opens over a window following a click with the <mouse>Menu</mouse> button.</p>
 
-<p>We will correct that omission soon, but first we will use some of our new-found knowledge to lay the foundations for our small application to so something useful. With the ability to select from a range of shapes, we could perhaps use it to do some simple geometric calculations &ndash; and now would be a good time to implement the first stages of that.</p>
+<p>We will correct that omission soon, but first we will use some of our new-found knowledge to lay the foundations for our small application to do something useful. With the ability to select from a range of shapes, we could perhaps use it to do some simple geometric calculations &ndash; and now would be a good time to implement the first stages of that.</p>
 </section>
 
 <section>
