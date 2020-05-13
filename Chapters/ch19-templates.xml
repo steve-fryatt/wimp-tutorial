@@ -152,9 +152,9 @@ extern void wimp_open_template(char const *file_name);
 extern os_error *xwimp_close_template(void);
 extern void wimp_close_template(void);</code>
 
-<p>At present, our <function>main_initialise()</function> function calls the <function>ibar_initialise()</function> and <function>win_initialise()</function> functions to allow the individual code modules to set themselves up. It would make sense for us to open the templates file before doing this, and the close it afterwards &ndash; which we can achieve as follows:</p>
+<p>At present, our <function>main_initialise()</function> function calls the <function>ibar_initialise()</function> and <function>win_initialise()</function> functions to allow the individual code modules to set themselves up. It would make sense for us to open the templates file before doing this, and the close it afterwards &ndash; which we can achieve as shown in <reference id="list-templates-main-init"/>.</p>
 
-<code lang="c">static void main_initialise(void)
+<code id="list-templates-main-init" lang="c" title="Opening the template file">static void main_initialise(void)
 {
 	os_error *error;
 
@@ -186,9 +186,9 @@ extern void wimp_close_template(void);</code>
 
 <p>Finally, there is an assumption that both <function>ibar_initialise()</function> and <function>win_initialise()</function> will return, so that the call to <function>wimp_close_template()</function> can be made. This could be a problem, because <function>ibar_initialise()</function> makes a call to <function>wimp_create_icon()</function> when it creates the iconbar icon &ndash; but no attempt is made to catch any errors, despite the act of creating an icon having the potential to fail. The <cite>Programmer&rsquo;s Reference Manual</cite> is clear that <swi>Wimp_CloseTemplate</swi> should <em>always</em> be called if <swi>Wimp_OpenTemplate</swi> succeeded &ndash; even if errors occur while the template file is open.</p>
 
-<p>To fix this, we can amend <function>ibar_initialise()</function> as follows:</p>
+<p>To fix this, we can amend <function>ibar_initialise()</function> as shown in <reference id="list-templates-ibar"/>.</p>
 
-<code lang="c">void ibar_initialise(char *sprite)
+<code id="list-templates-ibar" lang="c" title="Adding error handling to the iconbar code">void ibar_initialise(char *sprite)
 {
 	os_error *error;
 
@@ -262,9 +262,9 @@ extern void wimp_close_template(void);</code>
 
 <p>The values in <name>R1</name> and <name>R2</name> will be updated by the SWI on exit, too; if we asked for the buffer sizes by setting <variable>*window</variable> to <name>wimp_GET_SIZE</name> on entry, then this is how we read the sizes back. We can provide pointers to two integer variables in the <variable>*used</variable> and <variable>*data_used</variable> parameters to retrieve them.</p>
 
-<p>There&rsquo;s quite a lot of work to do with <swi>Wimp_LoadTemplate</swi>, so we will defer to SFLib&rsquo;s <function>windows_load_template()</function> to implement it. This is defined as follows:</p>
+<p>There&rsquo;s quite a lot of work to do with <swi>Wimp_LoadTemplate</swi>, so we will defer to SFLib&rsquo;s <function>windows_load_template()</function> to implement it. This is defined as shown in <reference id="list-templates-sflib-load"/>.</p>
 
-<code lang="c">wimp_window *windows_load_template(char *name)
+<code id="list-templates-sflib-load" lang="c" title="SFLib's code for loading a template">wimp_window *windows_load_template(char *name)
 {
 	wimp_window	*window_def = NULL;
 	byte		*ind_data = NULL;
@@ -318,26 +318,26 @@ extern void wimp_close_template(void);</code>
 
 <p>If everything worked as expected, then a pointer to the <name>wimp_window</name> block is returned by <function>windows_load_template()</function>. This is the same as the one that we have been creating by hand in <function>win_initialise()</function>, except that all of the icons definitions are included at the end &ndash; just as we hinted could be done back in <reference id="sect-window-theory-loose-ends"/>. This means that <swi>Wimp_CreateWindow</swi> will create all of the icons at the same time as the window, instead of our having to call <swi>Wimp_CreateIcon</swi> for each one &ndash; less work for us!</p>
 
-<p>To update <file>c.win</file>, we can first delete the prototypes and definitions for <function>win_create_radio_icon()</function> and <function>win_create_info_icon()</function>. We are no longer creating our icons by hand, so these functions are unnenecssary. We can also delete the definition of <name>WIN_ICON_TEXT_LEN</name>, and replace it with the following definitions:</p>
+<p>To update <file>c.win</file>, we can first delete the prototypes and definitions for <function>win_create_radio_icon()</function> and <function>win_create_info_icon()</function>. We are no longer creating our icons by hand, so these functions are unnenecssary. We can also delete the definition of <name>WIN_ICON_TEXT_LEN</name>, and replace it with the following definitions shown in <reference id="list-templates-head-const"/>.</p>
 
-<code lang="c">/* Main Window Icons. */
+<code id="list-templates-head-const" lang="c" title="The constants for the icon handles">/* Main Window Icons. */
 
 #define WIN_ICON_OPTION1 0
 #define WIN_ICON_OPTION2 1
 #define WIN_ICON_OPTION3 2
 #define WIN_ICON_INFO 3</code>
 
-<p>These show the icon handles from the window definition in the template file, and will need to be kept up to date if the window template changes. It&rsquo;s a good idea to define them once like this, instead of having to search the code for hard-coded references to the icon handles! A number of the global variable definitions can also be discarded, although we do need to retain the <variable>win_handle</variable>, <variable>win_width</variable> and <variable>win_height</variable> definitions.</p>
+<p>These show the icon handles from the window definition in the template file, and will need to be kept up to date if the window template changes. It&rsquo;s a good idea to define them once like this, instead of having to search the code for hard-coded references to the icon handles! A number of the global variable definitions can also be discarded, although we do need to retain the <variable>win_handle</variable>, <variable>win_width</variable> and <variable>win_height</variable> definitions seen in <reference id="list-templates-head-vars"/>.</p>
 
-<code lang="c">/* Global Variables */
+<code id="list-templates-head-vars" lang="c" title="The reduced global variable list">/* Global Variables */
 
 static wimp_w win_handle;
 
 static int win_width, win_height;</code>
 
-<p>The <function>win_initialise()</function> function now looks like this:</p>
+<p>The <function>win_initialise()</function> function now looks as seen in <reference id="list-templates-init"/>.</p>
 
-<code lang="c">void win_initialise(void)
+<code id="list-templates-init" lang="c" title="Loading the main window template">void win_initialise(void)
 {
 	wimp_window *window_definition;
 
@@ -368,9 +368,9 @@ static int win_width, win_height;</code>
 <section id="sect-templates-update-status">
 <title>Updating the status field</title>
 
-<p>There is still one fly in the ointment. Previously in <function>win_mouse_click()</function>, we had been writing the status text direct to the icon buffer using the global variable. Now we can&rsquo;t do that, because the Wimp has set up the indirected buffer somewhere in the memory that we supplied to <swi>Wimp_LoadTemplate</swi> and we don&rsquo;t know the address. Instead, we will need to use a different approach:</p>
+<p>There is still one fly in the ointment. Previously in <function>win_mouse_click()</function>, we had been writing the status text direct to the icon buffer using the global variable. Now we can&rsquo;t do that, because the Wimp has set up the indirected buffer somewhere in the memory that we supplied to <swi>Wimp_LoadTemplate</swi> and we don&rsquo;t know the address. Instead, we will need to use a different approach as shown in <reference id="list-templates-click"/>.</p>
 
-<code lang="c">static void win_mouse_click(wimp_pointer *pointer)
+<code id="list-templates-click" lang="c" title="A revised Mouse Click event handler">static void win_mouse_click(wimp_pointer *pointer)
 {
 	wimp_icon_state		state;
 	int			option = 0;
