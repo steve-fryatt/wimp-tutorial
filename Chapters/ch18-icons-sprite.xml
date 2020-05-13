@@ -57,9 +57,9 @@
 	int		size;
 } indirected_text_and_sprite;</code>
 
-<p>Once again, we now have three fields: two pointers to external buffers (<variable>*text</variable> and <variable>*validation</variable>), and a field holding the length of the buffer pointed to by <variable>*text</variable>. To make use of this, we can update the definition of <function>win_create_icon()</function> as follows:</p>
+<p>Once again, we now have three fields: two pointers to external buffers (<variable>*text</variable> and <variable>*validation</variable>), and a field holding the length of the buffer pointed to by <variable>*text</variable>. To make use of this, we can update the definition of <function>win_create_icon()</function> as in <reference id="list-icons-sprite-text-sprite"/>.</p>
 
-<code lang="c">static wimp_i win_create_icon(void)
+<code id="list-icons-sprite-text-sprite" lang="c" title="Creating a text+sprite icon">static wimp_i win_create_icon(void)
 {
 	wimp_icon_create icon_definition;
 
@@ -110,9 +110,9 @@
 
 <p>There&rsquo;s one other thing to consider, though: when the option is on, a different sprite should be shown so that a tick appears, and in fact the &ldquo;opton&rdquo; sprite is also in the Wimp Sprite Pool for this purpose. Once again, this is easy to implement, because the <name>S</name> validation command can actually take two comma separated sprite names. If we use <code>Soptoff,opton</code> then the sprite will change between &ldquo;optoff&rdquo; when the icon is not ticked, and &ldquo;opton&rdquo; when it is.</p>
 
-<p>Bringing this together results in the following changes to <function>win_create_icon()</function>:</p>
+<p>Bringing this together results in the changes to <function>win_create_icon()</function> as seen in <reference id="list-icons-sprite-option"/>.</p>
 
-<code lang="c">static wimp_i win_create_icon(void)
+<code id="list-icons-sprite-option" lang="c" title="Creating an option button">static wimp_i win_create_icon(void)
 {
 	wimp_icon_create icon_definition;
 
@@ -161,9 +161,9 @@
 
 <p>We can then create a similar function, <function>win_create_info_icon()</function>, which will create an icon capable of displaying information for the user. This needs its own memory buffer, which again we can pass in as a parameter. Finally, we will re-instate the <function>win_mouse_click()</function> event handler which was deleted earlier in the chapter.</p>
 
-<p>Taken together, these result in the following changes to the global variables and function prototypes:</p>
+<p>Taken together, these result in the following changes to the global variables and function prototypes as seen in <reference id="list-icons-sprite-option-head"/></p>
 
-<code lang="c">/* Constant Values */
+<code id="list-icons-sprite-option-head" lang="c" title="Radio icon file header">/* Constant Values */
 
 #define WIN_ICON_TEXT_LEN 100
 
@@ -187,9 +187,9 @@ static wimp_i win_create_radio_icon(int ypos, char *buffer, char *text);
 static wimp_i win_create_info_icon(int ypos, char *buffer, char *text);
 static void win_mouse_click(wimp_pointer *pointer);</code>
 
-<p>The last few lines of the <function>win_initialise()</function> become:</p>
+<p>The last few lines of the <function>win_initialise()</function> become those shown in <reference id="list-icons-sprite-option-init"/>.</p>
 
-<code lang="c">/* Create the icons. */
+<code id="list-icons-sprite-option-init" lang="c" title="Initialising the radio icons">/* Create the icons. */
 
 win_radio_icon_1_handle = win_create_radio_icon(-100, win_radio_icon_1_text, &quot;This is a useless option&quot;);
 win_info_icon_handle = win_create_info_icon(-200, win_info_icon_text, &quot;&quot;);
@@ -198,9 +198,9 @@ win_info_icon_handle = win_create_info_icon(-200, win_info_icon_text, &quot;&quo
 
 event_add_window_mouse_event(win_handle, win_mouse_click);</code>
 
-<p>Finally, for now, the two icon definition functions become:</p>
+<p>Finally, for now, the two icon definition functions become the ones seen in <reference id="list-icons-sprite-option-create"/>.</p>
 
-<code lang="c">/* Create a radio icon in a window. */
+<code id="list-icons-sprite-option-create" lang="c" title="Creating radio icons and display fields">/* Create a radio icon in a window. */
 
 static wimp_i win_create_radio_icon(int ypos, char *buffer, char *text)
 {
@@ -273,9 +273,9 @@ typedef struct wimp_icon_state wimp_icon_state;</code>
 
 <p>and we can see that this contains the <name>wimp_icon</name> structure that we are already using to define icons. This means that having got an icon&rsquo;s state, we can easily read the icon data back and examine or process it as required.</p>
 
-<p>Putting this into practice, we can reinstate our <function>win_mouse_click()</function> <name>Mouse Click</name> event handler as follows:</p>
+<p>Putting this into practice, we can reinstate our <function>win_mouse_click()</function> <name>Mouse Click</name> event handler as in <reference id="list-icons-sprite-option-click"/></p>
 
-<code lang="c">static void win_mouse_click(wimp_pointer *pointer)
+<code id="list-icons-sprite-option-click" lang="c" title="A Mouse Cick event handler for radio icons">static void win_mouse_click(wimp_pointer *pointer)
 {
 	wimp_icon_state		state;
 
@@ -309,9 +309,9 @@ typedef struct wimp_icon_state wimp_icon_state;</code>
 
 <p>In addition to simple on/off options, there is a variant of the option icon which uses multiple switches: one for each possible option. Known as <intro>radio icons</intro> because of their similarity to the tuning selection buttons on an old radio, they are also a common sight in dialogue boxes.</p>
 
-<p>As the name might suggest, the <name>wimp_BUTTON_RADIO</name> button type that we&rsquo;re already using will also implement radio icons. First, we need to define some global variables to hold the extra icons and their text labels.</p>
+<p>As the name might suggest, the <name>wimp_BUTTON_RADIO</name> button type that we&rsquo;re already using will also implement radio icons. First, we need to define some global variables to hold the extra icons and their text labels as shown in <reference id="list-icons-sprite-radio-head"/>.</p>
 
-<code lang="c">/* Global Variables */
+<code id="list-icons-sprite-radio-head" lang="c" title="The file heading changes for radio icons">/* Global Variables */
 
 static wimp_w win_handle;
 
@@ -329,9 +329,9 @@ static char win_radio_icon_3_text[WIN_ICON_TEXT_LEN];
 
 static char win_info_icon_text[WIN_ICON_TEXT_LEN];</code>
 
-<p>before creating the extra icons in <function>win_initialise()</function>:</p>
+<p>before creating the extra icons in <function>win_initialise()</function> as seen in <reference id="list-icons-sprite-radio-create"/>.</p>
 
-<code lang="c">/* Create the icons. */
+<code id="list-icons-sprite-radio-create" lang="c" title="Creating the radio icons">/* Create the icons. */
 
 win_radio_icon_1_handle = win_create_radio_icon(-100, win_radio_icon_1_text, "Option 1");
 win_radio_icon_2_handle = win_create_radio_icon(-152, win_radio_icon_2_text, "Option 2");
@@ -345,24 +345,24 @@ win_info_icon_handle = win_create_info_icon(-256, win_info_icon_text, "");</code
 
 <p>It used to be the case that five bits of the flags were set aside for the ESG, occupying bits 16 to 20, and this is still what OSLib has defined. However, in recent versions of the Wimp (where &lsquo;recent&rsquo; means &lsquo;this century&rsquo;), bit&nbsp;20 has been reallocated and only the four bits from 16 to 19 are available for the purpose. This still allows for 15 distinct groups within a window, which is probably more than enough; a zero ESG, which is what all of our previous icons have defaulted to, means that the icon is <em>not</em> part of any group.</p>
 
-<p>We can amend the icon flag definition within the <function>win_create_radio_icon()</function> function to include a non-zero ESG as follows:</p>
+<p>We can amend the icon flag definition within the <function>win_create_radio_icon()</function> function to include a non-zero ESG as in <reference id="list-icons-sprite-radio-flags"/>.</p>
 
-<code lang="c">icon_definition.icon.flags = wimp_ICON_TEXT | wimp_ICON_SPRITE |
+<code id="list-icons-sprite-radio-flags" lang="c" title="The icon flags for a radio icon">icon_definition.icon.flags = wimp_ICON_TEXT | wimp_ICON_SPRITE |
 		wimp_ICON_INDIRECTED | wimp_ICON_VCENTRED |
 		(wimp_BUTTON_RADIO &lt;&lt; wimp_ICON_BUTTON_TYPE_SHIFT) |
 		(1 &lt;&lt; wimp_ICON_ESG_SHIFT) |
 		(wimp_COLOUR_BLACK &lt;&lt; wimp_ICON_FG_COLOUR_SHIFT) |
 		(wimp_COLOUR_VERY_LIGHT_GREY &lt;&lt; wimp_ICON_BG_COLOUR_SHIFT);</code>
 
-<p>In addition, radio icons should use the &ldquo;radiooff&rdquo; and &ldquo;radioon&rdquo; sprites instead of &ldquo;optoff&rdquo; and &ldquo;opton&rdquo;, so we amend the validation string accordingly:</p>
+<p>In addition, radio icons should use the &ldquo;radiooff&rdquo; and &ldquo;radioon&rdquo; sprites instead of &ldquo;optoff&rdquo; and &ldquo;opton&rdquo;, so we amend the validation string accordingly, as seen in <reference id="list-icons-sprite-radio-valid"/>.</p>
 
-<code lang="c">icon_definition.icon.data.indirected_text_and_sprite.validation = "Sradiooff,radioon";</code>
+<code id="list-icons-sprite-radio-valid" lang="c" title="The S validation command for radio icons">icon_definition.icon.data.indirected_text_and_sprite.validation = "Sradiooff,radioon";</code>
 
 <p>In addition to these changes, we will also need to update the <name>Mouse Click</name> event handler, so that it can recognise the three distinct options now available. We could read the state of each icon individually using <swi>Wimp_GetIconState</swi> as we did with the single option icon, and this might still be the best option in a dialogue box when we&rsquo;re reading the state some time after the user has set it up. However, in this case, we want to react immediately and can therefore use the fact that with radio icons in an ESG, the last icon to be clicked by the user is almost guaranteed to be selected.</p>
 
-<p>This makes the following alternative approach possible:</p>
+<p>This makes the following alternative approach seen in <reference id="list-icons-sprite-radio-click"/> possible.</p>
 
-<code lang="c">static void win_mouse_click(wimp_pointer *pointer)
+<code id="list-icons-sprite-radio-click" lang="c" title="Updating the Mouse Click event handler">static void win_mouse_click(wimp_pointer *pointer)
 {
 	if (pointer->i == win_radio_icon_1_handle)
 		snprintf(win_info_icon_text, WIN_ICON_TEXT_LEN, "Option 1 is selected");
