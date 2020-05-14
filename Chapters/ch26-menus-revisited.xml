@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+
+<!DOCTYPE xmlmanual SYSTEM "../wimp.dtd">
+
+<manual xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="xmldoc.xsd" version="1.8.6">
+
+<!-- Chapter 26
+   -
+   - Menus Revisited
+  -->
+
+<chapter id="chap-menus-revisited">
+<resources>
+<images>Chapter26</images>
+<downloads>Chapter26</downloads>
+</resources>
+<filename>menus-revisited.html</filename>
+<title>Menus Revisited</title>
+
+<summary>We have seen how menus work from the perspective of the Wimp but, before moving on, let&rsquo;s see what SFLib can do to improve things.</summary>
+
+<section>
+
+
+</section>
+</chapter>
+</manual>

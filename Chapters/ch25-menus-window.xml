@@ -383,7 +383,7 @@ menu_entry(win_menu, WIN_MENU_DECIMAL3, &quot;3 Decimal places&quot;, NULL);</co
 
 <p>Which approach to use is largely down to the developer, and different situations may well suggest different solutions. In general, your author would probably recommend using the approach taken by <function>win_set_menu()</function> and setting all of the ticks, shadings and other configurable aspects of a menu each time it is opened and reopened on screen. This keeps all of the associated code in one place, and can be much easier to maintain than if each separate routine updates the parts of the menu that it uses directly.</p>
 
-<p>In addition, as we will see in the next chapter, this is the approach that SFLib supports with its own menu handling.</p>
+<p>In addition, as we will see in the <reference id="chap-menus-revisited">next chapter</reference>, this is the approach that SFLib supports with its own menu handling.</p>
 </section>
 </chapter>
 </manual>
