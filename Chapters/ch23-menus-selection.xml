@@ -79,7 +79,7 @@ typedef struct wimp_selection wimp_selection;</code>
 <p>Note that the event data from the Wimp contains no information about <em>which</em> menu the selection came from. If our application had more than one menu, such as one over its window and one on the iconbar, or used the same menu in several places, it would be up to us to remember which menu was open and what context it was opened in.</p>
 </section>
 
-<section>
+<section id="sect-menus-selection-dispatch">
 <title>Menu event dispatch</title>
 
 <p>There are many different ways that we could implement a scheme for tracking our application&rsquo;s menus and working out where <name>wimp_MENU_SELECTION</name> events need to be delivered to. We&rsquo;ll go for something relatively simple, and create the two global variables shown in <reference id="list-menus-selection-vars"/> within <file>c.menu</file> which can be used to remember menu activity:</p>

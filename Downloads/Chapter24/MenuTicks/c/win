@@ -69,7 +69,7 @@ static wimp_menu *win_shape_menu;
 /* Function Prototypes */
 
 static void win_mouse_click(wimp_pointer *pointer);
-static void win_menu_selection(wimp_menu *menu, wimp_selection *selection);
+static void win_shape_menu_selection(wimp_menu *menu, wimp_selection *selection);
 static void win_set_shape_menu(enum win_shape shape);
 static void win_set_shape(enum win_shape shape);
 
@@ -128,12 +128,12 @@ void win_open(void)
 static void win_mouse_click(wimp_pointer *pointer)
 {
 	if (pointer->i == WIN_ICON_SHAPE_POPUP && pointer->buttons == wimp_CLICK_SELECT)
-		menu_open_popup(win_shape_menu, pointer, win_menu_selection);
+		menu_open_popup(win_shape_menu, pointer, win_shape_menu_selection);
 }
 
-/* Menu Selection event handler. */
+/* Shape Pop-Up Menu Selection event handler. */
 
-static void win_menu_selection(wimp_menu *menu, wimp_selection *selection)
+static void win_shape_menu_selection(wimp_menu *menu, wimp_selection *selection)
 {
 	switch (selection->items[0]) {
 	case WIN_MENU_SHAPE_CIRCLE:
@@ -184,7 +184,7 @@ static void win_set_shape(enum win_shape shape)
 	if (sprite == NULL)
 		return;
 
-	icons_strncpy(WIN_HANDLE, win_icon_shape, sprite);
+	icons_strncpy(win_handle, WIN_ICON_SHAPE, sprite);
 	wimp_set_icon_state(win_handle, WIN_ICON_SHAPE, 0, 0);
 
 	icons_printf(win_handle, WIN_ICON_SHAPE_FIELD, "%s", name);

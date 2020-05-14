@@ -31,7 +31,6 @@
 #include "sflib/errors.h"
 #include "sflib/event.h"
 #include "sflib/icons.h"
-#include "sflib/menus.h"
 #include "sflib/windows.h"
 
 #include <stdio.h>
@@ -39,27 +38,21 @@
 
 #include "win.h"
 #include "menu.h"
+#include "calc.h"
 
 /* Main Window Icons. */
 
 #define WIN_ICON_SHAPE 0
 #define WIN_ICON_SHAPE_POPUP 1
 #define WIN_ICON_SHAPE_FIELD 2
+#define WIN_ICON_SIDES_FIELD 4
+#define WIN_ICON_INT_ANGLE_FIELD 6
 
 /* Shapes Menu Entries. */
 
 #define WIN_MENU_SHAPE_CIRCLE 0
 #define WIN_MENU_SHAPE_TRIANGLE 1
 #define WIN_MENU_SHAPE_SQUARE 2
-
-/* Display Shapes */
-
-enum win_shape {
-	WIN_SHAPE_NONE,
-	WIN_SHAPE_SQUARE,
-	WIN_SHAPE_CIRCLE,
-	WIN_SHAPE_TRIANGLE
-};
 
 /* Global Variables */
 
@@ -70,8 +63,9 @@ static wimp_menu *win_shape_menu;
 
 static void win_mouse_click(wimp_pointer *pointer);
 static void win_shape_menu_selection(wimp_menu *menu, wimp_selection *selection);
-static void win_set_shape_menu(enum win_shape shape);
-static void win_set_shape(enum win_shape shape);
+static void win_set_shape_menu(int selection);
+static void win_set_shape(enum calc_shape shape);
+static void win_update_all_calculations(void);
 
 /* Window Initialisation. */
 
@@ -113,7 +107,8 @@ void win_initialise(osspriteop_area *sprites)
 
 	/* Initialise the window contents. */
 
-	win_set_shape(WIN_SHAPE_SQUARE);
+	win_set_shape(CALC_SHAPE_SQUARE);
+	win_set_shape_menu(WIN_MENU_SHAPE_SQUARE);
 }
 
 /* Open the Window. */
@@ -137,61 +132,75 @@ static void win_shape_menu_selection(wimp_menu *menu, wimp_selection *selection)
 {
 	switch (selection->items[0]) {
 	case WIN_MENU_SHAPE_CIRCLE:
-		win_set_shape(WIN_SHAPE_CIRCLE);
+		win_set_shape(CALC_SHAPE_CIRCLE);
 		break;
 	case WIN_MENU_SHAPE_TRIANGLE:
-		win_set_shape(WIN_SHAPE_TRIANGLE);
+		win_set_shape(CALC_SHAPE_TRIANGLE);
 		break;
 	case WIN_MENU_SHAPE_SQUARE:
-		win_set_shape(WIN_SHAPE_SQUARE);
+		win_set_shape(CALC_SHAPE_SQUARE);
 		break;
 	}
+
+	win_set_shape_menu(selection->items[0]);
 }
 
 /* Set the Shape Pop-Up Menu state. */
 
-static void win_set_shape_menu(enum win_shape shape)
+static void win_set_shape_menu(int selection)
 {
-	menus_tick_entry(win_shape_menu, WIN_MENU_SHAPE_CIRCLE,
-			shape == WIN_SHAPE_CIRCLE);
-	menus_tick_entry(win_shape_menu, WIN_MENU_SHAPE_TRIANGLE,
-			shape == WIN_SHAPE_TRIANGLE);
-	menus_tick_entry(win_shape_menu, WIN_MENU_SHAPE_SQUARE,
-			shape == WIN_SHAPE_SQUARE);
-
-	menus_shade_entry(win_shape_menu, WIN_MENU_SHAPE_TRIANGLE,
-			shape == WIN_SHAPE_SQUARE);
+	menu_set_popup_menu(win_shape_menu, selection, win_handle, WIN_ICON_SHAPE_FIELD);
 }
 
 /* Set the shape being displayed. */
 
-static void win_set_shape(enum win_shape shape)
+static void win_set_shape(enum calc_shape shape)
 {
-	char *sprite = NULL, *name = NULL;
+	char *sprite = NULL;
+
+	/* Update the graphic. */
 
 	switch (shape) {
-	case WIN_SHAPE_SQUARE:
+	case CALC_SHAPE_SQUARE:
 		sprite = "square";
-		name = "Square";
 		break;
-	case WIN_SHAPE_CIRCLE:
+	case CALC_SHAPE_CIRCLE:
 		sprite = "circle";
-		name = "Circle";
 		break;
-	case WIN_SHAPE_TRIANGLE:
+	case CALC_SHAPE_TRIANGLE:
 		sprite = "triangle";
-		name = "Triangle";
 		break;
 	}
 
-	if (sprite == NULL)
-		return;
+	if (sprite != NULL) {
+		icons_strncpy(win_handle, WIN_ICON_SHAPE, sprite);
+		wimp_set_icon_state(win_handle, WIN_ICON_SHAPE, 0, 0);
+	}
 
-	icons_strncpy(win_handle, WIN_ICON_SHAPE, sprite);
-	wimp_set_icon_state(win_handle, WIN_ICON_SHAPE, 0, 0);
+	/* Change the shape. */
 
-	icons_printf(win_handle, WIN_ICON_SHAPE_FIELD, "%s", name);
-	wimp_set_icon_state(win_handle, WIN_ICON_SHAPE_FIELD, 0, 0);
+	calc_set_shape(shape);
 
-	win_set_shape_menu(shape);
+	/* Perform the shape calculations. */
+
+	win_update_all_calculations();
+}
+
+/* Update the shape data fields. */
+
+static void win_update_all_calculations(void)
+{
+	char *text = NULL;
+
+	text = calc_get_sides();
+	if (text != NULL) {
+		icons_strncpy(win_handle, WIN_ICON_SIDES_FIELD, text);
+		wimp_set_icon_state(win_handle, WIN_ICON_SIDES_FIELD, 0, 0);
+	}
+
+	text = calc_get_internal_angle();
+	if (text != NULL) {
+		icons_strncpy(win_handle, WIN_ICON_INT_ANGLE_FIELD, text);
+		wimp_set_icon_state(win_handle, WIN_ICON_INT_ANGLE_FIELD, 0, 0);
+	}
 }

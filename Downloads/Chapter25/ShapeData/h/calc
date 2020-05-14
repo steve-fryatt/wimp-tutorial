@@ -1,0 +1,65 @@
+/* Copyright 2020, Stephen Fryatt (info@stevefryatt.org.uk)
+ *
+ * This file is part of Wimp Programming In C:
+ *
+ *   http://www.stevefryatt.org.uk/software/
+ *
+ * Licensed under the EUPL, Version 1.1 only (the "Licence");
+ * You may not use this work except in compliance with the
+ * Licence.
+ *
+ * You may obtain a copy of the Licence at:
+ *
+ *   http://joinup.ec.europa.eu/software/page/eupl
+ *
+ * Unless required by applicable law or agreed to in
+ * writing, software distributed under the Licence is
+ * distributed on an "AS IS" basis, WITHOUT WARRANTIES
+ * OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ * See the Licence for the specific language governing
+ * permissions and limitations under the Licence.
+ */
+
+/**
+ * File: calc.h
+ */
+
+#ifndef EXAMPLEAPP_CALC
+#define EXAMPLEAPP_CALC
+
+/* Display Shapes */
+
+enum calc_shape {
+	CALC_SHAPE_NONE,
+	CALC_SHAPE_SQUARE,
+	CALC_SHAPE_CIRCLE,
+	CALC_SHAPE_TRIANGLE
+};
+
+/* Calculation Initialisation. */
+
+void calc_initialise(void);
+
+/* Shape Selection. */
+
+void calc_set_shape(enum calc_shape shape);
+
+/* Set the formatting of results. */
+
+void calc_set_format(int places);
+
+/* Get the decimal places. */
+
+int calc_get_places(void);
+
+/* The number of sides. */
+
+char *calc_get_sides(void);
+
+/* The internal angle. */
+
+char *calc_get_internal_angle(void);
+
+#endif
+

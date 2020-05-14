@@ -185,11 +185,11 @@ char *calc_get_internal_angle(void)
 
 <p>The other two functions are <function>calc_get_sides()</function> and <function>calc_get_internal_angle()</function>, which return a pointer to the output buffer having written a suitable string into it given the current shape. To avoid getting into geometric arguments, this will be &ldquo;n/a&rdquo; for the circle, and the calculated values for the triangle and square.</p>
 
-<p>We can now modify the <function>win_set_shape()</function> in <file>c.win</file> as shown in <reference id="list-menus-window-set-shape"/>, so that it makes use of the new facilities.</p>
+<p>We can now modify the <function>win_set_shape()</function> in <file>c.win</file> as shown in <reference id="list-menus-window-set-shape"/>, so that calls a new <function>win_update_all_calculations()</function> function to make use of the new facilities.</p>
 
 <code id="list-menus-window-set-shape" lang="c" title="Upodating the data fields">static void win_set_shape(enum calc_shape shape)
 {
-	char *sprite = NULL, *text = NULL;
+	char *sprite = NULL;
 
 	/* Update the graphic. */
 
@@ -214,7 +214,16 @@ char *calc_get_internal_angle(void)
 
 	calc_set_shape(shape);
 
-	/* Perform the static calculations */
+	/* Perform the shape calculations. */
+
+	win_update_all_calculations();
+}
+
+/* Update the shape data fields. */
+
+static void win_update_all_calculations(void)
+{
+	char *text = NULL;
 
 	text = calc_get_sides();
 	if (text != NULL) {
@@ -243,9 +252,138 @@ char *calc_get_internal_angle(void)
 <section>
 <title>A window menu</title>
 
-<p>When adding our </p>
+<p>When adding our calculation facility, we included support for setting the number of decimal places to which values will be displayed. This doesn&rsquo;t actually make a lot of difference for the shapes and data that we are able to show &ndash; although it would become relevant if we extended the shapes to include a heptagon. What we can&rsquo;t do at present is change this value without recompiling our code.</p>
 
+<p>An obvious solution would be to provide a menu which contains these options, so we will do just that. It&rsquo;s possible to imagine further &lsquo;behavioural&rsquo; parameters that we might wish to adjust in the future, so we will create a general menu for the window to hold them all. We can start by adding some constants to <file>c.win</file> which define the menu entries as seen in <reference id="list-menus-window-const"/> and a new global variable for the <name>wimp_menu</name> block pointer as in <reference id="list-menus-window-global"/>.</p>.
 
+<code id="list-menus-window-const" lang="c" title="Constants to define the window menu entries">/* Window Menu Entries. */
+
+#define WIN_MENU_DECIMAL1 0
+#define WIN_MENU_DECIMAL2 1
+#define WIN_MENU_DECIMAL3 2</code>
+
+<code id="list-menus-window-global" lang="c" title="A new global variable to hold a pointer to the menu">/* Global Variables */
+
+static wimp_w win_handle;
+static wimp_menu *win_menu;
+static wimp_menu *win_shape_menu;</code>
+
+<p>The menu itself can then be defined in the <function>win_initialise()</function> function as shown in <reference id="list-menus-window-init"/>, in a way which should now be familiar.</p>
+
+<code id="list-menus-window-init" lang="c" title="Defining the main window menu">/* Window Menu. */
+
+win_menu = menu_create(&quot;Example&quot;, 3);
+if (win_menu == NULL) {
+	error_report_error(&quot;Failed to create Main Menu&quot;);
+	return;
+}
+
+menu_entry(win_menu, WIN_MENU_DECIMAL1, &quot;1 Decimal place&quot;, NULL);
+menu_entry(win_menu, WIN_MENU_DECIMAL2, &quot;2 Decimal places&quot;, NULL);
+menu_entry(win_menu, WIN_MENU_DECIMAL3, &quot;3 Decimal places&quot;, NULL);</code>
+
+<p>Now that we have the new menu defined, we can open it when the user clicks <mouse>Menu</mouse> over the window. So far, we have created functions to open menus <reference id="sect-menus-selection-dispatch">over the iconbar</reference> and <reference id="sect-menus-popup-code">from pop-up menu fields</reference>, but do not yet have a way to open a menu at the mouse pointer. To rectify this, we can add another function to <file>c.menu</file> which will open a menu in the standard position, as shown in <reference id="list-menus-window-open"/>.</p>
+
+<code id="list-menus-window-open" lang="c" title="A function to open a standard menu">void menu_open(wimp_menu *menu, wimp_pointer *pointer,
+		void (*callback)(wimp_menu *menu, wimp_selection *selection))
+{
+	menu_current_menu = menu;
+	menu_current_callback = callback;
+
+	menus_create_standard_menu(menu, pointer);
+}</code>
+
+<p>As before, this simply defers to SFLib&rsquo;s <function>menus_create_standard_menu()</function> function to display the menu. When opening a menu at the mouse pointer as a result of a <mouse>Menu</mouse> click, the process is a lot easier that the other situations that we have seen so far. The <cite>Style Guide</cite> requires that it is opened at the <maths>y</maths> coordinate of the click, and 64 OS&nbsp;units to the left of the <maths>x</maths> coordinate; the code that SFLib uses to achieve this can be seen in <reference id="list-menus-window-sflib"/>.</p>
+
+<code id="list-menus-window-sflib" lang="c" title="The code used by SFLib to position a standard menu">wimp_menu *menus_create_standard_menu(wimp_menu *menu, wimp_pointer *pointer)
+{
+	if (menu == NULL || pointer == NULL)
+		return NULL;
+
+	if (xwimp_create_menu(menu, pointer-&gt;pos.x - 64, pointer-&gt;pos.y) != NULL)
+		return NULL;
+
+	return menu;
+}</code>
+
+<p>Armed with the new <function>menu_open()</function> function, we can update the <function>win_mouse_click()</function> event handler as shown in <reference id="list-menus-window-click"/>, so that <mouse>Menu</mouse> clicks anywhere over the window will cause the main menu to be opened.</p>
+
+<code id="list-menus-window-click" lang="c" title="Menu click events over the window will open the main menu">static void win_mouse_click(wimp_pointer *pointer)
+{
+	if (pointer-&gt;i == WIN_ICON_SHAPE_POPUP &amp;&amp; pointer-&gt;buttons == wimp_CLICK_SELECT) {
+		menu_open_popup(win_shape_menu, pointer, win_shape_menu_selection);
+	} else if (pointer-&gt;buttons == wimp_CLICK_MENU) {
+		win_set_menu();
+		menu_open(win_menu, pointer, win_menu_selection);
+	}
+}</code>
+
+<p>Before the menu is opened, the <function>win_set_menu()</function> function in <reference id="list-menus-window-set"/> is called to place a tick against the currently selected choice of decimal places. This reads the configured number of places back from the calc module first.</p>
+
+<code id="list-menus-window-set" lang="c" title="Updating the main menu ready for display">static void win_set_menu(void)
+{
+	int places;
+
+	places = calc_get_places();
+
+	menus_tick_entry(win_menu, WIN_MENU_DECIMAL1, places == 1);
+	menus_tick_entry(win_menu, WIN_MENU_DECIMAL2, places == 2);
+	menus_tick_entry(win_menu, WIN_MENU_DECIMAL3, places == 3);
+}</code>
+
+<p>The final piece of the jigsaw is the <name>Menu Selection</name> event handler in <function>win_menu_selection()</function>, which can be seen in <reference id="list-menus-window-select"/>. This sets the required number of decimal places in the calc module, before calling <function>win_update_all_calculations()</function> to update the display fields with the new settings. Finally <function>win_set_menu()</function> is called, so that the tick can be updated before the menu is reopened if <mouse>Adjust</mouse> was clicked.</p>
+
+<code id="list-menus-window-select" lang="c" title="Processing selections from the main menu">static void win_menu_selection(wimp_menu *menu, wimp_selection *selection)
+{
+	switch (selection->items[0]) {
+	case WIN_MENU_DECIMAL1:
+		calc_set_format(1);
+		break;
+	case WIN_MENU_DECIMAL2:
+		calc_set_format(2);
+		break;
+	case WIN_MENU_DECIMAL3:
+		calc_set_format(3);
+		break;
+	}
+
+	win_update_all_calculations();
+	win_set_menu();
+}</code>
+
+<p>If the code is compiled and the application run, the menu should appear as seen in <reference id="fig-menus-window-menu"/>. Selecting different numbers of places from the menu should update the number in the <icon>Internal angles</icon> field, assuming that shape isn&rsquo;t a circle!</p>
+
+<image id="fig-menus-window-menu" file="menus-window-menu.png" title="The main menu allows the decimal places to be changed"/>
+
+<p>The full code and templates can be found in <reference id="dl-menus-window-menu"/>.</p>
+
+<download id="dl-menus-window-menu" file="MainMenu" title="Adding a Main Menu to the Window" compatibility="none"/>
+</section>
+
+<section>
+<title>Updating menus</title>
+
+<p>Now that we have two menus in our window, both of which are opened following clicks handled in <function>win_mouse_click()</function>, observant readers might have noticed a difference between the way that the two are treated.</p>
+
+<code lang="c">static void win_mouse_click(wimp_pointer *pointer)
+{
+	if (pointer-&gt;i == WIN_ICON_SHAPE_POPUP &amp;&amp; pointer-&gt;buttons == wimp_CLICK_SELECT) {
+		menu_open_popup(win_shape_menu, pointer, win_shape_menu_selection);
+	} else if (pointer-&gt;buttons == wimp_CLICK_MENU) {
+		win_set_menu();
+		menu_open(win_menu, pointer, win_menu_selection);
+	}
+}</code>
+
+<p>Both menus currently contain three entries, of which one can be ticked at any given time. However, whilst both of the two <name>Menu Selection</name> handlers &ndash; in <function>win_menu_selection()</function> and <function>win_shape_menu_selection()</function> &ndash; call their respective routines to update the ticks in case the menu is reopened by an <mouse>Adjust</mouse> click, this isn&rsquo;t true of when the menus are initially opened.</p>
+
+<p>Before the main menu, whose pointer is in <variable>win_menu</variable> is opened with a call to <function>menu_open()</function>, there is a call made to <function>win_set_menu()</function> first to ensure that the tick is in the correct place. However, when the pop-up menu whose handle is in <variable>win_shape_menu</variable> is opened, there is no set-up done before <function>menu_open_popup()</function> is called. Instead the code relies on the fact that <function>win_set_shape_menu()</function> was called by the <function>win_initialise()</function> function, and will be left up-to-date each time a selection is made.</p>
+
+<p>There is actually a good reason for this in our example, because there is no way for the pop-up menu&rsquo;s set routine to read the shape that is currently active. When the window is initialised or a menu selection made, the shape and the ticks are set to match each other and the calc module is informed of the change through the <function>calc_set_shape()</function> function. Since we haven&rsquo;t defined a corresponding <function>calc_get_shape()</function> function, it wouldn&rsquo;t be possible for <function>win_set_shape_menu()</function> to read the current shape back in the way that <function>win_set_menu()</function> does for the decimal places.</p>
+
+<p>Which approach to use is largely down to the developer, and different situations may well suggest different solutions. In general, your author would probably recommend using the approach taken by <function>win_set_menu()</function> and setting all of the ticks, shadings and other configurable aspects of a menu each time it is opened and reopened on screen. This keeps all of the associated code in one place, and can be much easier to maintain than if each separate routine updates the parts of the menu that it uses directly.</p>
+
+<p>In addition, as we will see in the next chapter, this is the approach that SFLib supports with its own menu handling.</p>
 </section>
 </chapter>
 </manual>

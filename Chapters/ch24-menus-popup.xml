@@ -54,7 +54,7 @@
 <section id="sect-menus-popup-code">
 <title>Adding some code</title>
 
-<p>To implement our new pop-up menu, there are a few things that we will need to add to our code &ndash; not least a way to open the menu in the correct place on screen. In the <reference id="chap-menus-selection">previous chapter</reference> we implemented the <function>menu_open_ibar()</function> function, but this was coded specifically for handling the positioning of iconbar menus and the requirements for pop-up menus are very different.</p>
+<p>To implement our new pop-up menu, there are a few things that we will need to add to our code &ndash; not least a way to open the menu in the correct place on screen. In the <reference id="sect-menus-selection-dispatch">previous chapter</reference> we implemented the <function>menu_open_ibar()</function> function, but this was coded specifically for handling the positioning of iconbar menus and the requirements for pop-up menus are very different.</p>
 
 <p>Following the same naming and parameter format, we can add a new <function>menu_open_popup()</function> to <file>c.menu</file> as shown in <reference id="list-menus-popup-open"/> (with the appropriate prototype in <file>h.menu</file>):</p>
 
@@ -145,12 +145,12 @@ menu_entry(win_shape_menu, WIN_MENU_SHAPE_SQUARE, &quot;Square&quot;, NULL);</co
 <code id="list-menus-popup-click" lang="c" title="The updated Mouse Click event handler">static void win_mouse_click(wimp_pointer *pointer)
 {
 	if (pointer-&gt;i == WIN_ICON_SHAPE_POPUP &amp;&amp; pointer-&gt;buttons == wimp_CLICK_SELECT)
-		menu_open_popup(win_shape_menu, pointer, win_menu_selection);
+		menu_open_popup(win_shape_menu, pointer, win_shape_menu_selection);
 }</code>
 
-<p>The code which was selecting the required shape based on clicks on the radio icons can be converted into a <name>Menu Selection</name> event handler in <function>win_menu_selection()</function>, shown in <reference id="list-menus-popup-select"/>.</p>
+<p>The code which was selecting the required shape based on clicks on the radio icons can be converted into a <name>Menu Selection</name> event handler in <function>win_shape_menu_selection()</function>, shown in <reference id="list-menus-popup-select"/>.</p>
 
-<code id="list-menus-popup-select" lang="c" title="The new Menu Selection event handler">static void win_menu_selection(wimp_menu *menu, wimp_selection *selection)
+<code id="list-menus-popup-select" lang="c" title="The new Menu Selection event handler">static void win_shape_menu_selection(wimp_menu *menu, wimp_selection *selection)
 {
 	switch (selection-&gt;items[0]) {
 	case WIN_MENU_SHAPE_CIRCLE:
@@ -243,7 +243,7 @@ menu_entry(win_shape_menu, WIN_MENU_SHAPE_SQUARE, &quot;Square&quot;, NULL);</co
 
 <p>If the application is compiled and run, the result should be as seen in <reference id="fig-menus-popup-ticks"/> &ndash; opening the menu and selecting different shapes with both <mouse>Select</mouse> and <mouse>Adjust</mouse> should reveal that the selection is both initialised correctly and updated when the selection changes, even if the menu remains open.</p>
 
-<p>This works because we call <function>win_set_shape_menu()</function> from the <function>win_set_shape()</function> function, which in turn is called to initialise the shape and then called again from the <function>win_menu_selection()</function> event handler whenever the shape changes. The <file>c.menu</file> code calls the handler <em>before</em> using <swi>Wimp_CreateMenu</swi> to re-open the menu on an <mouse>Adjust</mouse> click, so the tick will be moved by our code before the menu is recreated by the Wimp.</p>
+<p>This works because we call <function>win_set_shape_menu()</function> from the <function>win_set_shape()</function> function, which in turn is called to initialise the shape and then called again from the <function>win_shape_menu_selection()</function> event handler whenever the shape changes. The <file>c.menu</file> code calls the handler <em>before</em> using <swi>Wimp_CreateMenu</swi> to re-open the menu on an <mouse>Adjust</mouse> click, so the tick will be moved by our code before the menu is recreated by the Wimp.</p>
 
 <p>Things are made a little easier for our code because we know that the only way that the shape can change is through the user making a selection from the pop-up menu. If this was not the case (such as if there were still radio icons in the window with the same purpose), then we would need to be careful that any change made in other ways also updated the menu &ndash; or updated the menu before it was initially opened. We will return to look at these options in a later chapter.</p>
 
@@ -376,7 +376,7 @@ wimp_set_icon_state(win_handle, WIN_ICON_SHAPE_FIELD, 0, 0);</code>
 	menu_set_popup_menu(win_shape_menu, selection, win_handle, WIN_ICON_SHAPE_FIELD);
 }</code>
 
-<p>Next, we will move the call to our new <function>win_set_shape_menu()</function> function from <function>win_set_shape()</function> to the end of the <function>win_menu_selection()</function> event handler, and use the selection supplied by the Wimp as shown in <reference id="list-menus-popup-new-select"/>.</p>
+<p>Next, we will move the call to our new <function>win_set_shape_menu()</function> function from <function>win_set_shape()</function> to the end of the <function>win_shape_menu_selection()</function> event handler, and use the selection supplied by the Wimp as shown in <reference id="list-menus-popup-new-select"/>.</p>
 
 <code id="list-menus-popup-new-select" lang="c" title="Updating the menu on a selection">win_set_shape_menu(selection->items[0]);</code>
 
