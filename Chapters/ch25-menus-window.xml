@@ -6,49 +6,49 @@
 
 <!-- Chapter 25
    -
-   - Doing Some Useful Work
+   - Standard Window Menus
   -->
 
-<chapter id="chap-some-work">
+<chapter id="chap-menus-window">
 <resources>
 <images>Chapter25</images>
 <downloads>Chapter25</downloads>
 </resources>
-<filename>some-work.html</filename>
-<title>Doing Some Useful Work</title>
+<filename>menus-window.html</filename>
+<title>Standard Window Menus</title>
 
-<summary>Before we completely finish with the subject of menus, let&rsquo;s stop to make our application do something slightly useful.</summary>
+<summary>There&rsquo;s one type of menu that we haven&rsquo;t yet looked at: the &lsquo;standard&rsquo; one that opens at the mouse pointer.</summary>
 
 <section>
 <p>We&rsquo;ve now covered two special types of menu &ndash; the <reference id="chap-menus-intro">iconbar menu</reference> and <reference id="chap-menus-popup">pop-up menu</reference> &ndash; but have yet to look at the simplest type: one that opens over a window following a click with the <mouse>Menu</mouse> button.</p>
 
-<p>We will correct that omission soon, but first we will use some of our new-found knowledge to lay the foundations for our small application to do something useful. With the ability to select from a range of shapes, we could perhaps use it to do some simple geometric calculations &ndash; and now would be a good time to implement the first stages of that.</p>
+<p>It&rsquo;s now time for us to correct that omission, but first we will use some of our new-found knowledge to lay the foundations for our small application to do something useful. With the ability to select from a range of shapes, we could perhaps use it to do some simple geometric calculations.</p>
 </section>
 
 <section>
 <title>Updating the templates</title>
 
-<p>As ever, the first thing that we need to do is to update the window templates to include some new icons. Load <file>!ExamplApp.Templates</file> into your template editor, then open the &ldquo;Main&rdquo; window. As ever, we will be using <cite>WinEd</cite> in the description that follows.</p>
+<p>The first thing that we need to do is to update the window templates to include some new icons. Load <file>!ExamplApp.Templates</file> into your template editor, then open the &ldquo;Main&rdquo; window. As ever, we will be using <cite>WinEd</cite> in the description that follows.</p>
 
-<p>We are going to add two new display fields, as seen in <reference id="fig-some-work-window"/>. Expand the work area downwards, then drag a couple of display fields and labels across from the <window>Icon picker</window> into the positions shown.</p>
+<p>We are going to add two new display fields, as seen in <reference id="fig-menus-window-window"/>. Expand the work area downwards, then drag a couple of display fields and labels across from the <window>Icon picker</window> into the positions shown.</p>
 
 <p>If the work is done in <cite>WinEd</cite>, then the icons will be numbered 4 and 5 for the <icon>Sides</icon> display field and label respectively, then 6 and 7 for the <icon>Internal angles</icon> display field and label. These will be the numbers that we will use in our code below.</p>
 
 <p>Close the window and save the changes to the templates file.</p>
 
-<image id="fig-some-work-window" file="some-work-window.png" title="The window with two new result fields included"/>
+<image id="fig-menus-window-window" file="menus-window-window.png" title="The window with two new result fields included"/>
 </section>
 
 <section>
 <title>Adding a calculator</title>
 
-<p>In order to be able to complete our two new fields, we will need some way to identify the number of sides for each of our shapes, and to calculate their internal angles. It&rsquo;s usually a good idea to separate the code which does the actual work from the code which handles theuser interface, so we will add another source file called <file>c.calc</file> and its associated header file <file>h.calc</file>. It will ne necessary to update the <variable>OBJS</variable> list in the <file>Makefile</file> to include a reference to it.</p>
+<p>In order to be able to complete our two new fields, we will need some way to identify the number of sides for each of our shapes, and to calculate their internal angles. It&rsquo;s usually a good idea to separate the code which does the actual work from the code which handles the user interface, so we will add another source file called <file>c.calc</file> and its associated header file <file>h.calc</file>. It will be necessary to update the <variable>OBJS</variable> list in the <file>Makefile</file> to include a reference to it.</p>
 
 <code lang="makefile">OBJS = calc main menu ibar win</code>
 
-<p>The new file will be a self-contained module for calculating simple geometry for the shapes that we are using. The <file>h.calc</file>> header file can be seen in <reference id="code-some-work-calc-h"/>, whilst the main code from <file>c.calc</file> can be seen in <reference id="code-some-work-calc-c"/>. The new <name>enum calc_shape</name> will replace the <name>enum win_shape</name> which was previously defined in <file>c.win</file>.</p>
+<p>The new file will be a self-contained module for calculating simple geometry for the shapes that we are using. The <file>h.calc</file> header file can be seen in <reference id="code-menus-window-calc-h"/>, whilst the main code from <file>c.calc</file> can be seen in <reference id="code-menus-window-calc-c"/>. The new <name>enum calc_shape</name> will replace the <name>enum win_shape</name> which was previously defined in <file>c.win</file>.</p>
 
-<code id="code-some-work-calc-h" lang="c" file="h.calc" title="The new calculation header">#ifndef EXAMPLEAPP_CALC
+<code id="code-menus-window-calc-h" lang="c" file="h.calc" title="The new calculation header">#ifndef EXAMPLEAPP_CALC
 #define EXAMPLEAPP_CALC
 
 /* Display Shapes */
@@ -86,7 +86,7 @@ char *calc_get_internal_angle(void);
 
 #endif</code>
 
-<code id="code-some-work-calc-c" lang="c" file="c.calc" title="The new calculation code">/* Constants. */
+<code id="code-menus-window-calc-c" lang="c" file="c.calc" title="The new calculation code">/* Constants. */
 
 #define CALC_BUFFER_LENGTH 32
 #define CALC_FORMAT_LENGTH 8
@@ -183,11 +183,11 @@ char *calc_get_internal_angle(void)
 
 <p>The <function>calc_initialise()</function> function needs to be called from <function>main_initialise()</function> in order to set up the variables and buffers to some sensible defaults, after which <function>calc_set_shape()</function> and <function>calc_set_format()</function> can be used to choose the active shape and set the number of decimal places used when displaying numbers. The configured number of decimal places can be read back using the <function>calc_get_places()</function> function.</p>
 
-<p>The other two functions are <function>calc_get_sides()</function> and <function>calc_get_internal_angle()</function>, which return a pointer to the output buffer having written a suitable string into it given the current shape. To avoid getting into geometric arguments, this will be &ldquo;n/a&rdquo; for the circle, and the calculated values for the triangle ans square.</p>
+<p>The other two functions are <function>calc_get_sides()</function> and <function>calc_get_internal_angle()</function>, which return a pointer to the output buffer having written a suitable string into it given the current shape. To avoid getting into geometric arguments, this will be &ldquo;n/a&rdquo; for the circle, and the calculated values for the triangle and square.</p>
 
-<p>We can now modify the <function>win_set_shape()</function> in <file>c.win</file> as shown in <reference id="list-some-work-set-shape"/>, so that it makes use of the new facilities.</p>
+<p>We can now modify the <function>win_set_shape()</function> in <file>c.win</file> as shown in <reference id="list-menus-window-set-shape"/>, so that it makes use of the new facilities.</p>
 
-<code id="list-some-work-set-shape" lang="c" title="Upodating the data fields">static void win_set_shape(enum calc_shape shape)
+<code id="list-menus-window-set-shape" lang="c" title="Upodating the data fields">static void win_set_shape(enum calc_shape shape)
 {
 	char *sprite = NULL, *text = NULL;
 
@@ -231,9 +231,18 @@ char *calc_get_internal_angle(void)
 
 <p>The function now takes a parameter of the new <name>enum calc_shape</name> type, so the calls made to it will need to be updated accordingly.</p>
 
-<p>When compiled and run, our application window should look similar to that shown in <reference id="fig-some-work-calcs"/>.</p>
+<p>When compiled and run, our application window should look similar to that shown in <reference id="fig-menus-window-calcs"/>.</p>
 
-<image id="fig-some-work-calcs" file="some-work-calcs.png" title="The application can now show some information about the displayed shape"/>
+<image id="fig-menus-window-calcs" file="menus-window-calcs.png" title="The application can now show some information about the displayed shape"/>
+
+<p>The full code of the changes can be found in <reference id="dl-menus-window-calcs"/>.</p>
+
+<download id="dl-menus-window-calcs" file="ShapeData" title="A Simple Shape Database" compatibility="none"/>
+</section>
+
+<section>
+<title></title>
+
 
 </section>
 </chapter>
