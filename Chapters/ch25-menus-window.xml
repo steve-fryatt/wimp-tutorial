@@ -206,7 +206,7 @@ char *calc_get_internal_angle(void)
 	}
 
 	if (sprite != NULL) {
-		icons_printf(win_handle, WIN_ICON_SHAPE, &quot;%s&quot;, sprite);
+		icons_strncpy(WIN_HANDLE, win_icon_shape, sprite);
 		wimp_set_icon_state(win_handle, WIN_ICON_SHAPE, 0, 0);
 	}
 
@@ -241,7 +241,9 @@ char *calc_get_internal_angle(void)
 </section>
 
 <section>
-<title></title>
+<title>A window menu</title>
+
+<p>When adding our </p>
 
 
 </section>

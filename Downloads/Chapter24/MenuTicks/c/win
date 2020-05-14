@@ -184,7 +184,7 @@ static void win_set_shape(enum win_shape shape)
 	if (sprite == NULL)
 		return;
 
-	icons_printf(win_handle, WIN_ICON_SHAPE, "%s", sprite);
+	icons_strncpy(WIN_HANDLE, win_icon_shape, sprite);
 	wimp_set_icon_state(win_handle, WIN_ICON_SHAPE, 0, 0);
 
 	icons_printf(win_handle, WIN_ICON_SHAPE_FIELD, "%s", name);
