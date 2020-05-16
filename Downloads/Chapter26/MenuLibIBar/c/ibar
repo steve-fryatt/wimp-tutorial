@@ -110,6 +110,8 @@ void ibar_initialise(char *sprite)
 		return;
 	}
 
+	/* Event Handlers */
+
 	event_add_window_mouse_event(wimp_ICON_BAR, ibar_mouse_click);
 	event_add_window_menu(wimp_ICON_BAR, ibar_menu);
 	event_add_window_menu_selection(wimp_ICON_BAR, ibar_menu_selection);
