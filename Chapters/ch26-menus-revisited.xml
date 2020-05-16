@@ -20,17 +20,17 @@
 <summary>We have seen how menus work from the perspective of the Wimp but, before moving on, let&rsquo;s see what SFLib can do to improve things.</summary>
 
 <section>
-<p>Over the past four chapters, we have seen how the Wimp handles menus and have built up a library of code in <file>c.menu</file> which can be used to display them and process selections made by the user. Whilst this has enabled us to see how the facilities offered by the Wimp work, it is likely to come as little surprise to learn that similar functionality is provided by SFLib&rsquo;s event library. In this chapter, we will look at what is required to move our code across.</p>
+<p>Over the past four chapters, we have seen how the Wimp handles menus and have built up a library of code in <file>c.menu</file> which can be used to display them and process selections made by the user. Whilst this has enabled us to see how the facilities offered by the Wimp work, it is likely to come as little surprise to learn that similar functionality is provided by SFLib&rsquo;s event library. In this chapter, we will look at what is required to make use of it.</p>
 </section>
 
 <section>
 <title>Menu events</title>
 
-<p>One of the biggest probems with the Wimp&rsquo;s native support for menus is the somewhat piecemeal approch used. It is left up to the application to open create and open menus using <swi>Wimp_CreateMenu</swi>, and to re-open them if selections are made with <mouse>Adjust</mouse>. In addition, as we have already seen, it is also the responsibility of the application to ensure that the menu is correctly set up before <swi>Wimp_CreateMenu</swi> is called.</p>
+<p>One of the biggest probems with the Wimp&rsquo;s native support for menus is the somewhat piecemeal approach used. It is left up to the application to open create and open menus using <swi>Wimp_CreateMenu</swi>, and to re-open them if selections are made with <mouse>Adjust</mouse>. In addition, as we have already seen, it is also the responsibility of the application to ensure that the menu is correctly set up before <swi>Wimp_CreateMenu</swi> is called.</p>
 
 <p>Selections by the user are reported through the <name>Menu Selection</name> event, but closure of a menu is harder to pin down. If a selection is made, the application can assume that the menu has closed if it does not take action to reopen it; if a menu closes for any other reason, then it is instead reported by the <name>Message_MenusDeleted</name> message.</p>
 
-<p>In an attempt to improve this situation, SFLib&rsquo;s event library provides a range of support for menus. Menus can be attached to windows or individual icons, and they are opened automatically when requested by the user. To allow an application to interact with its menus, the library creates the four &lsquo;pseudo-events&rsquo; listed in <reference id="table-menus-revisited-events"/>, which are reported to the window where the menu is attached.</p>
+<p>In an attempt to improve this situation, SFLib&rsquo;s event library provides a range of support for menus. Menus can be attached to windows or individual icons, and they are opened automatically when requested by the user. To allow an application to interact with its menus, the library creates the four window-level &lsquo;pseudo-events&rsquo; listed in <reference id="table-menus-revisited-events"/>, which are reported to the window where the menu is attached.</p>
 
 <table id="table-menus-revisited-events" title="The menu 'pseudo-events' implemented by SFLib's event library">
 <columns>
@@ -43,9 +43,136 @@
 <row><col>Close</col><col>Raised when a menu is closed, following a <name>Menu Selection</name> event or on receipt of a <name>Message_MenusDeleted</name></col></row>
 </table>
 
-<p>Using these &lsquo;pseudo-events&rsquo;, an application can streamline its menu support. It is guaranteed to receive a <name>Menu Prepare</name> event before a menu opens &ndash; which allows it to allocate any resources needed and update the menu state. It will receive a <name>Menu Selection</name> event whenever the user makes a selection, which might be followed by another <name>Menu Prepare</name> event if <mouse>Adjust</mouse> was used. Finally, whether or not a selection was made, it will receive a single <name>Menu Close</name> event when the menu is eventually closed, so that any resources claimed during the <name>Menu Prepare</name> event can be released again.</p>
+<p>Using these &lsquo;pseudo-events&rsquo;, an application can streamline its menu support. It is guaranteed to receive a <name>Menu Prepare</name> event before a menu opens &ndash; which allows it to allocate any resources needed and update the menu state. It will receive a <name>Menu Selection</name> event whenever the user makes a selection, which might be followed by another <name>Menu Prepare</name> event if <mouse>Adjust</mouse> was used. Finally, whether or not a selection was made, it will receive a single <name>Menu Close</name> event when the menu is eventually closed, so that any resources claimed during the <name>Menu Prepare</name> event can be released again. The <name>Menu Warning</name> events are raised whenever a <name>Message_SubmenuWarning</name> is received for a menu; we will be meeting these later on.</p>
+
+<p>In addition to the window-level events listed above, the library also provides support for pop-up menus. Simple menus can be left to the library to look after, or, if more interactivity is required, an icon-level event can be generated whenever a new selection is made. For truly custom menu support, it is possible for an application to manage pop-up menus itself via the standard window-level events.</p>
 
 <p>The SFLib event library implements these &lsquo;pseudo-events&rsquo; in a similar way to the code in our own <file>c.menu</file> file. The approach taken by our application up to now is perfectly valid, but if you&rsquo;re using SFLib&rsquo;s event handling, it makes sense to use the menu support as well!</p>
+</section>
+
+<section>
+<title>Updating the iconbar</title>
+
+<p>The easiest menu to update for use with SFLib&rsquo;s menu events will be the one on the iconbar, since this is self-contained. At present, we open the menu ourselves with a call to <function>menu_open_ibar()</function>, passing it a pointer to the <function>ibar_menu_selection()</function> event hander for returning any <name>Menu Selection</name> events which are raised.</p>
+
+<p>In keeping with the <cite>Style Guide</cite>, the event library allows us to add a single menu to any window in our application &ndash; this will then be displayed whenever the <mouse>Menu</mouse> button is clicked anywhere in that window. This is achieved by calling the <function>event_add_window_menu()</function>, which is defined as follows:</p>
+
+<code lang="c">osbool event_add_window_menu(
+	wimp_w w,
+	wimp_menu *menu
+);</code>
+
+<p>It takes two parameters: the window handle in <variable>w</variable>, and a pointer to the menu&rsquo;s <name>wimp_menu</name> block in <variable>*menu</variable>. The Wimp treats the iconbar as a special window with a handle of <name>wimp_ICON_BAR</name>, so adding an iconbar menu to our application is simply a case of calling</p>
+
+<code lang="c">event_add_window_menu(wimp_ICON_BAR, ibar_menu);</code>
+
+<p>to associate our iconbar menu (whose handle is held in the <variable>ibar_menu</variable> variable) with the <name>wimp_ICON_BAR</name> window.</p>
+
+<p>If the event library has opened a menu over our window as a result of this association, then it will start to return the associated &lsquo;pseudo-events&rsquo; to any event handlers that we choose to register. We are interrested in <name>Menu Selection</name> events, so we can register a handling using the <function>event_add_window_menu_selection()</function> function.</p>
+
+<code lang="c">osbool event_add_window_menu_selection(
+	wimp_w w,
+	void (*callback)(wimp_w w, wimp_menu *m, wimp_selection *selection)
+);</code>
+
+<p>This again takes two parameters: the window handle in <variable>w</variable>, which will again be <name>wimp_ICON_BAR</name> for the iconbar, and a pointer to an an event handler function in <variable>*callback</variable>. We can call it with</p>
+
+<code lang="c">event_add_window_menu_selection(wimp_ICON_BAR, ibar_menu_selection);</code>
+
+<p>to associate our existing <name>Menu Selection</name> event handler with the library&rsquo;s event.</p>
+
+<p>Putting all of the changes together, we end up with a new <function>ibar_initialise()</function> function as shown in <reference id="list-menus-revisited-ibar-init"/>.</p>
+
+<code id="list-menus-revisited-ibar-init" lang="c" title="The updated ibar_initialise() function">void ibar_initialise(char *sprite)
+{
+	os_error		*error;
+	wimp_window		*window_definition;
+	wimp_w			prog_info;
+	wimp_icon_create	icon_bar;
+
+	/* Program Info Window. */
+
+	window_definition = windows_load_template(&quot;ProgInfo&quot;);
+	if (window_definition == NULL) {
+		error_report_error(&quot;Failed to load ProgInfo template&quot;);
+		return;
+	}
+
+	prog_info = wimp_create_window(window_definition);
+	free(window_definition);
+
+	event_add_window_icon_click(prog_info, IBAR_PROGINFO_ICON_WEB, ibar_proginfo_web_click);
+
+	/* Iconbar Menu. */
+
+	ibar_menu = menu_create(&quot;Example&quot;, 3);
+	if (ibar_menu == NULL) {
+		error_report_error(&quot;Failed to create Iconbar Menu&quot;);
+		return;
+	}
+
+	menu_entry(ibar_menu, IBAR_MENU_INFO, &quot;Info&quot;, (wimp_menu *) prog_info);
+	menu_entry(ibar_menu, IBAR_MENU_HELP, &quot;Help...&quot;, NULL);
+	menu_entry(ibar_menu, IBAR_MENU_QUIT, &quot;Quit&quot;, NULL);
+
+	/* Iconbar Icon. */
+
+	icon_bar.w = wimp_ICON_BAR_RIGHT;
+	icon_bar.icon.extent.x0 = 0;
+	icon_bar.icon.extent.y0 = 0;
+	icon_bar.icon.extent.x1 = 68;
+	icon_bar.icon.extent.y1 = 68;
+	icon_bar.icon.flags = wimp_ICON_SPRITE | (wimp_BUTTON_CLICK &lt;&lt; wimp_ICON_BUTTON_TYPE_SHIFT);
+	strncpy(icon_bar.icon.data.sprite, sprite, osspriteop_NAME_LIMIT);
+
+	error = xwimp_create_icon(&amp;icon_bar, NULL);
+	if (error != NULL) {
+		error_report_error(error-&gt;errmess);
+		return;
+	}
+
+	event_add_window_mouse_event(wimp_ICON_BAR, ibar_mouse_click);
+	event_add_window_menu(wimp_ICON_BAR, ibar_menu);
+	event_add_window_menu_selection(wimp_ICON_BAR, ibar_menu_selection);
+}</code>
+
+<p>A couple of small changes are required to <function>ibar_menu_selection()</function>, since the event library expects a slightly different set of parameters for its event handler. In addition to the <name>wimp_menu</name> pointer and <name>wimp_selection</name> block, the library will also pass the handle of the window to which the menu was attached; the update can be seen in <reference id="list-menus-revisited-ibar-select"/>.</p>
+
+<code id="list-menus-revisited-ibar-select" lang="c" title="The updated Menu Selection event handler">static void ibar_menu_selection(wimp_w window, wimp_menu *menu, wimp_selection *selection)
+{
+	os_error *error;
+
+	if (menu != ibar_menu)
+		return;
+
+	switch (selection-&gt;items[0]) {
+	case IBAR_MENU_HELP:
+		error = xos_cli(&quot;%Filer_Run &lt;ExamplApp$Dir&gt;.!Help&quot;);
+		if (error != NULL)
+			error_report_os_error(error, wimp_ERROR_BOX_OK_ICON);
+		break;
+	case IBAR_MENU_QUIT:
+		main_quit_flag = TRUE;
+		break;
+	}
+}</code>
+
+<p>We have also added a check to make sure that the menu block is the one stored in <variable>ibar_menu</variable> before proceeding to act on the event. This isn&rsquo;t essential here, since there is only one menu attached to the iconbar, but it is good practice for when things become more complicated.</p>
+
+<p>The final change is to the <function>ibar_mouse_click()</function> event handler, as there is no longer any need to open the menu ourselves since the event library will do this for us. We can therefore remove the <code>case</code> statement to handle the <name>wimp_CLICK_MENU</name> condition, as shown in <reference id="list-menus-revisited-ibar-click"/>.</p>
+
+<code id="list-menus-revisited-ibar-click" lang="c" title="We only need to handle Select clicks on the icon now">static void ibar_mouse_click(wimp_pointer *pointer)
+{
+	switch (pointer-&gt;buttons) {
+	case wimp_CLICK_SELECT:
+		win_open();
+		break;
+	}
+}</code>
+
+<p>The full code can be found in <reference id="dl-menus-revisited-ibar"/>. When compiled and run, the application should behave the same, but will now be leaving the iconbar menu to SFLib&rsquo;s event library to look after.</p>
+
+<download id="dl-menus-revisited-ibar" file="MenuLibIBar" title="Using SFLib for the Iconbar Menu" compatibility="none"/>
 </section>
 </chapter>
 </manual>
