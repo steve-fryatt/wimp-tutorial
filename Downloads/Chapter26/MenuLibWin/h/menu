@@ -1,0 +1,66 @@
+/* Copyright 2020, Stephen Fryatt (info@stevefryatt.org.uk)
+ *
+ * This file is part of Wimp Programming In C:
+ *
+ *   http://www.stevefryatt.org.uk/software/
+ *
+ * Licensed under the EUPL, Version 1.1 only (the "Licence");
+ * You may not use this work except in compliance with the
+ * Licence.
+ *
+ * You may obtain a copy of the Licence at:
+ *
+ *   http://joinup.ec.europa.eu/software/page/eupl
+ *
+ * Unless required by applicable law or agreed to in
+ * writing, software distributed under the Licence is
+ * distributed on an "AS IS" basis, WITHOUT WARRANTIES
+ * OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ * See the Licence for the specific language governing
+ * permissions and limitations under the Licence.
+ */
+
+/**
+ * File: menu.h
+ */
+
+#ifndef EXAMPLEAPP_MENU
+#define EXAMPLEAPP_MENU
+
+#include "oslib/wimp.h"
+
+/* Menu Initialisation. */
+
+void menu_initialise(void);
+
+/* Menu Creation. */
+
+wimp_menu *menu_create(char *title, int entries);
+
+/* Menu Entry Configuration. */
+
+void menu_entry(wimp_menu *menu, int entry, char *text, wimp_menu *sub_menu);
+
+/* Menu Selection event handler. */
+
+void menu_process_event(wimp_selection *selection);
+
+/* Open a menu. */
+
+void menu_open(wimp_menu *menu, wimp_pointer *pointer, void (*callback)(wimp_menu *menu, wimp_selection *selection));
+
+/* Open an iconbar menu. */
+
+void menu_open_ibar(wimp_menu *menu, wimp_pointer *pointer, void (*callback)(wimp_menu *menu, wimp_selection *selection));
+
+/* Open a pop-up menu. */
+
+void menu_open_popup(wimp_menu *menu, wimp_pointer *pointer, void (*callback)(wimp_menu *menu, wimp_selection *selection));
+
+/* Update a pop-up menu state. */
+
+void menu_set_popup_menu(wimp_menu *menu, int selection, wimp_w window, wimp_i icon);
+
+#endif
+
