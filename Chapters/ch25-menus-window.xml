@@ -34,6 +34,8 @@
 
 <p>If the work is done in <cite>WinEd</cite>, then the icons will be numbered 4 and 5 for the <icon>Sides</icon> display field and label respectively, then 6 and 7 for the <icon>Internal angles</icon> display field and label. These will be the numbers that we will use in our code below.</p>
 
+<p>Both display field icons use the <name>R</name> validation command that we have met before, in <reference id="sect-icons-indirect-format"/> and <reference id="chap-templates"/>, to create the 3D effect. Entering a default string of &ldquo;000&rdquo; into the <icon>Sides</icon> field ensures that <cite>WinEd</cite> configures a <icon>Max text length</icon> of 4 &ndash; allowing up to three digits and a terminator. In a similar way, the &ldquo;00000000&rdquo; in the <icon>Internal angles</icon> field ensures a length of 8 digits plus a terminator, or a total length of 9.</p>
+
 <p>Close the window and save the changes to the templates file.</p>
 
 <image id="fig-menus-window-window" file="menus-window-window.png" title="The window with two new result fields included"/>
@@ -185,7 +187,7 @@ char *calc_get_internal_angle(void)
 
 <p>The other two functions are <function>calc_get_sides()</function> and <function>calc_get_internal_angle()</function>, which return a pointer to the output buffer having written a suitable string into it given the current shape. To avoid getting into geometric arguments, this will be &ldquo;n/a&rdquo; for the circle, and the calculated values for the triangle and square.</p>
 
-<p>We can now modify the <function>win_set_shape()</function> in <file>c.win</file> as shown in <reference id="list-menus-window-set-shape"/>, so that calls a new <function>win_update_all_calculations()</function> function to make use of the new facilities.</p>
+<p>We can now modify the <function>win_set_shape()</function> function in <file>c.win</file> as shown in <reference id="list-menus-window-set-shape"/>, so that it calls a new <function>win_update_all_calculations()</function> function to make use of the new facilities.</p>
 
 <code id="list-menus-window-set-shape" lang="c" title="Upodating the data fields">static void win_set_shape(enum calc_shape shape)
 {
@@ -240,7 +242,7 @@ static void win_update_all_calculations(void)
 
 <p>The function now takes a parameter of the new <name>enum calc_shape</name> type, so the calls made to it will need to be updated accordingly.</p>
 
-<p>When compiled and run, our application window should look similar to that shown in <reference id="fig-menus-window-calcs"/>.</p>
+<p>When compiled and run, our application window should look similar to that shown in <reference id="fig-menus-window-calcs"/>. Choosing different shapes from the pop-up menu should result in the <icon>Sides</icon> and <icon>Internal angles</icon> fields updating to show appropriate values.</p>
 
 <image id="fig-menus-window-calcs" file="menus-window-calcs.png" title="The application can now show some information about the displayed shape"/>
 
@@ -252,7 +254,7 @@ static void win_update_all_calculations(void)
 <section>
 <title>A window menu</title>
 
-<p>When adding our calculation facility, we included support for setting the number of decimal places to which values will be displayed. This doesn&rsquo;t actually make a lot of difference for the shapes and data that we are able to show &ndash; although it would become relevant if we extended the shapes to include a heptagon. What we can&rsquo;t do at present is change this value without recompiling our code.</p>
+<p>When adding our calculation facility, we included support for setting the number of decimal places to which values will be displayed. This doesn&rsquo;t actually make a lot of difference for the shapes and data that we are able to show &ndash; although it would become relevant if we extended the shapes to include a heptagon, where the internal angle isn&rsquo;s a round number of degrees. What we can&rsquo;t do at present is change this value without recompiling our code.</p>
 
 <p>An obvious solution would be to provide a menu which contains these options, so we will do just that. It&rsquo;s possible to imagine further &lsquo;behavioural&rsquo; parameters that we might wish to adjust in the future, so we will create a general menu for the window to hold them all. We can start by adding some constants to <file>c.win</file> which define the menu entries as seen in <reference id="list-menus-window-const"/> and a new global variable for the <name>wimp_menu</name> block pointer as in <reference id="list-menus-window-global"/>.</p>.
 
