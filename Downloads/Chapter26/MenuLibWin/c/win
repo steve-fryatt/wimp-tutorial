@@ -198,7 +198,7 @@ static void win_set_menu(wimp_w w, wimp_menu *menu, wimp_pointer *pointer)
 {
 	int places;
 
-	if (menu == win_shape_menu)
+	if (menu != win_menu)
 		return;
 
 	places = calc_get_places();
