@@ -319,13 +319,27 @@ event_add_window_menu_selection(win_handle, win_menu_selection);</code>
 </row>
 </table>
 
-
+<p>In the case of our menu, although we want to leave the event library to sort out its operation, we still need to know when a selection has been made so that we can update the shape that is on display. We could do this using the window-level <name>Menu Selection</name> events, but since we already have a separate function to process selections from the pop-up menu, we will register this as an icon-level handler as follows:</p>
 
 <code lang="c">event_set_window_icon_popup_action(win_handle, WIN_ICON_SHAPE_POPUP,
 		FALSE, win_shape_menu_selection);</code>
 
+<p>The only thing that remains for us to do now is to set the default selection, which we can do using the <function>event_set_window_icon_popup_selection()</function> function provided by the library. This takes the <name>wimp_w</name> and <name>wimp_i</name> handles for the pop-up menu icon, and the required index for the selection; it will set the menu ticks and update the pop-up menu field icon accordingly.</p>
 
+<code lang="c">osbool event_set_window_icon_popup_selection(
+	wimp_w w,
+	wimp_i i,
+	unsigned selection
+);</code>
 
+<p>A corresponding <function>event_get_window_icon_popup_selection()</function> function can be used to read the index of the current selection showing in the field, which can be useful in a situation where receiving and tracking events would be over complicated.</p>
+
+<code lang="c">unsigned event_get_window_icon_popup_selection(
+	wimp_w w,
+	wimp_i i
+);</code>
+
+<p>Putting these changes together results in the amendments to the <function>win_initialise()</function> function shown in <reference id="list-menus-revisited-popup-init"/>. In addition to registering the pop-up menu and its handler, it initialises the menu to show the sqaure. Note that the <name>Mouse Click</name> handler is no longer being registered; since both menus are now displayed automatically, we no longer require the <function>win_mouse_click()</function> function and have therefore deleted it from the code.</p>
 
 <code id="list-menus-revisited-popup-init" lang="c" title="Registering the pop-up menu in win_initialise()">/* Register event handlers. */
 
@@ -340,6 +354,9 @@ event_set_window_icon_popup_action(win_handle, WIN_ICON_SHAPE_POPUP, FALSE, win_
 win_set_shape(CALC_SHAPE_SQUARE);
 event_set_window_icon_popup_selection(win_handle, WIN_ICON_SHAPE_POPUP, WIN_MENU_SHAPE_SQUARE);</code>
 
+<p>The updated <function>win_shape_menu_selection()</function> event handler has been updated to suit the prototype required by the icon-level pop-up menu event raised by SFLib&rsquo;s event library, as seen in <reference id="list-menus-revisited-popup-select"/>. It receives the <name>wimp_w</name> and <name>wimp_i</name> window and icon handles for the menu in <variable>window</variable> and <variable>icon</variable>; the currently selected index is provided in <variable>selection</variable>.</p>
+
+<p>As with other icon-level event handlers, the function returns an <name>osbool</name> value, indicating whether the handling of the event should be considered complete. We do not wish to receive details of the event to the window-level <function>win_menu_selection()</function> function, so <function>win_shape_menu_selection()</function> returns <name>TRUE</name> to indicate that it has completely handled it.</p>
 
 <code id="list-menus-revisited-popup-select" lang="c" title="The pop-up menu selection event handler">static osbool win_shape_menu_selection(wimp_w window, wimp_menu *menu, unsigned selection)
 {
@@ -358,11 +375,23 @@ event_set_window_icon_popup_selection(win_handle, WIN_ICON_SHAPE_POPUP, WIN_MENU
 	return TRUE;
 }</code>
 
-
-
+<p>Once again, the updated code can be found in <reference id="dl-menus-revisited-popup"/>; from a user&rsquo;s perspective, it should function in the same way as the other versions in this chapter.</p>
 
 <download id="dl-menus-revisited-popup" file="MenuLibPopUp" title="Making SFLib Manage the Pop-Up Menu" compatibility="none"/>
+</section>
 
+<section>
+<title>Tidying up</title>
+
+<p>With the changes above in place, all of the menus in our application are being handled by SFLib&rsquo;s event library &ndash; which means that the support for <name>Menu Selection</name> events and <name>Message_MenusDeleted</name> in <file>c.menus</file> is no longer required.</p>
+
+<p>To tidy up, we can remove the calls to the <function>menu_initialise()</function> and <function>menu_process_event()</function> functions from <file>c.main</file>, and then delete them from <file>c.menus</file>. The <function>menu_message_menus_deleted()</function> function is no longer required, either. Finally, the <function>menu_open()</function>, <function>menu_open_ibar()</function>, <function>menu_open_popup()</function> and <function>menu_set_popup_menu()</function> functions are not required, since the library does these actions for us.</p>
+
+<p>With these removed, the <file>c.menu</file> file only contains the <function>menu_create()</function> and <function>menu_entry()</function> functions for setting up menus blocks. We will keep these for now, since the system doesn&rsquo;s provide any standard way of building menus. The newly-streamlined code can be found in <reference id="dl-menus-revisited-complete"/>.</p>
+
+<download id="dl-menus-revisited-complete" file="MenuLibComplete" title="Removing Our Custom Menu Event Support" compatibility="none"/>
+
+<p>Now that we have tidied up our menu implementation, we can move on in the next chapter to look at another new area of the Wimp.</p>
 </section>
 </chapter>
 </manual>

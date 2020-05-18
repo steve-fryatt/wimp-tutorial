@@ -110,7 +110,7 @@ void ibar_initialise(char *sprite)
 		return;
 	}
 
-	/* Register event handlers */
+	/* Register event handlers. */
 
 	event_add_window_mouse_event(wimp_ICON_BAR, ibar_mouse_click);
 	event_add_window_menu(wimp_ICON_BAR, ibar_menu);
