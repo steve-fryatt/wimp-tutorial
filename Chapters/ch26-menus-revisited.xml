@@ -292,9 +292,73 @@ event_add_window_menu_selection(win_handle, win_menu_selection);</code>
 	osbool (*callback)(wimp_w, wimp_menu *, unsigned)
 );</code>
 
-<p>By supplying the details of the pop-up icon from the previous call to <function>event_add_window_icon_popup()</function>, we can control how the event library handles the user interacting with the menu in more detail. The <variable>complete</variable> parameter allows us to choose whether the library considers its handling of the event &lsquo;complete&rsquo; according to the explanation in <reference id="sect-icons-radio-sflib"/>. If we set it to <name>TRUE</name> and pass <name>NULL</name> to the <variable>*callback</variable> parameter, our application will get no events for the menu or its icons.</p>
+<p>By supplying the details of the pop-up icon from the previous call to <function>event_add_window_icon_popup()</function>, we can control how the event library handles the user interacting with the menu in more detail. The <variable>complete</variable> parameter allows us to choose whether the library considers its handling of the event &lsquo;complete&rsquo; according to the explanation in <reference id="sect-icons-radio-sflib"/>. The <variable>*callback</variable> parameter allows an icon-level event handler to be registered for the menu.</p>
 
-<p>Setting <variable>complete</variable> to <name>FALSE</name> and passing <name>NULL</name> to the <variable>*callback</variable> parameter is the default condition, and results on selections from the menu being sent toe the registered <name>Menu Selection</name> event handler. Alternatively, we can pass a pointer to an icon-level event handling function in the <variable>*callback</variable> parameter, </p>
+<p>A full list of the combinations can be seen in <reference id="table-menus-revisited-popup"/>. Remember that <function>event_set_window_icon_popup_action()</function> can only be called if the <variable>field</variable> parameter to the <function>event_add_window_icon_popup()</function> function was <em>not</em> <name>wimp_ICON_WINDOW</name> &ndash; if it was, then all four menu &lsquo;pseudo-events&rsquo; will be returned.</p>
+
+<table id="table-menus-revisited-popup" title="The different pop-up menh handling options">
+<columns>
+<col align="centre"><variable>complete</variable></col>
+<col align="centre"><variable>*callback</variable></col>
+<col align="left">Result</col>
+</columns>
+<row>
+<col><name>TRUE</name></col>
+<col><name>NULL</name></col>
+<col>The library will handle the update of the pop-up menu and field, and the application will not receive any events.</col>
+</row>
+<row>
+<col><name>FALSE</name></col>
+<col><name>NULL</name></col>
+<col>The library will handle the update of the pop-up menu and field, but selections will be reported to the application through the window-level <name>Menu Selection</name> event.</col>
+</row>
+<row>
+<col><name>FALSE</name></col>
+<col>Function Pointer</col>
+<col>The library will handle the update of the pop-up menu and field, but selections will initially be reported to the application through the icon-level pop-up menu selection event. If its handler returns <name>FALSE</name> to indicate &ldquo;not complete&rdquo; a window-level <name>Menu Selection</name> event will then be raised.</col>
+</row>
+</table>
+
+
+
+<code lang="c">event_set_window_icon_popup_action(win_handle, WIN_ICON_SHAPE_POPUP,
+		FALSE, win_shape_menu_selection);</code>
+
+
+
+
+<code id="list-menus-revisited-popup-init" lang="c" title="Registering the pop-up menu in win_initialise()">/* Register event handlers. */
+
+event_add_window_menu(win_handle, win_menu);
+event_add_window_menu_prepare(win_handle, win_set_menu);
+event_add_window_menu_selection(win_handle, win_menu_selection);
+event_add_window_icon_popup(win_handle, WIN_ICON_SHAPE_POPUP, win_shape_menu, WIN_ICON_SHAPE_FIELD, NULL);
+event_set_window_icon_popup_action(win_handle, WIN_ICON_SHAPE_POPUP, FALSE, win_shape_menu_selection);
+
+/* Initialise the window contents. */
+
+win_set_shape(CALC_SHAPE_SQUARE);
+event_set_window_icon_popup_selection(win_handle, WIN_ICON_SHAPE_POPUP, WIN_MENU_SHAPE_SQUARE);</code>
+
+
+<code id="list-menus-revisited-popup-select" lang="c" title="The pop-up menu selection event handler">static osbool win_shape_menu_selection(wimp_w window, wimp_menu *menu, unsigned selection)
+{
+	switch (selection) {
+	case WIN_MENU_SHAPE_CIRCLE:
+		win_set_shape(CALC_SHAPE_CIRCLE);
+		break;
+	case WIN_MENU_SHAPE_TRIANGLE:
+		win_set_shape(CALC_SHAPE_TRIANGLE);
+		break;
+	case WIN_MENU_SHAPE_SQUARE:
+		win_set_shape(CALC_SHAPE_SQUARE);
+		break;
+	}
+
+	return TRUE;
+}</code>
+
+
 
 
 <download id="dl-menus-revisited-popup" file="MenuLibPopUp" title="Making SFLib Manage the Pop-Up Menu" compatibility="none"/>
