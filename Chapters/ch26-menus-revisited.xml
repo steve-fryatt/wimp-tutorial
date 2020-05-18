@@ -252,5 +252,40 @@ event_add_window_menu_selection(win_handle, win_menu_selection);</code>
 
 <download id="dl-menus-revisited-main" file="MenuLibWin" title="Adding the Main Menu to SFLib's Events" compatibility="none"/>
 </section>
+
+<section>
+<title>Automating pop-up menus</title>
+
+<p>Now that we have given the problems of managing our main and iconbar menus over to the SFLib event library, it would be useful if we could delegate the pop-up menu as well. Fortunately we can, since the library allows menus to be attached to icons within a window as part of its icon-level event handling that we met back in <reference id="sect-icons-radio-sflib"/>.</p>
+
+<p>Various levels of support are available, starting from a a menu which is attached to an icon but which requires us to look after it through all of the usual &lsquo;pseudo-events&rsquo; that we have already seen. Whilst this is useful for doing custom things, it can be overklill for a simple pop-up menu and so, at the other end of the scale is a fully automatic option where the library looks after the menu completely and provides a function through which an application can read the current selection. We will need something somewhere in between: our menu is standard, but we do need to know when a new shape has been selected so that we can update the display.</p>
+
+<p>To register a pop-up menu with an icon, the event library provides the <function>event_add_window_icon_popup()</function> function.</p>
+
+<code lang="c">osbool event_add_window_icon_popup(
+	wimp_w w,
+	wimp_i i,
+	wimp_menu *menu,
+	wimp_i field,
+	char *token
+);</code>
+
+<p>This takes five parameters, of which three are always required &ndash; these are shown graphically in <reference id="fig-menus-revisited-popup"/>. The <variable>w</variable> parameter should be the handle of the window containing the icon, while <variable>i</variable> should be the handle of the icon itself. A pointer to the <name>wimp_menu</name> block of the menu to be attached should be passed in the <variable>*menu</variable> parameter.</p>
+
+<p>What value is passed to the <variable>field</variable> parameter will depend on how much control we want over the menu; passing <name>wimp_NO_ICON</name> would leave us to look after everything, but since we want the library to look after the menu for us we also need to supply the handle of the icon to be used as the pop-up menu field. The <variable>*token</variable> paramater is a pointer to an optional MessageTrans token; since we haven&rsquo;t met MessageTrans yet, we can safely pass <name>NULL</name> for this.</p>
+
+<image id="fig-menus-revisited-popup" file="menus-revisited-popup.png" title="The parts of a pup-up menu and its field"/>
+
+<p>For our menu, we will need to make the call as follows:</p>
+
+<code lang="c">event_add_window_icon_popup(win_handle, WIN_ICON_SHAPE_POPUP,
+		win_shape_menu, WIN_ICON_SHAPE_FIELD, NULL);</code>
+
+<p>Note that the icon to which the menu is attached is the pop-up menu icon itself; the field icon is the one in which the current selection will be displayed.</p>
+
+
+<download id="dl-menus-revisited-popup" file="MenuLibPopUp" title="Making SFLib Manage the Pop-Up Menu" compatibility="none"/>
+
+</section>
 </chapter>
 </manual>

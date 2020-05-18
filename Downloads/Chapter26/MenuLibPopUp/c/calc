@@ -1,0 +1,123 @@
+/* Copyright 2020, Stephen Fryatt (info@stevefryatt.org.uk)
+ *
+ * This file is part of Wimp Programming In C:
+ *
+ *   http://www.stevefryatt.org.uk/software/
+ *
+ * Licensed under the EUPL, Version 1.1 only (the "Licence");
+ * You may not use this work except in compliance with the
+ * Licence.
+ *
+ * You may obtain a copy of the Licence at:
+ *
+ *   http://joinup.ec.europa.eu/software/page/eupl
+ *
+ * Unless required by applicable law or agreed to in
+ * writing, software distributed under the Licence is
+ * distributed on an "AS IS" basis, WITHOUT WARRANTIES
+ * OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ * See the Licence for the specific language governing
+ * permissions and limitations under the Licence.
+ */
+
+/**
+ * File: calc.c
+ */
+
+#include "sflib/string.h"
+
+#include "calc.h"
+
+/* Constants. */
+
+#define CALC_BUFFER_LENGTH 32
+#define CALC_FORMAT_LENGTH 8
+
+/* Global Variables. */
+
+static enum calc_shape calc_current_shape = CALC_SHAPE_NONE;
+
+static int calc_current_sides = 0;
+
+static int calc_current_places = 0;
+
+static char calc_buffer[CALC_BUFFER_LENGTH];
+
+static char calc_format[CALC_FORMAT_LENGTH];
+
+/* Calculation Initialisation. */
+
+void calc_initialise(void)
+{
+	calc_set_format(2);
+	calc_set_shape(CALC_SHAPE_NONE);
+}
+
+/* Shape Selection. */
+
+void calc_set_shape(enum calc_shape shape)
+{
+	calc_current_shape = shape;
+
+	switch (shape) {
+	case CALC_SHAPE_CIRCLE:
+		calc_current_sides = 1;
+		break;
+	case CALC_SHAPE_TRIANGLE:
+		calc_current_sides = 3;
+		break;
+	case CALC_SHAPE_SQUARE:
+		calc_current_sides = 4;
+		break;
+	default:
+		calc_current_sides = 0;
+		break;
+	}
+}
+
+/* Set the formatting of results. */
+
+void calc_set_format(int places)
+{
+	if (places >= 0 && places <= 5) {
+		calc_current_places = places;
+		string_printf(calc_format, CALC_FORMAT_LENGTH, "%%.%df", places);
+	}
+}
+
+/* Get the decimal places. */
+
+int calc_get_places(void)
+{
+	return calc_current_places;
+}
+
+/* The number of sides. */
+
+char *calc_get_sides(void)
+{
+	if (calc_current_sides > 1) {
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, "%d", calc_current_sides);
+	} else {
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, "n/a");
+	}
+
+	return calc_buffer;
+}
+
+/* The internal angle. */
+
+char *calc_get_internal_angle(void)
+{
+	double angle;
+
+	if (calc_current_sides > 2) {
+		angle = ((calc_current_sides - 2.0) * 180.0) / calc_current_sides;
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, calc_format, angle);
+	} else {
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, "n/a");
+	}
+
+	return calc_buffer;
+}
