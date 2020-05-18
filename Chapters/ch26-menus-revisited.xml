@@ -216,14 +216,9 @@ event_add_window_menu_selection(win_handle, win_menu_selection);</code>
 
 <p>The main changes are to the parameters taken by the function: as with the <name>Menu Selection</name> handler that we saw <reference id="list-menus-revisited-ibar-select">above</reference>, the handler for <name>Menu Prepare</name> events takes the handle of the window over which the menu was opened in <variable>w</variable> and a pointer to the <name>wimp_menu</name> block for the menu in <variable>*menu</variable>.</p>
 
-<p>The third parameter, <variable>*pointer</variable>, is a pointer to a <name>wimp_pointer</name> block. If the handler is being called when a menu first opens due to a <mouse>Menu</mouse> click, the this points to the block returned by the Wimp in the original <name>Mouse Click</name> event. When the handler is subsequently called before the menu is re-opened due to a selection being made with <mouse>Adjust</mouse>, the pointer will be <name>NULL</name>. Our application can use this to determine whether the menu is newly opening, or simply remaining on screen.</p>
+<p>The third parameter, <variable>*pointer</variable>, is a pointer to a <name>wimp_pointer</name> block. If the handler is being called when a menu first opens due to a <mouse>Menu</mouse> click, the this points to the block returned by the Wimp in the original <name>Mouse Click</name> event. When the handler is subsequently called before the menu is re-opened due to a selection being made with <mouse>Adjust</mouse>, the pointer will be <name>NULL</name>. Our application can use this to determine whether the menu is newly opening, or simply remaining on screen. This distinction doesn&rsquo;t matter to us, so we simply check the handle of the menu to make sure that it is the main menu, and then update the three ticks as we previously did.</p>
 
-<p>This distinction doesn&rsquo;t matter to us, so we simply check the handle of the menu to make sure that it is the main menu, and then update the three ticks as we previously did.</p>
-
-
-
-
-
+<p>The next piece of code to be updated is the <name>Menu Selection</name> event handler, which will follow the same format as the one that we updated for the iconbar menu. The changes can be seen in <reference id="list-menus-revisited-main-select"/>: the <variable>w</variable> parameter has been added, and we check that the correct menu pointer is in <variable>*menu</variable>. There is also no need to call <function>win_set_menu()</function> before returning, as the event library will do this for us automatically.</p>
 
 <code id="list-menus-revisited-main-select" lang="c" title="Handling selections from the main menu">static void win_menu_selection(wimp_w window, wimp_menu *menu, wimp_selection *selection)
 {
@@ -245,7 +240,7 @@ event_add_window_menu_selection(win_handle, win_menu_selection);</code>
        	win_update_all_calculations();
 }</code>
 
-
+<p>With our evet handlers hooked up to the &lsquo;pseudo-events&rsquo;, we no longer need to open the menu when the user clicks <mouse>Menu</mouse> over the window. This means that we can update the <function>win_mouse_click()</function> function as shown in <reference id="list-menus-revisited-main-click"/>, so that it returns to just opening the pop-up menu.</p>
 
 <code id="list-menus-revisited-main-click" lang="c" title="We only need to open the pop-up menu on Mouse Click events">static void win_mouse_click(wimp_pointer *pointer)
 {
@@ -253,7 +248,9 @@ event_add_window_menu_selection(win_handle, win_menu_selection);</code>
 		menu_open_popup(win_shape_menu, pointer, win_shape_menu_selection);
 }</code>
 
+<p>With these changes in place, the code continue to function the same when compiled and run. The full set of updates can be found in <reference id="dl-menus-revisited-main"/>.</p>
 
+<download id="dl-menus-revisited-main" file="MenuLibWin" title="Adding the Main Menu to SFLib's Events" compatibility="none"/>
 </section>
 </chapter>
 </manual>
