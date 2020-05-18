@@ -272,7 +272,7 @@ event_add_window_menu_selection(win_handle, win_menu_selection);</code>
 
 <p>This takes five parameters, of which three are always required &ndash; these are shown graphically in <reference id="fig-menus-revisited-popup"/>. The <variable>w</variable> parameter should be the handle of the window containing the icon, while <variable>i</variable> should be the handle of the icon itself. A pointer to the <name>wimp_menu</name> block of the menu to be attached should be passed in the <variable>*menu</variable> parameter.</p>
 
-<p>What value is passed to the <variable>field</variable> parameter will depend on how much control we want over the menu; passing <name>wimp_NO_ICON</name> would leave us to look after everything, but since we want the library to look after the menu for us we also need to supply the handle of the icon to be used as the pop-up menu field. The <variable>*token</variable> paramater is a pointer to an optional MessageTrans token; since we haven&rsquo;t met MessageTrans yet, we can safely pass <name>NULL</name> for this.</p>
+<p>What value is passed to the <variable>field</variable> parameter will depend on how much control we want over the menu; passing <name>wimp_ICON_WINDOW</name> (indicating no icon) would leave us to look after everything, but since we want the library to look after the menu for us we also need to supply the handle of the icon to be used as the pop-up menu field. The <variable>*token</variable> parameter is a pointer to an optional MessageTrans token; since we haven&rsquo;t met MessageTrans yet, we can safely pass <name>NULL</name> for this.</p>
 
 <image id="fig-menus-revisited-popup" file="menus-revisited-popup.png" title="The parts of a pup-up menu and its field"/>
 
@@ -281,7 +281,20 @@ event_add_window_menu_selection(win_handle, win_menu_selection);</code>
 <code lang="c">event_add_window_icon_popup(win_handle, WIN_ICON_SHAPE_POPUP,
 		win_shape_menu, WIN_ICON_SHAPE_FIELD, NULL);</code>
 
-<p>Note that the icon to which the menu is attached is the pop-up menu icon itself; the field icon is the one in which the current selection will be displayed.</p>
+<p>So far, this has associated the pop-up menu with the icon, but our application will still receive events via the usual window-level event handlers. If we had passed <name>wimp_ICON_WINDOW</name> in the <variable>field</variable> parameter, then the menu would produce the four &lsquo;pseudo-events&rsquo;; since we have specified a field icon, our application will only receive <name>Menu Selection</name> events.</p>
+
+<p>As we have provided a field icon, we can simplify things further by using the <function>event_set_window_icon_popup_action()</function> to change the behaviour of the menu; this is defined as follows:</p>
+
+<code lang="c">osbool event_set_window_icon_popup_action(
+	wimp_w w,
+	wimp_i i,
+	osbool complete,
+	osbool (*callback)(wimp_w, wimp_menu *, unsigned)
+);</code>
+
+<p>By supplying the details of the pop-up icon from the previous call to <function>event_add_window_icon_popup()</function>, we can control how the event library handles the user interacting with the menu in more detail. The <variable>complete</variable> parameter allows us to choose whether the library considers its handling of the event &lsquo;complete&rsquo; according to the explanation in <reference id="sect-icons-radio-sflib"/>. If we set it to <name>TRUE</name> and pass <name>NULL</name> to the <variable>*callback</variable> parameter, our application will get no events for the menu or its icons.</p>
+
+<p>Setting <variable>complete</variable> to <name>FALSE</name> and passing <name>NULL</name> to the <variable>*callback</variable> parameter is the default condition, and results on selections from the menu being sent toe the registered <name>Menu Selection</name> event handler. Alternatively, we can pass a pointer to an icon-level event handling function in the <variable>*callback</variable> parameter, </p>
 
 
 <download id="dl-menus-revisited-popup" file="MenuLibPopUp" title="Making SFLib Manage the Pop-Up Menu" compatibility="none"/>
