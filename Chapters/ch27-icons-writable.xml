@@ -1,0 +1,388 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+
+<!DOCTYPE xmlmanual SYSTEM "../wimp.dtd">
+
+<manual xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="xmldoc.xsd" version="1.8.6">
+
+<!-- Chapter 27
+   -
+   - Writable Icons
+  -->
+
+<chapter id="chap-icons-writable">
+<resources>
+<images>Chapter27</images>
+<downloads>Chapter27</downloads>
+</resources>
+<filename>icons-writable.html</filename>
+<title>Writable Icons</title>
+
+<summary>The Wimp isn&rsquo;t all about interacting with the mouse, and it can be useful to allow the user to enter values from the keyboard too.</summary>
+
+<section>
+<p>Aside from a brief look at writable icons back in <reference id="chap-icons-indirect"/>, our interaction with the Wimp has so far been entirely based around the mouse and pointer. This is fine for many simple applications, but sooner or later we will need our users to type something on their keyboard.</p>
+
+<p>Following the changes that we made in <reference id="chap-menus-window"/>, we have had fields to display the number of sides and the internal angles of the selected shape. It would be useful if the user could enter other parameters for the shape, such as the length of a side or the internal area, and see how they interact. We will now look at how this can be done.</p>
+</section>
+
+<section>
+<title>New templates</title>
+
+<p>We will start by updating the <file>!ExamplApp.Templates</file> file to add three writable fields to the main window, as seen in <refererence id="fig-icons-writable-template"/>. The work area has been extended downwards to make space for the fields, which are made from the <icon>Writable icon</icon> and <icon>Comment</icon> icons in the <cite>WinEd</cite> <window>Icon picker</window>.</p>
+
+<p>The icon numbers continue increase downwards from the <icon>Internal angles</icon> display field, which is number 6, and its label, which is number 7. The <icon>Side length</icon> field and its label are icon numbers 8 and 9; the <icon>Perimeter</icon> field and its label are icon numbers 10 and 11; the <icon>Area</icon> field and its label are icon numbers 12 and 13. For the first time, the order of the icon numbers in the window is important beyond ensuring that the template agrees with the constants in our code, because it will affect the use of the keyboard to navigate between the writable fields.</p>
+
+<image id="fig-icons-writable-template" file="icons-writable-template.png" title="The window template with three writable fields added"/>
+
+<p>The labels are standard comment icons, like the others already in the window; the template editor will make them indirected for us if the text is longer than 12 characters. The writable fields are something new, however &ndash; and the definition can be seen in <reference id="fig-icons-writable-edit"/>.</p>
+
+<p>The <icon>Button type</icon> of the icon is set to &ldquo;Writable&rdquo;, which corresponds to the <name>wimp_BUTTON_WRITABLE</name> value in the icon flags. The <name>wimp_ICON_TEXT</name> and <name>wimp_ICON_INDIRECTED</name> flags are set, so that the text in the icon can be changed: a non-indirected writable icon would be fairly useless! The appearance of a writable icon is fairly strictly controlled by the <cite>Style Guide</cite>: a black foreground and white background, with a border and no 3D effects.</p>
+
+<p>The validation string for the icon is &ldquo;Pptr_write;Kta;A0-9.&rdquo; &ndash; some of which should already be familiar, since we met the <name>P</name> and <name>A</name> commands back in <reference id="chap-icons-indirect"/>. The <name>K</name> command is one that we have not yet met: it is almost always specified for writable icons, and we will find out what it does soon.</p>
+
+<p>The &ldquo;Pptr_write&rdquo; command tells the Wimp to use the &ldquo;ptr_write&rdquo; sprite from the Wimp Sprite Pool as the mouse pointer when the cursor is over the icon &ndash; which, as we have previously mentioned, is a standard requirement in the <cite>Style Guide</cite>. The <name>A</name> command is applying a filter to the characters which can be typed into the field: we will be expecting non-negative numbers, so the digits 0 to 9 and a decimal point are all that we want the user to be able to type. See <reference id="sect-icons-indirect-filter"/> for a reminder of how these filters work. </p>
+
+<image id="fig-icons-writable-edit" file="icons-writable-edit.png" title="The definition for one of the writable field icons"/>
+
+<p>When setting the icons up, it might be easiest to place one field and configure the writable icon as above, before copying it to create the other two fields. Once the window is set up as above, save the template file ready to use in the application.</p>
+</section>
+
+<section>
+<title>Extra calculations</title>
+
+<p>In order to make our new icons work, we will need to add some additional functionality to the <file>c.calc</file> and <file>h.calc</file> files. First, we will define some dimension types in the header file, as shown in <reference id="list-icons-writable-dims"/>.</p> 
+
+<code id="list-icons-writable-dims" lang="c" title="The types of dimension that we will be able to calculate">/* Dimension Types */
+
+enum calc_dimension {
+	CALC_DIMENSION_NONE,
+	CALC_DIMENSION_LENGTH,
+	CALC_DIMENSION_DIAMETER,
+	CALC_DIMENSION_PERIMETER,
+	CALC_DIMENSION_AREA
+};</code>
+
+<p>Over in <file>c.calc</file>, we will add a couple of global variables to allow us to track what calculations are required. We will be allowing the user to specify a value for one of the three dimensions in the list &ndash; length, perimiter or area &ndash; and then updating the other two values accordingly. To this end, we will use the <variable>calc_current_dimension</variable> to remember what type of value was most recently supplied, and hold the value itself in <variable>calc_current_dimension_size</variable>. The changes can be seen in <reference id="list-icons-writable-const"/>.</p>
+
+<code id="list-icons-writable-const" lang="c" title="The constants and global variables used for calculations.">/* Constants. */
+
+#define CALC_BUFFER_LENGTH 32
+#define CALC_FORMAT_LENGTH 8
+#define CALC_PI 3.14159265358979323846
+
+/* Global Variables. */
+
+static enum calc_shape calc_current_shape = CALC_SHAPE_NONE;
+
+static int calc_current_sides = 0;
+
+static int calc_current_places = 0;
+
+static enum calc_dimension calc_current_dimension = CALC_DIMENSION_LENGTH;
+
+static double calc_current_dimension_size = 10.0;
+
+static char calc_buffer[CALC_BUFFER_LENGTH];
+
+static char calc_format[CALC_FORMAT_LENGTH];
+
+static char *calc_not_applicable = &quot;n/a&quot;;</code>
+
+<p>To allow a dimension to be set, we will supply a new <function>calc_set_dimension()</function>, which takes the type of dimension and a pointer to a string representing the new value. This will allow us to simply pass a pointer to the text in a writable icon, and have the calculation code extract the necessary information.</p>
+
+<code lang="c">/* Set one of the dimensions. */
+
+void calc_set_dimension(enum calc_dimension dimension, char *text)
+{
+	double value = 0.0;
+
+	if (text == NULL)
+		return;
+
+	value = atof(text);
+	if (value == 0.0)
+		return;
+
+	calc_current_dimension = dimension;
+	calc_current_dimension_size = value;
+}</code>
+
+<p>Finally, we will add three new functions &ndash; <function>calc_get_length()</function>, <function>calc_get_perimeter()</function> and <function>calc_get_area()</function> &ndash; which will operate in a similar way to the existing <function>calc_get_sides()</function> and <function>calc_get_internal_angle()</function> functions. When called, they will calculate the necessary value and write it to a string buffer, before returning a pointer to that buffer.</p>
+
+<p>The additional code, including a couple of internal functions to convert to and from area, can be seen in <reference id="list-icons-writable-calc"/>. This is somewhat incidental to the purpose of this tutorial, so there should be no reason not to take it as a &lsquo;black box&rsquo; if you do not wish to get bogged down in the mathematics.</p>
+
+<code id="list-icons-writable-calc" lang="c" title="The additional calculation routines">/* The length of a side, or diameter of a circle. */
+
+char *calc_get_length(void)
+{
+	double length = 0.0;
+
+	switch (calc_current_dimension) {
+	case CALC_DIMENSION_LENGTH:
+	case CALC_DIMENSION_DIAMETER:
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, calc_format, calc_current_dimension_size);
+		break;
+
+	case CALC_DIMENSION_PERIMETER:
+		if (calc_current_sides &gt; 1)
+			length = calc_current_dimension_size / calc_current_sides;
+		else
+			length = calc_current_dimension_size / CALC_PI;
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, calc_format, length);
+		break;
+
+	case CALC_DIMENSION_AREA:
+		length = calc_length_from_area();
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, calc_format, length);
+		break;
+
+	default:
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, calc_not_applicable);
+		break;
+	}
+
+	return calc_buffer;
+}
+
+/* The perimeter, or circumference of a circle. */
+
+char *calc_get_perimeter(void)
+{
+	double perimeter = 0.0;
+
+	switch (calc_current_dimension) {
+	case CALC_DIMENSION_LENGTH:
+	case CALC_DIMENSION_DIAMETER:
+		if (calc_current_sides &gt; 1)
+			perimeter = calc_current_dimension_size * calc_current_sides;
+		else
+			perimeter = calc_current_dimension_size * CALC_PI;
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, calc_format, perimeter);
+		break;
+
+	case CALC_DIMENSION_PERIMETER:
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, calc_format, calc_current_dimension_size);
+		break;
+
+	case CALC_DIMENSION_AREA:
+		if (calc_current_sides &gt; 1)
+			perimeter = calc_length_from_area() * calc_current_sides;
+		else
+			perimeter = calc_length_from_area() * CALC_PI;
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, calc_format, perimeter);
+		break;
+
+	default:
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, calc_not_applicable);
+		break;
+	}
+
+	return calc_buffer;
+}
+
+/* The area. */
+
+char *calc_get_area(void)
+{
+	double area = 0.0;
+
+	switch (calc_current_dimension) {
+	case CALC_DIMENSION_LENGTH:
+	case CALC_DIMENSION_DIAMETER:
+	case CALC_DIMENSION_PERIMETER:
+		area = calc_area_from_length();
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, calc_format, area);
+		break;
+
+	case CALC_DIMENSION_AREA:
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, calc_format, calc_current_dimension_size);
+		break;
+
+	default:
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, calc_not_applicable);
+		break;
+	}
+
+	return calc_buffer;
+}
+
+/* If the current dimension is Area, return the length. */
+
+static double calc_length_from_area(void)
+{
+	if (calc_current_dimension != CALC_DIMENSION_AREA)
+		return 0.0;
+
+	switch (calc_current_sides) {
+	case 1:
+		return sqrt(4.0 * calc_current_dimension_size / CALC_PI);
+	case 3:
+		return sqrt(4.0 * calc_current_dimension_size / sqrt(3.0));
+	case 4:
+		return sqrt(calc_current_dimension_size);
+	default:
+		return 0.0;
+	}
+}
+
+/* If the current dimension is length or perimeter, return the area. */
+
+static double calc_area_from_length(void)
+{
+	double length = 0.0;
+
+	switch (calc_current_dimension) {
+	case CALC_DIMENSION_LENGTH:
+	case CALC_DIMENSION_DIAMETER:
+		length = calc_current_dimension_size;
+		break;
+
+	case CALC_DIMENSION_PERIMETER:
+		if (calc_current_sides &gt; 1)
+			length = calc_current_dimension_size / calc_current_sides;
+		else
+			length = calc_current_dimension_size / CALC_PI;
+		break;
+
+	default:
+		return 0.0;
+	}
+
+	switch (calc_current_sides) {
+	case 1:
+		return CALC_PI * length * length;
+	case 3:
+		return sqrt(3.0) * length * length / 4.0;
+	case 4:
+		return length * length;
+	default:
+		return 0.0;
+	}
+}</code>
+</section>
+
+<section>
+<title>Updating the display</title>
+
+<p>To make use of the icons and code that we have added so far, we will need to update <file>c.win</file>. To start with, we need to add constants for the new writable icons that have been added to the window template, as shown in <reference id="list-icons-writable-win-init"/>. The numbers must match with those defined in the templates file.</p>
+
+<code id="list-icons-writable-win-init" lang="c" title="Constants for the handles of the new icons">/* Main Window Icons. */
+
+#define WIN_ICON_SHAPE 0
+#define WIN_ICON_SHAPE_POPUP 1
+#define WIN_ICON_SHAPE_FIELD 2
+#define WIN_ICON_SIDES_FIELD 4
+#define WIN_ICON_INT_ANGLE_FIELD 6
+#define WIN_ICON_LENGTH_FIELD 8
+#define WIN_ICON_PERIMETER_FIELD 10
+#define WIN_ICON_AREA_FIELD 12</code>
+
+<p>We can now extend the <function>win_update_all_calculations()</function> function to fill in the new writable icons, using the functions added to <file>c.calc</file>. The code is in <reference id="list-icons-writable-win-update"/>, but in addition to the three new copy-and-redraw blocks, there is some additional code added at the end.</p>
+
+<code id="list-icons-writable-win-update" lang="c" title="The code to update all of the icon contents">static void win_update_all_calculations(void)
+{
+	char		*text = NULL;
+	int		index;
+	wimp_caret	caret;
+	wimp_icon_state	state;
+
+	/* Update the window data. */
+
+	text = calc_get_sides();
+	if (text != NULL) {
+		icons_strncpy(win_handle, WIN_ICON_SIDES_FIELD, text);
+		wimp_set_icon_state(win_handle, WIN_ICON_SIDES_FIELD, 0, 0);
+	}
+
+	text = calc_get_internal_angle();
+	if (text != NULL) {
+		icons_strncpy(win_handle, WIN_ICON_INT_ANGLE_FIELD, text);
+		wimp_set_icon_state(win_handle, WIN_ICON_INT_ANGLE_FIELD, 0, 0);
+	}
+
+	text = calc_get_length();
+	if (text != NULL) {
+		icons_strncpy(win_handle, WIN_ICON_LENGTH_FIELD, text);
+		wimp_set_icon_state(win_handle, WIN_ICON_LENGTH_FIELD, 0, 0);
+	}
+
+	text = calc_get_perimeter();
+	if (text != NULL) {
+		icons_strncpy(win_handle, WIN_ICON_PERIMETER_FIELD, text);
+		wimp_set_icon_state(win_handle, WIN_ICON_PERIMETER_FIELD, 0, 0);
+	}
+
+	text = calc_get_area();
+	if (text != NULL) {
+		icons_strncpy(win_handle, WIN_ICON_AREA_FIELD, text);
+		wimp_set_icon_state(win_handle, WIN_ICON_AREA_FIELD, 0, 0);
+	}
+
+	/* Correct the caret position if required. */
+
+	if (xwimp_get_caret_position(&amp;caret) != NULL)
+		return;
+
+	if (caret.w != win_handle)
+		return;
+
+	state.w = caret.w;
+	state.i = caret.i;
+	if (xwimp_get_icon_state(&amp;state) != NULL)
+		return;
+
+	index = string_ctrl_strlen(state.icon.data.indirected_text.text);
+
+	if (caret.index &lt; index)
+		index = caret.index;
+
+	xwimp_set_caret_position(caret.w, caret.i, 0, 0, -1, index);
+}</code>
+
+
+
+<code lang="c">extern void wimp_get_caret_position(
+	wimp_caret *caret
+);
+
+extern os_error *xwimp_get_caret_position(
+	wimp_caret *caret
+);</code>
+
+
+
+<code lang="c">extern void wimp_set_caret_position(
+	wimp_w w,
+	wimp_i i,
+	int x,
+	int y,
+	int height,
+	int index
+);
+
+extern os_error *xwimp_set_caret_position(
+	wimp_w w,
+	wimp_i i,
+	int x,
+	int y,
+	int height,
+	int index
+);</code>
+
+
+
+<code lang="c">struct wimp_caret {
+	wimp_w w;
+	wimp_i i;
+	os_coord pos;
+	int height;
+	int index;
+};
+
+typedef struct wimp_caret wimp_caret;</code>
+
+
+
+</section>
+</chapter>
+</manual>

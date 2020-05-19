@@ -46,6 +46,8 @@ static char calc_buffer[CALC_BUFFER_LENGTH];
 
 static char calc_format[CALC_FORMAT_LENGTH];
 
+static char *calc_not_applicable = "n/a";
+
 /* Calculation Initialisation. */
 
 void calc_initialise(void)
@@ -100,7 +102,7 @@ char *calc_get_sides(void)
 	if (calc_current_sides > 1) {
 		string_printf(calc_buffer, CALC_BUFFER_LENGTH, "%d", calc_current_sides);
 	} else {
-		string_printf(calc_buffer, CALC_BUFFER_LENGTH, "n/a");
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, calc_not_applicable);
 	}
 
 	return calc_buffer;
@@ -116,7 +118,7 @@ char *calc_get_internal_angle(void)
 		angle = ((calc_current_sides - 2.0) * 180.0) / calc_current_sides;
 		string_printf(calc_buffer, CALC_BUFFER_LENGTH, calc_format, angle);
 	} else {
-		string_printf(calc_buffer, CALC_BUFFER_LENGTH, "n/a");
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, calc_not_applicable);
 	}
 
 	return calc_buffer;
