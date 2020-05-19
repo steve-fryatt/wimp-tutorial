@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+
+<!DOCTYPE xmlmanual SYSTEM "../wimp.dtd">
+
+<manual xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="xmldoc.xsd" version="1.8.6">
+
+<!-- Chapter 27
+   -
+   - Keyboard Input
+  -->
+
+<chapter id="chap-key-input">
+<resources>
+<images>Chapter27</images>
+<downloads>Chapter27</downloads>
+</resources>
+<filename>key-input.html</filename>
+<title>Keyboard Input</title>
+
+<summary>The Wimp isn&rsquo;t all about interacting with the mouse, and our application can benefit from listening out for keyboard activity too.</summary>
+
+<section>
+<p>Aside from a brief look at writable icons back in <reference id="chap-icons-indirect"/>, our interaction with the Wimp has so far been entirely based around the mouse and pointer. This is fine for many simple applications, but sooner or later we will need our users to type something on their keyboard.</p>
+
+<p>Following the changes that we made in <reference id="chap-menus-window"/>, we have had fields to display the number of sides and the internal angles of the selected shape. It would be useful if the user could enter other parameters for the shape, such as the length of a side or the internal area, and see how they interact. We will now look at how this can be done.</p>
+</section>
+
+<section>
+<title>New templates</title>
+
+<p>We will start by updating the <file>!ExamplApp.Templates</file> file to add three writable fields to the main window, as seen in <refererence id="fig-key-input-template"/>. The work area has been extended downwards to make space for the fields, which are made from the <icon>Writable icon</icon> and <icon>Comment</icon> icons in the <cite>WinEd</cite> <window>Icon picker</window>.</p>
+
+<p>The icon numbers continue increase downwards from the <icon>Internal angles</icon> display field, which is number 6, and its label, which is number 7. The <icon>Side length</icon> field and its label are icon numbers 8 and 9; the <icon>Perimeter</icon> field and its label are icon numbers 10 and 11; the <icon>Area</icon> field and its label are icon numbers 12 and 13.</p>
+
+<image id="fig-key-input-template" file="key-input-template.png" title="The window template with three writable fields added"/>
+
+<p>The labels are standard comment icons, like the others already in the window; the template editor will make them indirected for us if the text is longer than 12 characters. The writable fields are something new, however &ndash; and the definition can be seen in <reference id="fig-key-input-edit"/>.</p>
+
+<p>The <icon>Button type</icon> of the icon is set to &ldquo;Writable&rdquo;, which corresponds to the <name>wimp_BUTTON_WRITABLE</name> value in the icon flags. The <name>wimp_ICON_TEXT</name> and <name>wimp_ICON_INDIRECTED</name> flags are set, so that the text in the icon can be changed: a non-indirected writable icon would be fairly useless! The appearance of a writable icon is fairly strictly controlled by the <cite>Style Guide</cite>: a black foreground and white background, with a border and no 3D effects.</p>
+
+<p>The validation string for the icon is &ldquo;Pptr_write;Kta;A0-9.&rdquo; &ndash; some of which should already be familiar, since we met the <name>P</name> and <name>A</name> commands back in <reference id="chap-icons-indirect"/>. The <name>K</name> command is a new one that we have not yet met, which is almost always used with writable icons: we will find out what it does soon.</p>
+
+<p>The &ldquo;Pptr_write&rdquo; command tells the Wimp to use the &ldquo;ptr_write&rdquo; sprite from the Wimp Sprite Pool as the mouse pointer when the cursor is over the icon; this is a standard requirement in the <cite>Style Guide</cite>. The <name>A</name> command is applying a filter to the characters which can be typed into the field: we will be expecting non-negative numbers, so the digits 0 to 9 and a decimal point are all that we want the user to be able to type. See <reference id="sect-icons-indirect-filter"/> for a reminder of how these filters work. </p>
+
+<image id="fig-key-input-edit" file="key-input-edit.png" title="The definition for one of the writable field icons"/>
+
+<p>When setting the icons up, it might be easiest to place one field and configure the writable icon as above, before copying it to create the other two fields. Once the window is set up as above, save the template file ready to use in the application.</p>
+</section>
+</chapter>
+</manual>

@@ -200,7 +200,7 @@ static char win_icon_text[WIN_ICON_TEXT_LEN];</code>
 <p>Unlike the icon text buffer, the contents of a validation string usually doesn&rsquo;t change once its icon has been created. As with the text buffers, the string <em>must</em> remain in memory as long as the icon exists but, without the need to change their contents, specifying them as string constants in the code &ndash; as we&rsquo;ll be doing here &ndash; will have the required effect without the need to define a global buffer array for each one.</p>
 </section>
 
-<section>
+<section id="sect-icons-indirect-filter">
 <title>Filtering input</title>
 
 <p>When asking the user to enter data, a common requirement is to be able to limit what characters they can type. If an application is expecting an amount of money, for example, then limiting input to the characters from 0 to 9 along with . and - might be desirable. This can be done very easily in writable icons using the <name>A</name> validation command.</p>
