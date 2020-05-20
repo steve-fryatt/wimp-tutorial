@@ -38,7 +38,7 @@
 
 <image id="fig-icons-writable-icon" file="icons-writable-icon.png" title="In a writable icon, the Wimp handles the caret for us"/>
 
-<p>If the user clicks with in a writable icon, the Wimp will place the caret in an appropriate position within the icon&rsquo;s text and then handle all of the usual input and editing options, including support for the <intro>global clipboard</intro>. The application can read the text back from the icon whenever it needs to do so, and in addition, the Wimp will pass on some of all of the keypresses for it to process if it needs to do so.</p>
+<p>If the user clicks with in a writable icon, the Wimp will place the caret in an appropriate position within the icon&rsquo;s text and then handle all of the usual input and editing options, including support for the <intro>global clipboard</intro>. The application can read the text back from the icon at any time, and in addition, the Wimp will pass on some of all of the keypresses for it to process if it needs to do so.</p>
 
 <p>One final point to note is that the <cite>Style Guide</cite> states that the caret should be hidden if text is currently selected: in effect, the selection becomes the insertion point for the next keypress, as anything which is typed will <em>replace</em> it. Theis can be seen in <reference id="fig-icons-writable-select"/>. Once again, the Wimp will handle this for us in writable icons.</p>
 
@@ -50,7 +50,7 @@
 
 <p>We will start by updating the <file>!ExamplApp.Templates</file> file to add three writable fields to the main window, as seen in <refererence id="fig-icons-writable-template"/>. The work area has been extended downwards to make space for the fields, which are made from the <icon>Writable icon</icon> and <icon>Comment</icon> icons in the <cite>WinEd</cite> <window>Icon picker</window>.</p>
 
-<p>The icon numbers continue increase downwards from the <icon>Internal angles</icon> display field, which is number 6, and its label, which is number 7. The <icon>Side length</icon> field and its label are icon numbers 8 and 9; the <icon>Perimeter</icon> field and its label are icon numbers 10 and 11; the <icon>Area</icon> field and its label are icon numbers 12 and 13. For the first time, the order of the icon numbers in the window is important beyond ensuring that the template agrees with the constants in our code, because it will affect the use of the keyboard to navigate between the writable fields.</p>
+<p>The icon numbers should continue to increase downwards from the <icon>Internal angles</icon> display field, which is number 6, and its label, which is number 7. The <icon>Side length</icon> field and its label are icon numbers 8 and 9; the <icon>Perimeter</icon> field and its label are icon numbers 10 and 11; the <icon>Area</icon> field and its label are icon numbers 12 and 13. For the first time, the order of the icon numbers in the window is important beyond ensuring that the template agrees with the constants in our code, because it will affect the use of the keyboard to navigate between the writable fields.</p>
 
 <image id="fig-icons-writable-template" file="icons-writable-template.png" title="The window template with three writable fields added"/>
 
@@ -401,7 +401,7 @@ typedef struct wimp_caret wimp_caret;</code>
 
 <p>If the caret is in a writable icon, the icon handle is stored in <variable>i</variable>; otherwise this contains &minus;1 (or <name>wimp_ICON_WINDOW</name>). If it is in an icon, <variable>index</variable> contains the position in the string, starting from zero before the first character.</p>
 
-<p>The final piece of information is the caret height, in OS&nbsp;units, which is contained in <variable>height</variable>. This is actually a bit-field as shown in <reference id="table-icons-writable-height"/> &ndash; fortunately it isn&rsquo;t a value that we need to worry make use of for now.</p>
+<p>The final piece of information is the caret height, in OS&nbsp;units, which is contained in <variable>height</variable>. This is actually a bit-field as shown in <reference id="table-icons-writable-height"/> &ndash; fortunately it isn&rsquo;t a value that we need to make use of for now.</p>
 
 <table id="table-icons-writable-height" title="The contents of the height field in wimp_caret">
 <columns>
@@ -457,11 +457,11 @@ extern os_error *xwimp_set_caret_position(
 <section>
 <title>Moving between icons</title>
 
-<p>One thing that our application can do, without any effort from us, is move the caret between writable icons when the <key>Up</key> and <key>Down</key> cursor keys or the <key>Tab</key> key is used. Asuming that the icon numbers are in the order specified in <reference id="sect-icons-writable-templ"/>, and the ESGs are all the same, then the <key>Down</key> or <key>Tab</key> keys should move to the next field, while <key>Up</key> and <key>Shift-Tab</key> will move to the previous one.</p>
+<p>One thing that our application <em>can</em> do, without any effort from us, is move the caret between writable icons when the <key>Up</key> and <key>Down</key> cursor keys or the <key>Tab</key> key is used. Asuming that the icon numbers are in the order specified in <reference id="sect-icons-writable-templ"/>, and the ESGs are all the same, then the <key>Down</key> or <key>Tab</key> keys should move to the next field, while <key>Up</key> and <key>Shift-Tab</key> will move to the previous one.</p>
 
-<p>This functionality is provided for us by the Wimp, and is a result of the <name>K</name> validation command that we glossed over earlier. It controls how the Wimp handles keypresses in a writable icon, and takes the following option flags which can be applied in any combination.</p>
+<p>This functionality is provided for us by the Wimp, and is a result of the <name>K</name> validation command that we glossed over earlier. It controls how the Wimp handles keypresses in a writable icon and takes the option flags listed in <reference id="table-icons-writable-k"/>, which can be applied in any combination.</p>
 
-<table>
+<table id="table-icons-writable-k" title="The option flags for the K validation command">
 <columns>
 <col align="centre">Option</col>
 <col align="left">Action</col>
