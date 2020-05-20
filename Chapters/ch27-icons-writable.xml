@@ -23,6 +23,16 @@
 <p>Aside from a brief look at writable icons back in <reference id="chap-icons-indirect"/>, our interaction with the Wimp has so far been entirely based around the mouse and pointer. This is fine for many simple applications, but sooner or later we will need our users to type something on their keyboard.</p>
 
 <p>Following the changes that we made in <reference id="chap-menus-window"/>, we have had fields to display the number of sides and the internal angles of the selected shape. It would be useful if the user could enter other parameters for the shape, such as the length of a side or the internal area, and see how they interact. We will now look at how this can be done.</p>
+
+<p>From a user&rsquo;s point of view, the Wimp handles keypresses in a fairly standard way. At any given time, one window on the desktop can have <intro>input focus</intro>, which means that it will receive input from the keyboard. The window with focus is shown by its title bar being highlighted in a different colour, although as we saw in <reference id="sect-menus-intro-proginfo"/>, this is normally disabled for windows which are part of a menu tree. <!--Fig--> shows two <cite>Edit</cite> windows side by side; the one on the left has input focus.</p>
+
+<p>From the point of view of the Wimp, a window has input focus if it contains the <intro>caret</intro>. This is a cursor &ndash; which may or may not be visble to the user &ndash; indicating where the next keypress will be &lsquo;inserted&rsquo;. It has a physical position within the window, which &ndash; just like icons &ndash; is calculated in OS&nbsp;units relative to the work area origin.</p>
+
+<p>If an application chooses to make the caret visible, it appears as a vertical red bar with serifed ends; the height is configurable, to suit different font sizes. Alternatively, an application may prefer to keep the caret hidden and use its own cursor &ndash; the <cite>Zap</cite> and <cite>StrongED</cite> text editors do this, for example. It might even be valid to give the user no visibility of the caret position, if keypresses are not being used to edit text.</p>
+
+<p>An application can handle the incoming keypresses itself, inserting characters, performing edits and moving the caret as required. This will be the approach taken by software such as wordprocessors and text editors, but it can involve a fair bit of work. An easier approach, and the one that we will start by looking at here, is to hand the problem back to the Wimp by using a writable icon: one with a type of <name>wimp_BUTTON_WRITE_CLICK_DRAG</name> or <name>wimp_BUTTON_WRITABLE</name>.</p>
+
+<p>If the user clicks with in a writable icon, the Wimp will place the caret in an appropriate position within the icon&rsquo;s text and then handle all of the usual input and editing options, including support for the <intro>global clipboard</intro>. The application can read the text back from the icon whenever it needs to do so, and in addition, the Wimp will pass on some of all of the keypresses for it to process if it needs to do so.</p>
 </section>
 
 <section>
@@ -36,9 +46,9 @@
 
 <p>The labels are standard comment icons, like the others already in the window; the template editor will make them indirected for us if the text is longer than 12 characters. The writable fields are something new, however &ndash; and the definition can be seen in <reference id="fig-icons-writable-edit"/>.</p>
 
-<p>The <icon>Button type</icon> of the icon is set to &ldquo;Writable&rdquo;, which corresponds to the <name>wimp_BUTTON_WRITABLE</name> value in the icon flags. The <name>wimp_ICON_TEXT</name> and <name>wimp_ICON_INDIRECTED</name> flags are set, so that the text in the icon can be changed: a non-indirected writable icon would be fairly useless! The appearance of a writable icon is fairly strictly controlled by the <cite>Style Guide</cite>: a black foreground and white background, with a border and no 3D effects.</p>
+<p>The <icon>Button type</icon> of the icon is set to &ldquo;Writable&rdquo;, which corresponds to the <name>wimp_BUTTON_WRITABLE</name> value in the icon flags. The <name>wimp_ICON_TEXT</name> and <name>wimp_ICON_INDIRECTED</name> flags are set, so that the text in the icon can be changed: a non-indirected writable icon would be fairly useless! The appearance of a writable icon is fairly strictly controlled by the <cite>Style Guide</cite>: a black foreground and white background, with a border and no 3D effects. The ESG is set to 0.</p>
 
-<p>The validation string for the icon is &ldquo;Pptr_write;Kta;A0-9.&rdquo; &ndash; some of which should already be familiar, since we met the <name>P</name> and <name>A</name> commands back in <reference id="chap-icons-indirect"/>. The <name>K</name> command is one that we have not yet met: it is almost always specified for writable icons, and we will find out what it does soon.</p>
+<p>The validation string for the icon is &ldquo;Pptr_write;Kta;A0-9.&rdquo; &ndash; some of which should already be familiar, since we met the <name>P</name> and <name>A</name> commands back in <reference id="chap-icons-indirect"/>. The <name>K</name> command is one that we have not yet met: it is almost always specified for writable icons, and we will find out what it does later in the chapter.</p>
 
 <p>The &ldquo;Pptr_write&rdquo; command tells the Wimp to use the &ldquo;ptr_write&rdquo; sprite from the Wimp Sprite Pool as the mouse pointer when the cursor is over the icon &ndash; which, as we have previously mentioned, is a standard requirement in the <cite>Style Guide</cite>. The <name>A</name> command is applying a filter to the characters which can be typed into the field: we will be expecting non-negative numbers, so the digits 0 to 9 and a decimal point are all that we want the user to be able to type. See <reference id="sect-icons-indirect-filter"/> for a reminder of how these filters work. </p>
 
@@ -50,7 +60,7 @@
 <section>
 <title>Extra calculations</title>
 
-<p>In order to make our new icons work, we will need to add some additional functionality to the <file>c.calc</file> and <file>h.calc</file> files. First, we will define some dimension types in the header file, as shown in <reference id="list-icons-writable-dims"/>.</p> 
+<p>In order to make our new icons work, we will need to add some additional functionality to the <file>c.calc</file> and <file>h.calc</file> files. First, we will define some dimension types in the header file, as shown in <reference id="list-icons-writable-dims"/>. These will allow us to tell the code which of the fields the user has specified as the base for calculations.</p> 
 
 <code id="list-icons-writable-dims" lang="c" title="The types of dimension that we will be able to calculate">/* Dimension Types */
 
@@ -264,7 +274,7 @@ static double calc_area_from_length(void)
 <section>
 <title>Updating the display</title>
 
-<p>To make use of the icons and code that we have added so far, we will need to update <file>c.win</file>. To start with, we need to add constants for the new writable icons that have been added to the window template, as shown in <reference id="list-icons-writable-win-init"/>. The numbers must match with those defined in the templates file.</p>
+<p>To make use of the icons and code that we have added so far, we will also need to update <file>c.win</file>. To start with, we need to add constants for the new writable icons that have been added to the window template, as shown in <reference id="list-icons-writable-win-init"/>. The numbers must match with those defined in the templates file.</p>
 
 <code id="list-icons-writable-win-init" lang="c" title="Constants for the handles of the new icons">/* Main Window Icons. */
 
@@ -277,7 +287,7 @@ static double calc_area_from_length(void)
 #define WIN_ICON_PERIMETER_FIELD 10
 #define WIN_ICON_AREA_FIELD 12</code>
 
-<p>We can now extend the <function>win_update_all_calculations()</function> function to fill in the new writable icons, using the functions added to <file>c.calc</file>. The code is in <reference id="list-icons-writable-win-update"/>, but in addition to the three new copy-and-redraw blocks, there is some additional code added at the end.</p>
+<p>We can now extend the <function>win_update_all_calculations()</function> function to fill in the new writable icons, using the functions added to <file>c.calc</file>. The code is in <reference id="list-icons-writable-win-update"/>, but in addition to the three extra copy-and-redraw blocks which should already be familiar, there is some additional code added at the end.</p>
 
 <code id="list-icons-writable-win-update" lang="c" title="The code to update all of the icon contents">static void win_update_all_calculations(void)
 {
@@ -339,7 +349,7 @@ static double calc_area_from_length(void)
 	xwimp_set_caret_position(caret.w, caret.i, 0, 0, -1, index);
 }</code>
 
-
+<p>The additional code checks to see if the caret  is in our window. If it is, there&rsquo;s an additional step that we need to do, in order to work around another thing that the Wimp should probably be looking after but isn&rsquo;</p>
 
 <code lang="c">extern void wimp_get_caret_position(
 	wimp_caret *caret

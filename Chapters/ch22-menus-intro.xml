@@ -290,7 +290,7 @@ menu_entry(ibar_menu, IBAR_MENU_QUIT, &quot;Quit&quot;, NULL);</code>
 <download id="dl-menus-intro-ibar" file="IconbarMenu" title="Our First Iconbar Menu" compatibility="none"/>
 </section>
 
-<section>
+<section id="sect-menus-intro-proginfo">
 <title>A program information window</title>
 
 <p>Something that is obviously still missing from our new menu is the <window>program information</window> window, which would normally be expected to link from the <menu>Info</menu> entry at the top. Fortunately it is fairly easy to add one, so let&rsquo;s resolve the problem before moving on.</p>
