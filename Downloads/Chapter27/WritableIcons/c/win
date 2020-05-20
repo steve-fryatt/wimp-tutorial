@@ -1,0 +1,300 @@
+/* Copyright 2015-2020, Stephen Fryatt (info@stevefryatt.org.uk)
+ *
+ * This file is part of Wimp Programming In C:
+ *
+ *   http://www.stevefryatt.org.uk/software/
+ *
+ * Licensed under the EUPL, Version 1.1 only (the "Licence");
+ * You may not use this work except in compliance with the
+ * Licence.
+ *
+ * You may obtain a copy of the Licence at:
+ *
+ *   http://joinup.ec.europa.eu/software/page/eupl
+ *
+ * Unless required by applicable law or agreed to in
+ * writing, software distributed under the Licence is
+ * distributed on an "AS IS" basis, WITHOUT WARRANTIES
+ * OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ * See the Licence for the specific language governing
+ * permissions and limitations under the Licence.
+ */
+
+/**
+ * File: win.c
+ */
+
+#include "oslib/osspriteop.h"
+#include "oslib/wimp.h"
+
+#include "sflib/errors.h"
+#include "sflib/event.h"
+#include "sflib/icons.h"
+#include "sflib/menus.h"
+#include "sflib/string.h"
+#include "sflib/windows.h"
+
+#include <stdio.h>
+#include <string.h>
+
+#include "win.h"
+#include "menu.h"
+#include "calc.h"
+
+/* Main Window Icons. */
+
+#define WIN_ICON_SHAPE 0
+#define WIN_ICON_SHAPE_POPUP 1
+#define WIN_ICON_SHAPE_FIELD 2
+#define WIN_ICON_SIDES_FIELD 4
+#define WIN_ICON_INT_ANGLE_FIELD 6
+#define WIN_ICON_LENGTH_FIELD 8
+#define WIN_ICON_PERIMETER_FIELD 10
+#define WIN_ICON_AREA_FIELD 12
+
+/* Window Menu Entries. */
+
+#define WIN_MENU_DECIMAL1 0
+#define WIN_MENU_DECIMAL2 1
+#define WIN_MENU_DECIMAL3 2
+
+/* Shapes Menu Entries. */
+
+#define WIN_MENU_SHAPE_CIRCLE 0
+#define WIN_MENU_SHAPE_TRIANGLE 1
+#define WIN_MENU_SHAPE_SQUARE 2
+
+/* Global Variables */
+
+static wimp_w win_handle;
+static wimp_menu *win_menu;
+static wimp_menu *win_shape_menu;
+
+/* Function Prototypes */
+
+static void win_menu_selection(wimp_w window, wimp_menu *menu, wimp_selection *selection);
+static osbool win_shape_menu_selection(wimp_w window, wimp_menu *menu, unsigned selection);
+static void win_set_menu(wimp_w window, wimp_menu *menu, wimp_pointer *pointer);
+static void win_set_shape(enum calc_shape shape);
+static void win_update_all_calculations(void);
+
+/* Window Initialisation. */
+
+void win_initialise(osspriteop_area *sprites)
+{
+	wimp_window	*window_definition;
+	wimp_icon	*icons;
+
+	/* Load and create the window. */
+
+	window_definition = windows_load_template("Main");
+	if (window_definition == NULL) {
+		error_report_error("Failed to load Main template");
+		return;
+	}
+
+	icons = window_definition->icons;
+
+	icons[WIN_ICON_SHAPE].data.indirected_sprite.area = sprites;
+
+	win_handle = wimp_create_window(window_definition);
+	free(window_definition);
+
+	/* Window Menu. */
+
+	win_menu = menu_create("Example", 3);
+	if (win_menu == NULL) {
+		error_report_error("Failed to create Main Menu");
+		return;
+	}
+
+	menu_entry(win_menu, WIN_MENU_DECIMAL1, "1 Decimal place", NULL);
+	menu_entry(win_menu, WIN_MENU_DECIMAL2, "2 Decimal places", NULL);
+	menu_entry(win_menu, WIN_MENU_DECIMAL3, "3 Decimal places", NULL);
+
+	/* Shapes Menu. */
+
+	win_shape_menu = menu_create("Shapes", 3);
+	if (win_shape_menu == NULL) {
+		error_report_error("Failed to create Shapes Menu");
+		return;
+	}
+
+	menu_entry(win_shape_menu, WIN_MENU_SHAPE_CIRCLE, "Circle", NULL);
+	menu_entry(win_shape_menu, WIN_MENU_SHAPE_TRIANGLE, "Triangle", NULL);
+	menu_entry(win_shape_menu, WIN_MENU_SHAPE_SQUARE, "Square", NULL);
+
+	/* Register event handlers. */
+
+	event_add_window_menu(win_handle, win_menu);
+	event_add_window_menu_prepare(win_handle, win_set_menu);
+	event_add_window_menu_selection(win_handle, win_menu_selection);
+	event_add_window_icon_popup(win_handle, WIN_ICON_SHAPE_POPUP, win_shape_menu, WIN_ICON_SHAPE_FIELD, NULL);
+	event_set_window_icon_popup_action(win_handle, WIN_ICON_SHAPE_POPUP, FALSE, win_shape_menu_selection);
+
+	/* Initialise the window contents. */
+
+	win_set_shape(CALC_SHAPE_SQUARE);
+	event_set_window_icon_popup_selection(win_handle, WIN_ICON_SHAPE_POPUP, WIN_MENU_SHAPE_SQUARE);
+}
+
+/* Open the Window. */
+
+void win_open(void)
+{
+	windows_open_centred_on_screen(win_handle);
+}
+
+/* Main Menu Selection event handler. */
+
+static void win_menu_selection(wimp_w window, wimp_menu *menu, wimp_selection *selection)
+{
+	if (menu != win_menu)
+		return;
+
+	switch (selection->items[0]) {
+	case WIN_MENU_DECIMAL1:
+		calc_set_format(1);
+		break;
+	case WIN_MENU_DECIMAL2:
+		calc_set_format(2);
+		break;
+	case WIN_MENU_DECIMAL3:
+		calc_set_format(3);
+		break;
+	}
+
+       	win_update_all_calculations();
+}
+
+/* Shape Pop-Up Menu Selection event handler. */
+
+static osbool win_shape_menu_selection(wimp_w window, wimp_menu *menu, unsigned selection)
+{
+	switch (selection) {
+	case WIN_MENU_SHAPE_CIRCLE:
+		win_set_shape(CALC_SHAPE_CIRCLE);
+		break;
+	case WIN_MENU_SHAPE_TRIANGLE:
+		win_set_shape(CALC_SHAPE_TRIANGLE);
+		break;
+	case WIN_MENU_SHAPE_SQUARE:
+		win_set_shape(CALC_SHAPE_SQUARE);
+		break;
+	}
+
+	return TRUE;
+}
+
+/* Set the Main Menu state. */
+
+static void win_set_menu(wimp_w w, wimp_menu *menu, wimp_pointer *pointer)
+{
+	int places;
+
+	if (menu != win_menu)
+		return;
+
+	places = calc_get_places();
+
+	menus_tick_entry(win_menu, WIN_MENU_DECIMAL1, places == 1);
+	menus_tick_entry(win_menu, WIN_MENU_DECIMAL2, places == 2);
+	menus_tick_entry(win_menu, WIN_MENU_DECIMAL3, places == 3);
+}
+
+/* Set the shape being displayed. */
+
+static void win_set_shape(enum calc_shape shape)
+{
+	char *sprite = NULL;
+
+	/* Update the graphic. */
+
+	switch (shape) {
+	case CALC_SHAPE_SQUARE:
+		sprite = "square";
+		break;
+	case CALC_SHAPE_CIRCLE:
+		sprite = "circle";
+		break;
+	case CALC_SHAPE_TRIANGLE:
+		sprite = "triangle";
+		break;
+	}
+
+	if (sprite != NULL) {
+		icons_strncpy(win_handle, WIN_ICON_SHAPE, sprite);
+		wimp_set_icon_state(win_handle, WIN_ICON_SHAPE, 0, 0);
+	}
+
+	/* Change the shape. */
+
+	calc_set_shape(shape);
+
+	/* Perform the shape calculations. */
+
+	win_update_all_calculations();
+}
+
+/* Update the shape data fields. */
+
+static void win_update_all_calculations(void)
+{
+	char		*text = NULL;
+	int		index;
+	wimp_caret	caret;
+	wimp_icon_state	state;
+
+	/* Update the window data. */
+
+	text = calc_get_sides();
+	if (text != NULL) {
+		icons_strncpy(win_handle, WIN_ICON_SIDES_FIELD, text);
+		wimp_set_icon_state(win_handle, WIN_ICON_SIDES_FIELD, 0, 0);
+	}
+
+	text = calc_get_internal_angle();
+	if (text != NULL) {
+		icons_strncpy(win_handle, WIN_ICON_INT_ANGLE_FIELD, text);
+		wimp_set_icon_state(win_handle, WIN_ICON_INT_ANGLE_FIELD, 0, 0);
+	}
+
+	text = calc_get_length();
+	if (text != NULL) {
+		icons_strncpy(win_handle, WIN_ICON_LENGTH_FIELD, text);
+		wimp_set_icon_state(win_handle, WIN_ICON_LENGTH_FIELD, 0, 0);
+	}
+
+	text = calc_get_perimeter();
+	if (text != NULL) {
+		icons_strncpy(win_handle, WIN_ICON_PERIMETER_FIELD, text);
+		wimp_set_icon_state(win_handle, WIN_ICON_PERIMETER_FIELD, 0, 0);
+	}
+
+	text = calc_get_area();
+	if (text != NULL) {
+		icons_strncpy(win_handle, WIN_ICON_AREA_FIELD, text);
+		wimp_set_icon_state(win_handle, WIN_ICON_AREA_FIELD, 0, 0);
+	}
+
+	/* Correct the caret position if required. */
+
+	if (xwimp_get_caret_position(&caret) != NULL)
+		return;
+
+	if (caret.w != win_handle)
+		return;
+
+	state.w = caret.w;
+	state.i = caret.i;
+	if (xwimp_get_icon_state(&state) != NULL)
+		return;
+
+	index = string_ctrl_strlen(state.icon.data.indirected_text.text);
+
+	if (caret.index < index)
+		index = caret.index;
+
+	xwimp_set_caret_position(caret.w, caret.i, 0, 0, -1, index);
+}

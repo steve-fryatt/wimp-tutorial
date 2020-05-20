@@ -1,0 +1,162 @@
+/* Copyright 2015-2020, Stephen Fryatt (info@stevefryatt.org.uk)
+ *
+ * This file is part of Wimp Programming In C:
+ *
+ *   http://www.stevefryatt.org.uk/software/
+ *
+ * Licensed under the EUPL, Version 1.1 only (the "Licence");
+ * You may not use this work except in compliance with the
+ * Licence.
+ *
+ * You may obtain a copy of the Licence at:
+ *
+ *   http://joinup.ec.europa.eu/software/page/eupl
+ *
+ * Unless required by applicable law or agreed to in
+ * writing, software distributed under the Licence is
+ * distributed on an "AS IS" basis, WITHOUT WARRANTIES
+ * OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ * See the Licence for the specific language governing
+ * permissions and limitations under the Licence.
+ */
+
+/**
+ * File: ibar.c
+ */
+
+#include "oslib/wimp.h"
+
+#include "sflib/errors.h"
+#include "sflib/event.h"
+#include "sflib/windows.h"
+#include "sflib/url.h"
+
+#include <string.h>
+
+#include "ibar.h"
+
+#include "main.h"
+#include "menu.h"
+#include "win.h"
+
+/* Program Info Window Icons. */
+
+#define IBAR_PROGINFO_ICON_WEB 8
+
+/* Iconbar Menu Entries. */
+
+#define IBAR_MENU_INFO 0
+#define IBAR_MENU_HELP 1
+#define IBAR_MENU_QUIT 2
+
+/* Global Variables. */
+
+static wimp_menu *ibar_menu;
+
+/* Function Prototypes. */
+
+static void ibar_mouse_click(wimp_pointer *pointer);
+static osbool ibar_proginfo_web_click(wimp_pointer *pointer);
+static void ibar_menu_selection(wimp_w window, wimp_menu *menu, wimp_selection *selection);
+
+/* Iconbar Initialisation. */
+
+void ibar_initialise(char *sprite)
+{
+	os_error		*error;
+	wimp_window		*window_definition;
+	wimp_w			prog_info;
+	wimp_icon_create	icon_bar;
+
+	/* Program Info Window. */
+
+	window_definition = windows_load_template("ProgInfo");
+	if (window_definition == NULL) {
+		error_report_error("Failed to load ProgInfo template");
+		return;
+	}
+
+	prog_info = wimp_create_window(window_definition);
+	free(window_definition);
+
+	event_add_window_icon_click(prog_info, IBAR_PROGINFO_ICON_WEB, ibar_proginfo_web_click);
+
+	/* Iconbar Menu. */
+
+	ibar_menu = menu_create("Example", 3);
+	if (ibar_menu == NULL) {
+		error_report_error("Failed to create Iconbar Menu");
+		return;
+	}
+
+	menu_entry(ibar_menu, IBAR_MENU_INFO, "Info", (wimp_menu *) prog_info);
+	menu_entry(ibar_menu, IBAR_MENU_HELP, "Help...", NULL);
+	menu_entry(ibar_menu, IBAR_MENU_QUIT, "Quit", NULL);
+
+	/* Iconbar Icon. */
+
+	icon_bar.w = wimp_ICON_BAR_RIGHT;
+	icon_bar.icon.extent.x0 = 0;
+	icon_bar.icon.extent.y0 = 0;
+	icon_bar.icon.extent.x1 = 68;
+	icon_bar.icon.extent.y1 = 68;
+	icon_bar.icon.flags = wimp_ICON_SPRITE | (wimp_BUTTON_CLICK << wimp_ICON_BUTTON_TYPE_SHIFT);
+	strncpy(icon_bar.icon.data.sprite, sprite, osspriteop_NAME_LIMIT);
+
+	error = xwimp_create_icon(&icon_bar, NULL);
+	if (error != NULL) {
+		error_report_error(error->errmess);
+		return;
+	}
+
+	/* Register event handlers. */
+
+	event_add_window_mouse_event(wimp_ICON_BAR, ibar_mouse_click);
+	event_add_window_menu(wimp_ICON_BAR, ibar_menu);
+	event_add_window_menu_selection(wimp_ICON_BAR, ibar_menu_selection);
+}
+
+/* Mouse Click event handler */
+
+static void ibar_mouse_click(wimp_pointer *pointer)
+{
+	switch (pointer->buttons) {
+	case wimp_CLICK_SELECT:
+		win_open();
+		break;
+	}
+}
+
+/* Program Info Mouse Click event handler */
+
+static osbool ibar_proginfo_web_click(wimp_pointer *pointer)
+{
+	url_launch("http://www.stevefryatt.org.uk/docs/wimp/");
+
+	if (pointer->buttons == wimp_CLICK_SELECT)
+		wimp_create_menu((wimp_menu *) -1, 0, 0);
+
+	return TRUE;
+}
+
+/* Menu Selection event handler. */
+
+static void ibar_menu_selection(wimp_w window, wimp_menu *menu, wimp_selection *selection)
+{
+	os_error *error;
+
+	if (menu != ibar_menu)
+		return;
+
+	switch (selection->items[0]) {
+	case IBAR_MENU_HELP:
+		error = xos_cli("%Filer_Run <ExamplApp$Dir>.!Help");
+		if (error != NULL)
+			error_report_os_error(error, wimp_ERROR_BOX_OK_ICON);
+		break;
+	case IBAR_MENU_QUIT:
+		main_quit_flag = TRUE;
+		break;
+	}
+}

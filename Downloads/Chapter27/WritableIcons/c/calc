@@ -1,0 +1,304 @@
+/* Copyright 2020, Stephen Fryatt (info@stevefryatt.org.uk)
+ *
+ * This file is part of Wimp Programming In C:
+ *
+ *   http://www.stevefryatt.org.uk/software/
+ *
+ * Licensed under the EUPL, Version 1.1 only (the "Licence");
+ * You may not use this work except in compliance with the
+ * Licence.
+ *
+ * You may obtain a copy of the Licence at:
+ *
+ *   http://joinup.ec.europa.eu/software/page/eupl
+ *
+ * Unless required by applicable law or agreed to in
+ * writing, software distributed under the Licence is
+ * distributed on an "AS IS" basis, WITHOUT WARRANTIES
+ * OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ * See the Licence for the specific language governing
+ * permissions and limitations under the Licence.
+ */
+
+/**
+ * File: calc.c
+ */
+
+#include <math.h>
+#include <stdlib.h>
+
+#include "sflib/string.h"
+
+#include "calc.h"
+
+/* Constants. */
+
+#define CALC_BUFFER_LENGTH 32
+#define CALC_FORMAT_LENGTH 8
+#define CALC_PI 3.14159265358979323846
+
+/* Global Variables. */
+
+static enum calc_shape calc_current_shape = CALC_SHAPE_NONE;
+
+static int calc_current_sides = 0;
+
+static int calc_current_places = 0;
+
+static enum calc_dimension calc_current_dimension = CALC_DIMENSION_LENGTH;
+
+static double calc_current_dimension_size = 10.0;
+
+static char calc_buffer[CALC_BUFFER_LENGTH];
+
+static char calc_format[CALC_FORMAT_LENGTH];
+
+static char *calc_not_applicable = "n/a";
+
+/* Function Prototypes. */
+
+static double calc_length_from_area(void);
+static double calc_area_from_length(void);
+
+/* Calculation Initialisation. */
+
+void calc_initialise(void)
+{
+	calc_set_format(2);
+	calc_set_shape(CALC_SHAPE_NONE);
+}
+
+/* Shape Selection. */
+
+void calc_set_shape(enum calc_shape shape)
+{
+	calc_current_shape = shape;
+
+	switch (shape) {
+	case CALC_SHAPE_CIRCLE:
+		calc_current_sides = 1;
+		break;
+	case CALC_SHAPE_TRIANGLE:
+		calc_current_sides = 3;
+		break;
+	case CALC_SHAPE_SQUARE:
+		calc_current_sides = 4;
+		break;
+	default:
+		calc_current_sides = 0;
+		break;
+	}
+}
+
+/* Set the formatting of results. */
+
+void calc_set_format(int places)
+{
+	if (places >= 0 && places <= 5) {
+		calc_current_places = places;
+		string_printf(calc_format, CALC_FORMAT_LENGTH, "%%.%df", places);
+	}
+}
+
+/* Get the decimal places. */
+
+int calc_get_places(void)
+{
+	return calc_current_places;
+}
+
+/* Set one of the dimensions. */
+
+void calc_set_dimension(enum calc_dimension dimension, char *text)
+{
+	double value = 0.0;
+
+	if (text == NULL)
+		return;
+
+	value = atof(text);
+	if (value == 0.0)
+		return;
+
+	calc_current_dimension = dimension;
+	calc_current_dimension_size = value;
+}
+
+/* The number of sides. */
+
+char *calc_get_sides(void)
+{
+	if (calc_current_sides > 1) {
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, "%d", calc_current_sides);
+	} else {
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, calc_not_applicable);
+	}
+
+	return calc_buffer;
+}
+
+/* The internal angle. */
+
+char *calc_get_internal_angle(void)
+{
+	double angle;
+
+	if (calc_current_sides > 2) {
+		angle = ((calc_current_sides - 2.0) * 180.0) / calc_current_sides;
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, calc_format, angle);
+	} else {
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, calc_not_applicable);
+	}
+
+	return calc_buffer;
+}
+
+/* The length of a side, or diameter of a circle. */
+
+char *calc_get_length(void)
+{
+	double length = 0.0;
+
+	switch (calc_current_dimension) {
+	case CALC_DIMENSION_LENGTH:
+	case CALC_DIMENSION_DIAMETER:
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, calc_format, calc_current_dimension_size);
+		break;
+
+	case CALC_DIMENSION_PERIMETER:
+		if (calc_current_sides > 1)
+			length = calc_current_dimension_size / calc_current_sides;
+		else
+			length = calc_current_dimension_size / CALC_PI;
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, calc_format, length);
+		break;
+
+	case CALC_DIMENSION_AREA:
+		length = calc_length_from_area();
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, calc_format, length);
+		break;
+
+	default:
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, calc_not_applicable);
+		break;
+	}
+
+	return calc_buffer;
+}
+
+/* The perimeter, or circumference of a circle. */
+
+char *calc_get_perimeter(void)
+{
+	double perimeter = 0.0;
+
+	switch (calc_current_dimension) {
+	case CALC_DIMENSION_LENGTH:
+	case CALC_DIMENSION_DIAMETER:
+		if (calc_current_sides > 1)
+			perimeter = calc_current_dimension_size * calc_current_sides;
+		else
+			perimeter = calc_current_dimension_size * CALC_PI;
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, calc_format, perimeter);
+		break;
+
+	case CALC_DIMENSION_PERIMETER:
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, calc_format, calc_current_dimension_size);
+		break;
+
+	case CALC_DIMENSION_AREA:
+		if (calc_current_sides > 1)
+			perimeter = calc_length_from_area() * calc_current_sides;
+		else
+			perimeter = calc_length_from_area() * CALC_PI;
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, calc_format, perimeter);
+		break;
+
+	default:
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, calc_not_applicable);
+		break;
+	}
+
+	return calc_buffer;
+}
+
+/* The area. */
+
+char *calc_get_area(void)
+{
+	double area = 0.0;
+
+	switch (calc_current_dimension) {
+	case CALC_DIMENSION_LENGTH:
+	case CALC_DIMENSION_DIAMETER:
+	case CALC_DIMENSION_PERIMETER:
+		area = calc_area_from_length();
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, calc_format, area);
+		break;
+
+	case CALC_DIMENSION_AREA:
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, calc_format, calc_current_dimension_size);
+		break;
+
+	default:
+		string_printf(calc_buffer, CALC_BUFFER_LENGTH, calc_not_applicable);
+		break;
+	}
+
+	return calc_buffer;
+}
+
+/* If the current dimension is Area, return the length. */
+
+static double calc_length_from_area(void)
+{
+	if (calc_current_dimension != CALC_DIMENSION_AREA)
+		return 0.0;
+
+	switch (calc_current_sides) {
+	case 1:
+		return sqrt(4.0 * calc_current_dimension_size / CALC_PI);
+	case 3:
+		return sqrt(4.0 * calc_current_dimension_size / sqrt(3.0));
+	case 4:
+		return sqrt(calc_current_dimension_size);
+	default:
+		return 0.0;
+	}
+}
+
+/* If the current dimension is length or perimeter, return the area. */
+
+static double calc_area_from_length(void)
+{
+	double length = 0.0;
+
+	switch (calc_current_dimension) {
+	case CALC_DIMENSION_LENGTH:
+	case CALC_DIMENSION_DIAMETER:
+		length = calc_current_dimension_size;
+		break;
+
+	case CALC_DIMENSION_PERIMETER:
+		if (calc_current_sides > 1)
+			length = calc_current_dimension_size / calc_current_sides;
+		else
+			length = calc_current_dimension_size / CALC_PI;
+		break;
+
+	default:
+		return 0.0;
+	}
+
+	switch (calc_current_sides) {
+	case 1:
+		return CALC_PI * length * length;
+	case 3:
+		return sqrt(3.0) * length * length / 4.0;
+	case 4:
+		return length * length;
+	default:
+		return 0.0;
+	}
+}
