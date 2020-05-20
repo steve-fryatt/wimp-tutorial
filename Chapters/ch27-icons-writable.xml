@@ -45,7 +45,7 @@
 <image id="fig-icons-writable-select" file="icons-writable-select.png" title="The caret should become invisible if there is a selection"/>
 </section>
 
-<section>
+<section id="sect-icons-writable-templ">
 <title>New templates</title>
 
 <p>We will start by updating the <file>!ExamplApp.Templates</file> file to add three writable fields to the main window, as seen in <refererence id="fig-icons-writable-template"/>. The work area has been extended downwards to make space for the fields, which are made from the <icon>Writable icon</icon> and <icon>Comment</icon> icons in the <cite>WinEd</cite> <window>Icon picker</window>.</p>
@@ -444,6 +444,43 @@ extern os_error *xwimp_set_caret_position(
 <p>Whilst we can use <swi>Wimp_SetCaretPosition</swi> to set the caret to any location on screen that we desire, when working with writable icons we only need to specify <variable>w</variable>, <variable>i</variable> and <variable>index</variable>. So long as we also set <variable>height</variable> to &minus;1, the Wimp will work the rest our for us.</p>
 
 <p>With this code in place, the caret will be left in its current position within an icon when the contents changes, if that is possible. If it would fall off the end of the new text, however, then it will be placed at the end &ndash; safely before the string terminator!</p>
+
+<p>When compiled and run, our application should look similar to <reference id="fig-icons-writable-window"/>. The fields will update when the shape is changed, but typing in new values will have no effect &ndash; something that we will need to rectify in the next chapter.</p>
+
+<image id="fig-icons-writable-window" file="icons-writable-window.png" title="Our application will now fill in the calculated fields in its window"/>
+
+<p>The full code can be found in <reference id="dl-icons-writable-icons"/>.</p>
+
+<download id="dl-icons-writable-icons" file="WritableIcons" title="Populating the Writable Fields" compatibility="none"/>
+</section>
+
+<section>
+<title>Moving between icons</title>
+
+<p>One thing that our application can do, without any effort from us, is move the caret between writable icons when the <key>Up</key> and <key>Down</key> cursor keys or the <key>Tab</key> key is used. Asuming that the icon numbers are in the order specified in <reference id="sect-icons-writable-templ"/>, and the ESGs are all the same, then the <key>Down</key> or <key>Tab</key> keys should move to the next field, while <key>Up</key> and <key>Shift-Tab</key> will move to the previous one.</p>
+
+<p>This functionality is provided for us by the Wimp, and is a result of the <name>K</name> validation command that we glossed over earlier. It controls how the Wimp handles keypresses in a writable icon, and takes the following option flags which can be applied in any combination.</p>
+
+<table>
+<columns>
+<col align="centre">Option</col>
+<col align="left">Action</col>
+</columns>
+
+<row><col>A</col><col>The <key>Down</key> and <key>Up</key> cursor keys will move the caret to the numerically next and previous writable icons in the same ESG, wrapping around at the ends of the list.</col></row>
+
+<row><col>T</col><col>The <key>Tab</key> and <key>Shift-Tab</key> keys will move the caret to the numerically next and previous writable icons in the same ESG, wrapping around at the ends of the list.</col></row>
+
+<row><col>R</col><col>The <key>Return</key> key will move the caret to the numerically next writable icon in the same ESG; if at the end of the list, a <name>wimp_KEY_RETURN</name> code will be passed to the application.</col></row>
+
+<row><col>D</col><col>In addition to performing the standard actions in the icon, all <key>Copy</key>, <key>Delete</key>, <key>Shift-Copy</key>, <key>Ctrl-U</key> and <key>Ctrl-Copy</key> keypresses will be passed to the application.</col></row>
+
+<row><col>N</col><col>All keypresses in the icon will be passed to the application, even if the Wimp has acted on them first.</col></row>
+</table>
+
+<p>Our application set its icons to use <code>Kta</code>, which means that the cursor keys and <key>Tab</key> key will navigate around the fields while <key>Return</key> will always be returned for us to handle. This is what the <cite>Style Guide</cite> requires applications to do, and it makes sense to follow the behaviour: it can be surprisingly disconcerting as a user to find different behaviour in a dialogue box, especially if it results in changes being lost or applied unexpectedly!</p>
+
+<p>The D and N flags are useful when an application needs to know about keypresses that the Wimp has handled. This is relatively rare, as it can result in unexpected behaviour for the user and there are few occasions where the extra effort is justified, but we will look at an application later on. At present, we have no way to receive key codes which are passed to our application, but we will rectify that in the next chapter.</p>
 </section>
 </chapter>
 </manual>
