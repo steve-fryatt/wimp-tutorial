@@ -305,7 +305,7 @@ menu_entry(ibar_menu, IBAR_MENU_QUIT, &quot;Quit&quot;, NULL);</code>
 
 <p>Before closing the window, we need to make some changes to its design details: as a dialogue box linked to a menu, there are some specific requirements that we must meet. Click <mouse>Menu</mouse> over the window and choose <menu>Edit window...</menu> to open the <window>Edit window</window> dialogue.</p>
 
-<p>As we saw back in <reference id="sect-window-theory-appearance"/>, we can turn off the bits of the window furniture that we don&rsquo;t want on our dialogue. As part of a menu, the <em>only</em> tool that we want is the title bar, so untick all of the other switches in the <icon>Tools</icon> section. Also, as a dialogue box in a menu, the title bar should never change colour to indicate input focus: we achieve this by changing the <icon>Input focus</icon> colour from 12 to 2 (which is the same as the default <icon>Title B.</icon> colour).</p>
+<p>As we saw back in <reference id="sect-window-theory-appearance"/>, we can turn off the bits of the window furniture that we don&rsquo;t want on our dialogue. As part of a menu, the <em>only</em> tool that we want is the title bar, so untick all of the other switches in the <icon>Tools</icon> section. Also, as a dialogue box in a menu, the title bar should never change colour to indicate input focus (which we will meet in <reference id="chap-icons-writable"/>): we achieve this by changing the <icon>Input focus</icon> colour from 12 to 2 (which is the same as the default <icon>Title B.</icon> colour).</p>
 
 <p>With the options as shown in <reference id="fig-menus-intro-proginfo-edit"/>, click on <icon>Update</icon> to store the changes.</p>
 

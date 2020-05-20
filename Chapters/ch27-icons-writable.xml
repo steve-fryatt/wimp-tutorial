@@ -24,15 +24,25 @@
 
 <p>Following the changes that we made in <reference id="chap-menus-window"/>, we have had fields to display the number of sides and the internal angles of the selected shape. It would be useful if the user could enter other parameters for the shape, such as the length of a side or the internal area, and see how they interact. We will now look at how this can be done.</p>
 
-<p>From a user&rsquo;s point of view, the Wimp handles keypresses in a fairly standard way. At any given time, one window on the desktop can have <intro>input focus</intro>, which means that it will receive input from the keyboard. The window with focus is shown by its title bar being highlighted in a different colour, although as we saw in <reference id="sect-menus-intro-proginfo"/>, this is normally disabled for windows which are part of a menu tree. <!--Fig--> shows two <cite>Edit</cite> windows side by side; the one on the left has input focus.</p>
+<p>From a user&rsquo;s point of view, the Wimp handles keypresses in a fairly standard way. At any given time, one window on the desktop can have <intro>input focus</intro>, which means that it will receive input from the keyboard. The window with focus is shown by its title bar being highlighted in a different colour, although as we saw in <reference id="sect-menus-intro-proginfo"/>, this is normally disabled for windows which are part of a menu tree. <reference id="fig-icons-writable-focus"/> shows two <cite>Edit</cite> windows side by side; the one on the left has input focus.</p>
 
-<p>From the point of view of the Wimp, a window has input focus if it contains the <intro>caret</intro>. This is a cursor &ndash; which may or may not be visble to the user &ndash; indicating where the next keypress will be &lsquo;inserted&rsquo;. It has a physical position within the window, which &ndash; just like icons &ndash; is calculated in OS&nbsp;units relative to the work area origin.</p>
+<image id="fig-icons-writable-focus" file="icons-writable-focus.png" title="Two edit windows: the left-hand one has input focus"/>
 
-<p>If an application chooses to make the caret visible, it appears as a vertical red bar with serifed ends; the height is configurable, to suit different font sizes. Alternatively, an application may prefer to keep the caret hidden and use its own cursor &ndash; the <cite>Zap</cite> and <cite>StrongED</cite> text editors do this, for example. It might even be valid to give the user no visibility of the caret position, if keypresses are not being used to edit text.</p>
+<p>From the point of view of the Wimp, a window has input focus if it contains the <intro>caret</intro>. This is a cursor &ndash; which may or may not be visble to the user &ndash; indicating where the next keypress will be &lsquo;inserted&rsquo;. It has a physical position within the window, which &ndash; just like icons &ndash; is calculated in OS&nbsp;units relative to the work area origin. The caret can be seen in the left-hand window of <reference id="fig-icons-writable-focus"/> above.</p>
 
-<p>An application can handle the incoming keypresses itself, inserting characters, performing edits and moving the caret as required. This will be the approach taken by software such as wordprocessors and text editors, but it can involve a fair bit of work. An easier approach, and the one that we will start by looking at here, is to hand the problem back to the Wimp by using a writable icon: one with a type of <name>wimp_BUTTON_WRITE_CLICK_DRAG</name> or <name>wimp_BUTTON_WRITABLE</name>.</p>
+<p>If an application chooses to make the caret visible, it appears as a vertical red bar with serifed ends; the height is configurable, to suit different font sizes. Alternatively, an application may prefer to keep the caret hidden and use its own cursor &ndash; the <cite>Zap</cite> and <cite>StrongED</cite> text editors do this, for example, as seen in <reference id="fig-icons-writable-zap"/>. It might even be valid to give the user no visibility of the caret position, if keypresses are not being used to edit text.</p>
+
+<image id="fig-icons-writable-zap" file="icons-writable-zap.png" title="An application can hide the caret if it wishes to"/>
+
+<p>An application can handle the incoming keypresses itself, inserting characters, performing edits and moving the caret as required. This will be the approach taken by software such as wordprocessors and text editors, but it can involve a fair bit of work. An easier approach, and the one that we will start by looking at here, is to hand the problem back to the Wimp by using a writable icon: one with a type of <name>wimp_BUTTON_WRITE_CLICK_DRAG</name> or <name>wimp_BUTTON_WRITABLE</name>. An example can be seen in <reference id="fig-icons-writable-icon"/>.</p>
+
+<image id="fig-icons-writable-icon" file="icons-writable-icon.png" title="In a writable icon, the Wimp handles the caret for us"/>
 
 <p>If the user clicks with in a writable icon, the Wimp will place the caret in an appropriate position within the icon&rsquo;s text and then handle all of the usual input and editing options, including support for the <intro>global clipboard</intro>. The application can read the text back from the icon whenever it needs to do so, and in addition, the Wimp will pass on some of all of the keypresses for it to process if it needs to do so.</p>
+
+<p>One final point to note is that the <cite>Style Guide</cite> states that the caret should be hidden if text is currently selected: in effect, the selection becomes the insertion point for the next keypress, as anything which is typed will <em>replace</em> it. Theis can be seen in <reference id="fig-icons-writable-select"/>. Once again, the Wimp will handle this for us in writable icons.</p>
+
+<image id="fig-icons-writable-select" file="icons-writable-select.png" title="The caret should become invisible if there is a selection"/>
 </section>
 
 <section>
@@ -349,7 +359,17 @@ static double calc_area_from_length(void)
 	xwimp_set_caret_position(caret.w, caret.i, 0, 0, -1, index);
 }</code>
 
-<p>The additional code checks to see if the caret  is in our window. If it is, there&rsquo;s an additional step that we need to do, in order to work around another thing that the Wimp should probably be looking after but isn&rsquo;</p>
+<p>The additional code checks to see whether the caret is in our window, because if it is, we need to take care when changing the text in the writable icons. Although the Wimp does a lot of the caret handling for us, one thing that it does <em>not</em> do is update the position of the caret if we change the text of the buffer containing it. Generally this will lead to the effect seen on the left of <reference id="fig-icons-writable-errors"/>, where the caret ends up on top of one of the characters in the new value.</p>
+
+<p>This is fairly benign, since any attempt to type into the icon or move the caret will realign it as expected &ndash; although the keypress might not go exactly where the user expects! More dangerous is the effect shown on the right of <reference id="fig-icons-writable-errors"/>, which can happen if the caret was towards the end of the original icon text and the new text isn&rsquo;t long enough to reach it. Here, the caret ends up <em>beyond</em> the terminator of the new string, and pressing <key>Backspace</key> can actually delete the terminator with potentially fatal consequences for the system.</p>
+
+<image id="fig-icons-writable-errors" file="icons-writable-errors.png" title="The caret misaligned with the text on the left, or beyond the terminator on the right"/>
+
+<p>It is a little surprising that the Wimp does&rsquo;t catch these problems for us. Since it doesn&rsquo;t, however, any application which changes the text in a writable icon&rsquo;s buffer <em>must</em> then check to see if the caret is in the icon and, if it is, reposition it correctly within the new string. Often this will be done as part of a general update routine for a dialogue, at the same time as moving the caret out of an icon if it has become shaded, and like most libraries, SFLib offers a number of functions to help us. However, we have chosen to implement our own solution here &ndash; not least because it allows us to introduce a couple of new SWIs.</p>
+</section>
+
+<section>
+<title>Finding and moving the caret</title>
 
 <code lang="c">extern void wimp_get_caret_position(
 	wimp_caret *caret
