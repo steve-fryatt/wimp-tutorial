@@ -478,7 +478,7 @@ extern os_error *xwimp_set_caret_position(
 <row><col>N</col><col>All keypresses in the icon will be passed to the application, even if the Wimp has acted on them first.</col></row>
 </table>
 
-<p>Our application set its icons to use <code>Kta</code>, which means that the cursor keys and <key>Tab</key> key will navigate around the fields while <key>Return</key> will always be returned for us to handle. This is what the <cite>Style Guide</cite> requires applications to do, and it makes sense to follow the behaviour: it can be surprisingly disconcerting as a user to find different behaviour in a dialogue box, especially if it results in changes being lost or applied unexpectedly!</p>
+<p>Our application set its icons to use <code>Kta</code>, which means that the cursor keys and <key>Tab</key> key will navigate around the fields while <key>Return</key> will always be passed to us to handle. This is what the <cite>Style Guide</cite> requires applications to do, and it makes sense to follow the behaviour: it can be surprisingly disconcerting as a user to find different behaviour in a dialogue box, especially if it results in changes being lost or applied unexpectedly!</p>
 
 <p>The D and N flags are useful when an application needs to know about keypresses that the Wimp has handled. This is relatively rare, as it can result in unexpected behaviour for the user and there are few occasions where the extra effort is justified, but we will look at an application later on. At present, we have no way to receive key codes which are passed to our application, but we will rectify that in the next chapter.</p>
 </section>
