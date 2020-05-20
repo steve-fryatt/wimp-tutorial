@@ -476,6 +476,8 @@ extern os_error *xwimp_set_caret_position(
 <row><col>D</col><col>In addition to performing the standard actions in the icon, all <key>Copy</key>, <key>Delete</key>, <key>Shift-Copy</key>, <key>Ctrl-U</key> and <key>Ctrl-Copy</key> keypresses will be passed to the application.</col></row>
 
 <row><col>N</col><col>All keypresses in the icon will be passed to the application, even if the Wimp has acted on them first.</col></row>
+
+<row><col>C</col><col>Do not perform selection or clipboard operations on the icon (RISC&nbsp;OS Select only)</col></row>
 </table>
 
 <p>Our application set its icons to use <code>Kta</code>, which means that the cursor keys and <key>Tab</key> key will navigate around the fields while <key>Return</key> will always be passed to us to handle. This is what the <cite>Style Guide</cite> requires applications to do, and it makes sense to follow the behaviour: it can be surprisingly disconcerting as a user to find different behaviour in a dialogue box, especially if it results in changes being lost or applied unexpectedly!</p>
