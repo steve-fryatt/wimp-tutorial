@@ -368,7 +368,7 @@ static double calc_area_from_length(void)
 <p>It is a little surprising that the Wimp does&rsquo;t catch these problems for us. Since it doesn&rsquo;t, however, any application which changes the text in a writable icon&rsquo;s buffer <em>must</em> then check to see if the caret is in the icon and, if it is, reposition it correctly within the new string. Often this will be done as part of a general update routine for a dialogue, at the same time as moving the caret out of an icon if it has become shaded, and like most libraries, SFLib offers a number of functions to help us. However, we have chosen to implement our own solution here &ndash; not least because it allows us to introduce a couple of new SWIs.</p>
 </section>
 
-<section>
+<section id="sect-icons-writable-caret">
 <title>Finding and moving the caret</title>
 
 <p>The Wimp provides two SWIs to track and move the caret, which are predictably called <swi>Wimp_GetCaretPosition</swi> and <swi>Wimp_SetCaretPosition</swi>. OSLib defines two functions to access them, which cover the usage available on all versions of the Wimp since RISC&nbsp;OS&nbsp;3.1; RISC&nbsp;OS Select added some additional options, but since these have never made it into any other versions of the OS, they are of limited use.</p>
@@ -445,7 +445,7 @@ extern os_error *xwimp_set_caret_position(
 
 <p>With this code in place, the caret will be left in its current position within an icon when the contents changes, if that is possible. If it would fall off the end of the new text, however, then it will be placed at the end &ndash; safely before the string terminator!</p>
 
-<p>When compiled and run, our application should look similar to <reference id="fig-icons-writable-window"/>. The fields will update when the shape is changed, but typing in new values will have no effect &ndash; something that we will need to rectify in the next chapter.</p>
+<p>When compiled and run, our application should look similar to <reference id="fig-icons-writable-window"/>. The fields will update when the shape is changed, but typing in new values will have no effect &ndash; something that we will need to rectify in the <reference id="chap-key-input">next chapter</reference>.</p>
 
 <image id="fig-icons-writable-window" file="icons-writable-window.png" title="Our application will now fill in the calculated fields in its window"/>
 
@@ -477,12 +477,14 @@ extern os_error *xwimp_set_caret_position(
 
 <row><col>N</col><col>All keypresses in the icon will be passed to the application, even if the Wimp has acted on them first.</col></row>
 
-<row><col>C</col><col>Do not perform selection or clipboard operations on the icon (RISC&nbsp;OS Select only)</col></row>
+<row><col>C</col><col>Do not perform selection or clipboard operations on the icon and pass associated keypresses to the application, where the Wimp includes clipboard support.</col></row>
 </table>
 
 <p>Our application set its icons to use <code>Kta</code>, which means that the cursor keys and <key>Tab</key> key will navigate around the fields while <key>Return</key> will always be passed to us to handle. This is what the <cite>Style Guide</cite> requires applications to do, and it makes sense to follow the behaviour: it can be surprisingly disconcerting as a user to find different behaviour in a dialogue box, especially if it results in changes being lost or applied unexpectedly!</p>
 
-<p>The D and N flags are useful when an application needs to know about keypresses that the Wimp has handled. This is relatively rare, as it can result in unexpected behaviour for the user and there are few occasions where the extra effort is justified, but we will look at an application later on. At present, we have no way to receive key codes which are passed to our application, but we will rectify that in the next chapter.</p>
+<p>The D and N flags are useful when an application needs to know about keypresses that the Wimp has handled. This is relatively rare, as it can result in unexpected behaviour for the user and there are few occasions where the extra effort is justified, but we will look at an application later on. At present, we have no way to receive key codes which are passed to our application, but we will rectify that in the <reference id="chap-key-input">next chapter</reference>.</p>
+
+<p>The C flag will allow an application to prevent an icon supporting the global clipboard, on versions of the Wimp which implement it (RISC&nbsp;OS Select and RISC&nbsp;OS&nbsp;5.27 onwards). This is another option which is unlikely to have much purpose in &lsquo;normal&rdquo; use, since applications shouldn&rsquo;t be disabling functionality like text selection unless they have a <em>very</em> good reason for doing so. It isn&rsquo;t required to protect passwords, incidentally, since the <name>D</name> validation command (see <reference id="chap-icons-indirect"/>) will prevent an icon&rsquo;s contents from being cut or copied; allowing text to be pasted in from a password manager would still be useful.</p>
 </section>
 </chapter>
 </manual>

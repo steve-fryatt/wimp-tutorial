@@ -245,7 +245,7 @@ static char win_icon_text[WIN_ICON_TEXT_LEN];</code>
 
 <image id="fig-icons-indirect-ptr" file="icons-indirect-ptr.png" title="Writable icons should change the mouse pointer when it&rsquo;s over them"/>
 
-<p>Another requirement, when entering passwords or other secure information, can be to mask the characters in the icon so that they can&rsquo;t be observed by someone watching over the shoulder of the person using the computer. The <name>D</name> command allows a mask character to be specified, by including it as the data after the command. For example, to display an asterisk for each character in the icon, we could specify a validation string of <code>&quot;D*&quot;</code>; to use a dash, remembering that dashes need to be escaped in validation strings, we could use <code>&quot;D\-&quot;</code>.</p>
+<p>Another requirement, when entering passwords or other secure information, can be to mask the characters in the icon so that they can&rsquo;t be observed by someone watching over the shoulder of the person using the computer. The <name>D</name> command allows a mask character to be specified, by including it as the data after the command. For example, to display an asterisk for each character in the icon, we could specify a validation string of <code>&quot;D*&quot;</code>; to use a dash, remembering that dashes need to be escaped in validation strings, we could use <code>&quot;D\-&quot;</code>. The command also prevents the contents from being cut or copied to the clipboard where the Wimp supports such operations in icons.</p>
 
 <p>Updating the validation string as follows should now replace the text in the icon with asterisks, as seen in <reference id="fig-icons-indirect-pwd"/>, whilst leaving the pointer change and filtering intact.</p>
 

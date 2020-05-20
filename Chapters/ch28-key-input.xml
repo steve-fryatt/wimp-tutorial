@@ -1,0 +1,100 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+
+<!DOCTYPE xmlmanual SYSTEM "../wimp.dtd">
+
+<manual xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="xmldoc.xsd" version="1.8.6">
+
+<!-- Chapter 28
+   -
+   - Keyboard Input
+  -->
+
+<chapter id="chap-key-input">
+<resources>
+<images>Chapter28</images>
+<downloads>Chapter28</downloads>
+</resources>
+<filename>key-input.html</filename>
+<title>Keyboard Input</title>
+
+<summary>How do we actually find out what keys the user is pressing when they are typing into our window?</summary>
+
+<section>
+<p>In the <reference id="chap-icons-writable">last chapter</reference>, we added some writable icons to our window so that the user could enter values for calculation. We finished the chapter with the calculations apparently working, but with no way for the user to set different values. It would be useful if the user could press <key>Return</key> after entering a new number, and have the other values update.</p>
+
+<p>To do this, we will need to listen out for the <name>Key Pressed</name> event being returned from <swi>Wimp_Poll</swi>.</p>
+</section>
+
+<section>
+<title>Key pressed events</title>
+
+<p>To be able to detect when <key>Return</key> is pressed, our application will need to listen out for <name>Key Pressed</name> events. The Wimp sends these with a reason code of <name>wimp_KEY_PRESSED</name> when a key is pressed whilst the caret is in one of our windows, and supplies data in a <name>wimp_key</name> structure which OSLib defines as follows.</p>
+
+<code lang="c">struct wimp_key {
+	wimp_w w;
+	wimp_i i;
+	os_coord pos;
+	int height;
+	int index;
+	wimp_key_no c;
+};
+
+typedef struct wimp_key wimp_key;</code>
+
+<p>Having met the <name>wimp_caret</name> structure reurned by <swi>Wimp_GetCaretPosition</swi> in <reference id="sect-icons-writable-caret"/>, the contents of the <name>wimp_key</name> structure should be familiar. It contains the <name>wimp_w</name> and <name>wimp_i</name> handles of the window and icon containing the caret; as before, the icon could be &minus;1 (or <name>wimp_ICON_WINDOW</name>) if the caret is not in a writable icon.</p>
+
+<p>The position of the caret in OS&nbsp;units, relative to the work area origin of the window whose handle is supplied, is in <variable>pos</variable>, while the caret height and flags are in <variable>height</variable>. If <variable>i</variable> is not &minus;1, then <variable>index</variable> contains the index of the caret into the icon text.</p>
+
+<p>At the end of the structure is an entry named <variable>c</variable>, which has the type <name>wimp_key_no</name>. This is simply an <name>int</name>, defined by OSLib as</p>
+
+<code lang="c">typedef int wimp_key_no;</code>
+
+<p>The value returned will in most cases by a simple one-byte character code from the current character set, although the Wimp does support a range of extra values extending into the two-byte range. To help with these &lsquo;special&rsquo; keys, OSLib defines a number of constants for us.</p>
+
+<code lang="c">#define wimp_KEY_PRINT		((wimp_key_no) 0x180u)
+#define wimp_KEY_F1		((wimp_key_no) 0x181u)
+#define wimp_KEY_F2		((wimp_key_no) 0x182u)
+#define wimp_KEY_F3		((wimp_key_no) 0x183u)
+#define wimp_KEY_F4		((wimp_key_no) 0x184u)
+#define wimp_KEY_F5		((wimp_key_no) 0x185u)
+#define wimp_KEY_F6		((wimp_key_no) 0x186u)
+#define wimp_KEY_F7		((wimp_key_no) 0x187u)
+#define wimp_KEY_F8		((wimp_key_no) 0x188u)
+#define wimp_KEY_F9		((wimp_key_no) 0x189u)
+#define wimp_KEY_TAB		((wimp_key_no) 0x18Au)
+#define wimp_KEY_COPY		((wimp_key_no) 0x18Bu)
+#define wimp_KEY_LEFT		((wimp_key_no) 0x18Cu)
+#define wimp_KEY_RIGHT		((wimp_key_no) 0x18Du)
+#define wimp_KEY_DOWN		((wimp_key_no) 0x18Eu)
+#define wimp_KEY_UP		((wimp_key_no) 0x18Fu)
+#define wimp_KEY_PAGE_DOWN	((wimp_key_no) 0x19Eu)
+#define wimp_KEY_PAGE_UP	((wimp_key_no) 0x19Fu)
+#define wimp_KEY_LOGO		((wimp_key_no) 0x1C0u)
+#define wimp_KEY_MENU		((wimp_key_no) 0x1C1u)
+#define wimp_KEY_F10		((wimp_key_no) 0x1CAu)
+#define wimp_KEY_F11		((wimp_key_no) 0x1CBu)
+#define wimp_KEY_F12		((wimp_key_no) 0x1CCu)
+#define wimp_KEY_INSERT		((wimp_key_no) 0x1CDu)</code>
+
+<p>All of these can be used alone, or combined with <key>Shift</key> and <key>Control</key>.</p>
+
+<code lang="c">#define wimp_KEY_SHIFT		((wimp_key_no) 0x10u)
+#define wimp_KEY_CONTROL	((wimp_key_no) 0x20u)</code>
+
+<p>Creating combinations is simply a case of combining bits, so <key>Shift-Control-F12</key> would be</p>
+
+<code lang="c">wimp_KEY_SHIFT | wimp_KEY_CONTROL | wimp_KEY_F12</code>
+
+<p>Finally, there are a few key codes which fall into the &lsquo;ASCII&rsquo; range and can not be used with the <key>Shift</key> or <key>Control</key> modifiers.</p>
+
+<code lang="c">#define wimp_KEY_BACKSPACE	((wimp_key_no) 0x8u)
+#define wimp_KEY_RETURN		((wimp_key_no) 0xDu)
+#define wimp_KEY_ESCAPE		((wimp_key_no) 0x1Bu)
+#define wimp_KEY_HOME		((wimp_key_no) 0x1Eu)
+#define wimp_KEY_DELETE		((wimp_key_no) 0x7Fu)</code>
+
+
+
+</section>
+</chapter>
+</manual>
