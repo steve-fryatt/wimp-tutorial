@@ -371,6 +371,10 @@ static double calc_area_from_length(void)
 <section>
 <title>Finding and moving the caret</title>
 
+<p>The Wimp provides two SWIs to track and move the caret, which are predictably called <swi>Wimp_GetCaretPosition</swi> and <swi>Wimp_SetCaretPosition</swi>. OSLib defines two functions to access them, which cover the usage available on all versions of the Wimp since RISC&nbsp;OS&nbsp;3.1; RISC&nbsp;OS Select added some additional options, but since these have never made it into any other versions of the OS, they are of limited use.</p>
+
+<p><swi>Wimp_GetCaretPosition</swi> takes a pointer to a block of memory, and fills it with details of the current position of the caret; OSLib defines a pair of functions as follows:</p>
+
 <code lang="c">extern void wimp_get_caret_position(
 	wimp_caret *caret
 );
@@ -379,7 +383,45 @@ extern os_error *xwimp_get_caret_position(
 	wimp_caret *caret
 );</code>
 
+<p>The only parameter is a pointer to a <name>wimp_caret</name> structure, which is defined like this:</p>
 
+<code lang="c">struct wimp_caret {
+	wimp_w w;
+	wimp_i i;
+	os_coord pos;
+	int height;
+	int index;
+};
+
+typedef struct wimp_caret wimp_caret;</code>
+
+<p>On exit, <variable>w</variable> contains the handle of the window containing the caret (that is, the one with input focus). This could be <em>any</em> window, belonging to any application &ndash; there is no guarantee that it is one belonging to our application. A window handle of &minus;1 (or <name>wimp_BACKGROUND</name>) indicates that there is no caret &ndash; nothing has input focus.</p>
+
+<p>If there is a caret, then <variable>pos</variable> gives its <maths>x</maths> and <maths>y</maths> coordinates in OS&nbsp;units, relative to the work area origin of the window that it is in. To find the position on screen relative to the screen origin, it would be necessary to do a similar calculation to the one that we used in <reference id="sect-menus-popup-code"/> when finding the position of a pop-up menu icon.</p>
+
+<p>If the caret is in a writable icon, the icon handle is stored in <variable>i</variable>; otherwise this contains &minus;1 (or <name>wimp_ICON_WINDOW</name>). If it is in an icon, <variable>index</variable> contains the position in the string, starting from zero before the first character.</p>
+
+<p>The final piece of information is the caret height, in OS&nbsp;units, which is contained in <variable>height</variable>. This is actually a bit-field as shown in <reference id="table-icons-writable-height"/> &ndash; fortunately it isn&rsquo;t a value that we need to worry make use of for now.</p>
+
+<table id="table-icons-writable-height" title="The contents of the height field in wimp_caret">
+<columns>
+<col align="centre">Bit(s)</col>
+<col align="left">Meaning</col>
+</columns>
+<row><col>0&ndash;15</col><col>The caret height in OS units (0 to 65535)</col></row>
+<row><col>16&ndash;23</col><col>The caret colour, if bit 26 is set (0 to 255)</col></row>
+<row><col>24</col><col>Use a VDU&nbsp;5 caret, instead of an anti-aliased one</col></row>
+<row><col>25</col><col>The caret is invisible</col></row>
+<row><col>26</col><col>Use the colour in bits 16&ndash;23 instead of Wimp colour 11</col></row>
+<row><col>27</col><col>The colour in bits 16&ndash;23 is untranslated, instead of a Wimp colour</col></row>
+<row><col>30</col><col>The caret is a ghost caret (RISC&nbsp;OS&nbsp;5.27+ only)</col></row>
+</table>
+
+<p>Our code calls <swi>Wimp_GetCaretPosition</swi> and checks the returned <name>wimp_w</name> handle to see if it matches the handle of our window &ndash; which is stored in <variable>win_handle</variable>. If it does, then we set up a <name>wimp_icon_state</name> structure with the <name>wimp_w</name> and <name>wimp_i</name> handles returned by <swi>Wimp_GetCaretPosition</swi> in order to find the address of the icon&rsquo;s text buffer.</p>
+
+<p>The length of the contents of the icon buffer is read back using SFLib&rsquo;s <function>string_ctrl_strlen()</function> &ndash; this behaves like the standard <function>strlen()</function>, but will accept any control character (ie. any character whose ASCII value is less than 32) as a terminator. The Wimp can be a little vague about string terminators and some template editors use values like <code>'\r'</code> instead of <code>'\0'</code>, so it can be wise to be flexible.</p>
+
+<p>Once we know the length of the current icon text, we can use this to apply an upper bound to the index read from <swi>Wimp_GetCaretPosition</swi>. Now we are ready to use <swi>Wimp_SetCaretPosition</swi> to set the position of the caret; OSLib defines this as follows:</p>
 
 <code lang="c">extern void wimp_set_caret_position(
 	wimp_w w,
@@ -399,20 +441,9 @@ extern os_error *xwimp_set_caret_position(
 	int index
 );</code>
 
+<p>Whilst we can use <swi>Wimp_SetCaretPosition</swi> to set the caret to any location on screen that we desire, when working with writable icons we only need to specify <variable>w</variable>, <variable>i</variable> and <variable>index</variable>. So long as we also set <variable>height</variable> to &minus;1, the Wimp will work the rest our for us.</p>
 
-
-<code lang="c">struct wimp_caret {
-	wimp_w w;
-	wimp_i i;
-	os_coord pos;
-	int height;
-	int index;
-};
-
-typedef struct wimp_caret wimp_caret;</code>
-
-
-
+<p>With this code in place, the caret will be left in its current position within an icon when the contents changes, if that is possible. If it would fall off the end of the new text, however, then it will be placed at the end &ndash; safely before the string terminator!</p>
 </section>
 </chapter>
 </manual>
