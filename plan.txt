@@ -60,13 +60,11 @@ Drag and drop.
 
 Keypresses
 Scrolling
-Writable Icons
 
 
 <!-- B = Interface Module's Border Type -->
 <row><col>C</col><col>Set 24-bit Colours</col></row>
 <row><col>F</col><col>Set Wimp Font Colours</col></row>
-<row><col>K</col><col>Assign Functionality to Keys</col></row>
 <!-- M = Reserved -->
 <row><col>N</col><col>Set Icon Name</col></row>
 <row><col>T</col><col>Tinting Sprites</col></row>

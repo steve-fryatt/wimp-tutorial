@@ -85,15 +85,94 @@ typedef struct wimp_key wimp_key;</code>
 
 <code lang="c">wimp_KEY_SHIFT | wimp_KEY_CONTROL | wimp_KEY_F12</code>
 
-<p>Finally, there are a few key codes which fall into the &lsquo;ASCII&rsquo; range and can not be used with the <key>Shift</key> or <key>Control</key> modifiers.</p>
+<p>Finally, there are a few key codes which fall into the &lsquo;ASCII&rsquo; range for which OSLib defines constants. These can not be used with the <key>Shift</key> or <key>Control</key> modifiers.</p>
 
 <code lang="c">#define wimp_KEY_BACKSPACE	((wimp_key_no) 0x8u)
 #define wimp_KEY_RETURN		((wimp_key_no) 0xDu)
 #define wimp_KEY_ESCAPE		((wimp_key_no) 0x1Bu)
 #define wimp_KEY_HOME		((wimp_key_no) 0x1Eu)
 #define wimp_KEY_DELETE		((wimp_key_no) 0x7Fu)</code>
+</section>
 
+<section>
+<title>A keypress handler</title>
 
+<p>To make use of the <name>Key Pressed</name> events, we will need a handler for them. One can be seen in <reference id="list-key-input-handler"/>; the <code>#define</code> will need to go at the top of the file.</p>
+
+<code id="list-key-input-handler" lang="c" title="The Key Pressed event handler">#define WIN_NUM_BUF_SIZE 12
+
+static osbool win_keypress(wimp_key *key)
+{
+	char buffer[WIN_NUM_BUF_SIZE];
+
+	if (key-&gt;c != wimp_KEY_RETURN)
+		return FALSE;
+
+	if (key-&gt;i == wimp_ICON_WINDOW)
+		return TRUE;
+
+	icons_copy_text(win_handle, key-&gt;i, buffer, WIN_NUM_BUF_SIZE);
+
+	switch(key-&gt;i) {
+	case WIN_ICON_LENGTH_FIELD:
+		calc_set_dimension(CALC_DIMENSION_LENGTH, buffer);
+		break;
+	case WIN_ICON_PERIMETER_FIELD:
+		calc_set_dimension(CALC_DIMENSION_PERIMETER, buffer);
+		break;
+	case WIN_ICON_AREA_FIELD:
+		calc_set_dimension(CALC_DIMENSION_AREA, buffer);
+		break;
+	}
+
+	win_update_all_calculations();
+
+	return TRUE;
+}</code>
+
+<p>The format of the function is very similar to the other window-level event handlers that we have defined for use with SFLib&rsquo;s event library, with one exception: it returns an <name>osbool</name> value to indicate whether or not the keypress has been used. We will look at why this is shortly.</p>
+
+<p>The function declares a <variable>buffer</variable> of <name>WIN_NUM_BUF_SIZE</name> bytes on the stack, and then checks the key reported by the event (in <variable>c</variable> within the <name>wimp_key</name> structure) to see if it is the <key>Return</key> key (indicated by the <name>wimp_KEY_RETURN</name> value). We will make our interface respond when the user presses <key>Return</key> in one of the writable fields, so if they key was anything else the function exits immediately &ndash; returning <name>FALSE</name> to indicate that they keypress wasn&rsquo;t of interest.</p>
+
+<p>If the key was <key>Return</key>, the next check is to make sure that the caret was in an icon: although we don&rsquo; give the user a way to place the input focus anywhere other than into the three icons (because we leave placing input focus up to the Wimp), a third-party utility could do it. If the caret wasn&rsquo;t in an icon, we again return from the function &ndash; but this time returning <name>TRUE</name> to show that we have accepted the <key>Return</key> keypress.</p>
+
+<p>Assuming we get past the tests, we can be confident that <key>Return</key> was pressed and the caret was in one of our writable icons. We use the <function>icons_copy_text()</function> function from SFLib to copy the text from the target icon into our temporary buffer, which is defined as follows.</p>
+
+<code lang="c">char *icons_copy_text(
+	wimp_w w,
+	wimp_i i,
+	char *buffer,
+	size_t length
+);</code>
+
+<p>As we mentioned in the <reference id="sect-icons-writable-caret">last chapter</reference> when looking at placing the caret, string terminators in icons can be a little vague. The <function>icons_copy_text()</function> function will accept any control character as a terminator, but leave our buffer terminated with a <code>'\0'</code> character. The size of the buffer pointer to by <variable>buffer</variable> should be passed in the <variable>length</variable> parameter.</p>
+
+<p>Once the value entered by the user is in the buffer, all that remains to do is to pass it to <function>calc_set_dimension()</function> with the appropriate dimension type, and the call <function>win_update_all_calculations()</function> to recalculate all of the results and update the window.</p>
+
+<p>With the handler defined, all that remains to do is to register it with the event library, as seen in <reference id="list-key-input-init"/>.</p>
+
+<code id="list-key-input-init" lang="c" title="Registering the Key Pressed event hander in win_initialise()">/* Register event handlers. */
+
+event_add_window_key_event(win_handle, win_keypress);
+event_add_window_menu(win_handle, win_menu);
+event_add_window_menu_prepare(win_handle, win_set_menu);
+event_add_window_menu_selection(win_handle, win_menu_selection);
+event_add_window_icon_popup(win_handle, WIN_ICON_SHAPE_POPUP, win_shape_menu, WIN_ICON_SHAPE_FIELD, NULL);
+event_set_window_icon_popup_action(win_handle, WIN_ICON_SHAPE_POPUP, FALSE, win_shape_menu_selection);</code>
+
+<p>When assembled, compiled and run, our application should look similar to <reference id="fig-key-input-window"/>. Entering a value and pressing <key>Return</key> in one of the fields will update the others to reflect the corresponding values.</p>
+
+<image id="fig-key-input-window" file="key-input-window.png" title="Finally we can calculate the parameters of a triangle!"/>
+
+<p>The full set of code can be found in <reference id="dl-key-input-keypress"/>.</p>
+
+<download id="dl-key-input-keypress" file="KeyPress" title="Updating Fields on Return" compatibility="none"/>
+</section>
+
+<section>
+<title>Unused keypresses</title>
+
+<p>When introducing our new <name>Key Pressed</name> event handler in the previous section, we noted that it returned either <name>TRUE</name> or <name>FALSE</name> to indicate whether the supplied keypress had been processed.</p>
 
 </section>
 </chapter>

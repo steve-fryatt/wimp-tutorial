@@ -161,7 +161,7 @@ static void win_menu_selection(wimp_w window, wimp_menu *menu, wimp_selection *s
 		break;
 	}
 
-       	win_update_all_calculations();
+	win_update_all_calculations();
 }
 
 /* Shape Pop-Up Menu Selection event handler. */

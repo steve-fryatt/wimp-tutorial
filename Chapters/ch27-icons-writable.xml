@@ -270,7 +270,7 @@ static double calc_area_from_length(void)
 
 	switch (calc_current_sides) {
 	case 1:
-		return CALC_PI * length * length;
+		return CALC_PI * length * length / 4.0;
 	case 3:
 		return sqrt(3.0) * length * length / 4.0;
 	case 4:

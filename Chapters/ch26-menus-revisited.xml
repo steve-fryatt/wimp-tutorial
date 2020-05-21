@@ -237,7 +237,7 @@ event_add_window_menu_selection(win_handle, win_menu_selection);</code>
 		break;
 	}
 
-       	win_update_all_calculations();
+	win_update_all_calculations();
 }</code>
 
 <p>With our event handlers hooked up to the &lsquo;pseudo-events&rsquo;, we no longer need to open the menu when the user clicks <mouse>Menu</mouse> over the window. This means that we can update the <function>win_mouse_click()</function> function as shown in <reference id="list-menus-revisited-main-click"/>, so that it returns to just opening the pop-up menu.</p>

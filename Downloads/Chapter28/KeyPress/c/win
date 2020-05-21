@@ -28,10 +28,12 @@
 #include "oslib/osspriteop.h"
 #include "oslib/wimp.h"
 
+#include "sflib/debug.h"
 #include "sflib/errors.h"
 #include "sflib/event.h"
 #include "sflib/icons.h"
 #include "sflib/menus.h"
+#include "sflib/string.h"
 #include "sflib/windows.h"
 
 #include <stdio.h>
@@ -48,6 +50,9 @@
 #define WIN_ICON_SHAPE_FIELD 2
 #define WIN_ICON_SIDES_FIELD 4
 #define WIN_ICON_INT_ANGLE_FIELD 6
+#define WIN_ICON_LENGTH_FIELD 8
+#define WIN_ICON_PERIMETER_FIELD 10
+#define WIN_ICON_AREA_FIELD 12
 
 /* Window Menu Entries. */
 
@@ -61,6 +66,10 @@
 #define WIN_MENU_SHAPE_TRIANGLE 1
 #define WIN_MENU_SHAPE_SQUARE 2
 
+/* Temporary Value Storage. */
+
+#define WIN_NUM_BUF_SIZE 12
+
 /* Global Variables */
 
 static wimp_w win_handle;
@@ -69,11 +78,10 @@ static wimp_menu *win_shape_menu;
 
 /* Function Prototypes */
 
-static void win_mouse_click(wimp_pointer *pointer);
+static osbool win_keypress(wimp_key *key);
 static void win_menu_selection(wimp_w window, wimp_menu *menu, wimp_selection *selection);
-static void win_shape_menu_selection(wimp_menu *menu, wimp_selection *selection);
+static osbool win_shape_menu_selection(wimp_w window, wimp_menu *menu, unsigned selection);
 static void win_set_menu(wimp_w window, wimp_menu *menu, wimp_pointer *pointer);
-static void win_set_shape_menu(int selection);
 static void win_set_shape(enum calc_shape shape);
 static void win_update_all_calculations(void);
 
@@ -125,15 +133,17 @@ void win_initialise(osspriteop_area *sprites)
 
 	/* Register event handlers. */
 
-	event_add_window_mouse_event(win_handle, win_mouse_click);
+	event_add_window_key_event(win_handle, win_keypress);
 	event_add_window_menu(win_handle, win_menu);
 	event_add_window_menu_prepare(win_handle, win_set_menu);
 	event_add_window_menu_selection(win_handle, win_menu_selection);
+	event_add_window_icon_popup(win_handle, WIN_ICON_SHAPE_POPUP, win_shape_menu, WIN_ICON_SHAPE_FIELD, NULL);
+	event_set_window_icon_popup_action(win_handle, WIN_ICON_SHAPE_POPUP, FALSE, win_shape_menu_selection);
 
 	/* Initialise the window contents. */
 
 	win_set_shape(CALC_SHAPE_SQUARE);
-	win_set_shape_menu(WIN_MENU_SHAPE_SQUARE);
+	event_set_window_icon_popup_selection(win_handle, WIN_ICON_SHAPE_POPUP, WIN_MENU_SHAPE_SQUARE);
 }
 
 /* Open the Window. */
@@ -143,12 +153,35 @@ void win_open(void)
 	windows_open_centred_on_screen(win_handle);
 }
 
-/* Handle Mouse Click events. */
+/* Key Pressed event handler. */
 
-static void win_mouse_click(wimp_pointer *pointer)
+static osbool win_keypress(wimp_key *key)
 {
-	if (pointer->i == WIN_ICON_SHAPE_POPUP && pointer->buttons == wimp_CLICK_SELECT)
-		menu_open_popup(win_shape_menu, pointer, win_shape_menu_selection);
+	char buffer[WIN_NUM_BUF_SIZE];
+
+	if (key->c != wimp_KEY_RETURN)
+		return FALSE;
+
+	if (key->i == wimp_ICON_WINDOW)
+		return TRUE;
+
+	icons_copy_text(win_handle, key->i, buffer, WIN_NUM_BUF_SIZE);
+
+	switch(key->i) {
+	case WIN_ICON_LENGTH_FIELD:
+		calc_set_dimension(CALC_DIMENSION_LENGTH, buffer);
+		break;
+	case WIN_ICON_PERIMETER_FIELD:
+		calc_set_dimension(CALC_DIMENSION_PERIMETER, buffer);
+		break;
+	case WIN_ICON_AREA_FIELD:
+		calc_set_dimension(CALC_DIMENSION_AREA, buffer);
+		break;
+	}
+
+	win_update_all_calculations();
+
+	return TRUE;
 }
 
 /* Main Menu Selection event handler. */
@@ -175,9 +208,9 @@ static void win_menu_selection(wimp_w window, wimp_menu *menu, wimp_selection *s
 
 /* Shape Pop-Up Menu Selection event handler. */
 
-static void win_shape_menu_selection(wimp_menu *menu, wimp_selection *selection)
+static osbool win_shape_menu_selection(wimp_w window, wimp_menu *menu, unsigned selection)
 {
-	switch (selection->items[0]) {
+	switch (selection) {
 	case WIN_MENU_SHAPE_CIRCLE:
 		win_set_shape(CALC_SHAPE_CIRCLE);
 		break;
@@ -189,7 +222,7 @@ static void win_shape_menu_selection(wimp_menu *menu, wimp_selection *selection)
 		break;
 	}
 
-	win_set_shape_menu(selection->items[0]);
+	return TRUE;
 }
 
 /* Set the Main Menu state. */
@@ -206,13 +239,6 @@ static void win_set_menu(wimp_w w, wimp_menu *menu, wimp_pointer *pointer)
 	menus_tick_entry(win_menu, WIN_MENU_DECIMAL1, places == 1);
 	menus_tick_entry(win_menu, WIN_MENU_DECIMAL2, places == 2);
 	menus_tick_entry(win_menu, WIN_MENU_DECIMAL3, places == 3);
-}
-
-/* Set the Shape Pop-Up Menu state. */
-
-static void win_set_shape_menu(int selection)
-{
-	menu_set_popup_menu(win_shape_menu, selection, win_handle, WIN_ICON_SHAPE_FIELD);
 }
 
 /* Set the shape being displayed. */
@@ -253,7 +279,12 @@ static void win_set_shape(enum calc_shape shape)
 
 static void win_update_all_calculations(void)
 {
-	char *text = NULL;
+	char		*text = NULL;
+	int		index;
+	wimp_caret	caret;
+	wimp_icon_state	state;
+
+	/* Update the window data. */
 
 	text = calc_get_sides();
 	if (text != NULL) {
@@ -266,4 +297,42 @@ static void win_update_all_calculations(void)
 		icons_strncpy(win_handle, WIN_ICON_INT_ANGLE_FIELD, text);
 		wimp_set_icon_state(win_handle, WIN_ICON_INT_ANGLE_FIELD, 0, 0);
 	}
+
+	text = calc_get_length();
+	if (text != NULL) {
+		icons_strncpy(win_handle, WIN_ICON_LENGTH_FIELD, text);
+		wimp_set_icon_state(win_handle, WIN_ICON_LENGTH_FIELD, 0, 0);
+	}
+
+	text = calc_get_perimeter();
+	if (text != NULL) {
+		icons_strncpy(win_handle, WIN_ICON_PERIMETER_FIELD, text);
+		wimp_set_icon_state(win_handle, WIN_ICON_PERIMETER_FIELD, 0, 0);
+	}
+
+	text = calc_get_area();
+	if (text != NULL) {
+		icons_strncpy(win_handle, WIN_ICON_AREA_FIELD, text);
+		wimp_set_icon_state(win_handle, WIN_ICON_AREA_FIELD, 0, 0);
+	}
+
+	/* Correct the caret position if required. */
+
+	if (xwimp_get_caret_position(&caret) != NULL)
+		return;
+
+	if (caret.w != win_handle)
+		return;
+
+	state.w = caret.w;
+	state.i = caret.i;
+	if (xwimp_get_icon_state(&state) != NULL)
+		return;
+
+	index = string_ctrl_strlen(state.icon.data.indirected_text.text);
+
+	if (caret.index < index)
+		index = caret.index;
+
+	xwimp_set_caret_position(caret.w, caret.i, 0, 0, -1, index);
 }
