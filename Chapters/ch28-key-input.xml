@@ -20,23 +20,21 @@
 <summary>How do we actually find out what keys the user is pressing when they are typing into our window?</summary>
 
 <section>
-<p>In the <reference id="chap-icons-writable">last chapter</reference>, we added some writable icons to our window so that the user could enter values for calculation. We finished the chapter with the calculations apparently working, but with no way for the user to set different values. It would be useful if the user could press <key>Return</key> after entering a new number, and have the other values update.</p>
-
-<p>To do this, we will need to listen out for the <name>Key Pressed</name> event being returned from <swi>Wimp_Poll</swi>.</p>
+<p>In the <reference id="chap-icons-writable">last chapter</reference>, we added some writable icons to our window so that the user could enter values, but had no way to identify new numbers and use them in the shape calculations. It would be useful if the user could press <key>Return</key> after entering a new number, and have the other values update.</p>
 </section>
 
 <section>
 <title>Key pressed events</title>
 
-<p>To be able to detect when <key>Return</key> is pressed, our application will need to listen out for <name>Key Pressed</name> events. The Wimp sends these with a reason code of <name>wimp_KEY_PRESSED</name> when a key is pressed whilst the caret is in one of our windows, and supplies data in a <name>wimp_key</name> structure which OSLib defines as follows.</p>
+<p>To be able to detect when <key>Return</key> is pressed, our application will need to listen out for <name>Key Pressed</name> events being returned from <swi>Wimp_Poll</swi>. The Wimp sends these with a reason code of <name>wimp_KEY_PRESSED</name> when a key is pressed whilst the caret is in one of our windows, and supplies data in a <name>wimp_key</name> structure which OSLib defines as follows.</p>
 
 <code lang="c">struct wimp_key {
-	wimp_w w;
-	wimp_i i;
-	os_coord pos;
-	int height;
-	int index;
-	wimp_key_no c;
+	wimp_w		w;
+	wimp_i		i;
+	os_coord	pos;
+	int		height;
+	int		index;
+	wimp_key_no	c;
 };
 
 typedef struct wimp_key wimp_key;</code>
@@ -85,7 +83,7 @@ typedef struct wimp_key wimp_key;</code>
 
 <code lang="c">wimp_KEY_SHIFT | wimp_KEY_CONTROL | wimp_KEY_F12</code>
 
-<p>Finally, there are a few key codes which fall into the &lsquo;ASCII&rsquo; range for which OSLib defines constants. These can not be used with the <key>Shift</key> or <key>Control</key> modifiers.</p>
+<p>Finally, there are a few key &lsquo;special&rsquo; codes which fall into the &lsquo;ASCII&rsquo; range for which OSLib defines constants. These can not be used with the <key>Shift</key> or <key>Control</key> modifiers.</p>
 
 <code lang="c">#define wimp_KEY_BACKSPACE	((wimp_key_no) 0x8u)
 #define wimp_KEY_RETURN		((wimp_key_no) 0xDu)
@@ -145,11 +143,11 @@ static osbool win_keypress(wimp_key *key)
 	size_t length
 );</code>
 
-<p>As we mentioned in the <reference id="sect-icons-writable-caret">last chapter</reference> when looking at placing the caret, string terminators in icons can be a little vague. The <function>icons_copy_text()</function> function will accept any control character as a terminator, but leave our buffer terminated with a <code>'\0'</code> character. The size of the buffer pointer to by <variable>buffer</variable> should be passed in the <variable>length</variable> parameter.</p>
+<p>As we mentioned in the <reference id="sect-icons-writable-caret">last chapter</reference> when looking at placing the caret, string terminators in icons can be a little vague. The <function>icons_copy_text()</function> function will accept any control character as a terminator, but leave our buffer terminated with a <code>'\0'</code> character. The size of the buffer pointed to by <variable>buffer</variable> should be passed in the <variable>length</variable> parameter.</p>
 
 <p>Once the value entered by the user is in the buffer, all that remains to do is to pass it to <function>calc_set_dimension()</function> with the appropriate dimension type, and the call <function>win_update_all_calculations()</function> to recalculate all of the results and update the window.</p>
 
-<p>With the handler defined, all that remains to do is to register it with the event library, as seen in <reference id="list-key-input-init"/>.</p>
+<p>With the handler defined, we must register it with the event library as seen in <reference id="list-key-input-init"/>.</p>
 
 <code id="list-key-input-init" lang="c" title="Registering the Key Pressed event hander in win_initialise()">/* Register event handlers. */
 
