@@ -9,6 +9,7 @@ Chapter 12
 ----------
 
 Finish text at the end of the introduction block. (marked TODO).
+Forward reference to wimp_WINDOW_HOT_KEYS.
 
 
 Chapter 13
@@ -62,6 +63,9 @@ Keypresses
 Scrolling
 
 
+Do we actually explain window stacks anywhere? Refer to them in Chapter 28.
+
+
 <!-- B = Interface Module's Border Type -->
 <row><col>C</col><col>Set 24-bit Colours</col></row>
 <row><col>F</col><col>Set Wimp Font Colours</col></row>
@@ -104,3 +108,37 @@ Scrolling
 #define wimp_MENU_WRITABLE                      ((wimp_menu_flags) 0x4u)
 #define wimp_MENU_GIVE_WARNING                  ((wimp_menu_flags) 0x8u)
 #define wimp_MENU_SUB_MENU_WHEN_SHADED          ((wimp_menu_flags) 0x10u)
+
+
+
+
+Partially (forward reference in Ch 12 or 13):
+#define wimp_WINDOW_IGNORE_XEXTENT              ((wimp_window_flags) 0x4000u)
+#define wimp_WINDOW_IGNORE_YEXTENT              ((wimp_window_flags) 0x8000u)
+#define wimp_WINDOW_AUTO_REDRAW                 ((wimp_window_flags) 0x10u)
+
+#define wimp_WINDOW_BACK                        ((wimp_window_flags) 0x800u)
+#define wimp_WINDOW_FURNITURE_WINDOW            ((wimp_window_flags) 0x800000u)
+      /*WindowManager 3.98+*/
+#define wimp_WINDOW_FOREGROUND_WINDOW           ((wimp_window_flags) 0x800000u)
+      /*RISC OS 4+*/
+
+#define wimp_WINDOW_PANE                        ((wimp_window_flags) 0x20u)
+#define wimp_WINDOW_SCROLL_REPEAT               ((wimp_window_flags) 0x100u)
+#define wimp_WINDOW_SCROLL                      ((wimp_window_flags) 0x200u)
+#define wimp_WINDOW_HOT_KEYS                    ((wimp_window_flags) 0x1000u)
+
+#define wimp_WINDOW_USE_EXTENDED_SCROLL_REQUEST ((wimp_extra_window_flags) 0x2u)
+      /*RISC OS 4.32+*/
+#define wimp_WINDOW_GIVE_SHADED_ICON_INFO       ((wimp_extra_window_flags) 0x10u)
+      /*RISC OS 5+*/
+
+
+#define wimp_WINDOW_OPEN                        ((wimp_window_flags) 0x10000u)
+#define wimp_WINDOW_NOT_COVERED                 ((wimp_window_flags) 0x20000u)
+#define wimp_WINDOW_FULL_SIZE                   ((wimp_window_flags) 0x40000u)
+      /*Window at full size, obscuring Iconbar*/
+#define wimp_WINDOW_TOGGLED                     ((wimp_window_flags) 0x80000u)
+#define wimp_WINDOW_BOUNDED_ONCE                ((wimp_window_flags) 0x200000u)
+#define wimp_WINDOW_PARTIAL_SIZE                ((wimp_window_flags) 0x400000u)
+      /*Window at full size, not obscuring iconbar - WindowManager 3.98+*/

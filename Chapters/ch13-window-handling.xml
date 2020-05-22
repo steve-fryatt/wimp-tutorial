@@ -227,7 +227,7 @@ int general_mode_height(void)
 
 <p>A full set of modified code can be found in <reference id="dl-handling-windows-centre"/>: when compiled and run, the application&rsquo;s window should always open at the centre of the desktop. Slightly confusingly, it also jumps back to the centre if it is already open when <mouse>Select</mouse> is clicked on the iconbar icon; this isn&rsquo;t really good behaviour, and we&rsquo;ll sort it out shortly.</p>
 
-<download id="dl-handling-windows-centre" file="OpenAtCentre" title="Open the Window Centred on the Desktop" compatibility="none"/>
+<download id="dl-handling-windows-centre" file="OpenAtCentre" title="Open the Window Centred on the desktop" compatibility="none"/>
 </section>
 
 <section id="sect-window-handling-info">
@@ -243,7 +243,7 @@ int general_mode_height(void)
 #define wimp_WINDOW_BOUNDED_ONCE	((wimp_window_flags) 0x200000u)
 #define wimp_WINDOW_PARTIAL_SIZE	((wimp_window_flags) 0x400000u)</code>
 
-<p>Some of the flags describe simple aspects of the window&rsquo;s state. The <name>wimp_WINDOW_OPEN</name> flag is set if the window is open on screen, while <name>wimp_WINDOW_HAS_FOCUS</name> indicates that it has <intro>input focus</intro> &ndash; that keyboard input will be directed to it. If <name>wimp_WINDOW_NOT_COVERED</name> is set, we know that there are no other windows on top of ours.</p>
+<p>Some of the flags describe simple aspects of the window&rsquo;s state. The <name>wimp_WINDOW_OPEN</name> flag is set if the window is open on screen, while <name>wimp_WINDOW_HAS_FOCUS</name> indicates that it has <intro>input focus</intro> &ndash; that keyboard input will be directed to it, as we will see in <reference id="chap-icons-writable"/>. If <name>wimp_WINDOW_NOT_COVERED</name> is set, we know that there are no other windows on top of ours.</p>
 
 <!-- Remaining flags relate to the Toggle Size operation. wimp_WINDOW_PARTIAL_SIZE is only available in the Nested Wimp. -->
 
@@ -277,7 +277,7 @@ int general_mode_height(void)
 
 <p>The updated code can be found in <reference id="dl-handling-windows-re-centre"/>, and if this is tried, <mouse>Select</mouse> clicks on the iconbar icon should seem a lot more &lsquo;normal&rsquo;.</p>
 
-<download id="dl-handling-windows-re-centre" file="ReopenAtCentre" title="Open the Window Centred on the Desktop" compatibility="none"/>
+<download id="dl-handling-windows-re-centre" file="ReopenAtCentre" title="Open the Window Centred on the desktop" compatibility="none"/>
 
 <p>One slight curiosity still remains: while the window returns to the centre of the screen whenever it is opened, the size of its visible area is remembered from when it was closed. To see this in action, open the window, change its size with the resize icon, close it, then finally open it again with another <mouse>Select</mouse> click on the iconbar icon. The effect happens because we calculate the <variable>width</variable> and <variable>height</variable> variables from the visible area returned by <swi>Wimp_GetWindowState</swi> &ndash; which, of course, remembers where the window was when it was last closed.</p>
 

@@ -254,13 +254,14 @@ window_definition.extra_flags = 0;</code>
 
 <p>Finally, in this group of flags, are two which control the way in which the window colours above are interpreted by the Wimp:</p>
 
-<code lang="c">#define wimp_WINDOW_REAL_COLOURS		((wimp_window_flags) 0x400u)
-#define wimp_WINDOW_USE_TITLE_VALIDATION_STRING	((wimp_extra_window_flags) 0x1u)</code>
+<code lang="c">#define wimp_WINDOW_REAL_COLOURS			((wimp_window_flags) 0x400u)
+#define wimp_WINDOW_USE_TITLE_VALIDATION_COLOURS	((wimp_extra_window_flags) 0x1u)
+#define wimp_WINDOW_USE_TITLE_VALIDATION_STRING		((wimp_extra_window_flags) 0x1u) /* Preferred */</code>
 
 <p>For now, these can both safely be left un-set.</p>
 </section>
 
-<section>
+<section id="sect-window-theory-behaviour">
 <title>Moving the window around</title>
 
 <p>Another group of flags determine how the window moves and responds to the user dragging its title bar and resize button:</p>
@@ -294,7 +295,7 @@ window_definition.extra_flags = 0;</code>
 
 <p>If the <name>wimp_WINDOW_AUTO_REDRAW</name> flag is set, the Wimp won&rsquo;t ask the application to help with redrawing the window. For all simple windows, this flag should be set: if it isn&rsquo;t, then opening the window will lock the application (requiring <key>Alt</key>-<key>Break</key> to escape) unless there&rsquo;s code in place to redraw the window. We&rsquo;ll cover this, and the associated <swi>Wimp_Poll</swi> event, later.</p>
 
-<p>Setting the <name>wimp_WINDOW_HOT_KEYS</name> flag will cause the window to receive details of unclaimed key presses even when it doesn&rsquo;t have input focus. Generally, this isn&rsquo;t much use, and will be left un-set.</p>
+<p>Setting the <name>wimp_WINDOW_HOT_KEYS</name> flag will cause the window to receive details of unclaimed key presses even when it doesn&rsquo;t have <intro>input focus</intro>: a concept that we will meet in <reference id="chap-icons-writable"/>. This often isn&rsquo;t much use to an application, and will be left un-set for now &ndash; we will investigate further in <reference id="sect-key-input-hotkeys"/>.</p>
 
 <p>The <name>wimp_WINDOW_SCROLL</name> and <name>wimp_WINDOW_SCROLL_REPEAT</name> flags, along with the <name>wimp_WINDOW_USE_EXTENDED_SCROLL_REQUEST</name> extended flag, control how the window responds to the user clicking on the arrows at the ends of its scroll bars. These can safely be left unset &ndash; at least until we&rsquo;ve met the <swi>Wimp_Poll</swi> event associated with them!</p>
 

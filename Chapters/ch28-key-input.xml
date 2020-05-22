@@ -167,11 +167,41 @@ event_set_window_icon_popup_action(win_handle, WIN_ICON_SHAPE_POPUP, FALSE, win_
 <download id="dl-key-input-keypress" file="KeyPress" title="Updating Fields on Return" compatibility="none"/>
 </section>
 
-<section>
-<title>Unused keypresses</title>
+<section id="sect-key-input-hotkeys">
+<title>Passing keys on</title>
 
-<p>When introducing our new <name>Key Pressed</name> event handler in the previous section, we noted that it returned either <name>TRUE</name> or <name>FALSE</name> to indicate whether the supplied keypress had been processed.</p>
+<p>So far, we have suggested that the Wimp will simply pass the details of keypresses to the task owning the window with input focus, but this isn&rsquo;t quite the whole story. There are some keypresses &ndash; such as <key>F12</key> to access the command line, or <key>Ctrl-Shift-F12</key> to shut down the system &ndash; which we expect to operate whichever window has input focus. To achieve this, the Wimp uses the concept of <intro>hot keys</intro>.</p>
 
+<p>When a key is pressed, the Wimp will initially give the details to the task which owns window with input focus. If that task fails to process the keypress, however, then the Wimp will pass the keypress on to any other windows which have expressed an interest in hot keys, starting from the top of the window stack and working down. To express interest, a window should have its <name>wimp_WINDOW_HOT_KEYS</name> flag set &ndash; we introduced this briefly in <reference id="sect-window-theory-behaviour"/>.</p>
+
+<p>In order to make this work, the Wimp requires applications which claim the <name>Key Pressed</name> event to pass on any keyspresses which they do not use. This is done using the <swi>Wimp_ProcessKey</swi> SWI, which simply takes the code of the keypress to be passed on:</p>
+
+<code lang="c">extern void wimp_process_key(
+	wimp_key_no c
+);
+
+extern os_error *xwimp_process_key(
+	wimp_key_no c
+);</code>
+
+<p>SFLib&rsquo;s event library looks after the use of <swi>Wimp_ProcessKey</swi> for us, and will pass the code of if the <name>Key Pressed</name> event handler returns <name>FALSE</name>. In effect, the following code is calling our function:</p>
+
+<code lang="c">if (win_keypress(key) == FALSE)
+	wimp_process_key(key-&gt;c);</code>
+
+<p>If you are using another library, consult its documentation to see whether you will need to call the SWI directly or not.</p>
+
+<p>To see the effect that not calling <swi>Wimp_ProcessKey</swi> can have, run our application and &ndash; with the caret in one of the writable icons &ndash; confirm that pressing <key>F12</key> accesses the command line in the usual way (press <key>Return</key> at the <code>*</code> prompt to return to the desktop afterwards). Now change the two <code>if</code> statements at the top of <function>win_keypress()</function> so that they both return <name>TRUE</name>.</p>
+
+<code lang="c">if (key-&gt;c != wimp_KEY_RETURN)
+	return TRUE;
+
+if (key-&gt;i == wimp_ICON_WINDOW)
+	return TRUE;</code>
+
+<p>This will prevent the event library from passing any keypresses on via <swi>Wimp_ProcessKey</swi>, and if the code is compiled and run with this change in place, the <key>F12</key> should no longer work if the caret is in one of our icons. This clearly isn&rsquo;t a good thing, so correctly passing on unused keypresses is essential for any application which claims <name>Key Pressed</name> events.</p>
+
+<p>Deciding which keys to pass on might seem difficult, but 
 </section>
 </chapter>
 </manual>
