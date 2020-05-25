@@ -108,7 +108,7 @@ static char calc_format[CALC_FORMAT_LENGTH];
 
 static char *calc_not_applicable = &quot;n/a&quot;;</code>
 
-<p>To allow a dimension to be set, we will supply a new <function>calc_set_dimension()</function>, which takes the type of dimension and a pointer to a string representing the new value. This will allow us to simply pass a pointer to the text in a writable icon, and have the calculation code extract the necessary information.</p>
+<p>To allow a dimension to be set, we will supply a new <function>calc_set_dimension()</function> function, which takes the type of dimension and a pointer to a string representing the new value. This will allow us to simply pass a pointer to the text in a writable icon, and have the calculation code extract the necessary information.</p>
 
 <code lang="c">/* Set one of the dimensions. */
 
@@ -116,7 +116,7 @@ void calc_set_dimension(enum calc_dimension dimension, char *text)
 {
 	double value = 0.0;
 
-	if (text == NULL)
+	if (text == NULL || dimension == CALC_DIMENSION_NONE)
 		return;
 
 	value = atof(text);

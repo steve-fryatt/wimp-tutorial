@@ -174,7 +174,7 @@ event_set_window_icon_popup_action(win_handle, WIN_ICON_SHAPE_POPUP, FALSE, win_
 
 <p>When a key is pressed, the Wimp will initially give the details to the task which owns window with input focus. If that task fails to process the keypress, however, then the Wimp will pass the keypress on to any other windows which have expressed an interest in hot keys, starting from the top of the window stack and working down. To express interest, a window should have its <name>wimp_WINDOW_HOT_KEYS</name> flag set &ndash; we introduced this briefly in <reference id="sect-window-theory-behaviour"/>.</p>
 
-<p>In order to make this work, the Wimp requires applications which claim the <name>Key Pressed</name> event to pass on any keyspresses which they do not use. This is done using the <swi>Wimp_ProcessKey</swi> SWI, which simply takes the code of the keypress to be passed on:</p>
+<p>In order to make hot keys work, the Wimp requires applications which claim the <name>Key Pressed</name> event to pass on any keyspresses which they do not use. This is done using the <swi>Wimp_ProcessKey</swi> SWI, which simply takes the code of the keypress to be passed on:</p>
 
 <code lang="c">extern void wimp_process_key(
 	wimp_key_no c
@@ -184,24 +184,314 @@ extern os_error *xwimp_process_key(
 	wimp_key_no c
 );</code>
 
-<p>SFLib&rsquo;s event library looks after the use of <swi>Wimp_ProcessKey</swi> for us, and will pass the code of if the <name>Key Pressed</name> event handler returns <name>FALSE</name>. In effect, the following code is calling our function:</p>
+<p>This is something that we&rsquo;re not currently doing, and the effect can be seen by placing the caret in one of our writable icons and pressing <key>F12</key>: the nothing will happen. Move the caret away from our application (click in a text editor window, for example) and pressing <key>F12</key> should accesses the command line in the usual way (press <key>Return</key> at the <code>*</code> prompt to return to the desktop afterwards). This isn&rsquo;t desirable, because applications should <em>never</em> prevent hot keys from working.</p>
 
-<code lang="c">if (win_keypress(key) == FALSE)
-	wimp_process_key(key-&gt;c);</code>
+<p>To resolve the problem, we can make use of the fact that the <function>event_process_event()</function> function in SFLib&rsquo;s event library, which we are using in <file>c.main</file> to dispatch events from <swi>Wimp_Poll</swi>, returns <name>TRUE</name> if an event is handled and <name>FALSE</name> otherwise. We are already using this to implement the generic event handlers for <name>Open_Window_Request</name> and <name>Close_Window_Request</name> events, as we saw in <reference id="sect-windows-generic"/>, and we if we change the code as shown in <reference id="list-key-input-generic"/> then we can also use it to pass on unwanted keypresses from <name>Key_Pressed</name> events.</p>
 
-<p>If you are using another library, consult its documentation to see whether you will need to call the SWI directly or not.</p>
+<code id="list-key-input-generic" lang="c" title="Passing on unwanted keypresses to other applications">static void main_poll(void)
+{
+	wimp_block	blk;
+	wimp_event_no	reason;
+	int		pollword;
 
-<p>To see the effect that not calling <swi>Wimp_ProcessKey</swi> can have, run our application and &ndash; with the caret in one of the writable icons &ndash; confirm that pressing <key>F12</key> accesses the command line in the usual way (press <key>Return</key> at the <code>*</code> prompt to return to the desktop afterwards). Now change the two <code>if</code> statements at the top of <function>win_keypress()</function> so that they both return <name>TRUE</name>.</p>
+	while (!main_quit_flag) {
+		reason = wimp_poll(wimp_MASK_NULL, &amp;blk, &amp;pollword);
 
-<code lang="c">if (key-&gt;c != wimp_KEY_RETURN)
+		if (!event_process_event(reason, &amp;blk, pollword)) {
+			switch (reason) {
+			case wimp_OPEN_WINDOW_REQUEST:
+				wimp_open_window(&amp;(blk.open));
+				break;
+
+			case wimp_CLOSE_WINDOW_REQUEST:
+				wimp_close_window(blk.close.w);
+				break;
+
+			case wimp_KEY_PRESSED:
+				wimp_process_key(blk.key.c);
+				break;
+			}
+		}
+	}
+}</code>
+
+<p>In the case of <name>Key_Pressed</name> event handlers registered with SFLib using the <function>event_add_window_key_event()</function> function, the return value is passed on by <function>event_process_event()</function>. Since <function>event_process_event()</function> will also return <name>FALSE</name> if no handler was found, we can treat this as an instruction to pass the keypress on via <swi>Wimp_ProcessKey</swi>. If you are using another library, consult its documentation to see how this is handled.</p> 
+
+<p>The changes can be found in <reference id="dl-key-input-generic"/>.</p>
+
+<download id="dl-key-input-generic" file="ProcessKey" title="Passing On Unused Keypresses" compatibility="none"/>
+
+<p>Deciding which keys to pass on might seem difficult, but in fact our keypress handler here is quite unusual in that we&rsquo;re only interested in one specific keypress. Most keypress handlers for hot key and dialogue box use follow the form of a <code>switch()</code> statement checking off the possible keys, before passing the keypress on to <swi>Wimp_ProcessKey</swi> if none of them match.</p>
+
+<code lang="c">static osbool win_keypress(wimp_key *key)
+{
+	switch(key-&gt;c) {
+	case wimp_KEY_RETURN:
+		process_dialogue_contents();
+		close_dialogue();
+		break;
+	case wimp_KEY_ESCAPE:
+		close_dialogue();
+		break;
+	default:
+		return FALSE;
+	}
+
 	return TRUE;
+}</code>
 
-if (key-&gt;i == wimp_ICON_WINDOW)
-	return TRUE;</code>
+<p>There is something else to remember if setting the <name>wimp_WINDOW_HOT_KEYS</name> flag in a window. The <name>wimp_w</name> handle in the <name>wimp_key</name> structure will be the handle of the window with input focus when the key was pressed, <em>not</em> the window with the interest in hot keys. This means that for a hot key press, the window will almost certainly belong to another task and so will need to be processed in the generic handler that we have just added.</p>
 
-<p>This will prevent the event library from passing any keypresses on via <swi>Wimp_ProcessKey</swi>, and if the code is compiled and run with this change in place, the <key>F12</key> should no longer work if the caret is in one of our icons. This clearly isn&rsquo;t a good thing, so correctly passing on unused keypresses is essential for any application which claims <name>Key Pressed</name> events.</p>
+<p>In general, this will not be too much of a problem since the vast majority of keyboard shortcuts used in applications will not be handled as hot keys. Consider pressing <key>F3</key> in the window of a text editor to save the file: the editor will need to know <em>which</em> file to save, and so will take the keypress on the first original window with input focus. The <name>wimp_WINDOW_HOT_KEYS</name> flag is only really useful for system-wide actions like <key>F12</key> which don&rsquo;t relate to a specific window.</p>
+</section>
 
-<p>Deciding which keys to pass on might seem difficult, but 
+<section>
+<title>An immediate reaction</title>
+
+<p>One possible improvement that we could make to our application is to have the calculations update as values are typed into the writable icons. For a calculator application this would give the user more immediate feedback, at the expense of some slightly non-standard behaviour.</p>
+
+<p>It should be remembered that in general, RISC&nbsp;OS applications do not act immediately on character input in this way. In a dialogue box, effects like this are likely to cause more confusion than actual advantages &ndash; and they should be avoided unless there is a <em>good</em> reason for them. We will therefore make the behaviour a configurable option, and have it default to off.</p>
+
+<p>It&rsquo;s also worth considering that while we can implement this feature fairly simply here in order to demonstrate a concept, implementing it <em>well</em> will in many cases be vary difficult to do. Effects like this are best used sparingly, when there is a real need for them!</p>
+
+<p>We will start, as usual, by updating the &ldquo;Main&rdquo; window template so that our application can see all of the keypresses within the writable icons, even if the Wimp handles them for us. There is very little to change: the validation string for each of the three writable icons should be updated so that the <name>K</name> command contains the N flag. This will make the full string &ldquo;Pptr_write;Ktan;A0-9.&rdquo;. Save the changed templates file.</p>
+
+<p>In the <file>c.win</file> file, we will start by adding another menu entry to the menu entry index constants, as seen in <reference id="list-key-input-all-const"/>.</p>
+
+<code id="list-key-input-all-const" lang="c" title="Updated menu entry index constants">/* Window Menu Entries. */
+
+#define WIN_MENU_DECIMAL1 0
+#define WIN_MENU_DECIMAL2 1
+#define WIN_MENU_DECIMAL3 2
+#define WIN_MENU_IMMEDIATE 3</code>
+
+<p>Armed with this, we can then define a new entry in the menu for toggling <menu>Immediate</menu> updates, as seen in <reference id="list-key-input-all-menu"/>. It will be operating separately from the three entries above it, which behave as a mutually-exclusive group, so we need to place a separator between them using a new <function>menu_separator()</function> function.</p>
+
+<p>If you&rsquo;re copying the changes by hand, note that the number of entries specified in the call to <function>menu_create()</function> has increased to four.</p>
+
+<code id="list-key-input-all-menu" lang="c" title="Defining the additional menu entry">/* Window Menu. */
+
+win_menu = menu_create(&quot;Example&quot;, 4);
+if (win_menu == NULL) {
+	error_report_error(&quot;Failed to create Main Menu&quot;);
+	return;
+}
+
+menu_entry(win_menu, WIN_MENU_DECIMAL1, &quot;1 Decimal place&quot;, NULL);
+menu_entry(win_menu, WIN_MENU_DECIMAL2, &quot;2 Decimal places&quot;, NULL);
+menu_entry(win_menu, WIN_MENU_DECIMAL3, &quot;3 Decimal places&quot;, NULL);
+menu_separator(win_menu, WIN_MENU_DECIMAL3);
+menu_entry(win_menu, WIN_MENU_IMMEDIATE, &quot;Immediate&quot;, NULL);</code>
+
+<p>The new <function>menu_separator()</function> function will need to be defined in <file>c.menu</file> as shown in <reference id="list-key-input-all-sep"/>, with a suitable prototype added to <file>h.menu</file>. All it has to do is set the <name>wimp_MENU_SEPARATE</name> flag in the entry&rsquo;s <variable>menu_flags</variable>, which tells the Wimp to place a dotted line below the entry.</p>
+
+<code id="list-key-input-all-sep" lang="c" title="Adding a separator to a menu entry">void menu_separator(wimp_menu *menu, int entry)
+{
+	wimp_menu_entry *definition = NULL;
+
+	if (menu == NULL)
+		return;
+
+	/* Update the menu entry definition. */
+
+	definition = menu->entries + entry;
+
+	definition-&gt;menu_flags |= wimp_MENU_SEPARATE;
+}</code>
+</section>
+
+<section>
+<title>Changing the behaviour</title>
+
+<p>Now that we have a menu entry to allow the user to choose between &lsquo;normal&rsquo; and &lsquo;immediate&rsquo; responses, we will need to keep track of their wishes and act accordingly. To do this, we will create a new <variable>win_immediate_update</variable> global variable in <file>c.win</file> as seen in <reference id="list-key-input-all-vars"/>.</p>
+
+<code id="list-key-input-all-vars" lang="c" title="Adding a global variable to track the behaviour">/* Global Variables */
+
+static wimp_w win_handle;
+static wimp_menu *win_menu;
+static wimp_menu *win_shape_menu;
+static osbool win_immediate_update = FALSE;</code>
+
+<p>This variable will be <name>FALSE</name> by default, but can be toggled to <name>TRUE</name> and back again using the new menu entry. To show the user the current state, we will update <function>win_set_menu()</function> to tick the menu entry as appropriate before the menu opens, as seen in <reference id="list-key-input-all-set"/>.</p>
+
+<code id="list-key-input-all-set" lang="c" title="We also need to set the Immediate tick when the menu opens">static void win_set_menu(wimp_w w, wimp_menu *menu, wimp_pointer *pointer)
+{
+	int places;
+
+	if (menu != win_menu)
+		return;
+
+	places = calc_get_places();
+
+	menus_tick_entry(win_menu, WIN_MENU_DECIMAL1, places == 1);
+	menus_tick_entry(win_menu, WIN_MENU_DECIMAL2, places == 2);
+	menus_tick_entry(win_menu, WIN_MENU_DECIMAL3, places == 3);
+	menus_tick_entry(win_menu, WIN_MENU_IMMEDIATE, win_immediate_update == TRUE);
+}</code>
+
+<p>To change the state of the new option, we can also update <function>win_menu_selection()</function> as seen in <reference id="list-key-input-all-select"/>.</p>
+
+<code id="list-key-input-all-select" lang="c" title="Detecting clicks on the Immediate menu entry">static void win_menu_selection(wimp_w window, wimp_menu *menu, wimp_selection *selection)
+{
+	if (menu != win_menu)
+		return;
+
+	switch (selection-&gt;items[0]) {
+	case WIN_MENU_DECIMAL1:
+		calc_set_format(1);
+		break;
+	case WIN_MENU_DECIMAL2:
+		calc_set_format(2);
+		break;
+	case WIN_MENU_DECIMAL3:
+		calc_set_format(3);
+		break;
+	case WIN_MENU_IMMEDIATE:
+		win_immediate_update = !win_immediate_update;
+		break;
+	}
+
+	win_update_all_calculations(CALC_DIMENSION_NONE);
+}</code>
+
+
+<!-- This isn't optimal, as any keypress will trigged a recalculation and refresh of the screen. -->
+
+<code id="list-key-input-all-keys" lang="c" title="">static osbool win_keypress(wimp_key *key)
+{
+	char			buffer[WIN_NUM_BUF_SIZE];
+	enum calc_dimension	target = CALC_DIMENSION_NONE;
+
+	/* Only allow Return, unless immediate update is on. */
+
+	if (key-&gt;c != wimp_KEY_RETURN &amp;&amp; (win_immediate_update == FALSE || (!isdigit(key-&gt;c) &amp;&amp;
+			key-&gt;c != wimp_KEY_BACKSPACE &amp;&amp; key-&gt;c != wimp_KEY_DELETE &amp;&amp; key-&gt;c != '.')))
+
+	/* We take the key but do nothing if the caret isn't in an icon. */
+
+	if (key-&gt;i == wimp_ICON_WINDOW)
+		return TRUE;
+
+	/* Copy the icon text, and identify the target dimension. */
+
+	icons_copy_text(win_handle, key-&gt;i, buffer, WIN_NUM_BUF_SIZE);
+
+	switch (key-&gt;i) {
+	case WIN_ICON_LENGTH_FIELD:
+		target = CALC_DIMENSION_LENGTH;
+		break;
+	case WIN_ICON_PERIMETER_FIELD:
+		target = CALC_DIMENSION_PERIMETER;
+		break;
+	case WIN_ICON_AREA_FIELD:
+		target = CALC_DIMENSION_AREA;
+		break;
+	}
+
+	/* Update the calculations. */
+
+	calc_set_dimension(target, buffer);
+
+	win_update_all_calculations((key-&gt;c == wimp_KEY_RETURN) ? CALC_DIMENSION_NONE : target);
+
+	return TRUE;
+}</code>
+
+
+
+<code id="list-key-input-all-calcs" lang="c" title="">static void win_update_all_calculations(enum calc_dimension avoid)
+{
+	char		*text = NULL;
+	int		index;
+	wimp_caret	caret;
+	wimp_icon_state	state;
+
+	/* Update the window data. */
+
+	text = calc_get_sides();
+	if (text != NULL) {
+		icons_strncpy(win_handle, WIN_ICON_SIDES_FIELD, text);
+		wimp_set_icon_state(win_handle, WIN_ICON_SIDES_FIELD, 0, 0);
+	}
+
+	text = calc_get_internal_angle();
+	if (text != NULL) {
+		icons_strncpy(win_handle, WIN_ICON_INT_ANGLE_FIELD, text);
+		wimp_set_icon_state(win_handle, WIN_ICON_INT_ANGLE_FIELD, 0, 0);
+	}
+
+	text = calc_get_length();
+	if (text != NULL &amp;&amp; avoid != CALC_DIMENSION_LENGTH) {
+		icons_strncpy(win_handle, WIN_ICON_LENGTH_FIELD, text);
+		wimp_set_icon_state(win_handle, WIN_ICON_LENGTH_FIELD, 0, 0);
+	}
+
+	text = calc_get_perimeter();
+	if (text != NULL &amp;&amp; avoid != CALC_DIMENSION_PERIMETER) {
+		icons_strncpy(win_handle, WIN_ICON_PERIMETER_FIELD, text);
+		wimp_set_icon_state(win_handle, WIN_ICON_PERIMETER_FIELD, 0, 0);
+	}
+
+	text = calc_get_area();
+	if (text != NULL &amp;&amp; avoid != CALC_DIMENSION_AREA) {
+		icons_strncpy(win_handle, WIN_ICON_AREA_FIELD, text);
+		wimp_set_icon_state(win_handle, WIN_ICON_AREA_FIELD, 0, 0);
+	}
+
+	/* Correct the caret position if required. */
+
+	if (xwimp_get_caret_position(&amp;caret) != NULL)
+		return;
+
+	if (caret.w != win_handle)
+		return;
+
+	state.w = caret.w;
+	state.i = caret.i;
+	if (xwimp_get_icon_state(&amp;state) != NULL)
+		return;
+
+	index = string_ctrl_strlen(state.icon.data.indirected_text.text);
+
+	if (caret.index &lt; index)
+		index = caret.index;
+
+	xwimp_set_caret_position(caret.w, caret.i, 0, 0, -1, index);
+}</code>
+
+<code id="list-key-input-all-shape" lang="c" title="The call to win_update_all_calculations() must be updated everywhere">static void win_set_shape(enum calc_shape shape)
+{
+	char *sprite = NULL;
+
+	/* Update the graphic. */
+
+	switch (shape) {
+	case CALC_SHAPE_SQUARE:
+		sprite = &quot;square&quot;;
+		break;
+	case CALC_SHAPE_CIRCLE:
+		sprite = &quot;circle&quot;;
+		break;
+	case CALC_SHAPE_TRIANGLE:
+		sprite = &quot;triangle&quot;;
+		break;
+	}
+
+	if (sprite != NULL) {
+		icons_strncpy(win_handle, WIN_ICON_SHAPE, sprite);
+		wimp_set_icon_state(win_handle, WIN_ICON_SHAPE, 0, 0);
+	}
+
+	/* Change the shape. */
+
+	calc_set_shape(shape);
+
+	/* Perform the shape calculations. */
+
+	win_update_all_calculations(CALC_DIMENSION_NONE);
+}</code>
+
+
 </section>
 </chapter>
 </manual>

@@ -219,7 +219,7 @@ event_add_window_open_event(win_handle, win_open_window_request);</code>
 <p>However, clicking on the <icon>Close</icon> button still doesn&rsquo;t work &ndash; and there&rsquo;s another potential annoyance with this approach, too. We&rsquo;ve said that <em>every</em> window needs to respond to <name>Open_Window_Request</name> events, and since our event handler is registered to this one specific window handle, we would need to register a handler for each window that our application uses. This isn&rsquo;t impossible, but it will be a lot of duplication for something that&rsquo;s so standard.</p>
 </section>
 
-<section>
+<section id="sect-windows-generic">
 <title>Generic event handlers</title>
 
 <p>If we&rsquo;re using SFLib&rsquo;s event library to dispatch Wimp events, then there&rsquo;s another way to handle these events. In <file>c.main</file>, the events returned by our application&rsquo;s repeated calls to <swi>Wimp_Poll</swi> are sent out to the appropriate pieces of code by the library. Each time the SWI returns with details of a new event, it is passed on to the <function>event_process_event()</function> function and this tries to find a handler which is interested. At present, the code looks like this:</p>
