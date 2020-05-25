@@ -335,7 +335,7 @@ menu_entry(win_menu, WIN_MENU_DECIMAL3, &quot;3 Decimal places&quot;, NULL);</co
 	menus_tick_entry(win_menu, WIN_MENU_DECIMAL3, places == 3);
 }</code>
 
-<p>The final piece of the jigsaw is the <name>Menu Selection</name> event handler in <function>win_menu_selection()</function>, which can be seen in <reference id="list-menus-window-select"/>. This sets the required number of decimal places in the calc module, before calling <function>win_update_all_calculations()</function> to update the display fields with the new settings. Finally <function>win_set_menu()</function> is called, so that the tick can be updated before the menu is reopened if <mouse>Adjust</mouse> was clicked.</p>
+<p>The final piece of the jigsaw is the <name>Menu_Selection</name> event handler in <function>win_menu_selection()</function>, which can be seen in <reference id="list-menus-window-select"/>. This sets the required number of decimal places in the calc module, before calling <function>win_update_all_calculations()</function> to update the display fields with the new settings. Finally <function>win_set_menu()</function> is called, so that the tick can be updated before the menu is reopened if <mouse>Adjust</mouse> was clicked.</p>
 
 <code id="list-menus-window-select" lang="c" title="Processing selections from the main menu">static void win_menu_selection(wimp_menu *menu, wimp_selection *selection)
 {
@@ -379,7 +379,7 @@ menu_entry(win_menu, WIN_MENU_DECIMAL3, &quot;3 Decimal places&quot;, NULL);</co
 	}
 }</code>
 
-<p>Both menus currently contain three entries, of which one can be ticked at any given time. However, whilst both of the two <name>Menu Selection</name> handlers &ndash; in <function>win_menu_selection()</function> and <function>win_shape_menu_selection()</function> &ndash; call their respective routines to update the ticks in case the menu is reopened by an <mouse>Adjust</mouse> click, this isn&rsquo;t true of when the menus are initially opened.</p>
+<p>Both menus currently contain three entries, of which one can be ticked at any given time. However, whilst both of the two <name>Menu_Selection</name> handlers &ndash; in <function>win_menu_selection()</function> and <function>win_shape_menu_selection()</function> &ndash; call their respective routines to update the ticks in case the menu is reopened by an <mouse>Adjust</mouse> click, this isn&rsquo;t true of when the menus are initially opened.</p>
 
 <p>Before the main menu, whose pointer is in <variable>win_menu</variable> is opened with a call to <function>menu_open()</function>, there is a call made to <function>win_set_menu()</function> first to ensure that the tick is in the correct place. However, when the pop-up menu whose handle is in <variable>win_shape_menu</variable> is opened, there is no set-up done before <function>menu_open_popup()</function> is called. Instead the code relies on the fact that <function>win_set_shape_menu()</function> was called by the <function>win_initialise()</function> function, and will be left up-to-date each time a selection is made.</p>
 

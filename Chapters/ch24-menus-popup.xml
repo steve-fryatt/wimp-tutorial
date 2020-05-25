@@ -44,7 +44,7 @@
 
 <image id="fig-menus-popup-template" file="menus-popup-template.png" title="Updating our window template for a pop-up menu"/>
 
-<p>It&rsquo;s worth having a look at the pop-up menu icon (number 1) before we move on, because it uses a combination of options that we haven&rsquo;t yet met. The button has a type of <name>wimp_BUTTON_CLICK</name> so that clicks are reported back to our application through the usual <name>Mouse Click</name> event. It uses a pair of standard sprites from the Wimp Sprite Pool &ndash; &ldquo;gright&rdquo; and &ldquo;pgright&rdquo; &ndash; which are supplied by the system for this purpose and represent raised and pressed versions of a pop-up menu button. The name comes from history: the original RISC&nbsp;OS&nbsp;3.1 design was a flat, grey arrow which pointed to the right; the &ldquo;p&rdquo; is a standard convention which indicates &ldquo;pressed&rdquo;.</p>
+<p>It&rsquo;s worth having a look at the pop-up menu icon (number 1) before we move on, because it uses a combination of options that we haven&rsquo;t yet met. The button has a type of <name>wimp_BUTTON_CLICK</name> so that clicks are reported back to our application through the usual <name>Mouse_Click</name> event. It uses a pair of standard sprites from the Wimp Sprite Pool &ndash; &ldquo;gright&rdquo; and &ldquo;pgright&rdquo; &ndash; which are supplied by the system for this purpose and represent raised and pressed versions of a pop-up menu button. The name comes from history: the original RISC&nbsp;OS&nbsp;3.1 design was a flat, grey arrow which pointed to the right; the &ldquo;p&rdquo; is a standard convention which indicates &ldquo;pressed&rdquo;.</p>
 
 <p>Despite containing only a sprite, the icon is configured for indirected text and sprite but the text field is left as an empty string. This allows a validation string to be specified, because the effect that we are after can only be achieved through the use of validation commands. The <name>S</name> command that we met in <reference id="chap-icons-sprite"/> is used to specify the two sprites, whilst the <name>R</name> command from <reference id="sect-icons-indirect-format"/> is used to make the icon a 3D &lsquo;clickable&rsquo; button which responds to the mouse. The icon has no border, however (the <name>wimp_ICON_BORDER</name> flag is <em>not</em> set), so no 3D border is plotted; when the button &lsquo;clicks&rsquo;, the only effect seen by the user is the sprite changing from unselected to selected and back again. The complete validation string is <code>R5;Sgright,pgright</code>.</p>
 
@@ -93,7 +93,7 @@
 	return menu;
 }</code>
 
-<p>This is a little more complex than positioning an iconbar menu. The <cite>Style Guide</cite> states that a pop-up menu must &ldquo;appear immediately to the right of the button the user clicked on to display it&rdquo;, so the mouse coordinates in the <name>wimp_pointer</name> structure supplied by the <name>Mouse Click</name> event are of little use to us. The structure also contains the <name>wimp_w</name> and <name>wimp_i</name> handles of the button that was clicked on, but we don&rsquo;t know where that button is on screen.</p>
+<p>This is a little more complex than positioning an iconbar menu. The <cite>Style Guide</cite> states that a pop-up menu must &ldquo;appear immediately to the right of the button the user clicked on to display it&rdquo;, so the mouse coordinates in the <name>wimp_pointer</name> structure supplied by the <name>Mouse_Click</name> event are of little use to us. The structure also contains the <name>wimp_w</name> and <name>wimp_i</name> handles of the button that was clicked on, but we don&rsquo;t know where that button is on screen.</p>
 
 <p>The routine starts by calling <swi>Wimp_GetWindowState</swi> to find the scroll offsets of the window and the coordinates of its visible area relative to the screen origin, before calling <swi>Wimp_GetIconState</swi> to retrieve the location of the target icon in terms of the window&rsquo;s work area. Now that we know where the icon is within its window, and also where that window is on screen, we can combine the two pieces of information to work out where the icon is relative to the screen origin.</p>
 
@@ -148,7 +148,7 @@ menu_entry(win_shape_menu, WIN_MENU_SHAPE_SQUARE, &quot;Square&quot;, NULL);</co
 		menu_open_popup(win_shape_menu, pointer, win_shape_menu_selection);
 }</code>
 
-<p>The code which was selecting the required shape based on clicks on the radio icons can be converted into a <name>Menu Selection</name> event handler in <function>win_shape_menu_selection()</function>, shown in <reference id="list-menus-popup-select"/>.</p>
+<p>The code which was selecting the required shape based on clicks on the radio icons can be converted into a <name>Menu_Selection</name> event handler in <function>win_shape_menu_selection()</function>, shown in <reference id="list-menus-popup-select"/>.</p>
 
 <code id="list-menus-popup-select" lang="c" title="The new Menu Selection event handler">static void win_shape_menu_selection(wimp_menu *menu, wimp_selection *selection)
 {

@@ -26,7 +26,7 @@
 <section>
 <title>Key pressed events</title>
 
-<p>To be able to detect when <key>Return</key> is pressed, our application will need to listen out for <name>Key Pressed</name> events being returned from <swi>Wimp_Poll</swi>. The Wimp sends these with a reason code of <name>wimp_KEY_PRESSED</name> when a key is pressed whilst the caret is in one of our windows, and supplies data in a <name>wimp_key</name> structure which OSLib defines as follows.</p>
+<p>To be able to detect when <key>Return</key> is pressed, our application will need to listen out for <name>Key_Pressed</name> events being returned from <swi>Wimp_Poll</swi>. The Wimp sends these with a reason code of <name>wimp_KEY_PRESSED</name> when a key is pressed whilst the caret is in one of our windows, and supplies data in a <name>wimp_key</name> structure which OSLib defines as follows.</p>
 
 <code lang="c">struct wimp_key {
 	wimp_w		w;
@@ -95,7 +95,7 @@ typedef struct wimp_key wimp_key;</code>
 <section>
 <title>A keypress handler</title>
 
-<p>To make use of the <name>Key Pressed</name> events, we will need a handler for them. One can be seen in <reference id="list-key-input-handler"/>; the <code>#define</code> will need to go at the top of the file.</p>
+<p>To make use of the <name>Key_Pressed</name> events, we will need a handler for them. One can be seen in <reference id="list-key-input-handler"/>; the <code>#define</code> will need to go at the top of the file.</p>
 
 <code id="list-key-input-handler" lang="c" title="The Key Pressed event handler">#define WIN_NUM_BUF_SIZE 12
 
@@ -174,7 +174,7 @@ event_set_window_icon_popup_action(win_handle, WIN_ICON_SHAPE_POPUP, FALSE, win_
 
 <p>When a key is pressed, the Wimp will initially give the details to the task which owns window with input focus. If that task fails to process the keypress, however, then the Wimp will pass the keypress on to any other windows which have expressed an interest in hot keys, starting from the top of the window stack and working down. To express interest, a window should have its <name>wimp_WINDOW_HOT_KEYS</name> flag set &ndash; we introduced this briefly in <reference id="sect-window-theory-behaviour"/>.</p>
 
-<p>In order to make hot keys work, the Wimp requires applications which claim the <name>Key Pressed</name> event to pass on any keyspresses which they do not use. This is done using the <swi>Wimp_ProcessKey</swi> SWI, which simply takes the code of the keypress to be passed on:</p>
+<p>In order to make hot keys work, the Wimp requires applications which claim the <name>Key_Pressed</name> event to pass on any keyspresses which they do not use. This is done using the <swi>Wimp_ProcessKey</swi> SWI, which simply takes the code of the keypress to be passed on:</p>
 
 <code lang="c">extern void wimp_process_key(
 	wimp_key_no c

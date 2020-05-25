@@ -136,7 +136,7 @@ wimp_set_icon_state(win_handle, WIN_ICON_OPTION3, 0, wimp_ICON_SELECTED);</code>
 <section id="sect-icons-radio-sflib">
 <title>Icon-level event handlers</title>
 
-<p>One potential problem with the fix for <menu>Adjust</menu> clicks that we implemented in the previous section is that it requires us to have a <name>Mouse Click</name> event handler in place. Whilst we do have one for our window, this might not always be the case and, unless a change in state should trigger another action (such as a display update, or shading part of a dialogue box), it could be better to leave the Wimp to handle the user interaction with the icons until we are ready to read the settings back. Additionally, whilst simple, the code would have to be duplicated every single time we use radio icons in a window.</p>
+<p>One potential problem with the fix for <menu>Adjust</menu> clicks that we implemented in the previous section is that it requires us to have a <name>Mouse_Click</name> event handler in place. Whilst we do have one for our window, this might not always be the case and, unless a change in state should trigger another action (such as a display update, or shading part of a dialogue box), it could be better to leave the Wimp to handle the user interaction with the icons until we are ready to read the settings back. Additionally, whilst simple, the code would have to be duplicated every single time we use radio icons in a window.</p>
 
 <p>To improve things, we can make use of a feature of SFLib&rsquo;s event library which we have so far not mentioned. The <function>win_mouse_click()</function> event handler that we have created is in fact a <intro>window-level event handler</intro>, and before it is called, the event dispatcher will look for any <intro>icon-level event handlers</intro> which are registered for the target window and icon.</p>
 
@@ -160,7 +160,7 @@ wimp_set_icon_state(win_handle, WIN_ICON_OPTION3, 0, wimp_ICON_SELECTED);</code>
 event_add_window_icon_radio(win_handle, WIN_ICON_OPTION2, FALSE);
 event_add_window_icon_radio(win_handle, WIN_ICON_OPTION3, FALSE);</code>
 
-<p>We have set <variable>complete</variable> to <name>FALSE</name>, since we do still wish to receive window-level <name>Mouse Click</name> events for these icons in order to be able to update the status field. The changes to the code can be found in <reference id="dl-icons-radio-sflib"/>.</p> 
+<p>We have set <variable>complete</variable> to <name>FALSE</name>, since we do still wish to receive window-level <name>Mouse_Click</name> events for these icons in order to be able to update the status field. The changes to the code can be found in <reference id="dl-icons-radio-sflib"/>.</p> 
 
 <download id="dl-icons-radio-sflib" file="SFLibRadioIcons" title="Using SFLib to Handle Adjust Clicks" compatibility="none"/>
 </section>

@@ -22,7 +22,7 @@
 <section>
 <p>In the <reference id="chap-menus-intro">last chapter</reference> we introduced the concept of menus, and added an iconbar menu to our application. On the way, we implemented a <window>program information</window> window and a button to take users to our website &ndash; but the menu itself remained unable to pass on details of selections made by the user.</p>
 
-<p>It is now time to look at the <name>Menu Selection</name> event, and investigate how we might allow our application to start to respond to it.</p>
+<p>It is now time to look at the <name>Menu_Selection</name> event, and investigate how we might allow our application to start to respond to it.</p>
 </section>
 
 <section>

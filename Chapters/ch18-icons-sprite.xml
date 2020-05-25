@@ -145,7 +145,7 @@
 <section id="sect-icons-sprite-get">
 <title>Reading an icon&rsquo;s state</title>
 
-<p>If the Wimp keeps track of clicks on our option icon, then how does the application know whether or not it is ticked? In fact the <name>wimp_BUTTON_RADIO</name> button type does return clicks to the task, so we could register an event handler for <name>Mouse Click</name> events as we saw in <reference id="chap-interact-click"/> and track the changes. This isn&rsquo;t ideal, though: it&rsquo;s a lot of effort, especially if we have many such icons in our application.</p>
+<p>If the Wimp keeps track of clicks on our option icon, then how does the application know whether or not it is ticked? In fact the <name>wimp_BUTTON_RADIO</name> button type does return clicks to the task, so we could register an event handler for <name>Mouse_Click</name> events as we saw in <reference id="chap-interact-click"/> and track the changes. This isn&rsquo;t ideal, though: it&rsquo;s a lot of effort, especially if we have many such icons in our application.</p>
 
 <p>In fact, the Wimp will once again do the work for us. As hinted at above, the icon is being toggled between two states: <intro>selected</intro> and <intro>deselected</intro>. The two parameters given to the <name>S</name> validation command actually apply to the deselected and selected states respectively, and we can read the current state back from the Wimp when required. Exactly when we do this depends on the application: we might do it each time there is a click on the icon if an immediate response is required, whereas in a dialogue box, we would probably only check when the user clicks on the <icon>OK</icon> button.</p>
 
@@ -273,7 +273,7 @@ typedef struct wimp_icon_state wimp_icon_state;</code>
 
 <p>and we can see that this contains the <name>wimp_icon</name> structure that we are already using to define icons. This means that having got an icon&rsquo;s state, we can easily read the icon data back and examine or process it as required.</p>
 
-<p>Putting this into practice, we can reinstate our <function>win_mouse_click()</function> <name>Mouse Click</name> event handler as in <reference id="list-icons-sprite-option-click"/></p>
+<p>Putting this into practice, we can reinstate our <function>win_mouse_click()</function> <name>Mouse_Click</name> event handler as in <reference id="list-icons-sprite-option-click"/></p>
 
 <code id="list-icons-sprite-option-click" lang="c" title="A Mouse Cick event handler for radio icons">static void win_mouse_click(wimp_pointer *pointer)
 {
@@ -358,7 +358,7 @@ win_info_icon_handle = win_create_info_icon(-256, win_info_icon_text, "");</code
 
 <code id="list-icons-sprite-radio-valid" lang="c" title="The S validation command for radio icons">icon_definition.icon.data.indirected_text_and_sprite.validation = "Sradiooff,radioon";</code>
 
-<p>In addition to these changes, we will also need to update the <name>Mouse Click</name> event handler, so that it can recognise the three distinct options now available. We could read the state of each icon individually using <swi>Wimp_GetIconState</swi> as we did with the single option icon, and this might still be the best option in a dialogue box when we&rsquo;re reading the state some time after the user has set it up. However, in this case, we want to react immediately and can therefore use the fact that with radio icons in an ESG, the last icon to be clicked by the user is almost guaranteed to be selected.</p>
+<p>In addition to these changes, we will also need to update the <name>Mouse_Click</name> event handler, so that it can recognise the three distinct options now available. We could read the state of each icon individually using <swi>Wimp_GetIconState</swi> as we did with the single option icon, and this might still be the best option in a dialogue box when we&rsquo;re reading the state some time after the user has set it up. However, in this case, we want to react immediately and can therefore use the fact that with radio icons in an ESG, the last icon to be clicked by the user is almost guaranteed to be selected.</p>
 
 <p>This makes the following alternative approach seen in <reference id="list-icons-sprite-radio-click"/> possible.</p>
 

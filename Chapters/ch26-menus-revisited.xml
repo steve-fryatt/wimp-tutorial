@@ -28,7 +28,7 @@
 
 <p>One of the biggest probems with the Wimp&rsquo;s native support for menus is the somewhat piecemeal approach used. It is left up to the application to open create and open menus using <swi>Wimp_CreateMenu</swi>, and to re-open them if selections are made with <mouse>Adjust</mouse>. In addition, as we have already seen, it is also the responsibility of the application to ensure that the menu is correctly set up before <swi>Wimp_CreateMenu</swi> is called.</p>
 
-<p>Selections by the user are reported through the <name>Menu Selection</name> event, but closure of a menu is harder to pin down. If a selection is made, the application can assume that the menu has closed if it does not take action to reopen it; if a menu closes for any other reason, then it is instead reported by the <name>Message_MenusDeleted</name> message.</p>
+<p>Selections by the user are reported through the <name>Menu_Selection</name> event, but closure of a menu is harder to pin down. If a selection is made, the application can assume that the menu has closed if it does not take action to reopen it; if a menu closes for any other reason, then it is instead reported by the <name>Message_MenusDeleted</name> message.</p>
 
 <p>In an attempt to improve this situation, SFLib&rsquo;s event library provides a range of support for menus. Menus can be attached to windows or individual icons, and they are opened automatically when requested by the user. To allow an application to interact with its menus, the library creates the four window-level &lsquo;pseudo-events&rsquo; listed in <reference id="table-menus-revisited-events"/>, which are reported to the window where the menu is attached.</p>
 
@@ -39,11 +39,11 @@
 </columns>
 <row><col>Prepare</col><col>Raised when a menu is about to be opened or reopened using <swi>Wimp_CreateMenu</swi></col></row>
 <row><col>Warning</col><col>Raised when a <name>Message_SubmenuWarning</name> is received for a menu</col></row>
-<row><col>Selection</col><col>Raised when a selection is received from a <name>Menu Selection</name> event</col></row>
-<row><col>Close</col><col>Raised when a menu is closed, following a <name>Menu Selection</name> event or on receipt of a <name>Message_MenusDeleted</name></col></row>
+<row><col>Selection</col><col>Raised when a selection is received from a <name>Menu_Selection</name> event</col></row>
+<row><col>Close</col><col>Raised when a menu is closed, following a <name>Menu_Selection</name> event or on receipt of a <name>Message_MenusDeleted</name></col></row>
 </table>
 
-<p>Using these &lsquo;pseudo-events&rsquo;, an application can streamline its menu support. It is guaranteed to receive a <name>Menu Prepare</name> event before a menu opens &ndash; which allows it to allocate any resources needed and update the menu state. It will receive a <name>Menu Selection</name> event whenever the user makes a selection, which might be followed by another <name>Menu Prepare</name> event if <mouse>Adjust</mouse> was used. Finally, whether or not a selection was made, it will receive a single <name>Menu Close</name> event when the menu is eventually closed, so that any resources claimed during the <name>Menu Prepare</name> event can be released again. The <name>Menu Warning</name> events are raised whenever a <name>Message_SubmenuWarning</name> is received for a menu; we will be meeting these later on.</p>
+<p>Using these &lsquo;pseudo-events&rsquo;, an application can streamline its menu support. It is guaranteed to receive a <name>Menu Prepare</name> event before a menu opens &ndash; which allows it to allocate any resources needed and update the menu state. It will receive a <name>Menu_Selection</name> event whenever the user makes a selection, which might be followed by another <name>Menu Prepare</name> event if <mouse>Adjust</mouse> was used. Finally, whether or not a selection was made, it will receive a single <name>Menu Close</name> event when the menu is eventually closed, so that any resources claimed during the <name>Menu Prepare</name> event can be released again. The <name>Menu Warning</name> events are raised whenever a <name>Message_SubmenuWarning</name> is received for a menu; we will be meeting these later on.</p>
 
 <p>In addition to the window-level events listed above, the library also provides support for pop-up menus. Simple menus can be left to the library to look after, or, if more interactivity is required, an icon-level event can be generated whenever a new selection is made. For truly custom menu support, it is possible for an application to manage pop-up menus itself via the standard window-level events.</p>
 
@@ -53,7 +53,7 @@
 <section>
 <title>Updating the iconbar</title>
 
-<p>The easiest menu to update for use with SFLib&rsquo;s menu events will be the one on the iconbar, since this is self-contained. At present, we open the menu ourselves with a call to <function>menu_open_ibar()</function>, passing it a pointer to the <function>ibar_menu_selection()</function> event hander for returning any <name>Menu Selection</name> events which are raised.</p>
+<p>The easiest menu to update for use with SFLib&rsquo;s menu events will be the one on the iconbar, since this is self-contained. At present, we open the menu ourselves with a call to <function>menu_open_ibar()</function>, passing it a pointer to the <function>ibar_menu_selection()</function> event hander for returning any <name>Menu_Selection</name> events which are raised.</p>
 
 <p>In keeping with the <cite>Style Guide</cite>, the event library allows us to add a single menu to any window in our application &ndash; this will then be displayed whenever the <mouse>Menu</mouse> button is clicked anywhere in that window. A menu is added by calling the <function>event_add_window_menu()</function>, which is defined as follows:</p>
 
@@ -68,7 +68,7 @@
 
 <p>to associate our iconbar menu (whose handle is held in the <variable>ibar_menu</variable> variable) with the <name>wimp_ICON_BAR</name> window.</p>
 
-<p>If the event library has opened a menu over our window as a result of this association, then it will start to return the appropriate &lsquo;pseudo-events&rsquo; to any event handlers that we choose to register. We are interested in <name>Menu Selection</name> events, so we can register a handler using the <function>event_add_window_menu_selection()</function> function.</p>
+<p>If the event library has opened a menu over our window as a result of this association, then it will start to return the appropriate &lsquo;pseudo-events&rsquo; to any event handlers that we choose to register. We are interested in <name>Menu_Selection</name> events, so we can register a handler using the <function>event_add_window_menu_selection()</function> function.</p>
 
 <code lang="c">osbool event_add_window_menu_selection(
 	wimp_w w,
@@ -79,7 +79,7 @@
 
 <code lang="c">event_add_window_menu_selection(wimp_ICON_BAR, ibar_menu_selection);</code>
 
-<p>to associate our existing <name>Menu Selection</name> event handler with the library&rsquo;s event.</p>
+<p>to associate our existing <name>Menu_Selection</name> event handler with the library&rsquo;s event.</p>
 
 <p>Putting all of the changes together, we end up with a new <function>ibar_initialise()</function> function as shown in <reference id="list-menus-revisited-ibar-init"/>.</p>
 
@@ -182,7 +182,7 @@
 
 <p>We saw in the last section that SFLib&rsquo;s event library allowed a menu to be associated with our application&rsquo;s iconbar icon, so that clicking <mouse>Menu</mouse> over the icon opened the menu without our code having to do anything. This support extends to windows, so we can associate our main menu &ndash; the one with the decimal place options &ndash; with the main window of our application in a similar way.</p>
 
-<p>There is a difference, however, because unlike the iconbar menu, our main menu requires setting up using the <function>win_set_menu()</function> before it is opened on screen. Fortunately, the library provides a <name>Menu Prepare</name> &lsquo;pseudo-event&rsquo; to enable us to do this. In a similar way to the <name>Menu Selection</name> event that we have alsready seen, an event handler can be registered with the <name>Menu Prepare</name> event using the <function>event_add_window_menu_prepare()</function> function. This is defined as</p>
+<p>There is a difference, however, because unlike the iconbar menu, our main menu requires setting up using the <function>win_set_menu()</function> before it is opened on screen. Fortunately, the library provides a <name>Menu Prepare</name> &lsquo;pseudo-event&rsquo; to enable us to do this. In a similar way to the <name>Menu_Selection</name> event that we have alsready seen, an event handler can be registered with the <name>Menu Prepare</name> event using the <function>event_add_window_menu_prepare()</function> function. This is defined as</p>
 
 <code lang="c">osbool event_add_window_menu_prepare(
 	wimp_w w,
@@ -198,7 +198,7 @@ event_add_window_menu(win_handle, win_menu);
 event_add_window_menu_prepare(win_handle, win_set_menu);
 event_add_window_menu_selection(win_handle, win_menu_selection);</code>
 
-<p>As with the iconbar menu in <reference id="list-menus-revisited-ibar-init"/>, we associate the menu handle with the window, and then register <name>Menu Prepare</name> and <name>Menu Selection</name> event handlers. Our existing <function>win_set_menu()</function> and <function>win_menu_selection()</function> functions can be used, with some modifications &ndash; those required to <function>win_set_menu()</function> can be seen in <reference id="list-menus-revisited-main-set"/>.</p>
+<p>As with the iconbar menu in <reference id="list-menus-revisited-ibar-init"/>, we associate the menu handle with the window, and then register <name>Menu Prepare</name> and <name>Menu_Selection</name> event handlers. Our existing <function>win_set_menu()</function> and <function>win_menu_selection()</function> functions can be used, with some modifications &ndash; those required to <function>win_set_menu()</function> can be seen in <reference id="list-menus-revisited-main-set"/>.</p>
 
 <code id="list-menus-revisited-main-set" lang="c" title="Preparing the main menu for display">static void win_set_menu(wimp_w w, wimp_menu *menu, wimp_pointer *pointer)
 {
@@ -214,11 +214,11 @@ event_add_window_menu_selection(win_handle, win_menu_selection);</code>
 	menus_tick_entry(win_menu, WIN_MENU_DECIMAL3, places == 3);
 }</code>
 
-<p>The main changes are to the parameters taken by the function: as with the <name>Menu Selection</name> handler that we saw <reference id="list-menus-revisited-ibar-select">above</reference>, the handler for <name>Menu Prepare</name> events takes the handle of the window over which the menu was opened in <variable>w</variable> and a pointer to the <name>wimp_menu</name> block for the menu in <variable>*menu</variable>.</p>
+<p>The main changes are to the parameters taken by the function: as with the <name>Menu_Selection</name> handler that we saw <reference id="list-menus-revisited-ibar-select">above</reference>, the handler for <name>Menu Prepare</name> events takes the handle of the window over which the menu was opened in <variable>w</variable> and a pointer to the <name>wimp_menu</name> block for the menu in <variable>*menu</variable>.</p>
 
-<p>The third parameter, <variable>*pointer</variable>, is a pointer to a <name>wimp_pointer</name> block. If the handler is being called when a menu first opens due to a <mouse>Menu</mouse> click, then this points to the block returned by the Wimp in the original <name>Mouse Click</name> event. When the handler is subsequently called before the menu is re-opened due to a selection being made with <mouse>Adjust</mouse>, the pointer will be <name>NULL</name>. Our application can use this to determine whether the menu is newly opening, or simply remaining on screen. This distinction doesn&rsquo;t matter to us, so we simply check the handle of the menu to make sure that it is the main menu, and then update the three ticks as we previously did.</p>
+<p>The third parameter, <variable>*pointer</variable>, is a pointer to a <name>wimp_pointer</name> block. If the handler is being called when a menu first opens due to a <mouse>Menu</mouse> click, then this points to the block returned by the Wimp in the original <name>Mouse_Click</name> event. When the handler is subsequently called before the menu is re-opened due to a selection being made with <mouse>Adjust</mouse>, the pointer will be <name>NULL</name>. Our application can use this to determine whether the menu is newly opening, or simply remaining on screen. This distinction doesn&rsquo;t matter to us, so we simply check the handle of the menu to make sure that it is the main menu, and then update the three ticks as we previously did.</p>
 
-<p>The next piece of code to be updated is the <name>Menu Selection</name> event handler, which will follow the same format as the one that we updated for the iconbar menu. The changes can be seen in <reference id="list-menus-revisited-main-select"/>: the <variable>w</variable> parameter has been added, and we check that the correct menu pointer is in <variable>*menu</variable>. There is also no need to call <function>win_set_menu()</function> before returning, as the event library will do this for us automatically.</p>
+<p>The next piece of code to be updated is the <name>Menu_Selection</name> event handler, which will follow the same format as the one that we updated for the iconbar menu. The changes can be seen in <reference id="list-menus-revisited-main-select"/>: the <variable>w</variable> parameter has been added, and we check that the correct menu pointer is in <variable>*menu</variable>. There is also no need to call <function>win_set_menu()</function> before returning, as the event library will do this for us automatically.</p>
 
 <code id="list-menus-revisited-main-select" lang="c" title="Handling selections from the main menu">static void win_menu_selection(wimp_w window, wimp_menu *menu, wimp_selection *selection)
 {
@@ -281,7 +281,7 @@ event_add_window_menu_selection(win_handle, win_menu_selection);</code>
 <code lang="c">event_add_window_icon_popup(win_handle, WIN_ICON_SHAPE_POPUP,
 		win_shape_menu, WIN_ICON_SHAPE_FIELD, NULL);</code>
 
-<p>So far, this has associated the pop-up menu with the icon, but our application will still receive events via the usual window-level event handlers. If we had passed <name>wimp_ICON_WINDOW</name> in the <variable>field</variable> parameter, then the menu would produce the four &lsquo;pseudo-events&rsquo;; since we have specified a field icon, our application will only receive <name>Menu Selection</name> events.</p>
+<p>So far, this has associated the pop-up menu with the icon, but our application will still receive events via the usual window-level event handlers. If we had passed <name>wimp_ICON_WINDOW</name> in the <variable>field</variable> parameter, then the menu would produce the four &lsquo;pseudo-events&rsquo;; since we have specified a field icon, our application will only receive <name>Menu_Selection</name> events.</p>
 
 <p>As we have provided a field icon, we can simplify things further by using the <function>event_set_window_icon_popup_action()</function> to change the behaviour of the menu; this is defined as follows:</p>
 
@@ -310,16 +310,16 @@ event_add_window_menu_selection(win_handle, win_menu_selection);</code>
 <row>
 <col><name>FALSE</name></col>
 <col><name>NULL</name></col>
-<col>The library will handle the update of the pop-up menu and field, but selections will be reported to the application through the window-level <name>Menu Selection</name> event.</col>
+<col>The library will handle the update of the pop-up menu and field, but selections will be reported to the application through the window-level <name>Menu_Selection</name> event.</col>
 </row>
 <row>
 <col><name>FALSE</name></col>
 <col>Function Pointer</col>
-<col>The library will handle the update of the pop-up menu and field, but selections will initially be reported to the application through the icon-level pop-up menu selection event. If its handler returns <name>FALSE</name> to indicate &ldquo;not complete&rdquo; a window-level <name>Menu Selection</name> event will then be raised.</col>
+<col>The library will handle the update of the pop-up menu and field, but selections will initially be reported to the application through the icon-level pop-up menu selection event. If its handler returns <name>FALSE</name> to indicate &ldquo;not complete&rdquo; a window-level <name>Menu_Selection</name> event will then be raised.</col>
 </row>
 </table>
 
-<p>In the case of our menu, although we want to leave the event library to sort out its operation, we still need to know when a selection has been made so that we can update the shape that is on display. We could do this using the window-level <name>Menu Selection</name> events, but since we already have a separate function to process selections from the pop-up menu, we will register this as an icon-level handler as follows:</p>
+<p>In the case of our menu, although we want to leave the event library to sort out its operation, we still need to know when a selection has been made so that we can update the shape that is on display. We could do this using the window-level <name>Menu_Selection</name> events, but since we already have a separate function to process selections from the pop-up menu, we will register this as an icon-level handler as follows:</p>
 
 <code lang="c">event_set_window_icon_popup_action(win_handle, WIN_ICON_SHAPE_POPUP,
 		FALSE, win_shape_menu_selection);</code>
@@ -339,7 +339,7 @@ event_add_window_menu_selection(win_handle, win_menu_selection);</code>
 	wimp_i i
 );</code>
 
-<p>Putting these changes together results in the amendments to the <function>win_initialise()</function> function shown in <reference id="list-menus-revisited-popup-init"/>. In addition to registering the pop-up menu and its handler, it initialises the menu to show the sqaure. Note that the <name>Mouse Click</name> handler is no longer being registered; since both menus are now displayed automatically, we no longer require the <function>win_mouse_click()</function> function and have therefore deleted it from the code.</p>
+<p>Putting these changes together results in the amendments to the <function>win_initialise()</function> function shown in <reference id="list-menus-revisited-popup-init"/>. In addition to registering the pop-up menu and its handler, it initialises the menu to show the sqaure. Note that the <name>Mouse_Click</name> handler is no longer being registered; since both menus are now displayed automatically, we no longer require the <function>win_mouse_click()</function> function and have therefore deleted it from the code.</p>
 
 <code id="list-menus-revisited-popup-init" lang="c" title="Registering the pop-up menu in win_initialise()">/* Register event handlers. */
 
@@ -383,7 +383,7 @@ event_set_window_icon_popup_selection(win_handle, WIN_ICON_SHAPE_POPUP, WIN_MENU
 <section>
 <title>Tidying up</title>
 
-<p>With the changes above in place, all of the menus in our application are being handled by SFLib&rsquo;s event library &ndash; which means that the support for <name>Menu Selection</name> events and <name>Message_MenusDeleted</name> in <file>c.menus</file> is no longer required.</p>
+<p>With the changes above in place, all of the menus in our application are being handled by SFLib&rsquo;s event library &ndash; which means that the support for <name>Menu_Selection</name> events and <name>Message_MenusDeleted</name> in <file>c.menus</file> is no longer required.</p>
 
 <p>To tidy up, we can remove the calls to the <function>menu_initialise()</function> and <function>menu_process_event()</function> functions from <file>c.main</file>, and then delete them from <file>c.menus</file>. The <function>menu_message_menus_deleted()</function> function is no longer required, either. Finally, the <function>menu_open()</function>, <function>menu_open_ibar()</function>, <function>menu_open_popup()</function> and <function>menu_set_popup_menu()</function> functions are not required, since the library does these actions for us.</p>
 

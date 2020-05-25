@@ -354,7 +354,7 @@ free(window_definition);</code>
 <section id ="sect-menus-into-website">
 <title>A website link</title>
 
-<p>Before moving on to make our menu respond to the user, we should probably make the <icon>Website</icon> button do something useful and for this, we will need a <name>Mouse Click</name> event handler to respond to clicks on the button. Since there is only one button in the window, we will define an <intro>icon-level handler</intro> for it instead of creating a <intro>window-level handler</intro> for the whole <window>program information</window> window. The main advantage is that the event dispatcher will check the icon handle for us, and only call our code if the click was on the icon that we specified.</p>
+<p>Before moving on to make our menu respond to the user, we should probably make the <icon>Website</icon> button do something useful and for this, we will need a <name>Mouse_Click</name> event handler to respond to clicks on the button. Since there is only one button in the window, we will define an <intro>icon-level handler</intro> for it instead of creating a <intro>window-level handler</intro> for the whole <window>program information</window> window. The main advantage is that the event dispatcher will check the icon handle for us, and only call our code if the click was on the icon that we specified.</p>
 
 <p>We met the concept of window- and icon-level event handlers, which are part of SFLib&rsquo;s event library, in <reference id="sect-icons-radio-sflib"/>. To define one to handle clicks on the <icon>Website</icon> button will require the code shown in <reference id="list-menus-intro-click-handle"/>.</p>
 
