@@ -172,7 +172,7 @@ event_set_window_icon_popup_action(win_handle, WIN_ICON_SHAPE_POPUP, FALSE, win_
 
 <p>So far, we have suggested that the Wimp will simply pass the details of keypresses to the task owning the window with input focus, but this isn&rsquo;t quite the whole story. There are some keypresses &ndash; such as <key>F12</key> to access the command line, or <key>Ctrl-Shift-F12</key> to shut down the system &ndash; which we expect to operate whichever window has input focus. To achieve this, the Wimp uses the concept of <intro>hot keys</intro>.</p>
 
-<p>When a key is pressed, the Wimp will initially give the details to the task which owns window with input focus. If that task fails to process the keypress, however, then the Wimp will pass the keypress on to any other windows which have expressed an interest in hot keys, starting from the top of the window stack and working down. To express interest, a window should have its <name>wimp_WINDOW_HOT_KEYS</name> flag set &ndash; we introduced this briefly in <reference id="sect-window-theory-behaviour"/>.</p>
+<p>When a key is pressed, the Wimp will initially give the details to the task which owns window with input focus. If that task fails to process the keypress, however, then the Wimp will pass the keypress on to any other tasks which have expressed an interest in hot keys, starting from the top of the window stack and working down. To express interest, a task should have a window open with its its <name>wimp_WINDOW_HOT_KEYS</name> flag set &ndash; we introduced this briefly in <reference id="sect-window-theory-behaviour"/>.</p>
 
 <p>In order to make hot keys work, the Wimp requires applications which claim the <name>Key_Pressed</name> event to pass on any keyspresses which they do not use. This is done using the <swi>Wimp_ProcessKey</swi> SWI, which simply takes the code of the keypress to be passed on:</p>
 
@@ -184,7 +184,7 @@ extern os_error *xwimp_process_key(
 	wimp_key_no c
 );</code>
 
-<p>This is something that we&rsquo;re not currently doing, and the effect can be seen by placing the caret in one of our writable icons and pressing <key>F12</key>: the nothing will happen. Move the caret away from our application (click in a text editor window, for example) and pressing <key>F12</key> should accesses the command line in the usual way (press <key>Return</key> at the <code>*</code> prompt to return to the desktop afterwards). This isn&rsquo;t desirable, because applications should <em>never</em> prevent hot keys from working.</p>
+<p>This is something that we&rsquo;re not currently doing, and the effect the omission can be clearly seen. Placing the caret in one of our writable icons and pressing <key>F12</key> will result in nothing happening, when we would expect the a command line to appear at the foot of the screen. Move the caret away from our application (click in a text editor window, for example) and pressing <key>F12</key> again should now accesses the command line in the usual way (press <key>Return</key> at the <code>*</code> prompt to return to the desktop afterwards). This isn&rsquo;t desirable, because applications should <em>never</em> prevent these system-wide hot keys from working.</p>
 
 <p>To resolve the problem, we can make use of the fact that the <function>event_process_event()</function> function in SFLib&rsquo;s event library, which we are using in <file>c.main</file> to dispatch events from <swi>Wimp_Poll</swi>, returns <name>TRUE</name> if an event is handled and <name>FALSE</name> otherwise. We are already using this to implement the generic event handlers for <name>Open_Window_Request</name> and <name>Close_Window_Request</name> events, as we saw in <reference id="sect-windows-generic"/>, and we if we change the code as shown in <reference id="list-key-input-generic"/> then we can also use it to pass on unwanted keypresses from <name>Key_Pressed</name> events.</p>
 
@@ -215,13 +215,13 @@ extern os_error *xwimp_process_key(
 	}
 }</code>
 
-<p>In the case of <name>Key_Pressed</name> event handlers registered with SFLib using the <function>event_add_window_key_event()</function> function, the return value is passed on by <function>event_process_event()</function>. Since <function>event_process_event()</function> will also return <name>FALSE</name> if no handler was found, we can treat this as an instruction to pass the keypress on via <swi>Wimp_ProcessKey</swi>. If you are using another library, consult its documentation to see how this is handled.</p> 
+<p>In the case of <name>Key_Pressed</name> event handlers registered with SFLib using the <function>event_add_window_key_event()</function> function, the return value is passed on by <function>event_process_event()</function>. Since <function>event_process_event()</function> will also return <name>FALSE</name> if no handler was found, we can treat this as an instruction to pass the keypress on via <swi>Wimp_ProcessKey</swi>.</p> 
 
 <p>The changes can be found in <reference id="dl-key-input-generic"/>.</p>
 
 <download id="dl-key-input-generic" file="ProcessKey" title="Passing On Unused Keypresses" compatibility="none"/>
 
-<p>Deciding which keys to pass on might seem difficult, but in fact our keypress handler here is quite unusual in that we&rsquo;re only interested in one specific keypress. Most keypress handlers for hot key and dialogue box use follow the form of a <code>switch()</code> statement checking off the possible keys, before passing the keypress on to <swi>Wimp_ProcessKey</swi> if none of them match.</p>
+<p>Deciding which keys to pass on might seem difficult, but in fact our keypress handler here is quite unusual in that we&rsquo;re only interested in one specific keypress. Most keypress handlers will follow the form of a <code>switch()</code> statement checking off the possible keys, before passing the keypress on to <swi>Wimp_ProcessKey</swi> if none of them match.</p>
 
 <code lang="c">static osbool win_keypress(wimp_key *key)
 {
@@ -242,7 +242,7 @@ extern os_error *xwimp_process_key(
 
 <p>There is something else to remember if setting the <name>wimp_WINDOW_HOT_KEYS</name> flag in a window. The <name>wimp_w</name> handle in the <name>wimp_key</name> structure will be the handle of the window with input focus when the key was pressed, <em>not</em> the window with the interest in hot keys. This means that for a hot key press, the window will almost certainly belong to another task and so will need to be processed in the generic handler that we have just added.</p>
 
-<p>In general, this will not be too much of a problem since the vast majority of keyboard shortcuts used in applications will not be handled as hot keys. Consider pressing <key>F3</key> in the window of a text editor to save the file: the editor will need to know <em>which</em> file to save, and so will take the keypress on the first original window with input focus. The <name>wimp_WINDOW_HOT_KEYS</name> flag is only really useful for system-wide actions like <key>F12</key> which don&rsquo;t relate to a specific window.</p>
+<p>In general, this will not be too much of a problem since the vast majority of keyboard shortcuts used in applications will not be handled as hot keys. Consider pressing <key>F3</key> in the window of a text editor to save the file: the editor will need to know <em>which</em> file to save, and so will take the keypress in the window with input focus. The <name>wimp_WINDOW_HOT_KEYS</name> flag is only really useful for system-wide actions like <key>F12</key> which don&rsquo;t relate to a specific window.</p>
 </section>
 
 <section>
@@ -329,7 +329,7 @@ static osbool win_immediate_update = FALSE;</code>
 	menus_tick_entry(win_menu, WIN_MENU_IMMEDIATE, win_immediate_update == TRUE);
 }</code>
 
-<p>To change the state of the new option, we can also update <function>win_menu_selection()</function> as seen in <reference id="list-key-input-all-select"/>.</p>
+<p>To change the state of the new option, we can also update <function>win_menu_selection()</function> as seen in <reference id="list-key-input-all-select"/>. Selecting the <menu>Immediate</menu> menu entry will toggle the state of the <variable>win_immediate_update</variable> variable.</p>
 
 <code id="list-key-input-all-select" lang="c" title="Detecting clicks on the Immediate menu entry">static void win_menu_selection(wimp_w window, wimp_menu *menu, wimp_selection *selection)
 {
@@ -492,6 +492,12 @@ static osbool win_immediate_update = FALSE;</code>
 }</code>
 
 
+
+<image id="fig-key-input-immediate" file="key-input-immediate.png" title="We have an option to toggle immediate key response"/>
+
+<p>The full set of code can be found in <reference id="dl-key-input-immediate"/>.</p>
+
+<download id="dl-key-input-immediate" file="ImmediateKey" title="Responding Immediately to Changes" compatibility="none"/>
 </section>
 </chapter>
 </manual>
