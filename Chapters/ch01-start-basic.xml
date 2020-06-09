@@ -77,7 +77,7 @@ UNTIL quit%</code>
 
 <p>It&rsquo;s fairly common in BASIC to take the reason code returned by <swi>Wimp_Poll</swi> and use it in a <code>CASE</code> statement, to allow the program to jump to an appropriate piece of code for the event in question. There&rsquo;s only one event that <em>every</em> Wimp application must handle, and that&rsquo;s something called a <name>Message_Quit</name> &ndash; as its name suggests, it&rsquo;s an instruction to terminate immediately.</p>
 
-<p>We&rsquo;ll look into the details of what&rsquo;s going in in a later chapter, but for now it&rsquo;s enough to know that <name>Message_Quit</name> will always arrive with an event reason code of 17 or 18 and with the word at offset 16 in the parameter block set to zero. If both these requirements are satisfied, the application simply sets <variable>quit%</variable> to <name>TRUE</name> and the <code>REPEAT</code> <code>UNTIL</code> loop exits without calling <swi>Wimp_Poll</swi> again.</p>
+<p>We&rsquo;ll look into the details of what&rsquo;s going on in a later chapter, but for now it&rsquo;s enough to know that <name>Message_Quit</name> will always arrive with an event reason code of 17 or 18 and with the word at offset 16 in the parameter block set to zero. If both these requirements are satisfied, the application simply sets <variable>quit%</variable> to <name>TRUE</name> and the <code>REPEAT</code> <code>UNTIL</code> loop exits without calling <swi>Wimp_Poll</swi> again.</p>
 </section>
 
 <section>
@@ -91,7 +91,7 @@ END</code>
 
 <p>Compared to <swi>Wimp_Initialise</swi>, <swi>Wimp_CloseDown</swi> is extremely simple: in the case of an application written in BASIC, it takes no parameters (it does take one parameter, but for a &lsquo;simple&rsquo; application it&rsquo;s zero so BASIC&rsquo;s <code>SYS</code> command fills it in for us).</p>
 
-<p>In the case of our example application, that&rsquo;s is: there&rsquo;s no resources to release. We can therefore just call <code>END</code> and let the program terminate.</p>
+<p>In the case of our example application, that&rsquo;s it: there&rsquo;s no resources to release. We can therefore just call <code>END</code> and let the program terminate.</p>
 </section>
 
 <section>
