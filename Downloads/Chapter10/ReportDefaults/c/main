@@ -76,7 +76,7 @@ static void main_poll(void)
 	while (!main_quit_flag) {
 		reason = wimp_poll(wimp_MASK_NULL, &blk, &pollword);
 
-		event_process_event(reason, &blk, pollword);
+		event_process_event(reason, &blk, pollword, NULL);
 	}
 }
 

@@ -183,7 +183,7 @@ case wimp_USER_MESSAGE_RECORDED:
 	while (!main_quit_flag) {
 		reason = wimp_poll(wimp_MASK_NULL, &amp;blk, &amp;pollword);
 
-		event_process_event(reason, &amp;blk, pollword);
+		event_process_event(reason, &amp;blk, pollword, NULL);
 	}
 }</code>
 
@@ -249,7 +249,7 @@ static void main_poll(void)
 	while (!main_quit_flag) {
 		reason = wimp_poll(wimp_MASK_NULL, &amp;blk, &amp;pollword);
 
-		event_process_event(reason, &amp;blk, pollword);
+		event_process_event(reason, &amp;blk, pollword, NULL);
 	}
 }
 

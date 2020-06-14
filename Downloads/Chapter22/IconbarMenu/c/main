@@ -110,7 +110,7 @@ static void main_poll(void)
 	while (!main_quit_flag) {
 		reason = wimp_poll(wimp_MASK_NULL, &blk, &pollword);
 
-		if (!event_process_event(reason, &blk, pollword)) {
+		if (!event_process_event(reason, &blk, pollword, NULL)) {
 			switch (reason) {
 			case wimp_OPEN_WINDOW_REQUEST:
 				wimp_open_window(&(blk.open));

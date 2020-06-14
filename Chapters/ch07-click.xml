@@ -135,7 +135,7 @@ case wimp_USER_MESSAGE_RECORDED:
 <code lang="c">while (!main_quit_flag) {
 	reason = wimp_poll(wimp_MASK_NULL, &amp;blk, &amp;pollword);
 
-	event_process_event(reason, &amp;blk, pollword);
+	event_process_event(reason, &amp;blk, pollword, NULL);
 }</code>
 
 <p>Instead of handling the events directly, we&rsquo;re now passing them on to <function>event_process_event()</function> from SFLib&rsquo;s event library and letting this route them to interested parties.</p>
@@ -243,7 +243,7 @@ static void main_poll(void)
 	while (!main_quit_flag) {
 		reason = wimp_poll(wimp_MASK_NULL, &amp;blk, &amp;pollword);
 
-		event_process_event(reason, &amp;blk, pollword);
+		event_process_event(reason, &amp;blk, pollword, NULL);
 	}
 }
 
