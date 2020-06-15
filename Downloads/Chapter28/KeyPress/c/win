@@ -157,7 +157,8 @@ void win_open(void)
 
 static osbool win_keypress(wimp_key *key)
 {
-	char buffer[WIN_NUM_BUF_SIZE];
+	char	buffer[WIN_NUM_BUF_SIZE];
+	double	value = 0.0;
 
 	if (key->c != wimp_KEY_RETURN)
 		return FALSE;
@@ -167,15 +168,19 @@ static osbool win_keypress(wimp_key *key)
 
 	icons_copy_text(win_handle, key->i, buffer, WIN_NUM_BUF_SIZE);
 
+	value = atof(buffer);
+	if (value == 0.0)
+		return TRUE;
+
 	switch (key->i) {
 	case WIN_ICON_LENGTH_FIELD:
-		calc_set_dimension(CALC_DIMENSION_LENGTH, buffer);
+		calc_set_dimension(CALC_DIMENSION_LENGTH, value);
 		break;
 	case WIN_ICON_PERIMETER_FIELD:
-		calc_set_dimension(CALC_DIMENSION_PERIMETER, buffer);
+		calc_set_dimension(CALC_DIMENSION_PERIMETER, value);
 		break;
 	case WIN_ICON_AREA_FIELD:
-		calc_set_dimension(CALC_DIMENSION_AREA, buffer);
+		calc_set_dimension(CALC_DIMENSION_AREA, value);
 		break;
 	}
 

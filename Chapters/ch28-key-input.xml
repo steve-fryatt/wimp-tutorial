@@ -26,7 +26,7 @@
 <section>
 <title>Key pressed events</title>
 
-<p>To be able to detect when <key>Return</key> is pressed, our application will need to listen out for <name>Key_Pressed</name> events being returned from <swi>Wimp_Poll</swi>. The Wimp sends these with a reason code of <name>wimp_KEY_PRESSED</name> when a key is pressed whilst the caret is in one of our windows, and supplies data in a <name>wimp_key</name> structure which OSLib defines as follows.</p>
+<p>To be able to detect when <key>Return</key> is pressed, our application will need to listen out for <name>Key_Pressed</name> events being returned from <swi>Wimp_Poll</swi>. The Wimp sends these with a reason code of <name>wimp_KEY_PRESSED</name> when a key is pressed whilst the caret is in one of our windows, and supplies data in a <name>wimp_key</name> structure which OSLib defines for us as follows.</p>
 
 <code lang="c">struct wimp_key {
 	wimp_w		w;
@@ -39,7 +39,7 @@
 
 typedef struct wimp_key wimp_key;</code>
 
-<p>Having met the <name>wimp_caret</name> structure reurned by <swi>Wimp_GetCaretPosition</swi> in <reference id="sect-icons-writable-caret"/>, the contents of the <name>wimp_key</name> structure should be familiar. It contains the <name>wimp_w</name> and <name>wimp_i</name> handles of the window and icon containing the caret; as before, the icon could be &minus;1 (or <name>wimp_ICON_WINDOW</name>) if the caret is not in a writable icon.</p>
+<p>Having met the <name>wimp_caret</name> structure returned by <swi>Wimp_GetCaretPosition</swi> in <reference id="sect-icons-writable-caret"/>, the contents of the <name>wimp_key</name> structure should be familiar. It contains the <name>wimp_w</name> and <name>wimp_i</name> handles of the window and icon containing the caret; as before, the icon could be &minus;1 (or <name>wimp_ICON_WINDOW</name>) if the caret is not in a writable icon.</p>
 
 <p>The position of the caret in OS&nbsp;units, relative to the work area origin of the window whose handle is supplied, is in <variable>pos</variable>, while the caret height and flags are in <variable>height</variable>. If <variable>i</variable> is not &minus;1, then <variable>index</variable> contains the index of the caret into the icon text.</p>
 
@@ -47,7 +47,57 @@ typedef struct wimp_key wimp_key;</code>
 
 <code lang="c">typedef int wimp_key_no;</code>
 
-<p>The value returned will in most cases by a simple one-byte character code from the current character set, although the Wimp does support a range of extra values extending into the two-byte range. To help with these &lsquo;special&rsquo; keys, OSLib defines a number of constants for us.</p>
+<p>The value returned will in most cases by a straight-forward one-byte character code from the current character set and will represent a printable character. The keys from <key>Ctrl-A</key> to <key>Ctrl-Z</key>, along with other special keys such as <key>Return</key>, <key>Escape</key>, <key>Home</key>, <key>Backspace</key> and <key>Delete</key> also appear within this range, as shown in <reference id="table-key-input-simple"/>. Note that without taking additional measures, it isn&rsquo;t possible to differentiate <key>Ctrl-H</key> from <key>Backspace</key>, or <key>Ctrl-M</key> from <key>Return</key>. It is also difficult to detect combinations like <key>Shift-Ctrl-A</key>, because they return the same codes as the un-shifted keys.</p>
+
+<table id="table-key-input-simple" title="Single-byte key codes which don't represent characters">
+<columns>
+<col align="left">Key</col>
+<col align="centre">Decimal</col>
+<col align="centre">Hex</col>
+</columns>
+
+<row><col>Ctrl-A &ndash; Ctrl-Z</col><col>1 &ndash; 26</col><col>0x01 &ndash; 0x1a</col></row>
+<row><col>Backspace</col><col>8</col><col>0x08</col></row>
+<row><col>Return</col><col>13</col><col>0x0d</col></row>
+<row><col>Escape</col><col>27</col><col>0x1b</col></row>
+<row><col>Home</col><col>30</col><col>0x1e</col></row>
+<row><col>Delete</col><col>127</col><col>0x7f</col></row>
+</table>
+
+<p>OSLib defines constants for some of these keys, as listed here.</p>
+
+<code lang="c">#define wimp_KEY_BACKSPACE	((wimp_key_no) 0x8u)
+#define wimp_KEY_RETURN		((wimp_key_no) 0xDu)
+#define wimp_KEY_ESCAPE		((wimp_key_no) 0x1Bu)
+#define wimp_KEY_HOME		((wimp_key_no) 0x1Eu)
+#define wimp_KEY_DELETE		((wimp_key_no) 0x7Fu)</code>
+
+<p>To allow access to other keys on the keyboard, the Wimp supports a range of extra two-byte values as shown in <reference id="table-key-input-extra"/>. The values form a pattern, such that the <key>Shift</key> and <key>Ctrl</key> variants are applied to the base key codes by setting the same bits in every case. In addition, note that <key>Page Up</key> and <key>Page Down</key> use the same key codes as the <key>Up</key> and <key>Down</key> Arrows. This enforces the requirements of the <cite>Style Guide</cite>, but makes it impossible to identify exactly which key was pressed.</p>
+
+<table id="table-key-input-extra" title="Two-byte key codes supported by the Wimp">
+<columns>
+<col align="left">Key</col>
+<col align="centre">Alone</col>
+<col align="centre">Shift</col>
+<col align="centre">Ctrl</col>
+<col align="centre">Shift-Ctrl</col>
+</columns>
+
+<row><col>Print</col><col>0x180</col><col>0x190</col><col>0x1a0</col><col>0x1b0</col></row>
+<row><col>F1 &ndash; F9</col><col>0x181 &ndash; 0x189</col><col>0x191 &ndash; 0x199</col><col>0x1a1 &ndash; 0x1a9</col><col>0x1b1 &ndash; 0x1b9</col></row>
+<row><col>Tab</col><col>0x18a</col><col>0x19a</col><col>0x1aa</col><col>0x1ba</col></row>
+<row><col>Copy</col><col>0x18b</col><col>0x19b</col><col>0x1ab</col><col>0x1bb</col></row>
+<row><col>Left Arrow</col><col>0x18c</col><col>0x19c</col><col>0x1ac</col><col>0x1bc</col></row>
+<row><col>Right Arrow</col><col>0x18d</col><col>0x19d</col><col>0x1ad</col><col>0x1bd</col></row>
+<row><col>Down Arrow</col><col>0x18e</col><col>0x19e</col><col>0x1ae</col><col>0x1be</col></row>
+<row><col>Up Arrow</col><col>0x18f</col><col>0x19f</col><col>0x1af</col><col>0x1bf</col></row>
+<row><col>Page Down</col><col>0x19e</col><col>0x18e</col><col>0x1be</col><col>0x1ae</col></row>
+<row><col>Page Up</col><col>0x19f</col><col>0x18f</col><col>0x1bf</col><col>0x1af</col></row>
+<row><col>F10 &ndash; F12</col><col>0x1ca &ndash; 0x1cc</col><col>0x1da &ndash; 0c1dc</col><col>0x1ea &ndash; 0x1ec</col><col>0x1fa &ndash; 0x1fc</col></row>
+<row><col>Insert</col><col>0x1cd</col><col>0x1dd</col><col>0x1ed</col><col>0x1fd</col></row>
+</table>
+
+<p>To help with these two-byte key codes, OSLib defines a number of &lsquo;base&rsquo; constants for us. All of these can be used alone, or combined with <key>Shift</key> and <key>Control</key>.</p>
 
 <code lang="c">#define wimp_KEY_PRINT		((wimp_key_no) 0x180u)
 #define wimp_KEY_F1		((wimp_key_no) 0x181u)
@@ -72,24 +122,14 @@ typedef struct wimp_key wimp_key;</code>
 #define wimp_KEY_F10		((wimp_key_no) 0x1CAu)
 #define wimp_KEY_F11		((wimp_key_no) 0x1CBu)
 #define wimp_KEY_F12		((wimp_key_no) 0x1CCu)
-#define wimp_KEY_INSERT		((wimp_key_no) 0x1CDu)</code>
+#define wimp_KEY_INSERT		((wimp_key_no) 0x1CDu)
 
-<p>All of these can be used alone, or combined with <key>Shift</key> and <key>Control</key>.</p>
-
-<code lang="c">#define wimp_KEY_SHIFT		((wimp_key_no) 0x10u)
+#define wimp_KEY_SHIFT		((wimp_key_no) 0x10u)
 #define wimp_KEY_CONTROL	((wimp_key_no) 0x20u)</code>
 
-<p>Creating combinations is simply a case of combining bits, so <key>Shift-Control-F12</key> would be</p>
+<p>Due to the pattern in the numbers, creating combinations is simply a case of combining bits, so <key>Shift-Control-F12</key> would be</p>
 
 <code lang="c">wimp_KEY_SHIFT | wimp_KEY_CONTROL | wimp_KEY_F12</code>
-
-<p>Finally, there are a few key &lsquo;special&rsquo; codes which fall into the &lsquo;ASCII&rsquo; range for which OSLib defines constants. These can not be used with the <key>Shift</key> or <key>Control</key> modifiers.</p>
-
-<code lang="c">#define wimp_KEY_BACKSPACE	((wimp_key_no) 0x8u)
-#define wimp_KEY_RETURN		((wimp_key_no) 0xDu)
-#define wimp_KEY_ESCAPE		((wimp_key_no) 0x1Bu)
-#define wimp_KEY_HOME		((wimp_key_no) 0x1Eu)
-#define wimp_KEY_DELETE		((wimp_key_no) 0x7Fu)</code>
 </section>
 
 <section>
@@ -101,7 +141,8 @@ typedef struct wimp_key wimp_key;</code>
 
 static osbool win_keypress(wimp_key *key)
 {
-	char buffer[WIN_NUM_BUF_SIZE];
+	char	buffer[WIN_NUM_BUF_SIZE];
+	double	value = 0.0;
 
 	if (key-&gt;c != wimp_KEY_RETURN)
 		return FALSE;
@@ -111,15 +152,19 @@ static osbool win_keypress(wimp_key *key)
 
 	icons_copy_text(win_handle, key-&gt;i, buffer, WIN_NUM_BUF_SIZE);
 
+	value = atof(buffer);
+	if (value == 0.0)
+		return TRUE;
+
 	switch(key-&gt;i) {
 	case WIN_ICON_LENGTH_FIELD:
-		calc_set_dimension(CALC_DIMENSION_LENGTH, buffer);
+		calc_set_dimension(CALC_DIMENSION_LENGTH, value);
 		break;
 	case WIN_ICON_PERIMETER_FIELD:
-		calc_set_dimension(CALC_DIMENSION_PERIMETER, buffer);
+		calc_set_dimension(CALC_DIMENSION_PERIMETER, value);
 		break;
 	case WIN_ICON_AREA_FIELD:
-		calc_set_dimension(CALC_DIMENSION_AREA, buffer);
+		calc_set_dimension(CALC_DIMENSION_AREA, value);
 		break;
 	}
 
@@ -132,7 +177,7 @@ static osbool win_keypress(wimp_key *key)
 
 <p>The function declares a <variable>buffer</variable> of <name>WIN_NUM_BUF_SIZE</name> bytes on the stack, and then checks the key reported by the event (in <variable>c</variable> within the <name>wimp_key</name> structure) to see if it is the <key>Return</key> key (indicated by the <name>wimp_KEY_RETURN</name> value). We will make our interface respond when the user presses <key>Return</key> in one of the writable fields, so if they key was anything else the function exits immediately &ndash; returning <name>FALSE</name> to indicate that they keypress wasn&rsquo;t of interest.</p>
 
-<p>If the key was <key>Return</key>, the next check is to make sure that the caret was in an icon: although we don&rsquo;t give the user a way to place the input focus anywhere other than into the three icons (because we leave placing input focus up to the Wimp), a third-party utility could do it. If the caret wasn&rsquo;t in an icon, we again return from the function &ndash; but this time returning <name>TRUE</name> to show that we have accepted the <key>Return</key> keypress.</p>
+<p>If the key was <key>Return</key>, the next check is to make sure that the caret was in an icon: although we don&rsquo;t give the user a way to place the input focus anywhere other than into the three icons (because we leave placing input focus up to the Wimp), a third-party utility could do it and so it is sensible to make sure. If the caret wasn&rsquo;t in an icon, we again return from the function &ndash; but this time returning <name>TRUE</name> to show that we have accepted the <key>Return</key> keypress.</p>
 
 <p>Assuming we get past the tests, we can be confident that <key>Return</key> was pressed and the caret was in one of our writable icons. We use the <function>icons_copy_text()</function> function from SFLib to copy the text from the target icon into our temporary buffer, which is defined as follows.</p>
 
@@ -145,7 +190,7 @@ static osbool win_keypress(wimp_key *key)
 
 <p>As we mentioned in the <reference id="sect-icons-writable-caret">last chapter</reference> when looking at placing the caret, string terminators in icons can be a little vague. The <function>icons_copy_text()</function> function will accept any control character as a terminator, but leave our buffer terminated with a <code>'\0'</code> character. The size of the buffer pointed to by <variable>buffer</variable> should be passed in the <variable>length</variable> parameter.</p>
 
-<p>Once the value entered by the user is in the buffer, all that remains to do is to pass it to <function>calc_set_dimension()</function> with the appropriate dimension type, and the call <function>win_update_all_calculations()</function> to recalculate all of the results and update the window.</p>
+<p>Once the value entered by the user is in the buffer, the standard <function>atof()</function> function from the <file>stdlib.h</file> is used to convert it to a floating point value. This can then be passed to <function>calc_set_dimension()</function> with the appropriate dimension type, before calling <function>win_update_all_calculations()</function> to recalculate all of the results and update the window.</p>
 
 <p>With the handler defined, we must register it with the event library as seen in <reference id="list-key-input-init"/>.</p>
 
@@ -158,7 +203,7 @@ event_add_window_menu_selection(win_handle, win_menu_selection);
 event_add_window_icon_popup(win_handle, WIN_ICON_SHAPE_POPUP, win_shape_menu, WIN_ICON_SHAPE_FIELD, NULL);
 event_set_window_icon_popup_action(win_handle, WIN_ICON_SHAPE_POPUP, FALSE, win_shape_menu_selection);</code>
 
-<p>When assembled, compiled and run, our application should look similar to <reference id="fig-key-input-window"/>. Entering a value and pressing <key>Return</key> in one of the fields will update the others to reflect the corresponding values.</p>
+<p>With all of the updates compiled, our application should look similar to <reference id="fig-key-input-window"/>. Entering a value and pressing <key>Return</key> in one of the fields will update the others to reflect the corresponding values.</p>
 
 <image id="fig-key-input-window" file="key-input-window.png" title="Finally we can calculate the parameters of a triangle!"/>
 
@@ -170,11 +215,11 @@ event_set_window_icon_popup_action(win_handle, WIN_ICON_SHAPE_POPUP, FALSE, win_
 <section id="sect-key-input-hotkeys">
 <title>Passing keys on</title>
 
-<p>So far, we have suggested that the Wimp will simply pass the details of keypresses to the task owning the window with input focus, but this isn&rsquo;t quite the whole story. There are some keypresses &ndash; such as <key>F12</key> to access the command line, or <key>Ctrl-Shift-F12</key> to shut down the system &ndash; which we expect to operate whichever window has input focus. To achieve this, the Wimp uses the concept of <intro>hot keys</intro>.</p>
+<p>So far, we have suggested that the Wimp will simply pass the details of keypresses to the task owning the window with input focus, but this isn&rsquo;t quite the whole story. There are some keypresses &ndash; such as <key>F12</key> to access the command line, or <key>Ctrl-Shift-F12</key> to shut down the system &ndash; which we expect to work regardless of which window has input focus. To achieve this, the Wimp uses the concept of <intro>hot keys</intro>.</p>
 
 <p>When a key is pressed, the Wimp will initially give the details to the task which owns window with input focus. If that task fails to process the keypress, however, then the Wimp will pass the keypress on to any other tasks which have expressed an interest in hot keys, starting from the top of the window stack and working down. To express interest, a task should have a window open with its its <name>wimp_WINDOW_HOT_KEYS</name> flag set &ndash; we introduced this briefly in <reference id="sect-window-theory-behaviour"/>.</p>
 
-<p>In order to make hot keys work, the Wimp requires applications which claim the <name>Key_Pressed</name> event to pass on any keyspresses which they do not use. This is done using the <swi>Wimp_ProcessKey</swi> SWI, which simply takes the code of the keypress to be passed on:</p>
+<p>In order to make hot keys work, the Wimp requires applications which claim the <name>Key_Pressed</name> event to pass on any keypresses which they do not use. This is done using the <swi>Wimp_ProcessKey</swi> SWI, which simply takes the code of the unwanted keypress:</p>
 
 <code lang="c">extern void wimp_process_key(
 	wimp_key_no c
@@ -242,7 +287,7 @@ extern os_error *xwimp_process_key(
 
 <p>There is something else to remember if setting the <name>wimp_WINDOW_HOT_KEYS</name> flag in a window. The <name>wimp_w</name> handle in the <name>wimp_key</name> structure will be the handle of the window with input focus when the key was pressed, <em>not</em> the window with the interest in hot keys. This means that for a hot key press, the window will almost certainly belong to another task and so will need to be processed in the generic handler that we have just added.</p>
 
-<p>In general, this will not be too much of a problem since the vast majority of keyboard shortcuts used in applications will not be handled as hot keys. Consider pressing <key>F3</key> in the window of a text editor to save the file: the editor will need to know <em>which</em> file to save, and so will take the keypress in the window with input focus. The <name>wimp_WINDOW_HOT_KEYS</name> flag is only really useful for system-wide actions like <key>F12</key> which don&rsquo;t relate to a specific window.</p>
+<p>In general, this will not be too much of a problem since the vast majority of keyboard shortcuts used in applications will not be handled as hot keys. Consider pressing <key>F3</key> in the window of a text editor to save the file: the editor will need to know <em>which</em> file to save, and so will take the keypress in the window with input focus. The <name>wimp_WINDOW_HOT_KEYS</name> flag is only really useful for system-wide actions like <key>F12</key> which don&rsquo;t relate to a specific window, and we won&rsquo;t be looking at it in more detail for now.</p>
 </section>
 
 <section>
@@ -254,7 +299,7 @@ extern os_error *xwimp_process_key(
 
 <p>It&rsquo;s also worth considering that while we can implement this feature fairly simply here in order to demonstrate a concept, implementing it <em>well</em> will in many cases be vary difficult to do. Effects like this are best used sparingly, when there is a real need for them!</p>
 
-<p>We will start, as usual, by updating the &ldquo;Main&rdquo; window template so that our application can see all of the keypresses within the writable icons, even if the Wimp handles them for us. There is very little to change: the validation string for each of the three writable icons should be updated so that the <name>K</name> command contains the N flag. This will make the full string &ldquo;Pptr_write;Ktan;A0-9.&rdquo;. Save the changed templates file.</p>
+<p>We will start, as usual, by updating the &ldquo;Main&rdquo; window template so that our application can see all of the keypresses within the writable icons, even if the Wimp handles them for us. There is very little to change: the validation string for each of the three writable icons should be updated so that the <name>K</name> command contains the N flag. This will make the full string &ldquo;<code>Pptr_write;Ktan;A0-9.</code>&rdquo;. Save the changed templates file.</p>
 
 <p>In the <file>c.win</file> file, we will start by adding another menu entry to the menu entry index constants, as seen in <reference id="list-key-input-all-const"/>.</p>
 
@@ -265,9 +310,9 @@ extern os_error *xwimp_process_key(
 #define WIN_MENU_DECIMAL3 2
 #define WIN_MENU_IMMEDIATE 3</code>
 
-<p>Armed with this, we can then define a new entry in the menu for toggling <menu>Immediate</menu> updates, as seen in <reference id="list-key-input-all-menu"/>. It will be operating separately from the three entries above it, which behave as a mutually-exclusive group, so we need to place a separator between them using a new <function>menu_separator()</function> function.</p>
+<p>Armed with this, we can then define a new entry in the menu for toggling <menu>Immediate</menu> updates, as seen in <reference id="list-key-input-all-menu"/>. It will be operating separately from the three entries above it, which behave as a mutually-exclusive group, so it would be a good idea to place a separator between them using a new <function>menu_separator()</function> function.</p>
 
-<p>If you&rsquo;re copying the changes by hand, note that the number of entries specified in the call to <function>menu_create()</function> has increased to four.</p>
+<p>If you&rsquo;re copying the changes into the code by hand, note that the number of entries specified in the call to <function>menu_create()</function> has increased to four. Our routines for creating menus perform no bounds checks on the blocks that they are updating!</p>
 
 <code id="list-key-input-all-menu" lang="c" title="Defining the additional menu entry">/* Window Menu. */
 
@@ -303,16 +348,19 @@ menu_entry(win_menu, WIN_MENU_IMMEDIATE, &quot;Immediate&quot;, NULL);</code>
 <section>
 <title>Changing the behaviour</title>
 
-<p>Now that we have a menu entry to allow the user to choose between &lsquo;normal&rsquo; and &lsquo;immediate&rsquo; responses, we will need to keep track of their wishes and act accordingly. To do this, we will create a new <variable>win_immediate_update</variable> global variable in <file>c.win</file> as seen in <reference id="list-key-input-all-vars"/>.</p>
+<p>Now that we have a menu entry to allow the user to choose between &lsquo;normal&rsquo; and &lsquo;immediate&rsquo; responses, we will need to keep track of their wishes and act accordingly. To do this, we will create a new <variable>win_immediate_update</variable> global variable in <file>c.win</file> as seen in <reference id="list-key-input-all-vars"/>. We will also add three new <name>double</name> variables (<variable>win_value_length</variable>, <variable>win_value_perimeter</variable> and <variable>win_value_area</variable>), which we will need later on.</p>
 
-<code id="list-key-input-all-vars" lang="c" title="Adding a global variable to track the behaviour">/* Global Variables */
+<code id="list-key-input-all-vars" lang="c" title="Adding global variables to track the behaviour and values">/* Global Variables */
 
 static wimp_w win_handle;
 static wimp_menu *win_menu;
 static wimp_menu *win_shape_menu;
-static osbool win_immediate_update = FALSE;</code>
+static osbool win_immediate_update = FALSE;
+static double win_value_length = 0.0;
+static double win_value_perimeter = 0.0;
+static double win_value_area = 0.0;</code>
 
-<p>This variable will be <name>FALSE</name> by default, but can be toggled to <name>TRUE</name> and back again using the new menu entry. To show the user the current state, we will update <function>win_set_menu()</function> to tick the menu entry as appropriate before the menu opens, as seen in <reference id="list-key-input-all-set"/>.</p>
+<p>The <variable>win_immediate_update</variable> variable will be <name>FALSE</name> by default, but can be toggled to <name>TRUE</name> and back again using the new menu entry. To show the user the current state, we will update <function>win_set_menu()</function> to tick the menu entry as appropriate before the menu opens, as seen in <reference id="list-key-input-all-set"/>.</p>
 
 <code id="list-key-input-all-set" lang="c" title="We also need to set the Immediate tick when the menu opens">static void win_set_menu(wimp_w w, wimp_menu *menu, wimp_pointer *pointer)
 {
@@ -329,7 +377,7 @@ static osbool win_immediate_update = FALSE;</code>
 	menus_tick_entry(win_menu, WIN_MENU_IMMEDIATE, win_immediate_update == TRUE);
 }</code>
 
-<p>To change the state of the new option, we can also update <function>win_menu_selection()</function> as seen in <reference id="list-key-input-all-select"/>. Selecting the <menu>Immediate</menu> menu entry will toggle the state of the <variable>win_immediate_update</variable> variable.</p>
+<p>To change the state of the new option, we can also update <function>win_menu_selection()</function> as seen in <reference id="list-key-input-all-select"/>. Selecting the <menu>Immediate</menu> menu entry will toggle the state of the <variable>win_immediate_update</variable> variable. The tick in the menu will be updated by <function>win_set_menu()</function> before the menu is redisplayed, even if <mouse>Adjust</mouse> is used.</p>
 
 <code id="list-key-input-all-select" lang="c" title="Detecting clicks on the Immediate menu entry">static void win_menu_selection(wimp_w window, wimp_menu *menu, wimp_selection *selection)
 {
@@ -354,50 +402,78 @@ static osbool win_immediate_update = FALSE;</code>
 	win_update_all_calculations(CALC_DIMENSION_NONE);
 }</code>
 
+<p>We mentioned above that implementing immediate updates was potentially difficult, and now that we must update our <function>win_keypress()</function> handler, this is likely to become more apparent. So far, we&rsquo;ve ignored any keypress which isn&rsquo;t <key>Return</key>, but now we need to detect when the values in the fields are changing whilst also continuing to pass on keypresses &ndash; such as <key>F12</key> &ndash; that we don&rsquo;t make use of. Up to now, the Wimp has only been passing on keys that it couldn&rsquo;t use in the writable icons, but with the N flag set in the <name>K</name> command, it is now passing on <em>everything</em>.</p>
 
-<!-- This isn't optimal, as any keypress will trigged a recalculation and refresh of the screen. -->
+<p>There are many ways to approach this problem, and one that immediately comes to mind is to pass on those keys that we know the icon won&rsquo;t use. We have set the <name>A</name> command to &ldquo;<code>A0-9.</code>&rdquo;, so on theory we could pass on anything which isn&rsquo;t <key>0</key> through to <key>9</key>, <key>.</key> or <key>Return</key>. Although <key>Delete</key> and <key>Backspace</key> could change the value in the field, as could <key>Ctrl-V</key> if a number is pasted in from the clipboard, and so on. This quickly becomes complicated!</p>
+
+<p>The best way to do this might be to keep a copy of the value from each field, and compare this copy to the contents of the icon each time a key is pressed. If the values are different then we know that the contents of the icon must have changed, so we can take a new copy and recalculate the other values. To this end, we defined the <variable>win_value_length</variable>, <variable>win_value_perimeter</variable> and <variable>win_value_area</variable> global variables earlier, which we will now use to update the keypress handler as seen in <reference id="list-key-input-all-keys"/>.</p>
+
+<p>The initial test for the <key>Return</key> key has been extended to allow <em>any</em> key through if <variable>win_immediate_update</variable> is <name>TRUE</name>. This will allow keys like <key>F12</key> through, so we need to be a lot more careful about the remaining checks. Any keypress which occurs outside an icon is now passed on to other tasks, before the content of the contents of the icon in question is converted to a floating point value as before.</p>
+
+<p>To detect changes, the resulting number is compared to one of the three new global variables, depending on which field it represents. If the values differ, or if the key was <key>Return</key>, we store the new value and set the <variable>target</variable> variable to report the change. If <variable>target</variable> remains set to <name>CALC_DIMENSION_NONE</name> at the end of these checks, no change has occurred as a result of the keypress and the key is passed on to other tasks.</p>
 
 <code id="list-key-input-all-keys" lang="c" title="">static osbool win_keypress(wimp_key *key)
 {
 	char			buffer[WIN_NUM_BUF_SIZE];
 	enum calc_dimension	target = CALC_DIMENSION_NONE;
+	double			value = 0.0;
 
 	/* Only allow Return, unless immediate update is on. */
 
-	if (key-&gt;c != wimp_KEY_RETURN &amp;&amp; (win_immediate_update == FALSE || (!isdigit(key-&gt;c) &amp;&amp;
-			key-&gt;c != wimp_KEY_BACKSPACE &amp;&amp; key-&gt;c != wimp_KEY_DELETE &amp;&amp; key-&gt;c != '.')))
+	if (key-&gt;c != wimp_KEY_RETURN &amp;&amp; win_immediate_update == FALSE)
+		return FALSE;
 
-	/* We take the key but do nothing if the caret isn't in an icon. */
+	/* We pass the key on if the caret isn't in an icon. */
 
 	if (key-&gt;i == wimp_ICON_WINDOW)
-		return TRUE;
+		return FALSE;
 
-	/* Copy the icon text, and identify the target dimension. */
+	/* Copy the icon text, and convert it into a value. */
 
 	icons_copy_text(win_handle, key-&gt;i, buffer, WIN_NUM_BUF_SIZE);
 
+	value = atof(buffer);
+	if (value == 0.0)
+		return FALSE;
+
+	/* Check to see if the value has changed. */
+
 	switch (key-&gt;i) {
 	case WIN_ICON_LENGTH_FIELD:
-		target = CALC_DIMENSION_LENGTH;
+		if (value != win_value_length || key-&gt;c == wimp_KEY_RETURN) {
+			win_value_length = value;
+			target = CALC_DIMENSION_LENGTH;
+		}
 		break;
 	case WIN_ICON_PERIMETER_FIELD:
-		target = CALC_DIMENSION_PERIMETER;
+		if (value != win_value_perimeter || key-&gt;c == wimp_KEY_RETURN) {
+			win_value_perimeter = value;
+			target = CALC_DIMENSION_PERIMETER;
+		}
 		break;
 	case WIN_ICON_AREA_FIELD:
-		target = CALC_DIMENSION_AREA;
+		if (value != win_value_area || key-&gt;c == wimp_KEY_RETURN) {
+			win_value_area = value;
+			target = CALC_DIMENSION_AREA;
+		}
 		break;
 	}
 
+	if (target == CALC_DIMENSION_NONE)
+		return FALSE;
+
 	/* Update the calculations. */
 
-	calc_set_dimension(target, buffer);
+	calc_set_dimension(target, value);
 
 	win_update_all_calculations((key-&gt;c == wimp_KEY_RETURN) ? CALC_DIMENSION_NONE : target);
 
 	return TRUE;
 }</code>
 
+<p>There&rsquo;s another subtlety to be aware of with immediate updates, too. Up to now, <function>win_update_all_calculations()</function> has updated all of the fields in the window, but if we&rsquo;re updating the values as the user types, we don&rsquo;t want to update the value in the icon where they&rsquo;re typing &ndash; if we do, decimal places will be appearing and the caret moving as they go.</p>
 
+<p>To avoid this, we will update the <function>win_update_all_calculations()</function> function so that it takes a parameter which indicates a dimension type to be left unchanged, as seen in <reference id="list-key-input-all-calcs"/>. This can then be used to skip the field where the user is typing.</p>
 
 <code id="list-key-input-all-calcs" lang="c" title="">static void win_update_all_calculations(enum calc_dimension avoid)
 {
@@ -459,6 +535,8 @@ static osbool win_immediate_update = FALSE;</code>
 	xwimp_set_caret_position(caret.w, caret.i, 0, 0, -1, index);
 }</code>
 
+<p>We will also need to update the call to <function>win_update_all_calculations()</function> from <function>win_set_shape()</function>, as seen in <reference id="list-key-input-all-shape"/>.</p>
+
 <code id="list-key-input-all-shape" lang="c" title="The call to win_update_all_calculations() must be updated everywhere">static void win_set_shape(enum calc_shape shape)
 {
 	char *sprite = NULL;
@@ -491,13 +569,15 @@ static osbool win_immediate_update = FALSE;</code>
 	win_update_all_calculations(CALC_DIMENSION_NONE);
 }</code>
 
-
+<p>With all of these changes in place, our application&rsquo;s menu will have gained an <menu>Immediate</menu> entry as seen in <reference id="fig-key-input-immediate"/>. It will be off by default, but if ticked, the fields will update in real time as values are typed into the icons in the window.</p>
 
 <image id="fig-key-input-immediate" file="key-input-immediate.png" title="We have an option to toggle immediate key response"/>
 
 <p>The full set of code can be found in <reference id="dl-key-input-immediate"/>.</p>
 
 <download id="dl-key-input-immediate" file="ImmediateKey" title="Responding Immediately to Changes" compatibility="none"/>
+
+<p>As already noted, immediate update has been a lot of work, which also has potential downsides in terms of the user interface. We&rsquo;ve used it here to demonstrate some features of the Wimp, but in general the <name>K</name> validation command&rsquo;s N flag is probably best used very sparingly indeed.</p>
 </section>
 </chapter>
 </manual>

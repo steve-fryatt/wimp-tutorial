@@ -26,7 +26,6 @@
  */
 
 #include <math.h>
-#include <stdlib.h>
 
 #include "sflib/string.h"
 
@@ -110,15 +109,9 @@ int calc_get_places(void)
 
 /* Set one of the dimensions. */
 
-void calc_set_dimension(enum calc_dimension dimension, char *text)
+void calc_set_dimension(enum calc_dimension dimension, double value)
 {
-	double value = 0.0;
-
-	if (text == NULL || dimension == CALC_DIMENSION_NONE)
-		return;
-
-	value = atof(text);
-	if (value == 0.0)
+	if (dimension == CALC_DIMENSION_NONE)
 		return;
 
 	calc_current_dimension = dimension;

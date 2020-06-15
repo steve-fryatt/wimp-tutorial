@@ -65,7 +65,7 @@ int calc_get_places(void);
 
 /* Set one of the dimensions. */
 
-void calc_set_dimension(enum calc_dimension dimension, char *text);
+void calc_set_dimension(enum calc_dimension dimension, double value);
 
 /* The number of sides. */
 

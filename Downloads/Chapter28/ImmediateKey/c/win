@@ -38,6 +38,7 @@
 
 #include <ctype.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "win.h"
@@ -78,6 +79,9 @@ static wimp_w win_handle;
 static wimp_menu *win_menu;
 static wimp_menu *win_shape_menu;
 static osbool win_immediate_update = FALSE;
+static double win_value_length = 0.0;
+static double win_value_perimeter = 0.0;
+static double win_value_area = 0.0;
 
 /* Function Prototypes */
 
@@ -164,37 +168,55 @@ static osbool win_keypress(wimp_key *key)
 {
 	char			buffer[WIN_NUM_BUF_SIZE];
 	enum calc_dimension	target = CALC_DIMENSION_NONE;
+	double			value = 0.0;
 
 	/* Only allow Return, unless immediate update is on. */
 
-	if (key->c != wimp_KEY_RETURN && (win_immediate_update == FALSE || (!isdigit(key->c) &&
-			key->c != wimp_KEY_BACKSPACE && key->c != wimp_KEY_DELETE && key->c != '.')))
+	if (key->c != wimp_KEY_RETURN && win_immediate_update == FALSE)
 		return FALSE;
 
-	/* We take the key but do nothing if the caret isn't in an icon. */
+	/* We pass the key on if the caret isn't in an icon. */
 
 	if (key->i == wimp_ICON_WINDOW)
-		return TRUE;
+		return FALSE;
 
-	/* Copy the icon text, and identify the target dimension. */
+	/* Copy the icon text, and convert it into a value. */
 
 	icons_copy_text(win_handle, key->i, buffer, WIN_NUM_BUF_SIZE);
 
+	value = atof(buffer);
+	if (value == 0.0)
+		return FALSE;
+
+	/* Check to see if the value has changed. */
+
 	switch (key->i) {
 	case WIN_ICON_LENGTH_FIELD:
-		target = CALC_DIMENSION_LENGTH;
+		if (value != win_value_length || key->c == wimp_KEY_RETURN) {
+			win_value_length = value;
+			target = CALC_DIMENSION_LENGTH;
+		}
 		break;
 	case WIN_ICON_PERIMETER_FIELD:
-		target = CALC_DIMENSION_PERIMETER;
+		if (value != win_value_perimeter || key->c == wimp_KEY_RETURN) {
+			win_value_perimeter = value;
+			target = CALC_DIMENSION_PERIMETER;
+		}
 		break;
 	case WIN_ICON_AREA_FIELD:
-		target = CALC_DIMENSION_AREA;
+		if (value != win_value_area || key->c == wimp_KEY_RETURN) {
+			win_value_area = value;
+			target = CALC_DIMENSION_AREA;
+		}
 		break;
 	}
 
+	if (target == CALC_DIMENSION_NONE)
+		return FALSE;
+
 	/* Update the calculations. */
 
-	calc_set_dimension(target, buffer);
+	calc_set_dimension(target, value);
 
 	win_update_all_calculations((key->c == wimp_KEY_RETURN) ? CALC_DIMENSION_NONE : target);
 
