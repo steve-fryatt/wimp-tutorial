@@ -20,7 +20,7 @@
 <summary>How do we actually find out what keys the user is pressing when they are typing into our window?</summary>
 
 <section>
-<p>In the <reference id="chap-icons-writable">last chapter</reference>, we added some writable icons to our window so that the user could enter values, but had no way to identify new numbers and use them in the shape calculations. It would be useful if the user could press <key>Return</key> after entering a new number, and have the other values update.</p>
+<p>In the <reference id="chap-icons-writable">last chapter</reference>, we added some writable icons to our window so that the user could enter values, but had no way to identify new numbers and use them in the shape calculations. It would be better if the user could press <key>Return</key> after entering a new number, and have the other values update.</p>
 </section>
 
 <section>
@@ -56,12 +56,12 @@ typedef struct wimp_key wimp_key;</code>
 <col align="centre">Hex</col>
 </columns>
 
-<row><col>Ctrl-A &ndash; Ctrl-Z</col><col>1 &ndash; 26</col><col>0x01 &ndash; 0x1a</col></row>
-<row><col>Backspace</col><col>8</col><col>0x08</col></row>
-<row><col>Return</col><col>13</col><col>0x0d</col></row>
-<row><col>Escape</col><col>27</col><col>0x1b</col></row>
-<row><col>Home</col><col>30</col><col>0x1e</col></row>
-<row><col>Delete</col><col>127</col><col>0x7f</col></row>
+<row><col><key>Ctrl-A</key> &ndash; <key>Ctrl-Z</key></col><col>1 &ndash; 26</col><col>0x01 &ndash; 0x1a</col></row>
+<row><col><key>Backspace</key></col><col>8</col><col>0x08</col></row>
+<row><col><key>Return</key></col><col>13</col><col>0x0d</col></row>
+<row><col><key>Escape</key></col><col>27</col><col>0x1b</col></row>
+<row><col><key>Home</key></col><col>30</col><col>0x1e</col></row>
+<row><col><key>Delete</key></col><col>127</col><col>0x7f</col></row>
 </table>
 
 <p>OSLib defines constants for some of these keys, as listed here.</p>
@@ -83,18 +83,18 @@ typedef struct wimp_key wimp_key;</code>
 <col align="centre">Shift-Ctrl</col>
 </columns>
 
-<row><col>Print</col><col>0x180</col><col>0x190</col><col>0x1a0</col><col>0x1b0</col></row>
-<row><col>F1 &ndash; F9</col><col>0x181 &ndash; 0x189</col><col>0x191 &ndash; 0x199</col><col>0x1a1 &ndash; 0x1a9</col><col>0x1b1 &ndash; 0x1b9</col></row>
-<row><col>Tab</col><col>0x18a</col><col>0x19a</col><col>0x1aa</col><col>0x1ba</col></row>
-<row><col>Copy</col><col>0x18b</col><col>0x19b</col><col>0x1ab</col><col>0x1bb</col></row>
-<row><col>Left Arrow</col><col>0x18c</col><col>0x19c</col><col>0x1ac</col><col>0x1bc</col></row>
-<row><col>Right Arrow</col><col>0x18d</col><col>0x19d</col><col>0x1ad</col><col>0x1bd</col></row>
-<row><col>Down Arrow</col><col>0x18e</col><col>0x19e</col><col>0x1ae</col><col>0x1be</col></row>
-<row><col>Up Arrow</col><col>0x18f</col><col>0x19f</col><col>0x1af</col><col>0x1bf</col></row>
-<row><col>Page Down</col><col>0x19e</col><col>0x18e</col><col>0x1be</col><col>0x1ae</col></row>
-<row><col>Page Up</col><col>0x19f</col><col>0x18f</col><col>0x1bf</col><col>0x1af</col></row>
-<row><col>F10 &ndash; F12</col><col>0x1ca &ndash; 0x1cc</col><col>0x1da &ndash; 0c1dc</col><col>0x1ea &ndash; 0x1ec</col><col>0x1fa &ndash; 0x1fc</col></row>
-<row><col>Insert</col><col>0x1cd</col><col>0x1dd</col><col>0x1ed</col><col>0x1fd</col></row>
+<row><col><key>Print</key></col><col>0x180</col><col>0x190</col><col>0x1a0</col><col>0x1b0</col></row>
+<row><col><key>F1</key> &ndash; <key>F9</key></col><col>0x181 &ndash; 0x189</col><col>0x191 &ndash; 0x199</col><col>0x1a1 &ndash; 0x1a9</col><col>0x1b1 &ndash; 0x1b9</col></row>
+<row><col><key>Tab</key></col><col>0x18a</col><col>0x19a</col><col>0x1aa</col><col>0x1ba</col></row>
+<row><col><key>Copy</key></col><col>0x18b</col><col>0x19b</col><col>0x1ab</col><col>0x1bb</col></row>
+<row><col><key>Left Arrow</key></col><col>0x18c</col><col>0x19c</col><col>0x1ac</col><col>0x1bc</col></row>
+<row><col><key>Right Arrow</key></col><col>0x18d</col><col>0x19d</col><col>0x1ad</col><col>0x1bd</col></row>
+<row><col><key>Down Arrow</key></col><col>0x18e</col><col>0x19e</col><col>0x1ae</col><col>0x1be</col></row>
+<row><col><key>Up Arrow</key></col><col>0x18f</col><col>0x19f</col><col>0x1af</col><col>0x1bf</col></row>
+<row><col><key>Page Down</key></col><col>0x19e</col><col>0x18e</col><col>0x1be</col><col>0x1ae</col></row>
+<row><col><key>Page Up</key></col><col>0x19f</col><col>0x18f</col><col>0x1bf</col><col>0x1af</col></row>
+<row><col><key>F10</key> &ndash; <key>F12</key></col><col>0x1ca &ndash; 0x1cc</col><col>0x1da &ndash; 0c1dc</col><col>0x1ea &ndash; 0x1ec</col><col>0x1fa &ndash; 0x1fc</col></row>
+<row><col><key>Insert</key></col><col>0x1cd</col><col>0x1dd</col><col>0x1ed</col><col>0x1fd</col></row>
 </table>
 
 <p>To help with these two-byte key codes, OSLib defines a number of &lsquo;base&rsquo; constants for us. All of these can be used alone, or combined with <key>Shift</key> and <key>Control</key>.</p>
@@ -328,7 +328,7 @@ menu_entry(win_menu, WIN_MENU_DECIMAL3, &quot;3 Decimal places&quot;, NULL);
 menu_separator(win_menu, WIN_MENU_DECIMAL3);
 menu_entry(win_menu, WIN_MENU_IMMEDIATE, &quot;Immediate&quot;, NULL);</code>
 
-<p>The new <function>menu_separator()</function> function will need to be defined in <file>c.menu</file> as shown in <reference id="list-key-input-all-sep"/>, with a suitable prototype added to <file>h.menu</file>. All it has to do is set the <name>wimp_MENU_SEPARATE</name> flag in the entry&rsquo;s <variable>menu_flags</variable>, which tells the Wimp to place a dotted line below the entry.</p>
+<p>The new <function>menu_separator()</function> function will need to be defined in <file>c.menu</file> as shown in <reference id="list-key-input-all-sep"/>, with a suitable prototype added to <file>h.menu</file>. All that it has to do is set the <name>wimp_MENU_SEPARATE</name> flag in the entry&rsquo;s <variable>menu_flags</variable>, which tells the Wimp to place a dotted line below the entry.</p>
 
 <code id="list-key-input-all-sep" lang="c" title="Adding a separator to a menu entry">void menu_separator(wimp_menu *menu, int entry)
 {
@@ -412,7 +412,7 @@ static double win_value_area = 0.0;</code>
 
 <p>To detect changes, the resulting number is compared to one of the three new global variables, depending on which field it represents. If the values differ, or if the key was <key>Return</key>, we store the new value and set the <variable>target</variable> variable to report the change. If <variable>target</variable> remains set to <name>CALC_DIMENSION_NONE</name> at the end of these checks, no change has occurred as a result of the keypress and the key is passed on to other tasks.</p>
 
-<code id="list-key-input-all-keys" lang="c" title="">static osbool win_keypress(wimp_key *key)
+<code id="list-key-input-all-keys" lang="c" title="Use keypresses to trigger immediate calculation updates">static osbool win_keypress(wimp_key *key)
 {
 	char			buffer[WIN_NUM_BUF_SIZE];
 	enum calc_dimension	target = CALC_DIMENSION_NONE;
@@ -475,7 +475,7 @@ static double win_value_area = 0.0;</code>
 
 <p>To avoid this, we will update the <function>win_update_all_calculations()</function> function so that it takes a parameter which indicates a dimension type to be left unchanged, as seen in <reference id="list-key-input-all-calcs"/>. This can then be used to skip the field where the user is typing.</p>
 
-<code id="list-key-input-all-calcs" lang="c" title="">static void win_update_all_calculations(enum calc_dimension avoid)
+<code id="list-key-input-all-calcs" lang="c" title="Allow a value to be omitted from the calculation update">static void win_update_all_calculations(enum calc_dimension avoid)
 {
 	char		*text = NULL;
 	int		index;
