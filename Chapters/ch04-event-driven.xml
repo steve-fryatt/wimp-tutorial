@@ -131,7 +131,7 @@ ENDPROC</code>
 
 <p>Anyone who has ever written software for other windowing systems &ndash; especially those that use so-called &lsquo;visual&rsquo; development environments &ndash; will be familiar with the concept of event-driven programming. An action button can have a function associated with it, which gets called whenever the user clicks on the button; windows can have functions which are called whenever they are moved or require redrawing.</p>
 
-<p>While it&rsquo;s relatively simple for beginners &ndash; and open to abuse &ndash; the approach does have advantages. These &lsquo;event handlers&rsquo; can be self-contained, and often don&rsquo;t need to be known about outside of the code that they relate to; this makes it possible to write extremely modular code, which can be much easier to update and maintain.</p>
+<p>While it&rsquo;s relatively simple for beginners &ndash; not to mention being open to abuse &ndash; the approach does have advantages. These &lsquo;event handlers&rsquo; can be self-contained, and often don&rsquo;t need to be known about outside of the code that they relate to; this makes it possible to write extremely modular code, which can be much easier to update and maintain.</p>
 
 <p>The RISC&nbsp;OS Wimp is also event-driven, although to a casual observer &ndash; especially one working in BASIC &ndash; it&rsquo;s quite well hidden. With the exception, perhaps, of <name>Null_Reason</name>, the information returned by <swi>Wimp_Poll</swi> is a series of events: a <name>Mouse_Click</name> could be an event destined for an action button in a window somewhere, while <name>Redraw_Window_Request</name> is an indication that a window wishes to be redrawn.</p>
 
