@@ -17,7 +17,7 @@
 <filename>menus-window.html</filename>
 <title>Standard Window Menus</title>
 
-<summary>There&rsquo;s one type of menu that we haven&rsquo;t yet looked at: the &lsquo;standard&rsquo; one that opens at the mouse pointer.</summary>
+<summary>There&rsquo;s one type of menu that we haven&rsquo;t yet looked at: the &lsquo;standard&rsquo; one which opens at the mouse pointer.</summary>
 
 <section>
 <p>We&rsquo;ve now covered two special types of menu &ndash; the <reference id="chap-menus-intro">iconbar menu</reference> and <reference id="chap-menus-popup">pop-up menu</reference> &ndash; but have yet to look at the simplest type: one that opens over a window following a click with the <mouse>Menu</mouse> button.</p>
