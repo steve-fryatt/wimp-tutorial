@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+
+<!DOCTYPE xmlmanual SYSTEM "../wimp.dtd">
+
+<manual xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="xmldoc.xsd" version="1.8.6">
+
+<!-- Chapter 29
+   -
+   - Internationalisation
+  -->
+
+<chapter id="chap-internat">
+<resources>
+<images>Chapter29</images>
+<downloads>Chapter29</downloads>
+</resources>
+<filename>internationalisation.html</filename>
+<title>Internationalisation</title>
+
+<summary>English isn&rsquo;t the first language of all RISC&nbsp;OS users, so how can we cater for those who would prefer to use our application in a different one?</summary>
+
+<section>
+<p>Whilst English appears to be the default language for most RISC&nbsp;OS applications, a significant number of users use a different one day to day. It would clearly be desirable to allow our application to translated for use in different languages, so that even if we can&rsquo;t do it ourselves, other people can provide translations if they wish to do so.</p>
+
+<p>Unfortunately, the system used by RISC&nbsp;OS for handling different languages dates back to the days of the BBC&nbsp;Master, and Acorn never really addressed the obvious problems with it. In addition, there was never an &lsquo;official&rsquo; way to handle different languages in an application, leading to developers each doing their own thing in the absence of any clear guidance.</p>
+
+<p>The fundamental support for internationalising applications on RISC&nbsp;OS is provided by the International module, which allows a country, alphabet and keyboard layout to be configured for the system. However, setting the country also sets the default alphabet and keyboard layout, which immediately causes a potential problem should a user wish to type on a keyboard which isn&rsquo;t considered &lsquo;standard&rsquo; for their country.</p>
+
+<p>In an attempt to address some of the issues, RISC&nbsp;OS&nbsp;3 introduced the Territory Manager. This attempted to extend the support to include dates, times and timezones, along with other information specific to a territory or region. There are routines for converting the case of letters, comparing strings and providing information about how to represent numbers.</p>
+</section>
+
+<section>
+<title>Pick a language</title>
+
+
+</section>
+</chapter>
+</manual>
