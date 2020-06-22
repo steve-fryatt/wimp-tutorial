@@ -32,17 +32,35 @@
 </section>
 
 <section>
-<title>Pick a language</title>
+<title>Separate resources</title>
 
 <p>The most fundamental thing that an application can do to assist non-English speakers is to allow itself to be translated for use in other languages. Our application would currently struggle with this, however, since user-facing text such as menu entries is held as string constants within the C code itself. Changing the language would require the source code to be updated, and a different <file>!RunImage</file> to be compiled.</p>
 
-<p>Fortunately this isn&rsquo;t necessary, and the answer lies &ndash; at least in part &ndash; in the window templates that we introduced in <reference id="chap-tempplates"/>. These define the look and feel of our application&rsquo;s windows, including all of the icon text: it would be possible to produce more than set of templates, in English, French, German and so on, then load the appropriate one when the appliation starts.</p>
+<p>Fortunately this isn&rsquo;t necessary, and the answer lies &ndash; at least in part &ndash; in the window templates that we introduced in <reference id="chap-templates"/>. These define the look and feel of our application&rsquo;s windows, including all of the icon text: it would be possible to produce more than set of templates, in English, French, German and so on, then load the appropriate one when the application starts.</p>
 
+<p>Whilst this doesn&rsquo;t deal with the text held inside our source code, RISC&nbsp;OS contains a module called MessageTrans which allows user-facing text to be stored in a single file and looked up as required. This makes it possible to treat all of the English text in our application in a similar way, holding it in a single <file>Messages</file> file and then providing different translations by loading a different version of the file.</p>
 
+<p>How these different files are held within the application is something that&rsquo;s left up to individual developers, and there are many different approaches available. One, which is becoming something of a de-facto standard, is to have a folder called <file>Resources</file> within the application directory, which in turn contains separate directories holding the language-specific files for each translation. How <cite>StrongHelp</cite> handles this can be seen in <reference id="fig-internat-stronghelp"/>.</p>
 
-We could supply our window templates in more than one language as separate template files, and load the one which is most appropriate for the user
+<image id="fig-internat-stronghelp" file="internat-stronghelp.png" title="StrongHelp contains translations for English, French and German"/>
 
-different languages, perhaps, . In fact, RISC&nbsp;OS contains a module called MessageTrans which allows all of the user facing text to be stored in a single file and looked up as required; 
+<p>The different files are stored in directories named <file>France</file>, <file>Germany</file> and <file>UK</file>, which all correspond to the names of countries supported by the International module. This has become something of a de-facto standard way to handle translations, and is the approach that we will be investigating here.</p>
+</section>
+
+<section>
+<title>Pick a country</title>
+
+<p>To determine which translation to use for our application, we need to read the currently configured country from the International module and use the folder corresponding to its name. To allow for the fact that we won&rsquo;t be providing translations for all the possible countries, we should fall back to a default set if a suitable folder can&rsquo;t be found. Usually this will be UK, since the vast majority of RISC&nbsp;OS applications appear to be written in English, but it&rsquo;s at the discretion of the developer &ndash; the only requirement is that the translation must exist, and be complete.</p>
+
+<p>That&rsquo;s not the end of the story, however, because it has become something of another de-facto standard for an application to check its <variable>AppName$Language</variable> system variable first; in the case of our <cite>ExamplApp</cite>, this would be <variable>ExamplApp$Lanugage</variable>. If this is set, the contents should be treated as a country name and checked against the available resource folders first &ndash; only if it fails to match should the country and default be used. This allows the user, not to mention anyone translating the application, to easily force it to load a different set of resources on demand.</p>
+
+<p>This isn&rsquo;t a perfect solution, however. First of all, the close links between country, alphabet and keyboard within the International module mean that there could be other reasons than just language to choose one country over another: a machine with a French keyboard attached might need to be configured for France, whatever language the user might want. In addition, languages and countries don&rsquo;t always align neatly.</p>
+
+<p>For example, consider a French-speaking Canadian living in the UK. If they have a UK keyboard attached to their machine, they could well need to have the country set to UK to allow this to work, but might prefer to use their applications in French. RISC&nbsp;OS offers a country for Canada (in fact it offers several, to allow for the various languages spoken), but if a suitable translastion isn&rsquo;t available, the user might well prefer to try France as well before settling on the language for which their machine is configured.</p>
+
+<p>Alternatively, consider an Austrian who has their machine configured for Austria. In this case, their chosen country matches their language preference, but if no Austrian translation is available then software will usually fall back to UK. In most cases, our Austrian user would probably prefer their applications to offer them a translation for Germany first, if one were available.</p>
+
+<p>To help solve issues like these, Olaf Krumnow and Herbert zur Nedden of the German Archimedes Group devised a system known as <link href="http://www.gag.de/software/ResFind">ResFind</link>, which has further extended the de-facto standards outlined already.</p>
 
 </section>
 </chapter>
