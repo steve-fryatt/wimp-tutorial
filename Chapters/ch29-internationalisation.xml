@@ -60,9 +60,23 @@
 
 <p>Alternatively, consider an Austrian who has their machine configured for Austria. In this case, their chosen country matches their language preference, but if no Austrian translation is available then software will usually fall back to UK. In most cases, our Austrian user would probably prefer that their applications offer them a translation intended for Germany first, if one is available.</p>
 
-<p>To help solve issues like these, Olaf Krumnow and Herbert zur Nedden of the German Archimedes Group devised a system known as <link href="http://www.gag.de/software/ResFind">ResFind</link>, which has further extended the de-facto standards outlined already. Two system variables, named <variable>ResConf$LanuguagesPref</variable> and <variable>ResConf$LanguagesSuff</variable>, allow a list of countries to be specified for consideration before and after the configured country is tried. This way, a user can supply one of more countries that they would prefer to try before the one for which the machine is configured; alternatively, they can suggest a list of alternatives if their configured option isn&rsquo;t available.</p>
+<p>To help solve issues like these, Olaf Krumnow and Herbert zur Nedden of the German Archimedes Group devised a system known as <link href="http://www.gag.de/software/ResFind">ResFind</link>, which has further extended the de-facto standards outlined already. Two system variables, named <variable>ResConf$LanguagesPref</variable> and <variable>ResConf$LanguagesSuff</variable>, allow a list of countries to be specified for consideration before and after the configured country is tried. This way, a user can supply one of more countries that they would prefer to try before the one for which the machine is configured; alternatively, they can suggest a list of alternatives if their configured option isn&rsquo;t available.</p>
 
-<p>In the case of our hypothetical Canadian, setting <variable>ResConf$LanuguagesPref</variable> to &ldquo;Canada1,France&rdquo; would cause applications which followed the <cite>ResConf</cite> approach to try Canada1, France and then the configured country of UK in their quest for translations. For the Austrian, setting <variable>ResConf$LanguagesSuff</variable> to &ldquo;Germany&rdquo; would cause applications to try the configured country of Austria before checking Germany.</p>
+<p>Taking all of these features together, an application should do five things in order to identify its resources.</p>
+
+<list type="ol">
+<li>If the variable <variable>AppName$Language</variable> is defined (where &ldquo;AppName&rdquo; is the name of the application), treat the contents as the name of a country. If it matches the name of one of the available resource folders, use that folder.</li>
+
+<li>If the variable <variable>ResConf$LanguagesPref</variable> is defined, treat its contents as a comma-separated list of country names. If any match the the name of one of the available resource folders, use the folder corresponding to the first match in the list.</li>
+
+<li>If the name of the configured country matches the name of one of the available resource folders, use that folder.</li>
+
+<li>If the variable <variable>ResConf$LanguagesSuff</variable> is defined, treat its contents as a comma-separated list of country names. If any match the the name of one of the available resource folders, use the folder corresponding to the first match in the list.</li>
+
+<li>Use the resources in the folder defined as the fallback (often UK, but can be selected as appropriate by the developer).</li>
+</list>
+
+<p>In the case of our hypothetical Canadian, setting <variable>ResConf$LanguagesPref</variable> to &ldquo;Canada1,France&rdquo; would cause applications which followed the <cite>ResConf</cite> approach to try Canada1, France and then the configured country of UK in their quest for translations. For the Austrian, setting <variable>ResConf$LanguagesSuff</variable> to &ldquo;Germany&rdquo; would cause applications to try the configured country of Austria before checking Germany.</p>
 
 </section>
 </chapter>

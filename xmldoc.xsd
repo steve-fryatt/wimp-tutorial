@@ -72,6 +72,7 @@
     <xsd:sequence>
       <xsd:element name="title" type="xsd:string" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="p" type="ParagraphType" minOccurs="0" maxOccurs="unbounded"/>
+      <xds:element name="list" type="ListType" minOccurs="0" maxOccurs="unbounded"/>
       <xsd:element name="table" type="TableType" minOccurs="0" maxOccurs="unbounded"/>
       <xsd:element name="code" type="CodeType" minOccurs="0" maxOccurs="unbounded"/>
       <xsd:element name="image" type="ImageType" minOccurs="0" maxOccurs="unbounded"/>
@@ -80,7 +81,12 @@
     <xsd:attribute name="id" type="xsd:string"/>
 <!--    <xsd:attribute name="kind" type="MemberKind" use="required"/>  -->
   </xsd:complexType>
-  
+
+  <xsd:complexType name="ListType">
+    <xsd:attribute name="type" type="xsd:string" use="required"/>
+    <xsd:element name="li" type="ParagraphType" minOccurs="1" maxOccurs="unbounded"/>
+  </xsd:complexType>
+
   <xsd:complexType name="TableType">
     <xsd:attribute name="id" type="xsd:string"/>
     <xsd:attribute name="title" type="xsd:string"/>
