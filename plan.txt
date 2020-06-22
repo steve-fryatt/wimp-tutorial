@@ -65,6 +65,9 @@ Scrolling
 
 Do we actually explain window stacks anywhere? Refer to them in Chapter 28.
 
+What about mouse pointers? writable icons? pop-up menus?
+
+The "Castle" app variables (App$Help, etc)?
 
 <!-- B = Interface Module's Border Type -->
 <row><col>C</col><col>Set 24-bit Colours</col></row>
