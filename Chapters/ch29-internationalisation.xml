@@ -26,12 +26,23 @@
 
 <p>The fundamental support for internationalising applications on RISC&nbsp;OS is provided by the International module, which allows a country, alphabet and keyboard layout to be configured for the system. However, setting the country also sets the default alphabet and keyboard layout, which immediately causes a potential problem should a user wish to type on a keyboard which isn&rsquo;t considered &lsquo;standard&rsquo; for their country.</p>
 
-<p>In an attempt to address some of the issues, RISC&nbsp;OS&nbsp;3 introduced the Territory Manager. This attempted to extend the support to include dates, times and timezones, along with other information specific to a territory or region. There are routines for converting the case of letters, comparing strings and providing information about how to represent numbers.</p>
+<p>In an attempt to address some of the issues, RISC&nbsp;OS&nbsp;3 introduced the Territory Manager. This added support for tailoring parts of applications for different regions, including dates, times and timezones. There are routines for converting the case of letters, comparing strings and providing information about how to represent numbers, and the standard C library makes use of some of these if <function>setlocale()</function> is called.</p>
+
+<p>Unfortunately the system has many drawbacks, and a search of the online forums and newsgroups will quickly reveal many debates about the ways in which it should be improved. Here, we will restrict ourselves to looking at the system as it currently exists, and what an application author should do <em>now</em> to support their international users.</p>
 </section>
 
 <section>
 <title>Pick a language</title>
 
+<p>The most fundamental thing that an application can do to assist non-English speakers is to allow itself to be translated for use in other languages. Our application would currently struggle with this, however, since user-facing text such as menu entries is held as string constants within the C code itself. Changing the language would require the source code to be updated, and a different <file>!RunImage</file> to be compiled.</p>
+
+<p>Fortunately this isn&rsquo;t necessary, and the answer lies &ndash; at least in part &ndash; in the window templates that we introduced in <reference id="chap-tempplates"/>. These define the look and feel of our application&rsquo;s windows, including all of the icon text: it would be possible to produce more than set of templates, in English, French, German and so on, then load the appropriate one when the appliation starts.</p>
+
+
+
+We could supply our window templates in more than one language as separate template files, and load the one which is most appropriate for the user
+
+different languages, perhaps, . In fact, RISC&nbsp;OS contains a module called MessageTrans which allows all of the user facing text to be stored in a single file and looked up as required; 
 
 </section>
 </chapter>
