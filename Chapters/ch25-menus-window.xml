@@ -14,7 +14,8 @@
 <images>Chapter25</images>
 <downloads>Chapter25</downloads>
 </resources>
-<filename>menus-window.html</filename>
+<filename>standard-window-menus.php</filename>
+<uri>standard-window-menus</uri>
 <title>Standard Window Menus</title>
 
 <summary>There&rsquo;s one type of menu that we haven&rsquo;t yet looked at: the &lsquo;standard&rsquo; one which opens at the mouse pointer.</summary>

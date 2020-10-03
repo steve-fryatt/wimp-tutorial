@@ -14,7 +14,8 @@
 <images>Chapter14</images>
 <downloads>Chapter14</downloads>
 </resources>
-<filename>icons.html</filename>
+<filename>introducing-icons.php</filename>
+<uri>introducing-icons</uri>
 <title>Introducing Icons</title>
 
 <summary>Icons are the building blocks used to make windows do something useful.</summary>

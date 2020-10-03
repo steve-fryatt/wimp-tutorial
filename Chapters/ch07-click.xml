@@ -14,7 +14,8 @@
 <images>Chapter07</images>
 <downloads>Chapter07</downloads>
 </resources>
-<filename>clicks.html</filename>
+<filename>clicks-on-the-iconbar.php</filename>
+<uri>clicks-on-the-iconbar</uri>
 <title>Clicks on the Iconbar</title>
 
 <summary>There&rsquo;s not much point having an iconbar icon if it doesn&rsquo;t respond to the user!</summary>

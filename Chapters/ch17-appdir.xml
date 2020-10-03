@@ -14,7 +14,8 @@
 <images>Chapter17</images>
 <downloads>Chapter17</downloads>
 </resources>
-<filename>appdir.html</filename>
+<filename>creating-an-application-directory.php</filename>
+<uri>creating-an-application-directory</uri>
 <title>Creating an Application Directory</title>
 
 <summary>Applications on RISC&nbsp;OS usually come packaged in an application directory, and ours needs to follow suit.</summary>

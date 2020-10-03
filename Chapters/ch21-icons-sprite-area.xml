@@ -14,7 +14,8 @@
 <images>Chapter21</images>
 <downloads>Chapter21</downloads>
 </resources>
-<filename>sprite-area.html</filename>
+<filename>sprite-icons-and-areas.php</filename>
+<uri>sprite-icons-and-areas</uri>
 <title>Sprite Icons and Areas</title>
 
 <summary>Sprites don&rsquo;t need text in them, and we can do more if we escape the Wimp Sprite Pool.</summary>

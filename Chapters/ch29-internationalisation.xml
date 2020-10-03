@@ -14,7 +14,8 @@
 <images>Chapter29</images>
 <downloads>Chapter29</downloads>
 </resources>
-<filename>internationalisation.html</filename>
+<filename>internationalisation.php</filename>
+<uri>internationalisation</uri>
 <title>Internationalisation</title>
 
 <summary>English isn&rsquo;t the first language of all RISC&nbsp;OS users, so how can we cater for those who would prefer to use our application in a different one?</summary>

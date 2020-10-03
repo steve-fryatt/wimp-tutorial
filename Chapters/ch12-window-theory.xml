@@ -14,7 +14,8 @@
 <images>Chapter12</images>
 <downloads>Chapter12</downloads>
 </resources>
-<filename>wintheory.html</filename>
+<filename>window-theory.php</filename>
+<uri>window-theory</uri>
 <title>Window Theory</title>
 
 <summary>With a window on the screen, we now need to understand how it works.</summary>

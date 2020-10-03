@@ -14,7 +14,8 @@
 <images>Chapter05</images>
 <downloads>Chapter05</downloads>
 </resources>
-<filename>makefiles.html</filename>
+<filename>a-better-way-to-compile.php</filename>
+<uri>a-better-way-to-compile</uri>
 <title>A Better Way to Compile</title>
 
 <summary>Compiling the code &lsquo;by hand&rsquo; soon becomes very tedious.</summary>

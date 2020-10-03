@@ -14,7 +14,8 @@
 <images>Chapter01</images>
 <downloads>Chapter01</downloads>
 </resources>
-<filename>introduction.html</filename>
+<filename>starting-in-basic.php</filename>
+<uri>starting-in-basic</uri>
 <title>Starting in BASIC</title>
 
 <summary>For those familiar with BBC&nbsp;BASIC, we start by getting a simple application up and running using this language.</summary>

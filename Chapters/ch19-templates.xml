@@ -14,7 +14,8 @@
 <images>Chapter19</images>
 <downloads>Chapter19</downloads>
 </resources>
-<filename>templates.html</filename>
+<filename>window-templates.php</filename>
+<uri>window-templates</uri>
 <title>Window Templates</title>
 
 <summary>There&rsquo;s a much easier way to design windows and icons than doing it by hand in C.</summary>

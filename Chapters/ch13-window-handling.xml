@@ -14,7 +14,8 @@
 <images>Chapter13</images>
 <downloads>Chapter13</downloads>
 </resources>
-<filename>winhandle.html</filename>
+<filename>handling-windows.php</filename>
+<uri>handling-windows</uri>
 <title>Handling Windows</title>
 
 <summary>Manipulating windows isn&rsquo;t too difficult, but there are a few things to get to grips with.</summary>

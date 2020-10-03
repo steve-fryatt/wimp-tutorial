@@ -14,7 +14,8 @@
 <images>Chapter23</images>
 <downloads>Chapter23</downloads>
 </resources>
-<filename>menus-selection.html</filename>
+<filename>menu-selections.php</filename>
+<uri>menu-selections</uri>
 <title>Menu Selections</title>
 
 <summary>Menus aren&rsquo;t a lot of use if we can&rsquo;t see the selections made by the user!</summary>

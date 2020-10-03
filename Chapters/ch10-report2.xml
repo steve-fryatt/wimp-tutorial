@@ -14,7 +14,8 @@
 <images>Chapter10</images>
 <downloads>Chapter10</downloads>
 </resources>
-<filename>report2.html</filename>
+<filename>closing-the-loose-reporting-ends.php</filename>
+<uri>closing-the-loose-reporting-ends</uri>
 <title>Closing the Loose Reporting Ends</title>
 
 <summary>Now that we can use Reporter to quickly see what&rsquo;s going on in our code, let&rsquo;s tidy up the report code a little.</summary>

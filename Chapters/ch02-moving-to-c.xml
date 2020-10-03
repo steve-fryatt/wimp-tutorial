@@ -14,7 +14,8 @@
 <images>Chapter02</images>
 <downloads>Chapter02</downloads>
 </resources>
-<filename>usingc.html</filename>
+<filename>moving-to-c.php</filename>
+<uri>moving-to-c</uri>
 <title>Moving to C</title>
 
 <summary>We can write a very similar application in C, which should help show the parallels with &ndash; and differences from &ndash; BASIC.</summary>
@@ -54,7 +55,8 @@ error = _kernel_swi(Wimp_Initialise, &amp;regs, &amp;regs);</code>
 <code lang="c">#include &quot;swis.h&quot;
 
 _kernel_oserror *error;
-error = _swix(Wimp_Initialise, _INR(0,3), (int) 310, (int) 0x4b534154, (int) &quot;Example App&quot;, (int) 0);</code>
+error = _swix(Wimp_Initialise, _INR(0,3), (int) 310, (int) 0x4b534154,
+		(int) &quot;Example App&quot;, (int) 0);</code>
 
 <p>This is better, but is still a little ungainly.</p>
 

@@ -14,7 +14,8 @@
 <images>Chapter06</images>
 <downloads>Chapter06</downloads>
 </resources>
-<filename>iconbar.html</filename>
+<filename>on-to-the-iconbar.php</filename>
+<uri>on-to-the-iconbar</uri>
 <title>Onto the Iconbar</title>
 
 <summary>Giving an application its own icon on the iconbar isn&rsquo;t too hard to do.</summary>

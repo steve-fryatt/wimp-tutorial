@@ -14,7 +14,8 @@
 <images>Chapter16</images>
 <downloads>Chapter16</downloads>
 </resources>
-<filename>interact-click.html</filename>
+<filename>mouse-clicks-in-windows.php</filename>
+<uri>mouse-clicks-in-windows</uri>
 <title>Mouse Clicks in Windows</title>
 
 <summary>The mouse can make it easy for the user to interact with and control the application, if we let it.</summary>

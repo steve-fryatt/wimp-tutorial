@@ -14,7 +14,8 @@
 <images>Chapter03</images>
 <downloads>Chapter03</downloads>
 </resources>
-<filename>compiling.html</filename>
+<filename>compiling-the-application.php</filename>
+<uri>compiling-the-application</uri>
 <title>Compiling the Application</title>
 
 <summary>How to get the code using OSLib to compile in the DDE.</summary>

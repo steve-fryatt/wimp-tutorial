@@ -14,7 +14,8 @@
 <images>Chapter28</images>
 <downloads>Chapter28</downloads>
 </resources>
-<filename>key-input.html</filename>
+<filename>keyboard-input.php</filename>
+<uri>keyboard-input</uri>
 <title>Keyboard Input</title>
 
 <summary>How do we actually find out what keys the user is pressing when they are typing into our window?</summary>

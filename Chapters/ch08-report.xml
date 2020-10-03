@@ -14,7 +14,8 @@
 <images>Chapter08</images>
 <downloads>Chapter08</downloads>
 </resources>
-<filename>report.html</filename>
+<filename>reporting-errors-and-other-messages.php</filename>
+<uri>reporting-errors-and-other-messages</uri>
 <title>Reporting Errors and Other Messages</title>
 
 <summary>It&rsquo;s time to start communicating with the user...</summary>

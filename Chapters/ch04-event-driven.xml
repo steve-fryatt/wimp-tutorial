@@ -14,7 +14,8 @@
 <images>Chapter04</images>
 <downloads>Chapter04</downloads>
 </resources>
-<filename>events.html</filename>
+<filename>event-driven-programming.php</filename>
+<uri>event-driven-programming</uri>
 <title>Event Driven Programming</title>
 
 <summary>The RISC&nbsp;OS Wimp is essentially an event-driven environment, so why don&rsquo;t we take advantage of that?</summary>

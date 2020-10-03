@@ -14,7 +14,8 @@
 <images>Chapter09</images>
 <downloads>Chapter09</downloads>
 </resources>
-<filename>debug.html</filename>
+<filename>a-look-at-debugging.php</filename>
+<uri>a-look-at-debugging</uri>
 <title>A Look at Debugging</title>
 
 <summary>Before moving on to the &lsquo;serious stuff&rsquo;, it might help to take a look at a tool to help us see what&rsquo;s going on.</summary>

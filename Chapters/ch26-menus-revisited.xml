@@ -14,7 +14,8 @@
 <images>Chapter26</images>
 <downloads>Chapter26</downloads>
 </resources>
-<filename>menus-revisited.html</filename>
+<filename>menus-revisited.php</filename>
+<uri>menus-revisited</uri>
 <title>Menus Revisited</title>
 
 <summary>We have seen how menus work from the perspective of the Wimp but, before moving on, let&rsquo;s see what SFLib can do to improve things.</summary>

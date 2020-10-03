@@ -4,7 +4,7 @@
 
 <manual xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="xmldoc.xsd" version="1.8.6">
 <title>Wimp Programming In C</title>
-<breadcrumb><dir>Home</dir><dir>Documentation</dir></breadcrumb>
+<breadcrumb><dir>Home</dir><dir>RISC&nbsp;OS</dir></breadcrumb>
 <icons>
 <zip width="34" height="34">../../software/images/zip.png</zip>
 <armv7 alt="ARMV7 OK" width="34" height="39">../../software/images/armv7.png</armv7>
@@ -20,7 +20,9 @@
 <!-- Index -->
 
 <index>
-<filename>index.html</filename>
+<filename>index.php</filename>
+<uri>./</uri>
+<uri></uri>
 <section>
 <p>Like many other RISC&nbsp;OS users, I started programming in BBC&nbsp;BASIC. Although it served me well, I began to find that it didn&rsquo;t always scale well &ndash; especially when software had to handle large, variable amounts of data or multiple documents.</p>
 
@@ -65,6 +67,6 @@
 <chapter file="ch26-menus-revisited.xml"/>
 <chapter file="ch27-icons-writable.xml"/>
 <chapter file="ch28-key-input.xml"/>
-<chapter file="ch29-internationalisation.xml"/>
+<chapter file="ch29-internationalisation.xml">
 
 </manual>

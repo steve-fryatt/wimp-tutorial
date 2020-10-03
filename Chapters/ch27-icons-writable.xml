@@ -14,7 +14,8 @@
 <images>Chapter27</images>
 <downloads>Chapter27</downloads>
 </resources>
-<filename>icons-writable.html</filename>
+<filename>writable-icons.php</filename>
+<uri>writable-icons</uri>
 <title>Writable Icons</title>
 
 <summary>The Wimp isn&rsquo;t all about interacting with the mouse, and it can be useful to allow the user to enter values from the keyboard too.</summary>

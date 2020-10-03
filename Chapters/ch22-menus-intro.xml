@@ -14,7 +14,8 @@
 <images>Chapter22</images>
 <downloads>Chapter22</downloads>
 </resources>
-<filename>menus-intro.html</filename>
+<filename>the-missing-menus.php</filename>
+<uri>the-missing-menus</uri>
 <title>The Missing Menus</title>
 
 <summary>With windows and icons introduced, now we can take a look at the third part of the RISC&nbsp;OS desktop.</summary>
