@@ -40,11 +40,11 @@
 
 <p>Whilst this doesn&rsquo;t deal with the text held inside our source code, RISC&nbsp;OS contains a module called MessageTrans which allows user-facing text to be stored in a single file and looked up as required. This makes it possible to treat all of the English text in our application in a similar way, holding it in a single <file>Messages</file> file and then providing different translations by loading a different version of the file.</p>
 
-<p>How these different files are held within the application is something that&rsquo;s left up to individual developers, and there are many different approaches available. One, which is becoming something of a de-facto standard, is to have a folder called <file>Resources</file> within the application directory, which in turn contains separate directories holding the language-specific files for each translation. How <cite>StrongHelp</cite> handles this can be seen in <reference id="fig-internat-stronghelp"/>.</p>
+<p>How these sets of files are held within the application is something that&rsquo;s left up to individual developers, and there are many different approaches available. One, which is becoming something of a de-facto standard, is to have a folder called <file>Resources</file> within the application directory, which in turn contains separate directories holding the language-specific files for each translation. How <cite>StrongHelp</cite> handles this can be seen in <reference id="fig-internat-stronghelp"/>.</p>
 
 <image id="fig-internat-stronghelp" file="internat-stronghelp.png" title="StrongHelp contains translations for English, French and German"/>
 
-<p>The different files are stored in directories named <file>France</file>, <file>Germany</file> and <file>UK</file>, which all correspond to the names of countries supported by the International module. This has become something of a de-facto standard way to handle translations, and is the approach that we will be investigating here.</p>
+<p>The files are stored in directories named <file>France</file>, <file>Germany</file> and <file>UK</file>, which all correspond to the names of countries supported by the International module. This is the approach that we will be investigating here.</p>
 </section>
 
 <section>
@@ -52,9 +52,9 @@
 
 <p>To determine which translation to use for our application, we need to read the currently configured country from the International module and use the folder corresponding to its name. To allow for the fact that we won&rsquo;t be providing translations for all the possible countries, we should fall back to a default set if a suitable folder can&rsquo;t be found. Usually this will be UK, since the vast majority of RISC&nbsp;OS applications appear to be written in English, but it&rsquo;s at the discretion of the developer &ndash; the only requirement is that the translation must exist, and be complete.</p>
 
-<p>That&rsquo;s not the end of the story, however, because it has become something of another de-facto standard for an application to check its <variable>AppName$Language</variable> system variable first; in the case of our <cite>ExamplApp</cite>, this would be <variable>ExamplApp$Lanugage</variable>. If this is set, the contents should be treated as a country name and checked against the available resource folders first &ndash; only if it fails to match should the country and default be used. This allows the user, not to mention anyone translating the application, to easily force it to load a different set of resources on demand.</p>
+<p>That&rsquo;s not the end of the story, however, because it has become something of another de-facto standard for an application to check its <variable>AppName$Language</variable> system variable first; in the case of our <cite>ExamplApp</cite>, this would be <variable>ExamplApp$Lanugage</variable>. If this is set, the contents should be treated as a country name and checked against the available resource folders first &ndash; only if it fails to match should the country and default be used. This allows the user of our application, not to mention anyone translating it, to easily force a different set of resources to be used on demand.</p>
 
-<p>This isn&rsquo;t a perfect solution, however. First of all, the close links between country, alphabet and keyboard within the International module mean that there could be other reasons than just language to choose one country over another: a machine with a French keyboard attached might need to be configured for France, whatever language the user might want. In addition, languages and countries don&rsquo;t always align neatly.</p>
+<p>This still isn&rsquo;t a perfect solution, however. First of all, the close links between country, alphabet and keyboard within the International module mean that there could be other reasons than just language to choose one country over another: a machine with a French keyboard attached might need to be configured for France, whatever language the user might want. In addition, languages and countries don&rsquo;t always align neatly.</p>
 
 <p>For example, consider a French-speaking Canadian living in the UK. If they have a UK keyboard attached to their machine, they could well need to have the country set to UK to allow this to work, but might prefer to use their applications in French. RISC&nbsp;OS offers a country for Canada (in fact it offers several, to allow for the various languages spoken), but if a suitable translastion isn&rsquo;t available, then the user might well prefer to try France as well before settling on the language for which their machine is configured.</p>
 
@@ -76,7 +76,15 @@
 <li>Use the resources in the folder defined as the fallback (often UK, but can be selected as appropriate by the developer).</li>
 </list>
 
-<p>In the case of our hypothetical Canadian, setting <variable>ResConf$LanguagesPref</variable> to &ldquo;Canada1,France&rdquo; would cause applications which followed the <cite>ResConf</cite> approach to try Canada1, France and then the configured country of UK in their quest for translations. For the Austrian, setting <variable>ResConf$LanguagesSuff</variable> to &ldquo;Germany&rdquo; would cause applications to try the configured country of Austria before checking Germany.</p>
+<p>In the case of our hypothetical Canadian, setting <variable>ResConf$LanguagesPref</variable> to &ldquo;Canada1,France&rdquo; would cause applications which followed the <cite>ResConf</cite> approach to try Canada1, France and then the configured country of UK in their quest for translations. For the Austrian, setting <variable>ResConf$LanguagesSuff</variable> to &ldquo;Germany&rdquo; would cause applications to try the configured country of Austria before checking Germany and then falling back to UK.</p>
+</section>
+
+<section>
+<title>Implementing the search</title>
+
+<p>The process for finding the correct set of resources sounds complicated, but fortunately it&rsquo;s a common enough problem that developers can usually reach for some library code to implement it. The <cite>ResFind</cite> utility is Freeware and can be included in software for a credit in the manual, or SFLib&rsquo;s resources library contains routines to carry out a very similar procedure.</p>
+
+
 
 </section>
 </chapter>
