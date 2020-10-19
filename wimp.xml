@@ -6,9 +6,9 @@
 <title>Wimp Programming In C</title>
 <breadcrumb><dir>Home</dir><dir>RISC&nbsp;OS</dir></breadcrumb>
 <icons>
-<zip width="34" height="34">../../software/images/zip.png</zip>
-<armv7 alt="ARMV7 OK" width="34" height="39">../../software/images/armv7.png</armv7>
-<iyonix alt="Iyonix OK" width="34" height="39">../../software/images/iyonix.gif</iyonix>
+<zip width="34" height="34">../../images/types/zip.png</zip>
+<armv7 alt="ARMV7 OK" width="34" height="39">../../images/compatibility/armv7.png</armv7>
+<iyonix alt="Iyonix OK" width="34" height="39">../../images/compatibility/iyonix.gif</iyonix>
 </icons>
 <resources>
 <images>Images</images>
