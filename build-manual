@@ -1,0 +1,3 @@
+#!/bin/sh
+
+xmldoc --source wimp.xml --output output/ --php static/wimp-prog/ --image images/wimp-prog/ --download files/wimp-prog/ --linkprefix wimp-prog/ --imageprefix ../../images/wimp-prog/ --downloadprefix../../files/wimp-prog/
