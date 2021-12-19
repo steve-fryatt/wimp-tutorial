@@ -2,9 +2,9 @@
 #
 # This file is part of Wimp Programming In C:
 #
-#   http://www.stevefryatt.org.uk/software/
+#   http://www.stevefryatt.org.uk/risc-os/wimp-prog
 #
-# Licensed under the EUPL, Version 1.1 only (the "Licence");
+# Licensed under the EUPL, Version 1.2 only (the "Licence");
 # You may not use this work except in compliance with the
 # Licence.
 #

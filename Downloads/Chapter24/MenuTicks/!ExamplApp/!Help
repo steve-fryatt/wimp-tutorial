@@ -7,7 +7,7 @@ Example App -- Explaining the Wimp!
 Licence
 -------
 
-  Example App is licensed under the EUPL, Version 1.1 only (the "Licence");
+  Example App is licensed under the EUPL, Version 1.2 only (the "Licence");
   you may not use this work except in compliance with the Licence.
 
   You may obtain a copy of the Licence at
@@ -24,7 +24,7 @@ Licence
   http://www.stevefryatt.org.uk/docs/wimp
 
   The necessary libraries and build tools can be found at
-  http://www.stevefryatt.org.uk/software/build
+  http://www.stevefryatt.org.uk/risc-os/wimp-progbuild
 
 
 

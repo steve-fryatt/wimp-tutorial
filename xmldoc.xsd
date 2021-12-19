@@ -4,7 +4,7 @@
    -
    - This file is part of Wimp Programming In C:
    -
-   -   http://www.stevefryatt.org.uk/software/
+   -   http://www.stevefryatt.org.uk/risc-os/wimp-prog
    -
    - Licensed under the EUPL, Version 1.2 only (the "Licence");
    - You may not use this work except in compliance with the
@@ -29,6 +29,7 @@
   <xsd:complexType name="XmlManualType">
     <xsd:sequence>
       <xsd:element name="title" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+      <xsd:element name="licence" type="xsd:string" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="breadcrumb" type="BreadcrumbType" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="icons" type="IconsType" minOccurs="0" maxOccurs="1"/>
       <xsd:element name="resources" type="ResourcesType" minOccurs="0" maxOccurs="1"/>
