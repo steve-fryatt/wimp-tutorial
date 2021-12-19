@@ -1,4 +1,28 @@
 <?xml version='1.0' encoding='utf-8' ?>
+
+<!-- Copyright 2015-2021, Stephen Fryatt (info@stevefryatt.org.uk)
+   -
+   - This file is part of Wimp Programming In C:
+   -
+   -   http://www.stevefryatt.org.uk/software/
+   -
+   - Licensed under the EUPL, Version 1.2 only (the "Licence");
+   - You may not use this work except in compliance with the
+   - Licence.
+   -
+   - You may obtain a copy of the Licence at:
+   -
+   -   http://joinup.ec.europa.eu/software/page/eupl
+   -
+   - Unless required by applicable law or agreed to in
+   - writing, software distributed under the Licence is
+   - distributed on an "AS IS" basis, WITHOUT WARRANTIES
+   - OR CONDITIONS OF ANY KIND, either express or implied.
+   -
+   - See the Licence for the specific language governing
+   - permissions and limitations under the Licence.
+  -->
+
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <xsd:element name="manual" type="XmlManualType"/>
 
@@ -153,44 +177,5 @@
   <xsd:complexType name="LinkType">
     <xsd:attribute name="href" type="xsd:string" use="required"/>
   </xsd:complexType>
-  
-
-<!--  
-  <xsd:simpleType name="CompoundKind">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="class"/>
-      <xsd:enumeration value="struct"/>
-      <xsd:enumeration value="union"/>
-      <xsd:enumeration value="interface"/>
-      <xsd:enumeration value="protocol"/>
-      <xsd:enumeration value="category"/>
-      <xsd:enumeration value="exception"/>
-      <xsd:enumeration value="file"/>
-      <xsd:enumeration value="namespace"/>
-      <xsd:enumeration value="group"/>
-      <xsd:enumeration value="page"/>
-      <xsd:enumeration value="example"/>
-      <xsd:enumeration value="dir"/>
-    </xsd:restriction>
-  </xsd:simpleType>
-
-  <xsd:simpleType name="MemberKind">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="define"/>
-      <xsd:enumeration value="property"/>
-      <xsd:enumeration value="event"/>
-      <xsd:enumeration value="variable"/>
-      <xsd:enumeration value="typedef"/>
-      <xsd:enumeration value="enum"/>
-      <xsd:enumeration value="enumvalue"/>
-      <xsd:enumeration value="function"/>
-      <xsd:enumeration value="signal"/>
-      <xsd:enumeration value="prototype"/>
-      <xsd:enumeration value="friend"/>
-      <xsd:enumeration value="dcop"/>
-      <xsd:enumeration value="slot"/>
-    </xsd:restriction>
-  </xsd:simpleType>
--->
 </xsd:schema>
 
