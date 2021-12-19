@@ -61,6 +61,11 @@
 
 <chapterlist/>
 
+<section>
+<title>About this tutorial</title>
+
+<p>This tutorial is licenced under Version 1.2 of the European Union Public Licence, and the source &ndash; in the form of a collection of XML files and the associated graphics and example downloads &ndash; can be found <link href="https://github.com/steve-fryatt/wimp-tutorial">on GitHub</link>. It can be built into the format required by this website using my <link href="https://github.com/steve-fryatt/xmldocs">XML Docs tools</link>; these may be useful as a starting point for using the content in other forms, and are also released under the EUPL&nbsp;v1.2.</p>
+</section>
 </index>
 
 <chapter file="ch01-start-basic.xml"/>

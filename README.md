@@ -13,7 +13,7 @@ Wimp Programming In C is a tutorial about writing multitasking RISC OS software 
 Use
 ---
 
-The tutorial was written with the single purpose of being published on <https://www.stevefryatt.org.uk/>, and is consequently in an XML-based format which can be parsed through [XML Docs](https://www.github.com/steve-fryatt/xml-docs) into a format suitable for the home-brew CMS used on that site. The format is largely semantic, however, so With some work on the parser's output module it shoould be possible to generate output in other formats as well.
+The tutorial was written with the single purpose of being published on <https://www.stevefryatt.org.uk/>, and is consequently in an XML-based format which can be parsed through [XML Docs](https://www.github.com/steve-fryatt/xmldocs) into a format suitable for the home-brew CMS used on that site. The format is largely semantic, however, so with some work on the parser's output module it should be possible to generate output in other formats as well.
 
 
 Licence
