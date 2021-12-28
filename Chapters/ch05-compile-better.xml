@@ -58,7 +58,7 @@
 <section>
 <title>Introducing SFLib</title>
 
-<p>The solution to this problem is to install the SFLib library, in a similar way as to what we <reference id="sect-compiling-install-oslib">did for OSLib</reference>. Copies of the library can be downloaded in a form suitable for use with the DDE from <link href="../../software/build/">my website</link> &ndash; you need the AOF version. The library is licensed with the <link href="../../software/licences.html">EUPL</link>, meaning that it&rsquo;s OK to use it in a range of open-source projects.</p>
+<p>The solution to this problem is to install the SFLib library, in a similar way as to what we <reference id="sect-compiling-install-oslib">did for OSLib</reference>. Copies of the library can be downloaded in a form suitable for use with the DDE from <link href="../../software/build/" external="false">my website</link> &ndash; you need the AOF version. The library is licensed with the <link href="../../software/licences.html" external="false">EUPL</link>, meaning that it&rsquo;s OK to use it in a range of open-source projects.</p>
 
 <p>With the zip file downloaded, the files shown in <reference id="fig-compile-better-sflib-archive"/> should be available. Note that the screenshot shows the files at the time of writing; future releases may contain different items.</p>
 

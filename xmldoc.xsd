@@ -177,6 +177,7 @@
 
   <xsd:complexType name="LinkType">
     <xsd:attribute name="href" type="xsd:string" use="required"/>
+    <xsd:attribute name="external" type="xsd:boolean"/>
   </xsd:complexType>
 </xsd:schema>
 
