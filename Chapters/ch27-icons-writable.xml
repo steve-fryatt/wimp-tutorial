@@ -64,7 +64,7 @@
 
 <p>If the user clicks with in a writable icon, the Wimp will place the caret in an appropriate position within the icon&rsquo;s text and then handle all of the usual input and editing options, including support for the <intro>global clipboard</intro>. The application can read the text back from the icon at any time, and in addition, the Wimp will pass on some of all of the keypresses for it to process if it needs to do so.</p>
 
-<p>One final point to note is that the <cite>Style Guide</cite> states that the caret should be hidden if text is currently selected: in effect, the selection becomes the insertion point for the next keypress, as anything which is typed will <em>replace</em> it. Theis can be seen in <reference id="fig-icons-writable-select"/>. Once again, the Wimp will handle this for us in writable icons.</p>
+<p>One final point to note is that the <cite>Style Guide</cite> states that the caret should be hidden if text is currently selected: in effect, the selection becomes the insertion point for the next keypress, as anything which is typed will <em>replace</em> it. This can be seen in <reference id="fig-icons-writable-select"/>. Once again, the Wimp will handle this for us in writable icons.</p>
 
 <image id="fig-icons-writable-select" file="icons-writable-select.png" title="The caret should become invisible if there is a selection"/>
 </section>
