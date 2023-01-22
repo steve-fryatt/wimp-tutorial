@@ -2,7 +2,7 @@
 
 <!DOCTYPE xmlmanual SYSTEM "../wimp.dtd">
 
-<!-- Copyright 2020-2021, Stephen Fryatt (info@stevefryatt.org.uk)
+<!-- Copyright 2020-2023, Stephen Fryatt (info@stevefryatt.org.uk)
    -
    - This file is part of Wimp Programming In C:
    -
@@ -58,7 +58,9 @@
 
 <image id="fig-icons-writable-zap" file="icons-writable-zap.png" title="An application can hide the caret if it wishes to"/>
 
-<p>An application can handle the incoming keypresses itself, inserting characters, performing edits and moving the caret as required. This will be the approach taken by software such as wordprocessors and text editors, but it can involve a fair bit of work. An easier approach, and the one that we will start by looking at here, is to hand the problem back to the Wimp by using a writable icon: one with a type of <name>wimp_BUTTON_WRITE_CLICK_DRAG</name> or <name>wimp_BUTTON_WRITABLE</name>. An example can be seen in <reference id="fig-icons-writable-icon"/>.</p>
+<p>An application can handle the incoming keypresses itself, inserting characters, performing edits and moving the caret as required. This will be the approach taken by software such as wordprocessors and text editors, but it can involve a fair bit of work. An easier approach, and the one that we will start by looking at here, is to hand the problem back to the Wimp by using a writable icon: one with a type of <name>wimp_BUTTON_WRITABLE</name>. An example can be seen in <reference id="fig-icons-writable-icon"/>.</p>
+
+<p>There&rsquo;s a second variant of writable icon with the type <name>wimp_BUTTON_WRITE_CLICK_DRAG</name>, which reports drag events to the task in addition to single clicks. Wimp-handled drags within the icon (such as for text selection) may not work with icons of this type on some versions of RISC&nbsp;OS, so in most cases <name>wimp_BUTTON_WRITABLE</name> is recommended for the best compatibility.</p>
 
 <image id="fig-icons-writable-icon" file="icons-writable-icon.png" title="In a writable icon, the Wimp handles the caret for us"/>
 
