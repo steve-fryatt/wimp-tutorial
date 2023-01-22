@@ -2,7 +2,7 @@
 
 <!DOCTYPE xmlmanual SYSTEM "../wimp.dtd">
 
-<!-- Copyright 2020-2021, Stephen Fryatt (info@stevefryatt.org.uk)
+<!-- Copyright 2020-2023, Stephen Fryatt (info@stevefryatt.org.uk)
    -
    - This file is part of Wimp Programming In C:
    -
@@ -175,7 +175,7 @@ static char win_icon_text[WIN_ICON_TEXT_LEN];</code>
 		(wimp_COLOUR_BLACK &lt;&lt; wimp_ICON_FG_COLOUR_SHIFT) |
 		(wimp_COLOUR_WHITE &lt;&lt; wimp_ICON_BG_COLOUR_SHIFT);</code>
 
-<p>Setting the button type is done in a very similar way to setting the colours: the required value is shifted into position using the constants defined by OSLib.The modified code can be found in <reference id="dl-icons-indirect-writable"/>.</p>
+<p>Setting the button type is done in a very similar way to setting the colours: the required value is shifted into position using the constants defined by OSLib. The modified code can be found in <reference id="dl-icons-indirect-writable"/>.</p>
 
 <download id="dl-icons-indirect-writable" file="WritableIcon" title="Creating a Writable Icon" compatibility="none"/>
 
