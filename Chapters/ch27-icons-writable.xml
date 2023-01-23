@@ -60,8 +60,6 @@
 
 <p>An application can handle the incoming keypresses itself, inserting characters, performing edits and moving the caret as required. This will be the approach taken by software such as wordprocessors and text editors, but it can involve a fair bit of work. An easier approach, and the one that we will start by looking at here, is to hand the problem back to the Wimp by using a writable icon: one with a type of <name>wimp_BUTTON_WRITABLE</name>. An example can be seen in <reference id="fig-icons-writable-icon"/>.</p>
 
-<p>There&rsquo;s a second variant of writable icon with the type <name>wimp_BUTTON_WRITE_CLICK_DRAG</name>, which reports drag events to the task in addition to single clicks. Wimp-handled drags within the icon (such as for text selection) may not work with icons of this type on some versions of RISC&nbsp;OS, so in most cases <name>wimp_BUTTON_WRITABLE</name> is recommended for the best compatibility.</p>
-
 <image id="fig-icons-writable-icon" file="icons-writable-icon.png" title="In a writable icon, the Wimp handles the caret for us"/>
 
 <p>If the user clicks with in a writable icon, the Wimp will place the caret in an appropriate position within the icon&rsquo;s text and then handle all of the usual input and editing options, including support for the <intro>global clipboard</intro>. The application can read the text back from the icon at any time, and in addition, the Wimp will pass on some of all of the keypresses for it to process if it needs to do so.</p>
@@ -69,6 +67,8 @@
 <p>One final point to note is that the <cite>Style Guide</cite> states that the caret should be hidden if text is currently selected: in effect, the selection becomes the insertion point for the next keypress, as anything which is typed will <em>replace</em> it. This can be seen in <reference id="fig-icons-writable-select"/>. Once again, the Wimp will handle this for us in writable icons.</p>
 
 <image id="fig-icons-writable-select" file="icons-writable-select.png" title="The caret should become invisible if there is a selection"/>
+
+<p>There&rsquo;s a second variant of writable icon with the type <name>wimp_BUTTON_WRITE_CLICK_DRAG</name>, which reports drag events to the task in addition to single clicks. Wimp-handled drags within the icon (such as for text selection) may not work with icons of this type on some versions of RISC&nbsp;OS, so in most cases <name>wimp_BUTTON_WRITABLE</name> is recommended for the best compatibility.</p>
 </section>
 
 <section id="sect-icons-writable-templ">
