@@ -182,9 +182,9 @@ RMEnsure SharedCLibrary 5.34 Error This application requires SharedCLibrary 5.34
 <col align="centre">Full Size</col>
 <col align="centre">Half Size</col>
 </columns>
-<row><col>!Sprites</col><col>90 &times; 45 dpi</col><col>32 &times; 16 pixels</col><col>16 &times; 8 pixels</col></row>
-<row><col>!Sprites22</col><col>90 &times; 90 dpi</col><col>32 &times; 32 pixels</col><col>16 &times; 16 pixels</col></row>
-<row><col>!Sprites11</col><col>180 &times; 180 dpi</col><col>64 &times; 64 pixels</col><col>32 &times; 32 pixels</col></row>
+<row><col>!Sprites</col><col>90 &times; 45 dpi</col><col>34 &times; 17 pixels</col><col>17 &times; 9 pixels</col></row>
+<row><col>!Sprites22</col><col>90 &times; 90 dpi</col><col>34 &times; 34 pixels</col><col>17 &times; 17 pixels</col></row>
+<row><col>!Sprites11</col><col>180 &times; 180 dpi</col><col>68 &times; 68 pixels</col><col>34 &times; 34 pixels</col></row>
 </table>
 
 <p>Our application sprites can end up in the Wimp Sprite Pool through a couple of mechanisms. First, when the Filer first opens a folder containing our <file>ExamplApp</file> directory, it will check inside our folder (and those of any other applications alongside it) for a file called <file>!Boot</file> (that is, <file>!ExamplApp.!Boot</file>). If one is found, it will execute that file and then stop.</p>
