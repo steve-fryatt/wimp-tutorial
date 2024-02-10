@@ -6,6 +6,7 @@
 		"markdown",
 		"latex",
 		"plaintext",
-		"xml"
+		"xml",
+		"git-commit"
 	]
 }
