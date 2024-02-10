@@ -193,7 +193,7 @@ RMEnsure SharedCLibrary 5.34 Error This application requires SharedCLibrary 5.34
 
 <code lang="obey">IconSprites &lt;Obey$Dir&gt;.!Sprites</code>
 
-<p>to the <file>!Run</file> file. Just as when the system loaded the file for us, <command>*IconSprites</command> will try all of the suffied versions of the filename first, before falling back to the default. If we did have a <file>!Boot</file> file, we would also need to use <command>*IconSprites</command> within that.</p>
+<p>to the <file>!Run</file> file. Just as when the system loaded the file for us, <command>*IconSprites</command> will try all of the suffixed versions of the filename first, before falling back to the default. If we did have a <file>!Boot</file> file, we would also need to use <command>*IconSprites</command> within that.</p>
 </section>
 
 <section id="sect-appdir-find-res">
