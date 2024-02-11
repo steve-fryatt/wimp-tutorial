@@ -262,6 +262,8 @@ Run &lt;Obey$Dir&gt;.!RunImage</code>
 
 <p>Supplied as part of the DDE is an application called <cite>Allocate</cite> &ndash; it comes in the <file>Utilities</file> folder, so if you have installed things in the standard locations it will be found inside this folder in the root of your hard disc. It allows requests for resource allocations to be assembled quickly into a form that can be emailed to the people who look after the database: once this was Acorn, but these days RISC&nbsp;OS Open are responsible for it. Remember that despite this, the database also includes software which is only intended for use on older 26-bit systems.</p>
 
+<p>If you don&rsquo;t have the DDE, then a copy of <cite>Allocate</cite> can also be found on <link href="https://www.riscosopen.org/content/allocate">the RISC&nbsp;OS Open website</link>, along with more details of the allocation process.</p>
+
 <p>When run for the first time, <cite>Allocate</cite> will ask for some personal details (name and contact information) so that any resources allocated to you can be identified &ndash; as seen in <reference id="fig-appdir-allocate-info"/>. The <icon>Dev No.</icon> field is largely obsolete in the post-Acorn world.</p>
 
 <image id="fig-appdir-allocate-info" file="appdir-allocate-info.png" title="Entering our details into Allocate"/>
