@@ -46,7 +46,7 @@
 <section>
 <p>Over the past few chapters, we&rsquo;ve seen how to create a window and get it to open on the desktop. Whilst windows are extremely useful in their own right, they can often become a lot more useful when combined with <intro>icons</intro>.</p>
 
-<p>The <cite>Programmer&rsquo;s Reference Manual</cite> defines an icon as &ldquo;a rectangular area of a window&rsquo;s workspace&rdquo; which &ndash; while accurate &ndash; is perhaps a little vague. In fact, many familiar pieces of the RISC&nbsp;OS desktop are icons: <reference id="fig-icons-intro-egs"/> shows four windows (from Paint, Ovation&nbsp;Pro and UnitConv) which are composed entirely using them.</p>
+<p>The <cite>Programmer&rsquo;s Reference Manual</cite> defines an icon as &ldquo;a rectangular area of a window&rsquo;s workspace&rdquo; which &ndash; while accurate &ndash; is perhaps a little vague. In fact, many familiar pieces of the RISC&nbsp;OS desktop are icons: <reference id="fig-icons-intro-egs"/> shows four windows (from <cite>Paint</cite>, <cite>Ovation&nbsp;Pro</cite> and <cite>UnitConv</cite>) which are composed entirely using them.</p>
 
 <image id="fig-icons-intro-egs" file="icons-intro-egs.png" title="Icons come in all shapes and sizes"/>
 
