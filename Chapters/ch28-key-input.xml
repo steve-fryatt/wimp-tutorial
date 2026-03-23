@@ -2,7 +2,7 @@
 
 <!DOCTYPE xmlmanual SYSTEM "../wimp.dtd">
 
-<!-- Copyright 2020-2021, Stephen Fryatt (info@stevefryatt.org.uk)
+<!-- Copyright 2020-2026, Stephen Fryatt (info@stevefryatt.org.uk)
    -
    - This file is part of Wimp Programming In C:
    -
@@ -292,7 +292,7 @@ extern os_error *xwimp_process_key(
 	}
 }</code>
 
-<p>In the case of <name>Key_Pressed</name> event handlers registered with SFLib using the <function>event_add_window_key_event()</function> function, the return value is passed on by <function>event_process_event()</function>. Since <function>event_process_event()</function> will also return <name>FALSE</name> if no handler was found, we can treat this as an instruction to pass the keypress on via <swi>Wimp_ProcessKey</swi>.</p> 
+<p>In the case of <name>Key_Pressed</name> event handlers registered with SFLib using the <function>event_add_window_key_event()</function> function, the return value is passed on by <function>event_process_event()</function>. Since <function>event_process_event()</function> will also return <name>FALSE</name> if no handler was found, we can treat this as an instruction to pass the keypress on via <swi>Wimp_ProcessKey</swi>.</p>
 
 <p>The changes can be found in <reference id="dl-key-input-generic"/>.</p>
 
@@ -609,7 +609,7 @@ static double win_value_area = 0.0;</code>
 
 <download id="dl-key-input-immediate" file="ImmediateKey" title="Responding Immediately to Changes" compatibility="none"/>
 
-<p>As already noted, immediate update has been a lot of work, which also has potential downsides in terms of the user interface. We&rsquo;ve used it here to demonstrate some features of the Wimp, but in general the <name>K</name> validation command&rsquo;s N flag is a feature of the Wimp that is best used very sparingly indeed.</p>
+<p>As already noted, immediate update has been a lot of work, which also has potential downsides in terms of the user interface. We&rsquo;ve used it here to demonstrate some features of the Wimp, but in general the <name>K</name> validation command&rsquo;s N flag is a feature of the Wimp that is best used very sparingly indeed. Accordingly, we&rsquo;ll now remove the code again before moving on to look at something completely different!</p>
 </section>
 </chapter>
 </manual>

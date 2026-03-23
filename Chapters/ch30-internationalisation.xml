@@ -2,7 +2,7 @@
 
 <!DOCTYPE xmlmanual SYSTEM "../wimp.dtd">
 
-<!-- Copyright 2020-2021, Stephen Fryatt (info@stevefryatt.org.uk)
+<!-- Copyright 2020-2026, Stephen Fryatt (info@stevefryatt.org.uk)
    -
    - This file is part of Wimp Programming In C:
    -
@@ -44,7 +44,16 @@
 <summary>English isn&rsquo;t the first language of all RISC&nbsp;OS users, so how can we cater for those who would prefer to use our application in a different one?</summary>
 
 <section>
-<p>Whilst English appears to be the default language for most RISC&nbsp;OS applications, a significant number of users use a different one day to day. It would clearly be desirable to allow our application to translated for use in different languages, so that even if we can&rsquo;t do it ourselves, other people can provide translations if they wish to do so.</p>
+<p>Despite considering quite a few aspects of our application, one thing that we haven&rsquo;t yet thought about is the possibility that anyone might wish to use it in a language other than English. And whilst English appears to be the default language for many RISC&nbsp;OS applications, a significant number of users will be using a different one day to day. It would clearly be desirable to allow our application to translated for use in different languages, so that even if we can&rsquo;t do it ourselves, other people can provide translations if they wish to do so.</p>
+
+<p>Unfortunately, there&rsquo;s a problem with this: we can translate the window and icon text in the <file>Templates</file>, and the contents of the <file>!Help</file> file, but there is are several pieces of user-facing text embedded in the <file>!RunImage</file> file itself. Translating this would require us to build a new copy of the application for each target language, or at least engage in some complicated conditional logic.</p>
+</section>
+
+<section>
+<title>MessageTrans</title>
+
+
+
 
 <p>Unfortunately, the system used by RISC&nbsp;OS for handling different languages dates back to the days of the BBC&nbsp;Master, and Acorn never really addressed the obvious problems with it. In addition, there was never an &lsquo;official&rsquo; way to handle different languages in an application, leading to developers each doing their own thing in the absence of any clear guidance.</p>
 

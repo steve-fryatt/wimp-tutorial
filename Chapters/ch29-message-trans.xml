@@ -1,0 +1,207 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+
+<!DOCTYPE xmlmanual SYSTEM "../wimp.dtd">
+
+<!-- Copyright 2020-2026, Stephen Fryatt (info@stevefryatt.org.uk)
+   -
+   - This file is part of Wimp Programming In C:
+   -
+   -   http://www.stevefryatt.org.uk/risc-os/wimp-prog
+   -
+   - Licensed under the EUPL, Version 1.2 only (the "Licence");
+   - You may not use this work except in compliance with the
+   - Licence.
+   -
+   - You may obtain a copy of the Licence at:
+   -
+   -   http://joinup.ec.europa.eu/software/page/eupl
+   -
+   - Unless required by applicable law or agreed to in
+   - writing, software distributed under the Licence is
+   - distributed on an "AS IS" basis, WITHOUT WARRANTIES
+   - OR CONDITIONS OF ANY KIND, either express or implied.
+   -
+   - See the Licence for the specific language governing
+   - permissions and limitations under the Licence.
+  -->
+
+<manual xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="xmldoc.xsd" version="1.8.6">
+
+<!-- Chapter 29
+   -
+   - Internationalisation
+  -->
+
+<chapter id="chap-mess-trans">
+<resources>
+<images>Chapter29</images>
+<downloads>Chapter29</downloads>
+</resources>
+<filename>message-trans.php</filename>
+<uri>message-trans</uri>
+<title>Using MessageTrans</title>
+
+<summary>English isn&rsquo;t the first language of all RISC&nbsp;OS users, so how can we cater for those who would prefer to use our application in a different one?</summary>
+
+<section>
+<p>Despite considering quite a few aspects of our application, one thing that we haven&rsquo;t yet thought about is the possibility that anyone might wish to use it in a language other than English. And whilst English appears to be the default language for many RISC&nbsp;OS applications, a significant number of users will be using a different one day to day. It would clearly be desirable to allow our application to translated for use in different languages, so that even if we can&rsquo;t do it ourselves, other people can provide translations if they wish to do so.</p>
+
+<p>Unfortunately, there&rsquo;s a problem with this: we can translate the window and icon text in the <file>Templates</file>, and the contents of the <file>!Help</file> file, but there is are several pieces of user-facing text embedded into the <file>!RunImage</file> file itself. Translating this would seem to require us to build a new copy of the application for each target language, or at least engage in some complicated conditional logic for selecting the appropriate pieces of text.</p>
+</section>
+
+<section>
+<title>The Messages file</title>
+
+<p>Fortunately RISC&nbsp;OS has a better solution, in the form of the MessageTrans module. This provides a number of SWI calls which allow us to move all of our user-facing text out of the <file>!RunImage</file> file and into a separate text file, then look the text up using simple tokens. We can then add this file to the list for translation, alongside <file>Templates</file> and <file>!Help</file>, should another language be requested.</p>
+
+<p>The first thing that we will need to do is to create our <file>Messages</file> file. Looking through the source files for text that will be presented to the user, we find the application and sprite names in <file>c.main</file> as seen in <reference id="list-mess-trans-main1"/>.</p>
+
+<code id="list-mess-trans-main1" lang="c">static char *main_application_name = &quot;Example App&quot;;
+
+static char *main_application_sprite = &quot;!examplapp&quot;;</code>
+
+<p>The application name is allocated, so this can&rsquo;t change in translastion, and the sprite name isn&rsquo;t user-facing. Further down the file, <reference id="list-mess-trans-main2"/> shows an error message used when the sprites are being loaded. Any error here would probably occur whilst the application was initialising itself and its messages, so we will leave this untouched as well: an error in English is better than no error at all if MessageTrans fails to work as expected!</p>
+
+<code id="list-mess-trans-main2" lang="c">/* Load the application sprites. */
+
+sprites = resources_load_user_sprite_area(&quot;&lt;ExamplApp$Dir&gt;.Sprites&quot;);
+if (sprites == NULL)
+	error_report_fatal(&quot;Failed to load application Sprites&quot;);</code>
+
+<p>Moving on to <file>c.ibar</file>, we start by loading the template for the <window>program information</window> window and reporting an error if this fails, as seen in <reference id="list-mess-trans-ibar1"/>. By this stage, MessageTrans should safely be running, so there&rsquo;s no harm in making this message available for translastion.</p>
+
+<code id="list-mess-trans-ibar1" lang="c">/* Program Info Window. */
+
+window_definition = windows_load_template(&quot;ProgInfo&quot;);
+if (window_definition == NULL) {
+	error_report_error(&quot;Failed to load ProgInfo template&quot;);
+	return;
+}</code>
+
+<p>Similarly, we can also include the message used if the iconbar menu fails to build. We also have the menu title passed to <function>menu_create()</function> and the menu entries passed to <function>menu_entry()</function>, as seen in <reference id="list-mess-trans-ibar2"/>.</p>
+
+<code id="list-mess-trans-ibar2" lang="c">/* Iconbar Menu. */
+
+ibar_menu = menu_create(&quot;Example&quot;, 3);
+if (ibar_menu == NULL) {
+	error_report_error(&quot;Failed to create Iconbar Menu&quot;);
+	return;
+}
+
+menu_entry(ibar_menu, IBAR_MENU_INFO, &quot;Info&quot;, (wimp_menu *) prog_info);
+menu_entry(ibar_menu, IBAR_MENU_HELP, &quot;Help...&quot;, NULL);
+menu_entry(ibar_menu, IBAR_MENU_QUIT, &quot;Quit&quot;, NULL);</code>
+
+<p>Moving on to <file>c.win</file>, we again have an error if the main window template fails to load, as seen in <reference id="list-mess-trans-win1"/>.</p>
+
+<code id="list-mess-trans-win1" lang="c">/* Load and create the window. */
+
+window_definition = windows_load_template(&quot;Main&quot;);
+if (window_definition == NULL) {
+	error_report_error(&quot;Failed to load Main template&quot;);
+	return;
+}</code>
+
+<p>And once again we have errors and menu components for the window menu and the shapes pop-up menu as seen in <reference id="list-mess-trans-win2"/>.</p>
+
+<code id="list-mess-trans-win2" lang="c">/* Window Menu. */
+
+win_menu = menu_create(&quot;Example&quot;, 3);
+if (win_menu == NULL) {
+	error_report_error(&quot;Failed to create Main Menu&quot;);
+	return;
+}
+
+menu_entry(win_menu, WIN_MENU_DECIMAL1, &quot;1 Decimal place&quot;, NULL);
+menu_entry(win_menu, WIN_MENU_DECIMAL2, &quot;2 Decimal places&quot;, NULL);
+menu_entry(win_menu, WIN_MENU_DECIMAL3, &quot;3 Decimal places&quot;, NULL);
+
+/* Shapes Menu. */
+
+win_shape_menu = menu_create(&quot;Shapes&quot;, 3);
+if (win_shape_menu == NULL) {
+	error_report_error(&quot;Failed to create Shapes Menu&quot;);
+	return;
+}
+
+menu_entry(win_shape_menu, WIN_MENU_SHAPE_CIRCLE, &quot;Circle&quot;, NULL);
+menu_entry(win_shape_menu, WIN_MENU_SHAPE_TRIANGLE, &quot;Triangle&quot;, NULL);
+menu_entry(win_shape_menu, WIN_MENU_SHAPE_SQUARE, &quot;Square&quot;, NULL);</code>
+
+<p>Finally, in <file>c.calc</file>, <reference id="list-mess-trans-calc"/> shows the &ldquo;n/a&rdquo; which is used to denote for &ldquo;not applicable&rdquo;.</p>
+
+<code id="list-mess-trans-calc" lang="c" title="The user-facing text from c.calc">static char *calc_not_applicable = &quot;n/a&quot;;</code>
+
+<p>Pulling all of these pieces of text together, we end up with the <file>Messages</file> file seen in <reference id="list-mess-trans-messages"/>. The format is fairly simple: lines consist of tokens &ndash; which can be any character except a comma (<code>,</code>), closing bracket (<code>)</code>), forward slash (<code>/</code>) or question mark (<code>?</code>) until the first colon (<code>:</code>) is reached. Following the colon is the value associated with the token. Blank lines, and lines starting with a <code>#</code>, are ignored.</p>
+
+<p>For example, the token &ldquo;MainMenu2&rdquo; in the file below would be associated with the text &ldquo;3 Decimal Places&rdquo;, while the token &ldquo;NA&rdquo; would be associated with the text &ldquo;n/a&rdquo;. The tokens <em>are case sensitive</em>.</p>
+
+<code id="list-mess-trans-messages" lang="messtrans" file="Messages" title="The new Messages file for MessageTrans"># Example 29.1
+#
+# (c) Stephen Fryatt, 2026
+#
+# File: Messages
+
+# Calculation messages
+
+NA:n/a
+
+# Iconbar menu
+
+IBarMenuTitle:Example
+IBarMenu0:Info
+IBarMenu1:Help...
+IBarMenu2:Quit
+
+# Main menu
+
+MainMenuTitle:Example
+MainMenu0:1 Decimal place
+MainMenu1:2 Decimal places
+MainMenu2:3 Decimal places
+
+# Shapes menu
+
+ShapeMenuTitle:Shapes
+ShapeMenu0:Circle
+ShapeMenu1:Triangle
+ShapeMenu2:Square
+
+# Error messages
+
+BadIBarMenu:Failed to create Iconbar Menu
+BadMainMenu:Failed to create Main Menu
+BadShapeMenu:Failed to create Shapes Menu
+
+BadMainTempl:Failed to load Main template
+BadInfoTempl:Failed to load ProgInfo template</code>
+
+<p>There are a couple of additional wrinkles to the file format to be borne in mind, although we aren&rsquo;t using them here. The <code>?</code> character is treated as a single-character wildcard in a token name, so the line</p>
+
+<code lang="messtrans">Help.IBar.Menu?:This is an entry in the Icon Bar menu.</code>
+
+<p>would match &ldquo;Help.IBarMenu0&rdquo;, &ldquo;Help.IBarMenu1&rdquo;, &ldquo;Help.IBarMenuA&rdquo;, and a whole lot more variations. It is also possible to specify complete alternative tokens, using either <code>/</code> or a newline as separators &ndash; both</p>
+
+<code lang="messtrans">Help.Find.Cancel/Help.Goto.Cancel/Help.Sort.Cancel:Click Select to close the dialogue.</code>
+
+<p>and</p>
+
+<code lang="messtrans">Help.Find.Cancel
+Help.Goto.Cancel
+Help.Sort.Cancel:Click Select to close the dialogue.</code>
+
+<p>would be equivalent. In both cases, three separate tokens would return the text &ldquo;Click Select to close the dialogue.&rdquo;; this can be extremely useful when working with things like repetitive interactive help messages.</p>
+</section>
+
+<section>
+<title>Loading the Messages file</title>
+
+</section>
+
+<section>
+<title>Looking up messages</title>
+
+
+</section>
+</chapter>
+</manual>
