@@ -28,6 +28,7 @@ xmldoc \
 	--php static/wimp-prog/ \
 	--image images/wimp-prog/ \
 	--download files/wimp-prog/ \
+	--cms protected/docs/wimp-prog.csv \
 	--linkprefix wimp-prog/ \
 	--imageprefix ../../images/wimp-prog/ \
 	--downloadprefix ../../files/wimp-prog/
