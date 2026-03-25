@@ -411,7 +411,7 @@ event_set_window_icon_popup_selection(win_handle, WIN_ICON_SHAPE_POPUP, WIN_MENU
 
 <p>To tidy up, we can remove the calls to the <function>menu_initialise()</function> and <function>menu_process_event()</function> functions from <file>c.main</file>, and then delete them from <file>c.menus</file>. The <function>menu_message_menus_deleted()</function> function is no longer required, either. Finally, the <function>menu_open()</function>, <function>menu_open_ibar()</function>, <function>menu_open_popup()</function> and <function>menu_set_popup_menu()</function> functions are not required, since the library does these actions for us.</p>
 
-<p>With these removed, the <file>c.menu</file> file only contains the <function>menu_create()</function> and <function>menu_entry()</function> functions for setting up menus blocks. We will keep these for now, since the system doesn&rsquo;s provide any standard way of building menus. The newly-streamlined code can be found in <reference id="dl-menus-revisited-complete"/>.</p>
+<p>With these removed, the <file>c.menu</file> file only contains the <function>menu_create()</function> and <function>menu_entry()</function> functions for setting up menus blocks. We will keep these for now, since the system doesn&rsquo;t provide any standard way of building menus. The newly-streamlined code can be found in <reference id="dl-menus-revisited-complete"/>.</p>
 
 <download id="dl-menus-revisited-complete" file="MenuLibComplete" title="Removing Our Custom Menu Event Support" compatibility="none"/>
 
