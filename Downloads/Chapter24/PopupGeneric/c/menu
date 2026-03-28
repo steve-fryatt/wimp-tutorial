@@ -147,7 +147,7 @@ void menu_entry(wimp_menu *menu, int entry, char *text, wimp_menu *sub_menu)
 	if (buffer != NULL) {
 		strncpy(buffer, text, len);
 		buffer[len] = '\0';
-		definition->data.indirected_text.text = text;
+		definition->data.indirected_text.text = buffer;
 		definition->data.indirected_text.validation = "";
 		definition->data.indirected_text.size = len + 1;
 		definition->icon_flags |= wimp_ICON_INDIRECTED;

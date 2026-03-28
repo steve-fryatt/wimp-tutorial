@@ -213,7 +213,7 @@ struct wimp_menu_entry {
 	if (buffer != NULL) {
 		strncpy(buffer, text, len);
 		buffer[len] = '\0';
-		definition-&gt;data.indirected_text.text = text;
+		definition-&gt;data.indirected_text.text = buffer;
 		definition-&gt;data.indirected_text.validation = "";
 		definition-&gt;data.indirected_text.size = len + 1;
 		definition-&gt;icon_flags |= wimp_ICON_INDIRECTED;
