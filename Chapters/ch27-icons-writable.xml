@@ -96,7 +96,7 @@
 <section>
 <title>Extra calculations</title>
 
-<p>In order to make our new icons work, we will need to add some additional functionality to the <file>c.calc</file> and <file>h.calc</file> files. First, we will define some dimension types in the header file, as shown in <reference id="list-icons-writable-dims"/>. These will allow us to tell the code which of the fields the user has specified as the base for calculations.</p> 
+<p>In order to make our new icons work, we will need to add some additional functionality to the <file>c.calc</file> and <file>h.calc</file> files. First, we will define some dimension types in the header file, as shown in <reference id="list-icons-writable-dims"/>. These will allow us to tell the code which of the fields the user has specified as the base for calculations.</p>
 
 <code id="list-icons-writable-dims" lang="c" title="The types of dimension that we will be able to calculate">/* Dimension Types */
 
@@ -149,7 +149,7 @@ void calc_set_dimension(enum calc_dimension dimension, double value)
 
 <p>Finally, we will add three new functions &ndash; <function>calc_get_length()</function>, <function>calc_get_perimeter()</function> and <function>calc_get_area()</function> &ndash; which will operate in a similar way to the existing <function>calc_get_sides()</function> and <function>calc_get_internal_angle()</function> functions. When called, they will calculate the necessary value and write it to a string buffer, before returning a pointer to that buffer.</p>
 
-<p>The additional code, including a couple of internal functions to convert to and from area, can be seen in <reference id="list-icons-writable-calc"/>. This is somewhat incidental to the purpose of this tutorial, so there should be no reason not to take it as a &lsquo;black box&rsquo; if you do not wish to get bogged down in the mathematics.</p>
+<p>The additional code, including a couple of internal functions to convert to and from area, can be seen in <reference id="list-icons-writable-calc"/>. This is somewhat incidental to the purpose of this tutorial, so there should be no reason not to take it as a &lsquo;black box&rsquo; if you do not wish to get bogged down in the mathematics. Note that the code uses a <function>string_printf()</function> function from SFLib&rsquo;s string library instead of the more usual <function>snprintf()</function> because it is guaranteed to leave the buffer correctly terminated with a <code>'\0'</code>, even if the result is too long to fit into the space.</p>
 
 <code id="list-icons-writable-calc" lang="c" title="The additional calculation routines">/* The length of a side, or diameter of a circle. */
 

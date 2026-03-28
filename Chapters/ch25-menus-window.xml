@@ -207,7 +207,7 @@ char *calc_get_internal_angle(void)
 	return calc_buffer;
 }</code>
 
-<p>The code starts with some global constants and variables, which between them provide storage for the current shape and formatting choices. There are two buffers: one to hold the most recently generated output text, and the other to hold a <function>printf()</function> format string.</p>
+<p>The code starts with some global constants and variables, which between them provide storage for the current shape and formatting choices. There are two buffers: one to hold the most recently generated output text, and the other to hold a <function>printf()</function> format string. We are using a <function>string_printf()</function> function from SFLib&rsquo;s string library instead of the more usual <function>snprintf()</function> because it is guaranteed to leave the buffer correctly terminated with a <code>'\0'</code>, even if the result is too long to fit into the space.</p>
 
 <p>The <function>calc_initialise()</function> function needs to be called from <function>main_initialise()</function> in order to set up the variables and buffers to some sensible defaults, after which <function>calc_set_shape()</function> and <function>calc_set_format()</function> can be used to choose the active shape and set the number of decimal places used when displaying numbers. The configured number of decimal places can be read back using the <function>calc_get_places()</function> function.</p>
 
