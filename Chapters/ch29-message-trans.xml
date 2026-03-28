@@ -29,7 +29,7 @@
 
 <!-- Chapter 29
    -
-   - Internationalisation
+   - MessageTrans
   -->
 
 <chapter id="chap-mess-trans">
@@ -105,12 +105,12 @@ BadInfoTempl:Failed to load ProgInfo template</code>
 
 <p>As an example, if we looked up the token &ldquo;MainMenu2&rdquo; in the file above, we would have the text &ldquo;3 Decimal Places&rdquo; returned to us, whilst looking up the token &ldquo;NA&rdquo; would return the text &ldquo;n/a&rdquo;. The tokens are case sensitive, so attempting to look up &ldquo;mainmenu2&rdquo; or &ldquo;na&rdquo; would not match the same entries (but these could be separate entries in their own right).</p>
 
-<p>It is possilbe to associate two or more tokens with a single piece of text by separating the token names with a forward slash or a new line. We have used this in our file to have a single entry for the menu title associated with both the &ldquo;IBarMenu&rdquo; and &ldquo;MainMenu&rdquo; tokens &ndash; this makes sense, as both titles are based on the name of the application. We could also have written this as</p>
+<p>It is possible to associate two or more tokens with a single piece of text by separating the token names with a forward slash or a new line. We have used this in our file to have a single entry for the menu title associated with both the &ldquo;IBarMenu&rdquo; and &ldquo;MainMenu&rdquo; tokens &ndash; this makes sense, as both titles are based on the name of the application. We could also have written this as</p>
 
 <code lang="messtrans">IBarMenu
 MainMenu:Example</code>
 
-<p>and it us up to the developer which they choose. In addition to our menu titles, this feature can be extremely useful when working with things like repetitive interactive help messages.</p>
+<p>and it is up to the developer which they choose. In addition to our menu titles, this feature can be extremely useful when working with things like repetitive interactive help messages.</p>
 
 <p>Within token names, the <code>?</code> is treated as a single-character wildcard, which provides another way of handling duplicated texts. If we had the line</p>
 
@@ -118,7 +118,7 @@ MainMenu:Example</code>
 
 <p>in our messages file, it would match the tokens &ldquo;Help.IBarMenu0&rdquo;, &ldquo;Help.IBarMenu1&rdquo;, &ldquo;Help.IBarMenuA&rdquo; &ndash; and a whole lot more variations!</p>
 
-<p>The token names that we have selected are fairly arbitrary. The aim is to keep them short, but also to make them clear and memorable so that there is no question what they refer to. That said, other approaches to naming tokens do exist &ndash; in the end, it is up to the developer to decide what they are most comfortable with (and what they expect any translators to be comfortable with)!</p>
+<p>The token names that we have selected are fairly arbitrary. The aim is to keep them short, but also to make them clear and memorable so that there is no question what they refer to. That said, other approaches to naming tokens do exist &ndash; in the end, it is up to the developer to decide what they are most comfortable with (and what they expect any translators to appreciate)!</p>
 </section>
 
 
@@ -135,7 +135,7 @@ MainMenu:Example</code>
 	int				*size
 );</code>
 
-<p>We call <swi>MessageTrans_FileInfo</swi>, which is defined by OSLib as shown above, with <variable>*file_name</variable> being a pointer to the filename of our file. If we also supply pointers to variables in which to return some flags and the file size, it will return us some information about the file and the amount of memory required to load it into memory. In practice, the only flag that is defined is <name>messagetrans_DIRECT_ACCESS</name>, which indicates that the file is already in memory (it may be stored in ResourceFS, for example) and can be accessed directly from there without it needing to be loaded into RAM first. As previously mentioned, this feature tends to be used by ROM modules and isn&rsquo;t something that will affect us.</p>
+<p>We call <swi>MessageTrans_FileInfo</swi>, which is defined by OSLib as shown above, with <variable>*file_name</variable> being a pointer to the filename of our file. If we also supply pointers to variables in which to return flags and the file size, it will return us some information about the file and the amount of memory required to load it into memory. In practice, the only flag that is defined is <name>messagetrans_DIRECT_ACCESS</name>, which indicates that the file is already in memory (it may be stored in ResourceFS, for example) and can be accessed directly from there without it needing to be loaded into RAM first. As previously mentioned, this feature tends to be used by ROM modules, and therefore isn&rsquo;t something that will affect us.</p>
 
 <p>Armed with the size of the file, we can allocate the memory that we need, and also allocate space for a <name>messagetrans_control_block</name> structure which is what MessageTrans uses for a file handle.</p>
 
@@ -173,7 +173,7 @@ message_buffer = malloc(message_size);</code>
 
 <code lang="c">messagetrans_open_file(message_block, messages_file, message_buffer);</code>
 
-<p>Our messages file is now held in the memory pointed to by <variable>*message_buffer</variable> and we can access it thorough the control block pointed to by <variable>message_block</variable>.</p>
+<p>Our messages file is now held in the memory pointed to by <variable>*message_buffer</variable> and we can access it through the control block pointed to by <variable>message_block</variable>.</p>
 
 <p>Putting all of the blocks together and adding in the missing error handling gives us the <function>msgs_initialise()</function> function seen in <reference id="list-mess-trans-load"/>.</p>
 
@@ -260,7 +260,7 @@ message_buffer = malloc(message_size);</code>
 <section>
 <title>Looking up messages</title>
 
-<p>With our messages file loaded, we will need to be able to look up the tokens and convert them into user-facing text. There are a number of ways to do this, but the one most likely to be useful is the <swi>MessageTrans_Lookup</swi> SWI &ndash; which OSLib defines as follows.</p>
+<p>With our messages file loaded, we will need to be able to look up the tokens and convert them into user-facing text. There are a number of ways to do this, but the one which is most likely to be useful is the <swi>MessageTrans_Lookup</swi> SWI &ndash; which OSLib defines as follows.</p>
 
 <code lang="c">extern char *messagetrans_lookup(
 	messagetrans_control_block const *cb,
@@ -286,7 +286,7 @@ message_buffer = malloc(message_size);</code>
 
 <p>then we could expect the memory pointed to by <variable>*buffer</variable> to contain the text &ldquo;10 Green Bottles&rdquo; afterwards.</p>
 
-<p>SFLib&rsquo;s msgs library contains a number of functions which can be used to access <swi>MessageTrans_Lookup</swi>, which ultimately all end up by calling <function>msgs_param_lookup_result()</function> as defined in <reference id="list-mess-trans-lookup"/>. Given C&rsquo;s vagaries around the use of strings, care is taken to try to ensure that a valid <code>'\0'</code>-terminated string is returned in <em>most</em> circumstances. This should only fail if the suupplied buffer itself is invalid &ndash; in which situation, our application probably has other problems to worry about first!</p>
+<p>SFLib&rsquo;s msgs library contains a number of functions which can be used to access <swi>MessageTrans_Lookup</swi>, which ultimately all end up by calling <function>msgs_param_lookup_result()</function> as defined in <reference id="list-mess-trans-lookup"/>. Given C&rsquo;s vagaries around the use of strings, care is taken to try to ensure that a valid <code>'\0'</code>-terminated string is returned in <em>most</em> circumstances. This should only fail if the supplied buffer itself is invalid &ndash; in which situation, our application probably has other more important problems to worry about first!</p>
 
 <code lang="c" id="list-mess-trans-lookup" title="Looking up a message token">osbool msgs_param_lookup_result(char *token, char *buffer, size_t buffer_size, char *a, char *b, char *c, char *d)
 {
@@ -323,7 +323,7 @@ message_buffer = malloc(message_size);</code>
 	return TRUE;
 }</code>
 
-<p>The function starts by checking that <variable>*buffer</variable> isn&rsquo;t <name>NULL</name> and the size is non-zero. If either of these checks fail, then it can&rsquo;t safely write anything to the buffer and so simply returns <name>FALSE</name> to indicate failure.</p>
+<p>The function starts by checking that <variable>*buffer</variable> isn&rsquo;t <name>NULL</name> and that size is non-zero. If either of these checks fail, then it can&rsquo;t safely write anything to the buffer and so simply returns <name>FALSE</name> to indicate failure.</p>
 
 <p>Once we know that we have a buffer, we check that <variable>*token</variable> isn&rsquo;t <name>NULL</name>; if it is, we terminate the buffer and then return <name>FALSE</name>. The next check is to see if <function>msgs_initialise()</function> has been called (because <variable>*message_block</variable> will be <name>NULL</name> otherwise); if it hasn&rsquo;t, we copy the token into the buffer to give <em>some</em> indication of what the intent was, and return <name>FALSE</name>. The final step is to call <function>messagetrans_lookup()</function>, terminating the buffer and returning <name>FALSE</name> if an error occurred. If nothing went wrong, we return <name>TRUE</name>.</p>
 
@@ -402,7 +402,7 @@ osbool msgs_lookup_result(char *token, char *buffer, size_t buffer_size)
 	wimp_close_template();
 }</code>
 
-<p>Since the call to <function>error_report_fatal()</function> won't return, we can be confident that if we get as far as <function>wimp_initialise()</function>, then we probably have a working instance of MessageTrans. There&rsquo;s no point tokenising the error message, as if it gets used we know that MessageTrans probably isn&rsquo;t working for us anyway!</p>
+<p>Since the call to <function>error_report_fatal()</function> won't return we can be confident that, if we get as far as <function>wimp_initialise()</function>, then we probably have a working instance of MessageTrans. There&rsquo;s no point tokenising the error message, as if it gets used we know that MessageTrans probably isn&rsquo;t working for us anyway!</p>
 
 <p>Further down the file, we can tokenise the error reported if the sprites fail to load simply by swapping the call to <function>error_report_fatal()</function> into the similarly-named <function>error_msgs_report_fatal()</function>. SFLib&rsquo;s errors library provides sibling MessageTrans calls for many of its reporting functions, which simply go on to call <function>msgs_lookup()</function> for us. Here we are showing another feature offered by MessageTrans: if the text supplied to <swi>MessageTrans_Lookup</swi> contains a colon, then what follows is treated as a fallback text in case the lookup fails for any reason. This lets us provide a backup error message, to reduce the chance that the user is faced with nothing should things go wrong.</p>
 
@@ -419,7 +419,7 @@ osbool msgs_lookup_result(char *token, char *buffer, size_t buffer_size)
 <section>
 <title>Translating the menus</title>
 
-<p>A significant source of the text within our messages file are our application&rsquo;s menus, so perhaps the next place to look is the menu generation within <file>c.menus</file>. Currently the <function>menu_create()</function> and <function>menu_entry()</function> functions take a pointer to the text which we want to appear in the menu title or entry, so it would be useful if these could take a pointer to a MessageTrans token instead. If we look at the code to set up the menu title in <function>menu_create()</function>, we find the following.</p>
+<p>A significant source of the text within our messages file are our application&rsquo;s menus, so perhaps the next place to look to convert is the menu generation within <file>c.menus</file>. Currently the <function>menu_create()</function> and <function>menu_entry()</function> functions take a pointer to the text which we want to appear in the menu title or entry, so it would be useful if these could take a pointer to a MessageTrans token instead. If we look at the code to set up the menu title in <function>menu_create()</function>, we find the following.</p>
 
 <code lang="c">len = strlen(title);
 if (len &gt; 12)
