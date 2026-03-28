@@ -34,91 +34,349 @@
 
 <chapter id="chap-internat">
 <resources>
-<images>Chapter29</images>
-<downloads>Chapter29</downloads>
+<images>Chapter30</images>
+<downloads>Chapter30</downloads>
 </resources>
 <filename>internationalisation.php</filename>
 <uri>internationalisation</uri>
 <title>Internationalisation</title>
 
-<summary>English isn&rsquo;t the first language of all RISC&nbsp;OS users, so how can we cater for those who would prefer to use our application in a different one?</summary>
+<summary>It&rsquo;s all very well being able to translate our application into different languages, but how do we make use of that?</summary>
 
 <section>
-<p>Despite considering quite a few aspects of our application, one thing that we haven&rsquo;t yet thought about is the possibility that anyone might wish to use it in a language other than English. And whilst English appears to be the default language for many RISC&nbsp;OS applications, a significant number of users will be using a different one day to day. It would clearly be desirable to allow our application to translated for use in different languages, so that even if we can&rsquo;t do it ourselves, other people can provide translations if they wish to do so.</p>
+<p>In the <reference id="chap-mess-trans">previous chapter</reference>, we separated all of the user-facing text in our application from the code in the <file>!RunImage</file> file &ndash; paving the way for translations away from the default English. What we didn&rsquo;t consider, however, was how we might make use of this new functionality.</p>
 
-<p>Unfortunately, there&rsquo;s a problem with this: we can translate the window and icon text in the <file>Templates</file>, and the contents of the <file>!Help</file> file, but there is are several pieces of user-facing text embedded in the <file>!RunImage</file> file itself. Translating this would require us to build a new copy of the application for each target language, or at least engage in some complicated conditional logic.</p>
+<p>If our application gains the ability to operate in more than one language, then we will need to find a way to store all of the translations within its application folder and to select the most appropriate set for the user each time it starts up.</p>
+
+<p>Finding a solution to this problem is known as &ldquo;internationalisation&rdquo; &ndash; or &ldquo;i18n&rdquo; as it is often referred to.</p>
 </section>
 
-<section>
-<title>MessageTrans</title>
-
-
-
-
-<p>Unfortunately, the system used by RISC&nbsp;OS for handling different languages dates back to the days of the BBC&nbsp;Master, and Acorn never really addressed the obvious problems with it. In addition, there was never an &lsquo;official&rsquo; way to handle different languages in an application, leading to developers each doing their own thing in the absence of any clear guidance.</p>
-
-<p>The fundamental support for internationalising applications on RISC&nbsp;OS is provided by the International module, which allows a country, alphabet and keyboard layout to be configured for the system. However, setting the country also sets the default alphabet and keyboard layout, which immediately causes a potential problem should a user wish to type on a keyboard which isn&rsquo;t considered &lsquo;standard&rsquo; for their country.</p>
-
-<p>In an attempt to address some of the issues, RISC&nbsp;OS&nbsp;3 introduced the Territory Manager. This added support for tailoring parts of applications for different regions, including dates, times and timezones. There are routines for converting the case of letters, comparing strings and providing information about how to represent numbers, and the standard C library makes use of some of these if <function>setlocale()</function> is called.</p>
-
-<p>Unfortunately the system has many drawbacks, and a search of the online forums and newsgroups will quickly reveal many debates about the ways in which it should be improved. Here, we will restrict ourselves to looking at the system as it currently exists, and what an application author should do <em>now</em> to support their international users.</p>
-</section>
 
 <section>
 <title>Separate resources</title>
 
-<p>The most fundamental thing that an application can do to assist non-English speakers is to allow itself to be translated for use in other languages. Our application would currently struggle with this, however, since user-facing text such as menu entries is held as string constants within the C code itself. Changing the language would require the source code to be updated, and a different <file>!RunImage</file> to be compiled.</p>
-
-<p>Fortunately this isn&rsquo;t necessary, and the answer lies &ndash; at least in part &ndash; in the window templates that we introduced in <reference id="chap-templates"/>. These define the look and feel of our application&rsquo;s windows, including all of the icon text: it would be possible to produce more than set of templates, in English, French, German and so on, then load the appropriate one when the application starts.</p>
-
-<p>Whilst this doesn&rsquo;t deal with the text held inside our source code, RISC&nbsp;OS contains a module called MessageTrans which allows user-facing text to be stored in a single file and looked up as required. This makes it possible to treat all of the English text in our application in a similar way, holding it in a single <file>Messages</file> file and then providing different translations by loading a different version of the file.</p>
-
-<p>How these sets of files are held within the application is something that&rsquo;s left up to individual developers, and there are many different approaches available. One, which is becoming something of a de-facto standard, is to have a folder called <file>Resources</file> within the application directory, which in turn contains separate directories holding the language-specific files for each translation. How <cite>StrongHelp</cite> handles this can be seen in <reference id="fig-internat-stronghelp"/>.</p>
+<p>Aside from the Toolbox, RISC&nbsp;OS doesn&rsquo;t really define a standard way to handle different languages within an application, and it is something which is largely left up to individual developers. There are many different approaches available, but a common one is to have a folder called <file>Resources</file> within the application directory. This folder, in turn, contains separate directories holding the language-specific files for each translation: including the English one that we currently have. How <cite>StrongHelp</cite> handles this can be seen in <reference id="fig-internat-stronghelp"/>.</p>
 
 <image id="fig-internat-stronghelp" file="internat-stronghelp.png" title="StrongHelp contains translations for English, French and German"/>
 
-<p>The files are stored in directories named <file>France</file>, <file>Germany</file> and <file>UK</file>, which all correspond to the names of countries supported by the International module. This is the approach that we will be investigating here.</p>
+<p>In the <cite>StrongHelp</cite> <file>Resources</file> folder, files are stored in directories named <file>France</file>, <file>Germany</file> and <file>UK</file> &ndash; which all correspond to the names of countries supported by the International module. Given its relative popularity, this is the approach that we will be investigating here.</p>
+
+<p>The fundamental support for internationalising applications on RISC&nbsp;OS is provided by the International module, which allows a country, alphabet and keyboard layout to be configured for the system in a manner which would be very familiar to users of the BBC&nbsp;Master. However, setting the country also sets the default alphabet and keyboard layout, which immediately causes a potential problem should a user wish to type on a keyboard which isn&rsquo;t considered &lsquo;standard&rsquo; for their country.</p>
+
+<p>In an attempt to address some of the issues, RISC&nbsp;OS&nbsp;3 introduced the Territory Manager. This added support for tailoring parts of applications for different regions, including dates, times and timezones. There are routines for converting the case of letters, comparing strings and providing information about how to represent numbers; the standard C library makes use of some of these if <function>setlocale()</function> is called.</p>
+
+<p>Unfortunately the system has many drawbacks, and a search of the online forums and newsgroups will quickly reveal numerous debates about the ways in which it should be improved. Here, we will restrict ourselves to looking at the system as it currently exists, and what an application author should do <em>now</em> to support their international users.</p>
 </section>
 
-<section>
+
+<section id="sect-internat-pick">
 <title>Pick a country</title>
 
-<p>To determine which translation to use for our application, we need to read the currently configured country from the International module and use the folder corresponding to its name. To allow for the fact that we won&rsquo;t be providing translations for all the possible countries, we should fall back to a default set if a suitable folder can&rsquo;t be found. Usually this will be UK, since the vast majority of RISC&nbsp;OS applications appear to be written in English, but it&rsquo;s at the discretion of the developer &ndash; the only requirement is that the translation must exist, and be complete.</p>
+<p>To determine which translation to use for our application, we need to read the currently configured country from the International module and use the folder corresponding to its name. To allow for the fact that we won&rsquo;t be providing translations for all of the possible countries, we should fall back to a default set if a suitable folder can&rsquo;t be found. Usually this will be <file>UK</file>, since the vast majority of RISC&nbsp;OS applications appear to be written in English, but it&rsquo;s at the discretion of the developer &ndash; the only requirement is that the translation must exist, and be complete.</p>
 
-<p>That&rsquo;s not the end of the story, however, because it has become something of another de-facto standard for an application to check its <variable>AppName$Language</variable> system variable first; in the case of our <cite>ExamplApp</cite>, this would be <variable>ExamplApp$Lanugage</variable>. If this is set, the contents should be treated as a country name and checked against the available resource folders first &ndash; only if it fails to match should the country and default be used. This allows the user of our application, not to mention anyone translating it, to easily force a different set of resources to be used on demand.</p>
+<p>That&rsquo;s not the end of the story, however, because it has become something of a de-facto standard for an application to check its <variable>AppName$Language</variable> system variable first; in the case of our <cite>ExamplApp</cite>, this would be <variable>ExamplApp$Lanugage</variable>. If this is set, the contents should be treated as a country name and checked against the available resource folders first &ndash; only if it fails to match should the search continue further. This allows the user of our application, not to mention anyone translating it, to easily force a different set of resources to be used on demand.</p>
 
 <p>This still isn&rsquo;t a perfect solution, however. First of all, the close links between country, alphabet and keyboard within the International module mean that there could be other reasons than just language to choose one country over another: a machine with a French keyboard attached might need to be configured for France, whatever language the user might want. In addition, languages and countries don&rsquo;t always align neatly.</p>
 
-<p>For example, consider a French-speaking Canadian living in the UK. If they have a UK keyboard attached to their machine, they could well need to have the country set to UK to allow this to work, but might prefer to use their applications in French. RISC&nbsp;OS offers a country for Canada (in fact it offers several, to allow for the various languages spoken), but if a suitable translastion isn&rsquo;t available, then the user might well prefer to try France as well before settling on the language for which their machine is configured.</p>
+<p>For example, consider a French-speaking Canadian living in the UK. If they have a UK keyboard attached to their machine, they could well need to have the country set to UK to allow this to work, but might prefer to use their applications in French. RISC&nbsp;OS offers a country for Canada (in fact it offers several, to allow for the various languages spoken), but if a suitable translation isn&rsquo;t available, then the user might well prefer to try France as well before settling on the language for which their machine is configured.</p>
 
 <p>Alternatively, consider an Austrian who has their machine configured for Austria. In this case, their chosen country matches their language preference, but if no Austrian translation is available then software will usually fall back to UK. In most cases, our Austrian user would probably prefer that their applications offer them a translation intended for Germany first, if one is available.</p>
 
-<p>To help solve issues like these, Olaf Krumnow and Herbert zur Nedden of the German Archimedes Group devised a system known as <link href="http://www.gag.de/software/ResFind">ResFind</link>, which has further extended the de-facto standards outlined already. Two system variables, named <variable>ResConf$LanguagesPref</variable> and <variable>ResConf$LanguagesSuff</variable>, allow a list of countries to be specified for consideration before and after the configured country is tried. This way, a user can supply one of more countries that they would prefer to try before the one for which the machine is configured; alternatively, they can suggest a list of alternatives if their configured option isn&rsquo;t available.</p>
+<p>To help solve issues like these, Olaf Krumnow and Herbert zur Nedden of the German Archimedes Group have devised a system known as <link href="http://www.gag.de/software/ResFind">ResFind</link>, which has further extended the de-facto standards outlined already &ndash; a copy of the utility can be seen in use within <cite>StrongHelp</cite> in <reference id="fig-internat-stronghelp">screenshot above</reference>. Two system variables, named <variable>ResConf$LanguagesPref</variable> and <variable>ResConf$LanguagesSuff</variable>, allow a list of countries to be specified for consideration before and after the configured country is tried. This way, a user can supply one of more countries that they would prefer to try before the one for which the machine is configured; alternatively, they can suggest a list of alternatives if their configured option isn&rsquo;t available.</p>
 
-<p>Taking all of these features together, an application should do five things in order to identify its resources.</p>
+<p>Taking all of these features together, an application should ideally do five things in sequence, in order to identify which if its resources it should use.</p>
 
 <list type="ol">
 <li>If the variable <variable>AppName$Language</variable> is defined (where &ldquo;AppName&rdquo; is the name of the application), treat the contents as the name of a country. If it matches the name of one of the available resource folders, use that folder.</li>
 
 <li>If the variable <variable>ResConf$LanguagesPref</variable> is defined, treat its contents as a comma-separated list of country names. If any match the the name of one of the available resource folders, use the folder corresponding to the first match in the list.</li>
 
-<li>If the name of the configured country matches the name of one of the available resource folders, use that folder.</li>
+<li>If the name of the system&rsquo;s configured country matches the name of one of the available resource folders, use that folder.</li>
 
 <li>If the variable <variable>ResConf$LanguagesSuff</variable> is defined, treat its contents as a comma-separated list of country names. If any match the the name of one of the available resource folders, use the folder corresponding to the first match in the list.</li>
 
-<li>Use the resources in the folder defined as the fallback (often UK, but can be selected as appropriate by the developer).</li>
+<li>Use the resources in the folder defined as the fallback (often <file>UK</file>, but can be selected as appropriate by the developer).</li>
 </list>
 
-<p>In the case of our hypothetical Canadian, setting <variable>ResConf$LanguagesPref</variable> to &ldquo;Canada1,France&rdquo; would cause applications which followed the <cite>ResConf</cite> approach to try Canada1, France and then the configured country of UK in their quest for translations. For the Austrian, setting <variable>ResConf$LanguagesSuff</variable> to &ldquo;Germany&rdquo; would cause applications to try the configured country of Austria before checking Germany and then falling back to UK.</p>
+<p>In the case of our hypothetical Canadian, setting <variable>ResConf$LanguagesPref</variable> to &ldquo;Canada1,France&rdquo; would cause applications which followed the <cite>ResConf</cite> approach to try first Canada1, then France and then the configured country of UK in their quest for translations (before falling back to <file>UK</file>). For the Austrian, setting <variable>ResConf$LanguagesSuff</variable> to &ldquo;Germany&rdquo; would cause applications to try the configured country of Austria before checking Germany and then falling back to <file>UK</file>.</p>
 </section>
 
 <section>
 <title>Implementing the search</title>
 
-<p>The process for finding the correct set of resources sounds complicated, but fortunately it&rsquo;s a common enough problem that developers can usually reach for some library code to implement it. The <cite>ResFind</cite> utility is Freeware and can be included in software for a credit in the manual, or SFLib&rsquo;s resources library contains routines to carry out a very similar procedure.</p>
+<p>The process for finding the correct set of resources sounds complicated, but fortunately it&rsquo;s a common enough problem that developers can usually reach for some library code to implement it. The <cite>ResFind</cite> utility mentioned above is Freeware and can be included in software for a credit in the manual: it can be called from an application&rsquo;s <file>!Run</file> file to set up some system variables, which the application can then use to locate things. Alternatively, SFLib&rsquo;s resources library contains routines to carry out a very similar procedure &ndash; and this is the approach that we will investigate here.</p>
+
+<p>At present, we use the following code to load the language-specific files inside the <function>main_initialise()</function> function of <file>c.main</file>. In both cases, we simply assume that <variable>ExamplApp$Dir</variable> is set correctly and load the file from within our application folder.</p>
+
+<code lang="c">/* Load the messages file. */
+
+if (!msgs_initialise(&quot;&lt;ExamplApp$Dir&gt;.Messages&quot;))
+	error_report_fatal(&quot;Failed to load application Messages&quot;);
+
+/* Open the templates file. */
+
+error = xwimp_open_template(&quot;&lt;ExamplApp$Dir&gt;.Templates&quot;);
+if (error != NULL)
+	error_report_program(error);</code>
+
+<p>Within SFLib, the resources library includes a couple of functions to help us find internationalied resources: <function>resources_initialise_paths()</function> and <function>resources_find_file()</function>. We are already using this part of the library to load the application sprites, so we can access these without needing to include any extra header files.</p>
+
+<p>After defining <name>MAIN_FILENAME_BUFFER_LEN</name> to be 1024, which should be long enough to cope with most reasonable RISC&nbsp;OS path lengths, we need to claim a couple of extra text buffers &ndash; <variable>resources</variable> and <variable>res_temp[]</variable> &ndash; on the stack when we enter <function>main_initialise()</function>.</p>
+
+<code lang="c">char resources[MAIN_FILENAME_BUFFER_LEN], res_temp[MAIN_FILENAME_BUFFER_LEN];</code>
+
+<p>We then copy the path of our <file>!ExampleApp.Resources</file> folder (relative to <variable>ExamplApp$Dir</variable>, into the <variable>resources</variable> buffer, before calling <function>resources_initialise_paths()</function>. Once again, we&rsquo;re using SFLib&rsquo;s <function>string_copy()</function> instead of the more familiar <function>strncpy()</function> because it guarantees to return with the copied string correctly terminated whatever happens.</p>
+
+<code lang="c">string_copy(resources, &quot;&lt;ExamplApp$Dir&gt;.Resources&quot;, MAIN_FILENAME_BUFFER_LEN);
+if (!resources_initialise_paths(resources, MAIN_FILENAME_BUFFER_LEN, &quot;ExamplApp$Language&quot;, &quot;UK&quot;))
+	error_report_fatal(&quot;Failed to initialise resources.&quot;);</code>
+
+<p>The <function>resources_initialise_paths()</function> is defined by SFLib as follows:</p>
+
+<code lang="c">osbool resources_initialise_paths(
+	char	*path_set,
+	size_t	length,
+	char	*appvar,
+	char	*fallback
+)</code>
+
+<p>On entry, <variable>*path_set</variable> should point to a buffer which initially contains the path to the resources folder, and <em>has free space at the end</em>; the length of the buffer is supplied in <variable>len</variable>. The <variable>*appvar</variable> parameter should point to a string giving the name of the application&rsquo;s <variable>AppName$Language</variable> variable (which in our case is <variable>ExamplApp$Language</variable>), and <variable>*fallback</variable> should point to a string containing the name of the fallback resource folder name.</p>
+
+<p>The reason that we need to include space at the end of the <variable>*path_set</variable> buffer is that <function>resources_initialise_paths()</function> will work its way through the list of checks <reference id="sect-internat-pick">outlined above</reference> and append the leafnames of possible resource folders to the end of the path that we supplied. These are included in the order that they should be tested, and will be used by <function>resources_find_file()</function> when it is asked to locate files.</p>
+
+<p>Having identified the possible places where our resources could be stored, we can use that information when loading the <file>Messages</file> and <file>Templates</file> files. SFLib defines <function>resources_find_file()</function> as follows.</p>
+
+<code lang="c">osbool resources_find_file(
+	char	*paths,
+	char	*buffer,
+	size_t	length,
+	char	*file,
+	bits	type
+)</code>
+
+<p>It takes a pointer to the <variable>resources[]</variable> buffer initialised by <function>resources_initialise_paths()</function> in <variable>*paths</variable>, and a pointer to a buffer in which to return a filename in <variable>*buffer</variable>; the length of this second buffer is given in <variable>length</variable>. A pointer to the name of the file that we are looking for is passed in <variable>*file</variable>, and the expected type of the file is given in <variable>type</variable>. For example, we might use it as follows to load our <file>Messages</file> file.</p>
+
+<code lang="c">if (!resources_find_file(resources, res_temp, MAIN_FILENAME_BUFFER_LEN, &quot;Messages&quot;, osfile_TYPE_TEXT))
+	error_report_fatal(&quot;Failed to locate suitable Messages file&quot;);
+
+if (!msgs_initialise(res_temp)
+	error_report_fatal(&quot;Failed to load application Messages&quot;);
+</code>
+
+<p>When called, <function>resources_find_file()</function> will look for a file of the given name and type in each of the folders identified by <function>resources_initialise_paths()</function>. If one is found, its full name will be copied into the buffer pointed to by <variable>*buffer</variable> and <name>TRUE</name> will be returned. If no suitable file is found, <name>FALSE</name> will be returned instead.</p>
+
+<p>Putting all of this together inside <function>main_initialise()</function>, we get the code seen in <reference id="list-internat-init"/>.</p>
+
+<code id="list-internat-init" lang="c" title="Searching for international resources">static void main_initialise(void)
+{
+	char		resources[MAIN_FILENAME_BUFFER_LEN], res_temp[MAIN_FILENAME_BUFFER_LEN];
+	os_error	*error;
+	osspriteop_area	*sprites;
+
+	/* Initialise the resources. */
+
+	string_copy(resources, &quot;&lt;ExamplApp$Dir&gt;.Resources&quot;, MAIN_FILENAME_BUFFER_LEN);
+	if (!resources_initialise_paths(resources, MAIN_FILENAME_BUFFER_LEN, &quot;ExamplApp$Language&quot;, &quot;UK&quot;))
+		error_report_fatal(&quot;Failed to initialise resources.&quot;);
+
+	/* Load the messages file. */
+
+	if (!resources_find_file(resources, res_temp, MAIN_FILENAME_BUFFER_LEN, &quot;Messages&quot;, osfile_TYPE_TEXT))
+		error_report_fatal(&quot;Failed to locate suitable Messages file&quot;);
+
+	if (!msgs_initialise(res_temp)
+		error_report_fatal(&quot;Failed to load application Messages&quot;);
+
+	/* Initialise with the Wimp. */
+
+	wimp_initialise(wimp_VERSION_RO3, main_application_name, NULL, NULL);
+
+	error_initialise(main_application_name, main_application_sprite, NULL);
+
+	event_add_message_handler(message_QUIT, EVENT_MESSAGE_INCOMING, main_message_quit);
+
+	/* Initialise library modules. */
+
+	url_initialise();
+
+	/* Load the application sprites. */
+
+	sprites = resources_load_user_sprite_area(&quot;&lt;ExamplApp$Dir&gt;.Sprites&quot;);
+	if (sprites == NULL)
+		error_msgs_report_fatal(&quot;BadSprites:Failed to load application Sprites&quot;);
+
+	/* Open the templates file. */
+
+	if (!resources_find_file(resources, res_temp, MAIN_FILENAME_BUFFER_LEN, &quot;Templates&quot;, osfile_TYPE_TEMPLATE))
+		error_report_fatal(&quot;MissingTemp:Failed to locate suitable Templates file&quot;);
+
+	error = xwimp_open_template(res_temp);
+	if (error != NULL)
+		error_report_program(error);
+
+	/* Initialise the program modules. */
+
+	calc_initialise();
+	ibar_initialise(main_application_sprite);
+	win_initialise(sprites);
+
+	/* Close the templates file. */
+
+	wimp_close_template();
+}</code>
+
+<p>Note that we have added another token &ndash; &ldquo;MissingTemp&rdquo; &ndash; to the messages, to cover the error if no <file>Templates</file> file could be located; previously we would simply have allowed <function>xwimp_open_template()</function> to return an error in this case. There&rsquo;s no point adding messages if we fail to find the <file>Messages</file> file, for obvious reasons!</p>
+
+<p>All that remains for us to do now is to move our <file>Messages</file> and <file>Templates</file> into a new <file>Resources.UK</file> subfolder within <file>!ExamplApp</file>, as seen in <reference id="fig-internat-resources"/>, and we&rsquo;re done!</p>
+
+<image id="fig-internat-resources" file="internat-resources.png" title="Our application now has its own Resources folder"/>
+
+<p>The full changes can be found in <reference id="dl-internat-resources"/>.</p>
+
+<download id="dl-internat-resources" file="Resources" title="Supporting the Resources folder" compatibility="none"/>
+</section>
 
 
+<section>
+<title>What about !Help?</title>
 
+<p>With the previous section of this chapter complete, our application now supports use in languages other than English (assuming that any translations are available). However, if you have been following closely, you might already have spotted a problem: what happens if we click on <menu>App. '!ExamplApp' &msep; Help</menu> in the Filer menu? Or, by extension (since our application just passes the <file>!Help</file> file to <command>*Filer_Run</command>), choose <menu>Help...</menu> from our application&rsquo;s iconbar menu?</p>
+
+<p>The answer is that we still get our help in English, regardless of the language that the application is working in. The <file>!Help</file> file remains in English, and RISC&nbsp;OS doesn&rsquo;t offer us any assistance with internationalisation &ndash; so we will need to come up with our own solution.</p>
+
+<p>To solve the problem, we will need to perform a similar search through the application resources when opening the application help. Fortunately, RISC&nbsp;OS allows us to supply any type of file for <file>!Help</file>: it doesn&rsquo;t have to be a text file. We could even put an executable there, including a small BASIC utility.</p>
+
+<p>Over the years, my own software has gravitated towards using a small BASIC program to launch its help. In addition to internationalisation, this handles the selection of StrongHelp or HTML documents when the application supports them and the user has suitable software installed to view them; that&rsquo;s outside the scope of this series, but the stripped down version in <reference id="list-internat-help"/> will do what we need.</p>
+
+<code id="list-internat-help" lang="bbcbasic" title="Locate the correct !Help file">REM Select help file based on available readers and selected territory.
+
+ON ERROR PRINT REPORT$ + &quot; at line &quot; + STR$(ERL) : END
+
+REM Change this directory and the names of the target files and variables as required.
+
+TextHelp$ = &quot;HelpText&quot;
+ResourceDir$ = &quot;Resources&quot;
+LanguageVar$ = &quot;ExamplApp$Language&quot;
+FallbackDir$ = &quot;UK&quot;
+
+DIM b% 1023
+
+REM Read the command line used to call the program.
+
+SYS &quot;OS_GetEnv&quot; TO environment%
+SYS &quot;OS_ReadArgs&quot;, &quot;,load=quit/K&quot;, environment%, b%, 1024
+
+SYS &quot;XOS_GenerateError&quot;, b%!0 TO basic$
+SYS &quot;XOS_GenerateError&quot;, b%!4 TO app_dir$
+
+REM We're assuming that we're being run by the Filer, and so the
+REM command line will start &quot;BASIC -quit ...&quot;. If not, we don't go
+REM any further.
+
+IF basic$ &lt;&gt; &quot;BASIC&quot; OR app_dir$ = &quot;&quot; THEN END
+
+REM There must also be some directory separators in the path. If there
+REM are, trim the leafname off until we have a .-terminated path.
+
+IF INSTR(app_dir$, &quot;.&quot;) = 0 THEN END
+
+WHILE RIGHT$(app_dir$) &lt;&gt; &quot;.&quot;
+	app_dir$ = LEFT$(app_dir$)
+ENDWHILE
+
+REM Assemble a comma-separated list of possible language folders.
+
+folders$ = &quot;&quot;
+
+REM Read the application language override.
+
+SYS &quot;XOS_ReadVarVal&quot;, LanguageVar$, b%, 1024, 0, 3 TO ,,length%,,type% ;flags%
+IF (flags% AND 1) = 0 AND type% = 0 AND length% &gt; 0 THEN
+	b%?length% = 13
+	folders$ += $b% + &quot;,&quot;
+ENDIF
+
+REM Read the ResFind Language Prefix.
+
+SYS &quot;XOS_ReadVarVal&quot;, &quot;ResFind$LanguagesPref&quot;, b%, 1024, 0, 3 TO ,,length%,,type% ;flags%
+IF (flags% AND 1) = 0 AND type% = 0 AND length% &gt; 0 THEN
+	b%?length% = 13
+	folders$ += $b% + &quot;,&quot;
+ENDIF
+
+REM Read the currently configured country.
+
+SYS &quot;XOS_Byte&quot;, 70, 127 TO ,country% ;flags%
+IF (flags% AND 1) = 0 THEN
+	SYS &quot;XOS_ServiceCall&quot;,,67, 2, country%, b%, 1024 TO ,claimed%,,,,length% ;flags%
+	IF (flags% AND 1) = 0 AND claimed% = 0 AND length% &gt; 0 THEN
+		b%?length% = 13
+		folders$ += $b% + &quot;,&quot;
+	ENDIF
+ENDIF
+
+REM Read the ResFind Language Suffix.
+
+SYS &quot;XOS_ReadVarVal&quot;, &quot;ResFind$LanguagesSuff&quot;, b%, 1024, 0, 3 TO ,,length%,,type% ;flags%
+IF (flags% AND 1) = 0 AND type% = 0 AND length% &gt; 0 THEN
+	b%?length% = 13
+	folders$ += $b% + &quot;,&quot;
+ENDIF
+
+REM Add in the fallback.
+
+IF FallbackDir$ &lt;&gt; &quot;&quot; THEN folders$ += FallbackDir$ ELSE folders$ += &quot;UK&quot;
+
+REM Scan through the folders until we've found the three files that we need.
+
+text_file$ = &quot;&quot;
+
+WHILE LEN(folders$) &gt; 0 AND TextHelp$ &lt;&gt; &quot;&quot; AND text_file$ = &quot;&quot;
+	pos% = INSTR(folders$, &quot;,&quot;)
+	IF pos% = 0 THEN
+		dir$ = folders$
+		folders$ = &quot;&quot;
+	ELSE
+		dir$ = LEFT$(folders$, pos% - 1)
+		folders$ = MID$(folders$, pos% + 1)
+	ENDIF
+
+	IF LEN(dir$) &gt; 0 THEN
+		dir$ = app_dir$ + ResourceDir$ + &quot;.&quot; + dir$
+
+		SYS &quot;XOS_File&quot;, 17, dir$ TO object_type% ;flags%
+		IF (flags% AND 1) = 0 AND object_type% = 2 THEN
+			IF TextHelp$ &lt;&gt; &quot;&quot; AND text_file$ = &quot;&quot; THEN
+				SYS &quot;XOS_File&quot;, 17, dir$ + &quot;.&quot; + TextHelp$ TO object_type% ;flags%
+				IF (flags% AND 1) = 0 AND object_type% &lt;&gt; 0 THEN text_file$ = dir$ + &quot;.&quot; + TextHelp$
+			ENDIF
+		ENDIF
+	ENDIF
+ENDWHILE
+
+REM Run the file.
+
+IF text_file$ &lt;&gt; &quot;&quot; THEN OSCLI(&quot;%Filer_Run &quot; + text_file$)
+
+END</code>
+
+<p>We start by setting up some variables: <variable>ResourceDir$</variable> holds the name of our application&rsquo;s <file>Resources</file> folder, <variable>TextHelp$</variable> has the name of the file that we will be looking for inside it, <variable>LanuguageVar$</variable> has the name of the system variable which could contain our application&rsquo;s specific language override, and <variable>FallbackDir$</variable> gives the name of the default language directory.</p>
+
+<p>The first step is to try to work out where our application, or more specifically the <file>!ExamplApp.Resources</file> folder, is. The <file>!Help</file> file can be run before a user double-clicks on the application, so there&rsquo;s no guarantee that <variable>ExamplApp$Dir</variable> will have been set by our <file>!Run</file> file. Instead, we take the command line used to call <file>!Help</file> using <swi>OS_GetEnv</swi>, and hope that this is a call to <command>*BASIC</command> with the <command>-load</command> or <command>-quit</command> parameter followed by the full path to the program being run. <swi>OS_ReadArgs</swi> is used to tease out the bits of the command line and, if the required components are found, we then strip the leafname off the path to leave us with the dot-terminated path of the folder which the BASIC program is in.</p>
+
+<p>Next we initialise <variable>folder$</variable> to an empty string, before working through <reference id="sect-internat-pick">the five steps described above</reference> for locating a set of resources. At the end, <variable>folder$</variable> should contain a comma-separated list of potential resource folder names &ndash; for example &ldquo;Germany,UK&rdquo; &ndash; in the order that they should be tried.</p>
+
+<p>The final step is to enter a <keyword>WHILE</keyword> loop, testing each folder in turn using <swi>OS_File</swi>&nbsp;17 until one is found which contains a text file with the correct name. If we have a filename when the loop exits, we pass it to <command>*Filer_Run</command>.</p>
+
+<p>Armed with this utility, we can update our application so that our <file>!Help</file> file moves to <file>Resources.UK.HelpText</file> (the name given in the <variable>HelpText$</variable> variable) and is replaced by this BASIC program. Note that the Filer can cache the details of application <file>!Help</file> files, so it may be necessary to close and re-open the folder after changing from text to BASIC.</p>
+
+<p>The arrangement of files within <file>!ExamplApp</file> can be seen in <reference id="fig-internat-help"/>, whilst a full set of files can be found in <reference id="dl-internat-help"/>.</p>
+
+<image id="fig-internat-help" file="internat-help.png" title="The contents of the application after updateing !Help"/>
+
+<download id="dl-internat-help" file="IntlHelp" title="Internationalising the !Help file" compatibility="none"/>
+
+<p>With that, we have an internationalised version of our example application, capable of being used in any language that RISC&nbsp;OS supports.</p>
 </section>
 </chapter>
 </manual>
