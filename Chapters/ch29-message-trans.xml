@@ -651,7 +651,7 @@ void calc_initialise(void)
 
 <p>With this change in place, our application no longer has any hard-coded English text within the <file>!RunImage</file> file, meaning that it can be translated into other languages by editing the <file>Messages</file>, <file>Templates</file> and <file>!Help</file> files. From an end-user&rsquo;s perspective, however, it should remain functionally identical.</p>
 
-<p>The full set of code can be found in <reference id="dl-mess-trans"/>.</p>
+<p>The full set of code can be found in <reference id="dl-mess-trans"/>. Why not try changing the text in the <file>Messages</file>, to see what effect it has?</p>
 
 <download id="dl-mess-trans" file="MessageTrans" title="Looking up Text from MessageTrans" compatibility="none"/>
 
