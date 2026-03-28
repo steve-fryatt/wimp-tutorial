@@ -55,7 +55,7 @@
 <section>
 <title>Separate resources</title>
 
-<p>Aside from the Toolbox, RISC&nbsp;OS doesn&rsquo;t really define a standard way to handle different languages within an application, and it is something which is largely left up to individual developers. There are many different approaches available, but a common one is to have a folder called <file>Resources</file> within the application directory. This folder, in turn, contains separate directories holding the language-specific files for each translation: including the English one that we currently have. How <cite>StrongHelp</cite> handles this can be seen in <reference id="fig-internat-stronghelp"/>.</p>
+<p>Aside from the Toolbox (which does something similar to what follows), RISC&nbsp;OS doesn&rsquo;t really define a standard way to handle different languages within an application, and it is something which is largely left up to individual developers. There are many different approaches available, but a common one is to have a folder called <file>Resources</file> within the application directory. This folder, in turn, contains separate directories holding the language-specific files for each translation: including the English one that we currently have. How <cite>StrongHelp</cite> handles this can be seen in <reference id="fig-internat-stronghelp"/>.</p>
 
 <image id="fig-internat-stronghelp" file="internat-stronghelp.png" title="StrongHelp contains translations for English, French and German"/>
 
@@ -87,7 +87,7 @@
 <p>Taking all of these features together, an application should ideally do five things in sequence, in order to identify which if its resources it should use.</p>
 
 <list type="ol">
-<li>If the variable <variable>AppName$Language</variable> is defined (where &ldquo;AppName&rdquo; is the name of the application), treat the contents as the name of a country. If it matches the name of one of the available resource folders, use that folder.</li>
+<li>If the variable <variable>AppName$Language</variable> is defined (where &ldquo;AppName&rdquo; is the name of the application), treat its contents as the name of a country. If it matches the name of one of the available resource folders, use that folder.</li>
 
 <li>If the variable <variable>ResConf$LanguagesPref</variable> is defined, treat its contents as a comma-separated list of country names. If any match the the name of one of the available resource folders, use the folder corresponding to the first match in the list.</li>
 
@@ -125,13 +125,13 @@ if (error != NULL)
 
 <code lang="c">char resources[MAIN_FILENAME_BUFFER_LEN], res_temp[MAIN_FILENAME_BUFFER_LEN];</code>
 
-<p>We then copy the path of our <file>!ExampleApp.Resources</file> folder (relative to <variable>ExamplApp$Dir</variable>, into the <variable>resources</variable> buffer, before calling <function>resources_initialise_paths()</function>. Once again, we&rsquo;re using SFLib&rsquo;s <function>string_copy()</function> instead of the more familiar <function>strncpy()</function> because it guarantees to return with the copied string correctly terminated whatever happens.</p>
+<p>We then copy the path of our <file>!ExampleApp.Resources</file> folder (relative to <variable>ExamplApp$Dir</variable>, into the <variable>resources</variable> buffer, before calling <function>resources_initialise_paths()</function>. Once again, we&rsquo;re using SFLib&rsquo;s <function>string_copy()</function> instead of the more familiar <function>strncpy()</function> because it guarantees to return with the passed buffer correctly terminated whatever happens.</p>
 
 <code lang="c">string_copy(resources, &quot;&lt;ExamplApp$Dir&gt;.Resources&quot;, MAIN_FILENAME_BUFFER_LEN);
 if (!resources_initialise_paths(resources, MAIN_FILENAME_BUFFER_LEN, &quot;ExamplApp$Language&quot;, &quot;UK&quot;))
 	error_report_fatal(&quot;Failed to initialise resources.&quot;);</code>
 
-<p>The <function>resources_initialise_paths()</function> is defined by SFLib as follows:</p>
+<p>The <function>resources_initialise_paths()</function> function is defined by SFLib as follows:</p>
 
 <code lang="c">osbool resources_initialise_paths(
 	char	*path_set,
@@ -142,7 +142,7 @@ if (!resources_initialise_paths(resources, MAIN_FILENAME_BUFFER_LEN, &quot;Examp
 
 <p>On entry, <variable>*path_set</variable> should point to a buffer which initially contains the path to the resources folder, and <em>has free space at the end</em>; the length of the buffer is supplied in <variable>len</variable>. The <variable>*appvar</variable> parameter should point to a string giving the name of the application&rsquo;s <variable>AppName$Language</variable> variable (which in our case is <variable>ExamplApp$Language</variable>), and <variable>*fallback</variable> should point to a string containing the name of the fallback resource folder name.</p>
 
-<p>The reason that we need to include space at the end of the <variable>*path_set</variable> buffer is that <function>resources_initialise_paths()</function> will work its way through the list of checks <reference id="sect-internat-pick">outlined above</reference> and append the leafnames of possible resource folders to the end of the path that we supplied. These are included in the order that they should be tested, and will be used by <function>resources_find_file()</function> when it is asked to locate files.</p>
+<p>The reason that we need to leave free space at the end of the <variable>*path_set</variable> buffer is that <function>resources_initialise_paths()</function> will work its way through the list of checks <reference id="sect-internat-pick">outlined above</reference> and append the leafnames of possible resource folders to the end of the path that we supplied. These are included in the order that they should be tested, and will be used by <function>resources_find_file()</function> when it is asked to locate files.</p>
 
 <p>Having identified the possible places where our resources could be stored, we can use that information when loading the <file>Messages</file> and <file>Templates</file> files. SFLib defines <function>resources_find_file()</function> as follows.</p>
 
@@ -244,9 +244,9 @@ if (!msgs_initialise(res_temp)
 
 <p>The answer is that we still get our help in English, regardless of the language that the application is working in. The <file>!Help</file> file remains in English, and RISC&nbsp;OS doesn&rsquo;t offer us any assistance with internationalisation &ndash; so we will need to come up with our own solution.</p>
 
-<p>To solve the problem, we will need to perform a similar search through the application resources when opening the application help. Fortunately, RISC&nbsp;OS allows us to supply any type of file for <file>!Help</file>: it doesn&rsquo;t have to be a text file. We could even put an executable there, including a small BASIC utility.</p>
+<p>To solve the problem, we will need to perform a similar search through the application resources when opening the application help. Fortunately, RISC&nbsp;OS allows us to supply any type of file for <file>!Help</file>: it doesn&rsquo;t have to be a text file. We could even put an executable there, such as a small BASIC utility.</p>
 
-<p>Over the years, my own software has gravitated towards using a small BASIC program to launch its help. In addition to internationalisation, this handles the selection of StrongHelp or HTML documents when the application supports them and the user has suitable software installed to view them; that&rsquo;s outside the scope of this series, but the stripped down version in <reference id="list-internat-help"/> will do what we need.</p>
+<p>Over the years, my own software has gravitated towards using a BASIC program to launch its help. In addition to internationalisation, this handles the selection of StrongHelp or HTML documents when the application supports them and the user has suitable software installed to view them; that&rsquo;s outside the scope of this series, but the stripped down version in <reference id="list-internat-help"/> will do what we need.</p>
 
 <code id="list-internat-help" lang="bbcbasic" title="Locate the correct !Help file">REM Select help file based on available readers and selected territory.
 
@@ -372,7 +372,7 @@ END</code>
 
 <p>The arrangement of files within <file>!ExamplApp</file> can be seen in <reference id="fig-internat-help"/>, whilst a full set of files can be found in <reference id="dl-internat-help"/>.</p>
 
-<image id="fig-internat-help" file="internat-help.png" title="The contents of the application after updateing !Help"/>
+<image id="fig-internat-help" file="internat-help.png" title="The contents of the application after updating !Help"/>
 
 <download id="dl-internat-help" file="IntlHelp" title="Internationalising the !Help file" compatibility="none"/>
 

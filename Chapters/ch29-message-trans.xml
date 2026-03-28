@@ -44,15 +44,15 @@
 <summary>English isn&rsquo;t the first language of all RISC&nbsp;OS users, so how can we cater for those who would prefer to use our application in a different one?</summary>
 
 <section>
-<p>Despite considering quite a few aspects of our application, one thing that we haven&rsquo;t yet thought about is the possibility that anyone might wish to use it in a language other than English. And whilst English appears to be the default language for many RISC&nbsp;OS applications, a significant number of users will be using a different one day to day. It would clearly be desirable to allow our application to be translated for use in different languages so that, even if we can&rsquo;t do it ourselves, other people can provide translations if they wish to do so.</p>
+<p>Despite considering quite a few aspects of our application, one thing that we haven&rsquo;t yet thought about is the possibility that anyone might wish to use it in a language other than English. And whilst English appears to be the default language for many RISC&nbsp;OS applications, a significant number of users will be working in a different one day to day. It would clearly be desirable to allow our application to be translated for use in different languages so that, even if we can&rsquo;t do it ourselves, other people can provide translations if they wish to do so.</p>
 
-<p>Unfortunately, there&rsquo;s a problem with this: we can translate the window and icon text in the <file>Templates</file>, and the contents of the <file>!Help</file> file, but there is are several pieces of user-facing text embedded into the <file>!RunImage</file> file itself. Translating this would seem to require us to build a new copy of the application for each target language, or at least engage in some complicated conditional logic for selecting the appropriate pieces of text.</p>
+<p>Unfortunately, there&rsquo;s a problem with this: we can translate the window and icon text in the <file>Templates</file> file, and the contents of the <file>!Help</file> file, but there is are several pieces of user-facing text embedded into the <file>!RunImage</file> file itself. Translating this would seem to require us to build a new copy of the application for each target language, or at least engage in some complicated conditional logic for selecting the appropriate pieces of text.</p>
 </section>
 
 <section>
 <title>The Messages file</title>
 
-<p>Fortunately RISC&nbsp;OS has a better solution, in the form of the MessageTrans module. This provides a number of SWI calls which allow us to move all of our user-facing text out of the <file>!RunImage</file> file and into a separate text file, then look the text up using simple tokens. We can add this file to the list for translation, alongside <file>Templates</file> and <file>!Help</file>, should another language be requested.</p>
+<p>Fortunately RISC&nbsp;OS has a better solution, in the form of the MessageTrans module. This provides a number of SWI calls which allow us to move all of our user-facing text out of <file>!RunImage</file> and into a separate text file, then look the text up using simple tokens. We can add this file to the list for translation, alongside <file>Templates</file> and <file>!Help</file>, should another language be requested.</p>
 
 <p>The first thing to do is to create our <file>Messages</file> file. Looking through our application&rsquo;s source files for text which is presented to the user we can find a number of strings which will need attention, and the result is the file shown in <reference id="list-mess-trans-messages"/>. It&rsquo;s made up of a piece of text that can be written to a display icon, the menu titles and entries, and the error messages which can be presented to the user when things go wrong.</p>
 
@@ -135,7 +135,7 @@ MainMenu:Example</code>
 	int				*size
 );</code>
 
-<p>We call <swi>MessageTrans_FileInfo</swi>, which is defined by OSLib as shown above, with <variable>*file_name</variable> being a pointer to the filename of our file. If we also supply pointers to variables in which to return some flags and the file size, it will return us some information about the file and the amount of memory required to load it into memory. In practice, the only flag that is defined is <name>messagetrans_DIRECT_ACCESS</name>, which indicates that the file is already in memory (it may be stored in ResourceFS, for example) and can be accessed directly from there without it needing to be loaded into RAM first &ndash; this feature tends to be used by ROM modules, and isn&rsquo;t something that will affect us.</p>
+<p>We call <swi>MessageTrans_FileInfo</swi>, which is defined by OSLib as shown above, with <variable>*file_name</variable> being a pointer to the filename of our file. If we also supply pointers to variables in which to return some flags and the file size, it will return us some information about the file and the amount of memory required to load it into memory. In practice, the only flag that is defined is <name>messagetrans_DIRECT_ACCESS</name>, which indicates that the file is already in memory (it may be stored in ResourceFS, for example) and can be accessed directly from there without it needing to be loaded into RAM first. As previously mentioned, this feature tends to be used by ROM modules and isn&rsquo;t something that will affect us.</p>
 
 <p>Armed with the size of the file, we can allocate the memory that we need, and also allocate space for a <name>messagetrans_control_block</name> structure which is what MessageTrans uses for a file handle.</p>
 
@@ -274,7 +274,7 @@ message_buffer = malloc(message_size);</code>
 	int *used
 );</code>
 
-<p>It takes a number of parameters, including a pointer to our control block in <variable>*cb</variable>, a pointer to the token to be looked up in <variable>*token</variable>, a pointer to a buffer to hold the resulting text in <variable>*buffer</variable>, and the size of that buffer in <variable>size</variable>. It returns a pointer to the output text (which in our case <em>should</em> just be a pointer to the buffer pointed to by <variable>*buffer</variable>) and the length of the returned string if we supply a pointer in <variable>*int</variable>.</p>
+<p>It takes a number of parameters, including a pointer to our control block in <variable>*cb</variable>, a pointer to the token to be looked up in <variable>*token</variable>, a pointer to a buffer to hold the resulting text in <variable>*buffer</variable>, and the size of that buffer in <variable>size</variable>. It returns a pointer to the output text (which in our case <em>should</em> just be a pointer to the buffer pointed to by <variable>*buffer</variable>) and the length of the returned string if we supply a pointer in <variable>*used</variable>.</p>
 
 <p>The three parameters <variable>*arg0</variable>, <variable>*arg1</variable>, <variable>*arg2</variable> and <variable>*arg0</variable> are optional pointers to strings which can be substituted into the text from the messages file if it contains placeholders <code>%0</code>, <code>%1</code>, <code>%2</code> or <code>%3</code> respectively. This allows run-time values to be included in messages. For example, if we had the token</p>
 
@@ -284,9 +284,9 @@ message_buffer = malloc(message_size);</code>
 
 <code lang="c">messagetrans_lookup(cb, "OnWall", buffer, BUFFER_LEN, "10", NULL, NULL, NULL, NULL);</code>
 
-<p>then we could expect the memory pointed to by <variable>*buffer</variable> to contain &ldquo;10 Green Bottles&rdquo; afterwards.</p>
+<p>then we could expect the memory pointed to by <variable>*buffer</variable> to contain the text &ldquo;10 Green Bottles&rdquo; afterwards.</p>
 
-<p>SFLib&rsquo;s msgs library contains a number of functions which can be used to access <swi>MessageTrans_Lookup</swi>, which ultimately all end up by calling <function>msgs_param_lookup_result()</function> as defined in <reference id="list-mess-trans-lookup"/>. Given C&rsquo;s vagaries around the use of strings, care is taken to try to ensure that a valid <code>'\0'</code>-terminated string is returned in <em>most</em> circumstances. This should only fail if the suupplied buffer itself is invalid &ndash; in which situation, our application probably has other problems.</p>
+<p>SFLib&rsquo;s msgs library contains a number of functions which can be used to access <swi>MessageTrans_Lookup</swi>, which ultimately all end up by calling <function>msgs_param_lookup_result()</function> as defined in <reference id="list-mess-trans-lookup"/>. Given C&rsquo;s vagaries around the use of strings, care is taken to try to ensure that a valid <code>'\0'</code>-terminated string is returned in <em>most</em> circumstances. This should only fail if the suupplied buffer itself is invalid &ndash; in which situation, our application probably has other problems to worry about first!</p>
 
 <code lang="c" id="list-mess-trans-lookup" title="Looking up a message token">osbool msgs_param_lookup_result(char *token, char *buffer, size_t buffer_size, char *a, char *b, char *c, char *d)
 {
@@ -329,7 +329,7 @@ message_buffer = malloc(message_size);</code>
 
 <p>The full set of parameters expected by <function>msgs_param_lookup_result()</function> can be a bit cumbersome in many circumstances, so the msgs library defines a few more functions to give us other options: these can be seen in <reference id="list-mess-trans-lookup-extra"/>. A sibling function &ndash; in that it returns success or failure but doesn&rsquo;t need the four parameter pointers to be passed if they are all <name>NULL</name> &ndash; is <function>msgs_lookup_result()</function>.</p>
 
-<p>The other two functions are <function>msgs_param_lookup()</function> and <function>msgs_lookup()</function>, which return pointers to the buffer supplied to them instead of success or failure. This can be useful when we need to pass a pointer to a message into another function.</p>
+<p>The other two functions are <function>msgs_param_lookup()</function> and <function>msgs_lookup()</function>, which both return pointers to the buffer supplied to them instead of success or failure. This can be useful when we need to pass a pointer to a message into another function.</p>
 
 <code id="list-mess-trans-lookup-extra" lang="c" title="More ways to look up a message token">char *msgs_lookup(char *token, char *buffer, size_t buffer_size)
 {
@@ -433,11 +433,11 @@ if (buffer != NULL) {
 	strncpy(menu-&gt;title_data.text, title, 12);
 }</code>
 
-<p>If the length of the text is twelve characters or less then we simply copy it straight into the menu block, otehrwise we allocate a buffer and copy the text into that so that we can create an indirected icon. At present, <variable>*title</variable> is one of the parameters to <function>menu_create()</function>, but we change that parameter to <variable>*token</variable> and instead declare <variable>title[]</variable> as a local variable on the stack.</p>
+<p>If the length of the text is twelve characters or less then we simply copy it straight into the menu block, otherwise we allocate a buffer and copy the text into that so that we can create an indirected icon. At present, <variable>*title</variable> is one of the parameters to <function>menu_create()</function>, but we change that parameter to <variable>*token</variable> and instead declare <variable>title[]</variable> as a local variable on the stack.</p>
 
 <code lang="c">char title[MENU_MAX_LINE_LEN]</code>
 
-<p>We can then insert a message lookup ahead of the code above.</p>
+<p>We can then insert a message token lookup ahead of the code above.</p>
 
 <code lang="c">msgs_lookup(token, title, MENU_MAX_LINE_LEN);</code>
 
@@ -632,11 +632,11 @@ menu_entry(win_shape_menu, WIN_MENU_SHAPE_SQUARE, &quot;ShapeMenu2&quot;, NULL);
 <section>
 <title>Tying up loose ends</title>
 
-<p>The other place that we have some user-facing text to translate is in <file>c.calc</file>, where we have &ldquo;n/a&rdquo; being used to denote for &ldquo;not applicable&rdquo;.</p>
+<p>The other place that we have some user-facing text to translate is in <file>c.calc</file>, where we have &ldquo;n/a&rdquo; being used to denote &ldquo;not applicable&rdquo;.</p>
 
 <code lang="c">static char *calc_not_applicable = &quot;n/a&quot;;</code>
 
-<p>This change isn&rsquo;t quite a simple, but we convert <variable>calc_not_applicable</variable> from a pointer to a character array and then look the token up in <function>calc_initialise()</function>. Once again, we are making an arbitrary decision on how long this text can be &ndash; although in this case, there is also the limit from the length of the icon that the text is displayed in which needs to be considered. This is set by the indirected text length of the icons in the template file.</p>
+<p>This change isn&rsquo;t quite as simple, but we convert <variable>calc_not_applicable</variable> from a pointer to a character array and then look the token up in <function>calc_initialise()</function>. Once again, we are making an arbitrary decision on how long this text can be &ndash; although in this case, there is also the limit from the length of the icon that the text is displayed in which needs to be considered. That limit is set by the indirected text length of the icons in the template file.</p>
 
 <code lang="c">#define CALC_NOT_APPLICABLE_LENGTH 8
 
@@ -649,7 +649,7 @@ void calc_initialise(void)
 	msgs_lookup(&quot;NA&quot;, calc_not_applicable, CALC_NOT_APPLICABLE_LENGTH);
 }</code>
 
-<p>With this change in place, our application no longer has any hard-coded English text within the <file>!RunImage</file> file, meaning that it can be translated into other languages by editing the <file>Messages</file>, <file>Templates</file> and <file>!Help</file> files. From an end-user&rsquo;s perspective, however, it should remain functionally identical.</p>
+<p>Finally, with this change in place, our application no longer has any hard-coded English text within the <file>!RunImage</file> file &ndash; meaning that it can be translated into other languages by editing the <file>Messages</file>, <file>Templates</file> and <file>!Help</file> files. From an end-user&rsquo;s perspective, however, it should remain functionally identical.</p>
 
 <p>The full set of code can be found in <reference id="dl-mess-trans"/>. Why not try changing the text in the <file>Messages</file>, to see what effect it has?</p>
 
