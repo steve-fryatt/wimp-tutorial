@@ -44,7 +44,7 @@
 <summary>English isn&rsquo;t the first language of all RISC&nbsp;OS users, so how can we cater for those who would prefer to use our application in a different one?</summary>
 
 <section>
-<p>Despite considering quite a few aspects of our application, one thing that we haven&rsquo;t yet thought about is the possibility that anyone might wish to use it in a language other than English. And whilst English appears to be the default language for many RISC&nbsp;OS applications, a significant number of users will be using a different one day to day. It would clearly be desirable to allow our application to translated for use in different languages, so that even if we can&rsquo;t do it ourselves, other people can provide translations if they wish to do so.</p>
+<p>Despite considering quite a few aspects of our application, one thing that we haven&rsquo;t yet thought about is the possibility that anyone might wish to use it in a language other than English. And whilst English appears to be the default language for many RISC&nbsp;OS applications, a significant number of users will be using a different one day to day. It would clearly be desirable to allow our application to be translated for use in different languages so that, even if we can&rsquo;t do it ourselves, other people can provide translations if they wish to do so.</p>
 
 <p>Unfortunately, there&rsquo;s a problem with this: we can translate the window and icon text in the <file>Templates</file>, and the contents of the <file>!Help</file> file, but there is are several pieces of user-facing text embedded into the <file>!RunImage</file> file itself. Translating this would seem to require us to build a new copy of the application for each target language, or at least engage in some complicated conditional logic for selecting the appropriate pieces of text.</p>
 </section>
@@ -52,89 +52,11 @@
 <section>
 <title>The Messages file</title>
 
-<p>Fortunately RISC&nbsp;OS has a better solution, in the form of the MessageTrans module. This provides a number of SWI calls which allow us to move all of our user-facing text out of the <file>!RunImage</file> file and into a separate text file, then look the text up using simple tokens. We can then add this file to the list for translation, alongside <file>Templates</file> and <file>!Help</file>, should another language be requested.</p>
+<p>Fortunately RISC&nbsp;OS has a better solution, in the form of the MessageTrans module. This provides a number of SWI calls which allow us to move all of our user-facing text out of the <file>!RunImage</file> file and into a separate text file, then look the text up using simple tokens. We can add this file to the list for translation, alongside <file>Templates</file> and <file>!Help</file>, should another language be requested.</p>
 
-<p>The first thing that we will need to do is to create our <file>Messages</file> file. Looking through the source files for text that will be presented to the user, we find the application and sprite names in <file>c.main</file> as seen in <reference id="list-mess-trans-main1"/>.</p>
+<p>The first thing to do is to create our <file>Messages</file> file. Looking through our application&rsquo;s source files for text which is presented to the user we can find a number of strings which will need attention, and the result is the file shown in <reference id="list-mess-trans-messages"/>. It&rsquo;s made up of a piece of text that can be written to a display icon, the menu titles and entries, and the error messages which can be presented to the user when things go wrong.</p>
 
-<code id="list-mess-trans-main1" lang="c">static char *main_application_name = &quot;Example App&quot;;
-
-static char *main_application_sprite = &quot;!examplapp&quot;;</code>
-
-<p>The application name is allocated, so this can&rsquo;t change in translastion, and the sprite name isn&rsquo;t user-facing. Further down the file, <reference id="list-mess-trans-main2"/> shows an error message used when the sprites are being loaded. Any error here would probably occur whilst the application was initialising itself and its messages, so we will leave this untouched as well: an error in English is better than no error at all if MessageTrans fails to work as expected!</p>
-
-<code id="list-mess-trans-main2" lang="c">/* Load the application sprites. */
-
-sprites = resources_load_user_sprite_area(&quot;&lt;ExamplApp$Dir&gt;.Sprites&quot;);
-if (sprites == NULL)
-	error_report_fatal(&quot;Failed to load application Sprites&quot;);</code>
-
-<p>Moving on to <file>c.ibar</file>, we start by loading the template for the <window>program information</window> window and reporting an error if this fails, as seen in <reference id="list-mess-trans-ibar1"/>. By this stage, MessageTrans should safely be running, so there&rsquo;s no harm in making this message available for translastion.</p>
-
-<code id="list-mess-trans-ibar1" lang="c">/* Program Info Window. */
-
-window_definition = windows_load_template(&quot;ProgInfo&quot;);
-if (window_definition == NULL) {
-	error_report_error(&quot;Failed to load ProgInfo template&quot;);
-	return;
-}</code>
-
-<p>Similarly, we can also include the message used if the iconbar menu fails to build. We also have the menu title passed to <function>menu_create()</function> and the menu entries passed to <function>menu_entry()</function>, as seen in <reference id="list-mess-trans-ibar2"/>.</p>
-
-<code id="list-mess-trans-ibar2" lang="c">/* Iconbar Menu. */
-
-ibar_menu = menu_create(&quot;Example&quot;, 3);
-if (ibar_menu == NULL) {
-	error_report_error(&quot;Failed to create Iconbar Menu&quot;);
-	return;
-}
-
-menu_entry(ibar_menu, IBAR_MENU_INFO, &quot;Info&quot;, (wimp_menu *) prog_info);
-menu_entry(ibar_menu, IBAR_MENU_HELP, &quot;Help...&quot;, NULL);
-menu_entry(ibar_menu, IBAR_MENU_QUIT, &quot;Quit&quot;, NULL);</code>
-
-<p>Moving on to <file>c.win</file>, we again have an error if the main window template fails to load, as seen in <reference id="list-mess-trans-win1"/>.</p>
-
-<code id="list-mess-trans-win1" lang="c">/* Load and create the window. */
-
-window_definition = windows_load_template(&quot;Main&quot;);
-if (window_definition == NULL) {
-	error_report_error(&quot;Failed to load Main template&quot;);
-	return;
-}</code>
-
-<p>And once again we have errors and menu components for the window menu and the shapes pop-up menu as seen in <reference id="list-mess-trans-win2"/>.</p>
-
-<code id="list-mess-trans-win2" lang="c">/* Window Menu. */
-
-win_menu = menu_create(&quot;Example&quot;, 3);
-if (win_menu == NULL) {
-	error_report_error(&quot;Failed to create Main Menu&quot;);
-	return;
-}
-
-menu_entry(win_menu, WIN_MENU_DECIMAL1, &quot;1 Decimal place&quot;, NULL);
-menu_entry(win_menu, WIN_MENU_DECIMAL2, &quot;2 Decimal places&quot;, NULL);
-menu_entry(win_menu, WIN_MENU_DECIMAL3, &quot;3 Decimal places&quot;, NULL);
-
-/* Shapes Menu. */
-
-win_shape_menu = menu_create(&quot;Shapes&quot;, 3);
-if (win_shape_menu == NULL) {
-	error_report_error(&quot;Failed to create Shapes Menu&quot;);
-	return;
-}
-
-menu_entry(win_shape_menu, WIN_MENU_SHAPE_CIRCLE, &quot;Circle&quot;, NULL);
-menu_entry(win_shape_menu, WIN_MENU_SHAPE_TRIANGLE, &quot;Triangle&quot;, NULL);
-menu_entry(win_shape_menu, WIN_MENU_SHAPE_SQUARE, &quot;Square&quot;, NULL);</code>
-
-<p>Finally, in <file>c.calc</file>, <reference id="list-mess-trans-calc"/> shows the &ldquo;n/a&rdquo; which is used to denote for &ldquo;not applicable&rdquo;.</p>
-
-<code id="list-mess-trans-calc" lang="c" title="The user-facing text from c.calc">static char *calc_not_applicable = &quot;n/a&quot;;</code>
-
-<p>Pulling all of these pieces of text together, we end up with the <file>Messages</file> file seen in <reference id="list-mess-trans-messages"/>. The format is fairly simple: lines consist of tokens &ndash; which can be any character except a comma (<code>,</code>), closing bracket (<code>)</code>), forward slash (<code>/</code>) or question mark (<code>?</code>) until the first colon (<code>:</code>) is reached. Following the colon is the value associated with the token. Blank lines, and lines starting with a <code>#</code>, are ignored.</p>
-
-<p>For example, the token &ldquo;MainMenu2&rdquo; in the file below would be associated with the text &ldquo;3 Decimal Places&rdquo;, while the token &ldquo;NA&rdquo; would be associated with the text &ldquo;n/a&rdquo;. The tokens <em>are case sensitive</em>.</p>
+<p>The file does not contain the application name, as this is a &lsquo;reserved&rsquo; name which has been registered through the allocations system and therefore can&rsquo;t be changed. We also haven&rsquo;t included text like sprite names, which the user does not see.</p>
 
 <code id="list-mess-trans-messages" lang="messtrans" file="Messages" title="The new Messages file for MessageTrans"># Example 29.1
 #
@@ -148,26 +70,27 @@ NA:n/a
 
 # Iconbar menu
 
-IBarMenuTitle:Example
+IBarMenu/MainMenu:Example
 IBarMenu0:Info
 IBarMenu1:Help...
 IBarMenu2:Quit
 
 # Main menu
 
-MainMenuTitle:Example
 MainMenu0:1 Decimal place
 MainMenu1:2 Decimal places
 MainMenu2:3 Decimal places
 
 # Shapes menu
 
-ShapeMenuTitle:Shapes
+ShapeMenu:Shapes
 ShapeMenu0:Circle
 ShapeMenu1:Triangle
 ShapeMenu2:Square
 
 # Error messages
+
+BadSprites:Failed to load application Sprites
 
 BadIBarMenu:Failed to create Iconbar Menu
 BadMainMenu:Failed to create Main Menu
@@ -176,31 +99,563 @@ BadShapeMenu:Failed to create Shapes Menu
 BadMainTempl:Failed to load Main template
 BadInfoTempl:Failed to load ProgInfo template</code>
 
-<p>There are a couple of additional wrinkles to the file format to be borne in mind, although we aren&rsquo;t using them here. The <code>?</code> character is treated as a single-character wildcard in a token name, so the line</p>
+<p>The format of the file is fairly simple: each line consists of a token, followed by a colon (<code>:</code>) and then the text which is to be associated with it. Tokens can contain any character except for a colon (since that denotes their end), comma (<code>,</code>), closing bracket (<code>)</code>), forward slash (<code>/</code>) or question mark (<code>?</code>).</p>
+
+<p>Blank lines, and lines starting with a <code>#</code>, are ignored or treated as comments.</p>
+
+<p>As an example, if we looked up the token &ldquo;MainMenu2&rdquo; in the file above, we would have the text &ldquo;3 Decimal Places&rdquo; returned to us, whilst looking up the token &ldquo;NA&rdquo; would return the text &ldquo;n/a&rdquo;. The tokens are case sensitive, so attempting to look up &ldquo;mainmenu2&rdquo; or &ldquo;na&rdquo; would not match the same entries (but these could be separate entries in their own right).</p>
+
+<p>It is possilbe to associate two or more tokens with a single piece of text by separating the token names with a forward slash or a new line. We have used this in our file to have a single entry for the menu title associated with both the &ldquo;IBarMenu&rdquo; and &ldquo;MainMenu&rdquo; tokens &ndash; this makes sense, as both titles are based on the name of the application. We could also have written this as</p>
+
+<code lang="messtrans">IBarMenu
+MainMenu:Example</code>
+
+<p>and it us up to the developer which they choose. In addition to our menu titles, this feature can be extremely useful when working with things like repetitive interactive help messages.</p>
+
+<p>Within token names, the <code>?</code> is treated as a single-character wildcard, which provides another way of handling duplicated texts. If we had the line</p>
 
 <code lang="messtrans">Help.IBar.Menu?:This is an entry in the Icon Bar menu.</code>
 
-<p>would match &ldquo;Help.IBarMenu0&rdquo;, &ldquo;Help.IBarMenu1&rdquo;, &ldquo;Help.IBarMenuA&rdquo;, and a whole lot more variations. It is also possible to specify complete alternative tokens, using either <code>/</code> or a newline as separators &ndash; both</p>
+<p>in our messages file, it would match the tokens &ldquo;Help.IBarMenu0&rdquo;, &ldquo;Help.IBarMenu1&rdquo;, &ldquo;Help.IBarMenuA&rdquo; &ndash; and a whole lot more variations!</p>
 
-<code lang="messtrans">Help.Find.Cancel/Help.Goto.Cancel/Help.Sort.Cancel:Click Select to close the dialogue.</code>
-
-<p>and</p>
-
-<code lang="messtrans">Help.Find.Cancel
-Help.Goto.Cancel
-Help.Sort.Cancel:Click Select to close the dialogue.</code>
-
-<p>would be equivalent. In both cases, three separate tokens would return the text &ldquo;Click Select to close the dialogue.&rdquo;; this can be extremely useful when working with things like repetitive interactive help messages.</p>
+<p>The token names that we have selected are fairly arbitrary. The aim is to keep them short, but also to make them clear and memorable so that there is no question what they refer to. That said, other approaches to naming tokens do exist &ndash; in the end, it is up to the developer to decide what they are most comfortable with (and what they expect any translators to be comfortable with)!</p>
 </section>
+
 
 <section>
 <title>Loading the Messages file</title>
 
+<p>The MessageTrans module provides a number of SWIs to help us use this messages file: <swi>MessageTrans_FileInfo</swi> will supply information about the file that we will need in order to call <swi>MessageTrans_OpenFile</swi>, and <swi>MessageTrans_CloseFile</swi> will tidy up when our application exits.</p>
+
+<p>The SWIs provided by MessageTrans, and the description in the <cite>Programmer&rsquo;s Reference Manual</cite>, look complicated because the module supports a number of different use cases &ndash; including ROM-based modules looking their messages up directly in the ROM-based ResourceFS. For a standard disc-based application, things can be a little bit simpler: we ask MessageTrans to load the file into our application space using memory that we supply, which removes a lot of the potential pitfalls. However, if you do plan to use the SWIs in different ways to the one described here, make sure that you have read and understood all of the requirements in the <cite>PRM</cite>!</p>
+
+<code lang="c">extern void messagetrans_file_info(
+	char const			*file_name,
+	messagetrans_file_flags		*flags,
+	int				*size
+);</code>
+
+<p>We call <swi>MessageTrans_FileInfo</swi>, which is defined by OSLib as shown above, with <variable>*file_name</variable> being a pointer to the filename of our file. If we also supply pointers to variables in which to return some flags and the file size, it will return us some information about the file and the amount of memory required to load it into memory. In practice, the only flag that is defined is <name>messagetrans_DIRECT_ACCESS</name>, which indicates that the file is already in memory (it may be stored in ResourceFS, for example) and can be accessed directly from there without it needing to be loaded into RAM first &ndash; this feature tends to be used by ROM modules, and isn&rsquo;t something that will affect us.</p>
+
+<p>Armed with the size of the file, we can allocate the memory that we need, and also allocate space for a <name>messagetrans_control_block</name> structure which is what MessageTrans uses for a file handle.</p>
+
+<code lang="c">struct messagetrans_control_block {
+	int cb [4];
+};
+
+typedef struct messagetrans_control_block messagetrans_control_block;
+
+extern void messagetrans_open_file(
+	messagetrans_control_block	*cb,
+	char const			*file_name,
+	char				*buffer
+);</code>
+
+<p>With the preparations in place, we can call <swi>MessageTrans_LoadFile</swi> using the OSLib definition here, to load the file into memory and ready it for use. Tracking message files is a fairly standard process which is similar across most applications, and SFLib provides a msgs library which will do most of the work for us. We&rsquo;ll make use of it, but will look inside first to see what it&rsquo;s doing.</p>
+
+<p>The library starts by defining a couple of global variables, <variable>*message_block</variable> and <variable>*message_buffer</variable>, which will point to the MessageTrans control block and the block of application memory into which the file will be loaded. These can be seen in <reference id="list-mess-trans-globals"/>.</p>
+
+<code id="list-mess-trans-globals" lang="c" title="The global variables used by the msgs library">static messagetrans_control_block *message_block = NULL;
+static char *message_buffer = NULL;</code>
+
+<p>When we come to load a file, the first step is to pass the filename &ndash; pointed to by <variable>*messages_file</variable> &ndash; to <swi>MessageTrans_FileInfo</swi> so that the amount of memory required to load it can be determined. This value is returned from the SWI call via the pointer that we supply to the <variable>message_size</variable> variable.</p>
+
+<code lang="c">int message_size = 0;
+
+messagetrans_file_info(messages_file, NULL, &amp;message_size);</code>
+
+<p>When the SWI returns, we allocate two blocks of memory: a MessageTrans control block whose pointer goes into the static <variable>*message_block</variable> variable, and the memory that we will be asking MessageTrans to load the file into, whose pointer goes into the static <variable>*message_buffer</variable> variable.</p>
+
+<code lang="c">message_block = malloc(sizeof (messagetrans_control_block));
+message_buffer = malloc(message_size);</code>
+
+<p>The final step is to call <swi>MessageTrans_LoadFile</swi> with the filename, and the pointers to the two memory blocks, to load the file into memory and set it up as an actual MessageTrans instance.</p>
+
+<code lang="c">messagetrans_open_file(message_block, messages_file, message_buffer);</code>
+
+<p>Our messages file is now held in the memory pointed to by <variable>*message_buffer</variable> and we can access it thorough the control block pointed to by <variable>message_block</variable>.</p>
+
+<p>Putting all of the blocks together and adding in the missing error handling gives us the <function>msgs_initialise()</function> function seen in <reference id="list-mess-trans-load"/>.</p>
+
+<code id="list-mess-trans-load" lang="c" title="Loading a MessageTrans file">osbool msgs_initialise(char *messages_file)
+{
+	int message_size = 0;
+
+	/* Validate the inputs. */
+
+	if (message_block != NULL || message_buffer != NULL || messages_file == NULL)
+		return FALSE;
+
+	/* Read the file details and allocate the necessary memory. */
+
+	if (xmessagetrans_file_info(messages_file, NULL, &amp;message_size) != NULL)
+		return FALSE;
+
+	message_block = malloc(sizeof (messagetrans_control_block));
+	message_buffer = malloc(message_size);
+
+	if (message_block == NULL || message_buffer == NULL) {
+		if (message_block != NULL)
+			free(message_block);
+
+		if (message_buffer != NULL)
+			free(message_buffer);
+
+		message_block = NULL;
+		message_buffer = NULL;
+
+		return FALSE;
+	}
+
+	/* Load the file */
+
+	if (xmessagetrans_open_file(message_block, messages_file, message_buffer) != NULL) {
+		if (message_block != NULL)
+			free(message_block);
+
+		if (message_buffer != NULL)
+			free(message_buffer);
+
+		message_block = NULL;
+		message_buffer = NULL;
+
+		return FALSE;
+	}
+
+	/* Return successfully. */
+
+	return TRUE;
+}</code>
+
+<p>Closing the file and freeing up the memory used is a bit easier, and uses the <swi>MessageTrans_CloseFile</swi> SWI, which is defined by OSLib like this.</p>
+
+<code lang="c">void messagetrans_close_file(
+	messagetrans_control_block const *cb
+);</code>
+
+<p>After checking that there is actually a file open (and that <variable>*message_block</variable> is not <name>NULL</name>), we simply call <swi>MessageTrans_CloseFile</swi> and pass it the pointer to the MessageTrans contol block. The memory which had been allocated is then freed.</p>
+
+<p>The full <function>msgs_terminate()</function> function can be seen in <reference id="list-mess-trans-close"/>.</p>
+
+<code id="list-mess-trans-close" lang="c" title="Closing a MessageTrans file">osbool msgs_terminate(void)
+{
+	if (message_block == NULL)
+		return FALSE;
+
+	messagetrans_close_file(message_block);
+	free(message_block);
+
+	if (message_buffer != NULL)
+		free(message_buffer);
+
+	message_block = NULL;
+	message_buffer = NULL;
+
+	return TRUE;
+}</code>
+
+<!-- TODO - Do we note that the library has external_file in it? -->
 </section>
 
 <section>
 <title>Looking up messages</title>
 
+<p>With our messages file loaded, we will need to be able to look up the tokens and convert them into user-facing text. There are a number of ways to do this, but the one most likely to be useful is the <swi>MessageTrans_Lookup</swi> SWI &ndash; which OSLib defines as follows.</p>
+
+<code lang="c">extern char *messagetrans_lookup(
+	messagetrans_control_block const *cb,
+	char const *token,
+	char *buffer,
+	int size,
+	char const *arg0,
+	char const *arg1,
+	char const *arg2,
+	char const *arg3,
+	int *used
+);</code>
+
+<p>It takes a number of parameters, including a pointer to our control block in <variable>*cb</variable>, a pointer to the token to be looked up in <variable>*token</variable>, a pointer to a buffer to hold the resulting text in <variable>*buffer</variable>, and the size of that buffer in <variable>size</variable>. It returns a pointer to the output text (which in our case <em>should</em> just be a pointer to the buffer pointed to by <variable>*buffer</variable>) and the length of the returned string if we supply a pointer in <variable>*int</variable>.</p>
+
+<p>The three parameters <variable>*arg0</variable>, <variable>*arg1</variable>, <variable>*arg2</variable> and <variable>*arg0</variable> are optional pointers to strings which can be substituted into the text from the messages file if it contains placeholders <code>%0</code>, <code>%1</code>, <code>%2</code> or <code>%3</code> respectively. This allows run-time values to be included in messages. For example, if we had the token</p>
+
+<code lang="messtrans">OnWall:%0 Green Bottles</code>
+
+<p>and called <swi>MessageTrans_Lookup</swi> with</p>
+
+<code lang="c">messagetrans_lookup(cb, "OnWall", buffer, BUFFER_LEN, "10", NULL, NULL, NULL, NULL);</code>
+
+<p>then we could expect the memory pointed to by <variable>*buffer</variable> to contain &ldquo;10 Green Bottles&rdquo; afterwards.</p>
+
+<p>SFLib&rsquo;s msgs library contains a number of functions which can be used to access <swi>MessageTrans_Lookup</swi>, which ultimately all end up by calling <function>msgs_param_lookup_result()</function> as defined in <reference id="list-mess-trans-lookup"/>. Given C&rsquo;s vagaries around the use of strings, care is taken to try to ensure that a valid <code>'\0'</code>-terminated string is returned in <em>most</em> circumstances. This should only fail if the suupplied buffer itself is invalid &ndash; in which situation, our application probably has other problems.</p>
+
+<code lang="c" id="list-mess-trans-lookup" title="Looking up a message token">osbool msgs_param_lookup_result(char *token, char *buffer, size_t buffer_size, char *a, char *b, char *c, char *d)
+{
+	os_error *error;
+
+	if (buffer == NULL || buffer_size == 0)
+		return FALSE;
+
+	/* If there's no token, return an empty buffer. */
+
+	if (token == NULL) {
+		*buffer = '\0';
+		return FALSE;
+	}
+
+	/* If there's no message block, instead of using the Global block, return the supplied token. */
+
+	if (message_block == NULL) {
+		string_copy(buffer, token, buffer_size);
+		return FALSE;
+	}
+
+	/* Look up the token. */
+
+	error = xmessagetrans_lookup(message_block, token, buffer, buffer_size, a, b, c, d, NULL, NULL);
+
+	/* If there was an error, return an empty buffer. */
+
+	if (error != NULL) {
+		*buffer = '\0';
+		return FALSE;
+	}
+
+	return TRUE;
+}</code>
+
+<p>The function starts by checking that <variable>*buffer</variable> isn&rsquo;t <name>NULL</name> and the size is non-zero. If either of these checks fail, then it can&rsquo;t safely write anything to the buffer and so simply returns <name>FALSE</name> to indicate failure.</p>
+
+<p>Once we know that we have a buffer, we check that <variable>*token</variable> isn&rsquo;t <name>NULL</name>; if it is, we terminate the buffer and then return <name>FALSE</name>. The next check is to see if <function>msgs_initialise()</function> has been called (because <variable>*message_block</variable> will be <name>NULL</name> otherwise); if it hasn&rsquo;t, we copy the token into the buffer to give <em>some</em> indication of what the intent was, and return <name>FALSE</name>. The final step is to call <function>messagetrans_lookup()</function>, terminating the buffer and returning <name>FALSE</name> if an error occurred. If nothing went wrong, we return <name>TRUE</name>.</p>
+
+<p>The full set of parameters expected by <function>msgs_param_lookup_result()</function> can be a bit cumbersome in many circumstances, so the msgs library defines a few more functions to give us other options: these can be seen in <reference id="list-mess-trans-lookup-extra"/>. A sibling function &ndash; in that it returns success or failure but doesn&rsquo;t need the four parameter pointers to be passed if they are all <name>NULL</name> &ndash; is <function>msgs_lookup_result()</function>.</p>
+
+<p>The other two functions are <function>msgs_param_lookup()</function> and <function>msgs_lookup()</function>, which return pointers to the buffer supplied to them instead of success or failure. This can be useful when we need to pass a pointer to a message into another function.</p>
+
+<code id="list-mess-trans-lookup-extra" lang="c" title="More ways to look up a message token">char *msgs_lookup(char *token, char *buffer, size_t buffer_size)
+{
+	msgs_param_lookup_result(token, buffer, buffer_size, NULL, NULL, NULL, NULL);
+
+	return buffer;
+}
+
+char *msgs_param_lookup(char *token, char *buffer, size_t buffer_size, char *a, char *b, char *c, char *d)
+{
+	msgs_param_lookup_result(token, buffer, buffer_size, a, b, c, d);
+
+	return buffer;
+}
+
+osbool msgs_lookup_result(char *token, char *buffer, size_t buffer_size)
+{
+	return msgs_param_lookup_result(token, buffer, buffer_size, NULL, NULL, NULL, NULL);
+}</code>
+</section>
+
+
+<section>
+<title>Updating the code</title>
+
+<p>To add MessageTrans support to our application, we will start in <file>c.main</file> by adding some lines to <function>main_initialise()</function> and <function>main_terminate()</function>. In <function>main_initialise()</function> we add a call to <function>msgs_initialise()</function> just before we call <function>wimp_initialise()</function>, exiting with a fatal error if MessageTrans failed to set itself up. The full code can be seen in <reference id="list-mess-trans-main-init"/>.</p>
+
+<code id="list-mess-trans-main-init" lang="c" title="Initialising the application with MessageTrans">static void main_initialise(void)
+{
+	os_error	*error;
+	osspriteop_area	*sprites;
+
+	/* Load the messages file. */
+
+	if (!msgs_initialise(&quot;&lt;ExamplApp$Dir&gt;.Messages&quot;))
+		error_report_fatal(&quot;Failed to load application Messages&quot;);
+
+	/* Initialise with the Wimp. */
+
+	wimp_initialise(wimp_VERSION_RO3, main_application_name, NULL, NULL);
+
+	error_initialise(main_application_name, main_application_sprite, NULL);
+
+	event_add_message_handler(message_QUIT, EVENT_MESSAGE_INCOMING, main_message_quit);
+
+	/* Initialise library modules. */
+
+	url_initialise();
+
+	/* Load the application sprites. */
+
+	sprites = resources_load_user_sprite_area(&quot;&lt;ExamplApp$Dir&gt;.Sprites&quot;);
+	if (sprites == NULL)
+		error_msgs_report_fatal(&quot;BadSprites:Failed to load application Sprites&quot;);
+
+	/* Open the templates file. */
+
+	error = xwimp_open_template(&quot;&lt;ExamplApp$Dir&gt;.Templates&quot;);
+	if (error != NULL)
+		error_report_program(error);
+
+	/* Initialise the program modules. */
+
+	calc_initialise();
+	ibar_initialise(main_application_sprite);
+	win_initialise(sprites);
+
+	/* Close the templates file. */
+
+	wimp_close_template();
+}</code>
+
+<p>Since the call to <function>error_report_fatal()</function> won't return, we can be confident that if we get as far as <function>wimp_initialise()</function>, then we probably have a working instance of MessageTrans. There&rsquo;s no point tokenising the error message, as if it gets used we know that MessageTrans probably isn&rsquo;t working for us anyway!</p>
+
+<p>Further down the file, we can tokenise the error reported if the sprites fail to load simply by swapping the call to <function>error_report_fatal()</function> into the similarly-named <function>error_msgs_report_fatal()</function>. SFLib&rsquo;s errors library provides sibling MessageTrans calls for many of its reporting functions, which simply go on to call <function>msgs_lookup()</function> for us. Here we are showing another feature offered by MessageTrans: if the text supplied to <swi>MessageTrans_Lookup</swi> contains a colon, then what follows is treated as a fallback text in case the lookup fails for any reason. This lets us provide a backup error message, to reduce the chance that the user is faced with nothing should things go wrong.</p>
+
+<p>In <function>main_terminate()</function>, we simply call <function>msgs_terminate()</function> after calling <function>wimp_close_down()</function> as seen in <reference id="list-mess-trans-main-term"/>.</p>
+
+<code id="list-mess-trans-main-term" lang="c" title="Tidying up MessageTrans on exit">static void main_terminate(void)
+{
+	wimp_close_down(0);
+	msgs_terminate();
+}</code>
+</section>
+
+
+<section>
+<title>Translating the menus</title>
+
+<p>A significant source of the text within our messages file are our application&rsquo;s menus, so perhaps the next place to look is the menu generation within <file>c.menus</file>. Currently the <function>menu_create()</function> and <function>menu_entry()</function> functions take a pointer to the text which we want to appear in the menu title or entry, so it would be useful if these could take a pointer to a MessageTrans token instead. If we look at the code to set up the menu title in <function>menu_create()</function>, we find the following.</p>
+
+<code lang="c">len = strlen(title);
+if (len &gt; 12)
+	buffer = malloc(len + 1);
+
+if (buffer != NULL) {
+	strncpy(buffer, title, len);
+	buffer[len] = '\0';
+	menu-&gt;title_data.indirected_text.text = buffer;
+} else {
+	strncpy(menu-&gt;title_data.text, title, 12);
+}</code>
+
+<p>If the length of the text is twelve characters or less then we simply copy it straight into the menu block, otehrwise we allocate a buffer and copy the text into that so that we can create an indirected icon. At present, <variable>*title</variable> is one of the parameters to <function>menu_create()</function>, but we change that parameter to <variable>*token</variable> and instead declare <variable>title[]</variable> as a local variable on the stack.</p>
+
+<code lang="c">char title[MENU_MAX_LINE_LEN]</code>
+
+<p>We can then insert a message lookup ahead of the code above.</p>
+
+<code lang="c">msgs_lookup(token, title, MENU_MAX_LINE_LEN);</code>
+
+<p>Taken together, we end up with the function seen in <reference id="list-mess-trans-menu-create"/>. Note that we have made an arbitrary decision that the texts for menu titles (and, as we&rsquo;ll see soon, menu entries) won&rsquo;t be more than 63 characters long. Working with strings in C often results in these sorts of compromises, and it&rsquo;s worth bearing in mind that the messages files are to an extent part of the application that we&rsquo;re in control of. Also, if a text is too long it will simply be truncated: the application won&rsquo;t crash.</p>
+
+<code id="list-mess-trans-menu-create" lang="c" title="Creating menu titles with message tokens">#define MENU_MAX_LINE_LEN 64
+
+wimp_menu *menu_create(char *token, int entries)
+{
+	wimp_menu	*menu = NULL;
+	wimp_menu_entry	*entry = NULL;
+	char		title[MENU_MAX_LINE_LEN], *buffer = NULL;
+	int		len, size;
+
+	/* A menu must have one entry. */
+
+	if (entries &lt; 1)
+		return NULL;
+
+	/* Allocate the menu definition block. */
+
+	size = wimp_SIZEOF_MENU(entries);
+
+	menu = malloc(size);
+	if (menu == NULL)
+		return NULL;
+
+	/* Set up the menu title. */
+
+	msgs_lookup(token, title, MENU_MAX_LINE_LEN);
+
+	len = strlen(title);
+	if (len &gt; 12)
+		buffer = malloc(len + 1);
+
+	if (buffer != NULL) {
+		strncpy(buffer, title, len);
+		buffer[len] = '\0';
+		menu-&gt;title_data.indirected_text.text = buffer;
+	} else {
+		strncpy(menu-&gt;title_data.text, title, 12);
+	}
+
+	/* Set up the remainder of the menu header. */
+
+	menu-&gt;title_fg = wimp_COLOUR_BLACK;
+	menu-&gt;title_bg = wimp_COLOUR_LIGHT_GREY;
+	menu-&gt;work_fg = wimp_COLOUR_BLACK;
+	menu-&gt;work_bg = wimp_COLOUR_WHITE;
+	menu-&gt;width = 16;
+	menu-&gt;height = wimp_MENU_ITEM_HEIGHT;
+	menu-&gt;gap = wimp_MENU_ITEM_GAP;
+
+	/* Initialise the menu entries. */
+
+	entry = menu-&gt;entries;
+
+	while (entries-- &gt; 0) {
+		entry-&gt;menu_flags = (entries &gt; 0) ? 0 : wimp_MENU_LAST;
+		entry-&gt;sub_menu = NULL;
+		entry-&gt;icon_flags = wimp_ICON_TEXT | wimp_ICON_FILLED |
+				(wimp_COLOUR_BLACK &lt;&lt; wimp_ICON_FG_COLOUR_SHIFT) |
+				(wimp_COLOUR_WHITE &lt;&lt; wimp_ICON_BG_COLOUR_SHIFT);
+		strncpy(entry->data.text, "", 12);
+
+		entry++;
+	}
+
+	/* Set the title indirection flag. */
+
+	if (buffer != NULL)
+		menu-&gt;entries[0].menu_flags |= wimp_MENU_TITLE_INDIRECTED;
+
+	return menu;
+}</code>
+
+<p>We can also make a very similar change to <function>menu_entry()</function>, as seen in <reference id="list-mess-trans-menu-entry"/>.</p>
+
+<code id="list-mess-trans-menu-entry" lang="c" title="Adding menu entries with message tokens">void menu_entry(wimp_menu *menu, int entry, char *token, wimp_menu *sub_menu)
+{
+	wimp_menu_entry *definition = NULL;
+	char		text[MENU_MAX_LINE_LEN], *buffer = NULL;
+	int		len, width;
+
+	if (menu == NULL || text == NULL)
+		return;
+
+	/* Update the menu entry definition. */
+
+	definition = menu-&gt;entries + entry;
+
+	/* Set up the menu text. */
+
+	msgs_lookup(token, text, MENU_MAX_LINE_LEN);
+
+	len = strlen(text);
+	if (len &gt; 12)
+		buffer = malloc(len + 1);
+
+	if (buffer != NULL) {
+		strncpy(buffer, text, len);
+		buffer[len] = '\0';
+		definition-&gt;data.indirected_text.text = buffer;
+		definition-&gt;data.indirected_text.validation = "";
+		definition-&gt;data.indirected_text.size = len + 1;
+		definition-&gt;icon_flags |= wimp_ICON_INDIRECTED;
+	} else {
+		strncpy(definition-&gt;data.text, text, 12);
+	}
+
+	definition-&gt;sub_menu = sub_menu;
+
+	/* Recalculate the menu width. */
+
+	width = (16 * strlen(text)) + 16;
+	if (width &gt; menu-&gt;width)
+		menu-&gt;width = width;
+}</code>
+
+<p>Armed with these new versions of <function>menu_create()</function> and <function>menu_entry()</function>, we can change <function>ibar_initialise()</function> in <file>c.ibar</file> so that it uses MessageTrans tokens instead of the original text. The errors raised if there are problems loading the <window>program information</window> window template or creating the iconbar menu have been updated in the same way that we did with the error when loading the application sprites &ndash; although we haven&rsquo;t provided any fallback text this time.</p>
+
+<code lang="c">/* Program Info Window. */
+
+window_definition = windows_load_template(&quot;ProgInfo&quot;);
+if (window_definition == NULL) {
+	error_msgs_report_error(&quot;BadInfoTempl&quot;);
+	return;
+}
+
+prog_info = wimp_create_window(window_definition);
+free(window_definition);
+
+event_add_window_icon_click(prog_info, IBAR_PROGINFO_ICON_WEB, ibar_proginfo_web_click);
+
+/* Iconbar Menu. */
+
+ibar_menu = menu_create(&quot;IBarMenu&quot;, 3);
+if (ibar_menu == NULL) {
+	error_msgs_report_error(&quot;BadIBarMenu&quot;);
+	return;
+}
+
+menu_entry(ibar_menu, IBAR_MENU_INFO, &quot;IBarMenu0&quot;, (wimp_menu *) prog_info);
+menu_entry(ibar_menu, IBAR_MENU_HELP, &quot;IBarMenu1&quot;, NULL);
+menu_entry(ibar_menu, IBAR_MENU_QUIT, &quot;IBarMenu2&quot;, NULL);</code>
+
+<p>We can also update <function>win_initialise()</function> within <file>c.win</file> in a similar way.</p>
+
+<code lang="c">/* Load and create the window. */
+
+window_definition = windows_load_template(&quot;Main&quot;);
+if (window_definition == NULL) {
+	error_msgs_report_error(&quot;BadMainTempl&quot;);
+	return;
+}
+
+icons = window_definition-&gt;icons;
+
+icons[WIN_ICON_SHAPE].data.indirected_sprite.area = sprites;
+
+win_handle = wimp_create_window(window_definition);
+free(window_definition);
+
+/* Window Menu. */
+
+win_menu = menu_create(&quot;MainMenu&quot;, 3);
+if (win_menu == NULL) {
+	error_msgs_report_error(&quot;BadMainMenu&quot;);
+	return;
+}
+
+menu_entry(win_menu, WIN_MENU_DECIMAL1, &quot;MainMenu0&quot;, NULL);
+menu_entry(win_menu, WIN_MENU_DECIMAL2, &quot;MainMenu1&quot;, NULL);
+menu_entry(win_menu, WIN_MENU_DECIMAL3, &quot;MainMenu2&quot;, NULL);
+
+/* Shapes Menu. */
+
+win_shape_menu = menu_create(&quot;ShapeMenu&quot;, 3);
+if (win_shape_menu == NULL) {
+	error_msgs_report_error(&quot;BadShapeMenu&quot;);
+	return;
+}
+
+menu_entry(win_shape_menu, WIN_MENU_SHAPE_CIRCLE, &quot;ShapeMenu0&quot;, NULL);
+menu_entry(win_shape_menu, WIN_MENU_SHAPE_TRIANGLE, &quot;ShapeMenu1&quot;, NULL);
+menu_entry(win_shape_menu, WIN_MENU_SHAPE_SQUARE, &quot;ShapeMenu2&quot;, NULL);</code>
+
+<!-- On the menu front, possibly mention MenuGen after discussing the updates to c.menus? -->
+</section>
+
+
+<section>
+<title>Tying up loose ends</title>
+
+<p>The other place that we have some user-facing text to translate is in <file>c.calc</file>, where we have &ldquo;n/a&rdquo; being used to denote for &ldquo;not applicable&rdquo;.</p>
+
+<code lang="c">static char *calc_not_applicable = &quot;n/a&quot;;</code>
+
+<p>This change isn&rsquo;t quite a simple, but we convert <variable>calc_not_applicable</variable> from a pointer to a character array and then look the token up in <function>calc_initialise()</function>. Once again, we are making an arbitrary decision on how long this text can be &ndash; although in this case, there is also the limit from the length of the icon that the text is displayed in which needs to be considered. This is set by the indirected text length of the icons in the template file.</p>
+
+<code lang="c">#define CALC_NOT_APPLICABLE_LENGTH 8
+
+static char calc_not_applicable[CALC_NOT_APPLICABLE_LENGTH];
+
+void calc_initialise(void)
+{
+	calc_set_format(2);
+	calc_set_shape(CALC_SHAPE_NONE);
+	msgs_lookup(&quot;NA&quot;, calc_not_applicable, CALC_NOT_APPLICABLE_LENGTH);
+}</code>
+
+<p>With this change in place, our application no longer has any hard-coded English text within the <file>!RunImage</file> file, meaning that it can be translated into other languages by editing the <file>Messages</file>, <file>Templates</file> and <file>!Help</file> files. From an end-user&rsquo;s perspective, however, it should remain functionally identical.</p>
+
+<p>The full set of code can be found in <reference id="dl-mess-trans"/>.</p>
+
+<download id="dl-mess-trans" file="MessageTrans" title="Looking up Text from MessageTrans" compatibility="none"/>
+
+<p>Despite all of the work, however, there is still a problem: our application can still only support one language at a time. That&rsquo;s something that we will look at <reference id="chap-internat">in the next chapter</reference>.</p>
 
 </section>
 </chapter>
