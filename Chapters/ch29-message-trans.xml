@@ -284,7 +284,7 @@ message_buffer = malloc(message_size);</code>
 
 <code lang="c">messagetrans_lookup(cb, "OnWall", buffer, BUFFER_LEN, "10", NULL, NULL, NULL, NULL);</code>
 
-<p>then we could expect the memory pointed to by <variable>*buffer</variable> to contain the text &ldquo;10 Green Bottles&rdquo; afterwards.</p>
+<p>then we could expect the memory pointed to by <variable>*buffer</variable> to contain the text &ldquo;10 Green Bottles&rdquo; afterwards. Note that the four parameters are pointers to strings: it is up to the application to convert numbers or other data into string form before passing them to <swi>MessageTrans_Lookup</swi>.</p>
 
 <p>SFLib&rsquo;s msgs library contains a number of functions which can be used to access <swi>MessageTrans_Lookup</swi>, which ultimately all end up by calling <function>msgs_param_lookup_result()</function> as defined in <reference id="list-mess-trans-lookup"/>. Given C&rsquo;s vagaries around the use of strings, care is taken to try to ensure that a valid <code>'\0'</code>-terminated string is returned in <em>most</em> circumstances. This should only fail if the supplied buffer itself is invalid &ndash; in which situation, our application probably has other more important problems to worry about first!</p>
 
