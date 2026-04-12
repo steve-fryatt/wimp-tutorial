@@ -1,0 +1,182 @@
+/* Copyright 2015-2026, Stephen Fryatt (info@stevefryatt.org.uk)
+ *
+ * This file is part of Wimp Programming In C:
+ *
+ *   http://www.stevefryatt.org.uk/risc-os/wimp-prog
+ *
+ * Licensed under the EUPL, Version 1.2 only (the "Licence");
+ * You may not use this work except in compliance with the
+ * Licence.
+ *
+ * You may obtain a copy of the Licence at:
+ *
+ *   http://joinup.ec.europa.eu/software/page/eupl
+ *
+ * Unless required by applicable law or agreed to in
+ * writing, software distributed under the Licence is
+ * distributed on an "AS IS" basis, WITHOUT WARRANTIES
+ * OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ * See the Licence for the specific language governing
+ * permissions and limitations under the Licence.
+ */
+
+/**
+ * File: main.c
+ */
+
+#include "oslib/osfile.h"
+#include "oslib/osspriteop.h"
+#include "oslib/wimp.h"
+#include "sflib/errors.h"
+#include "sflib/event.h"
+#include "sflib/msgs.h"
+#include "sflib/resources.h"
+#include "sflib/string.h"
+#include "sflib/url.h"
+
+#include "main.h"
+
+#include "calc.h"
+#include "ibar.h"
+#include "results.h"
+#include "win.h"
+
+/* Application Details */
+
+static char *main_application_name = "Example App";
+
+static char *main_application_sprite = "!examplapp";
+
+/* Global Variables */
+
+osbool main_quit_flag = FALSE;
+
+/* Constants */
+
+#define MAIN_FILENAME_BUFFER_LEN 1024
+
+/* Function Prototypes */
+
+static void main_initialise(void);
+static void main_poll(void);
+static void main_terminate(void);
+static osbool main_message_quit(wimp_message *message);
+
+/* Main code entry point. */
+
+int main(int argc, char *argv[])
+{
+	main_initialise();
+	main_poll();
+	main_terminate();
+
+	return 0;
+}
+
+/* Global application initialisation. */
+
+static void main_initialise(void)
+{
+	char		resources[MAIN_FILENAME_BUFFER_LEN], res_temp[MAIN_FILENAME_BUFFER_LEN];
+	os_error	*error;
+	osspriteop_area	*sprites;
+
+	/* Initialise the resources. */
+
+	string_copy(resources, "<ExamplApp$Dir>.Resources", MAIN_FILENAME_BUFFER_LEN);
+	if (!resources_initialise_paths(resources, MAIN_FILENAME_BUFFER_LEN, "ExamplApp$Language", "UK"))
+		error_report_fatal("Failed to initialise resources.");
+
+	/* Load the messages file. */
+
+	if (!resources_find_file(resources, res_temp, MAIN_FILENAME_BUFFER_LEN, "Messages", osfile_TYPE_TEXT))
+		error_report_fatal("Failed to locate suitable Messages file");
+
+	if (!msgs_initialise(res_temp))
+		error_report_fatal("Failed to load application Messages");
+
+	/* Initialise with the Wimp. */
+
+	wimp_initialise(wimp_VERSION_RO3, main_application_name, NULL, NULL);
+
+	error_initialise(main_application_name, main_application_sprite, NULL);
+
+	event_add_message_handler(message_QUIT, EVENT_MESSAGE_INCOMING, main_message_quit);
+
+	/* Initialise library modules. */
+
+	url_initialise();
+
+	/* Load the application sprites. */
+
+	sprites = resources_load_user_sprite_area("<ExamplApp$Dir>.Sprites");
+	if (sprites == NULL)
+		error_msgs_report_fatal("BadSprites:Failed to load application Sprites");
+
+	/* Open the templates file. */
+
+	if (!resources_find_file(resources, res_temp, MAIN_FILENAME_BUFFER_LEN, "Templates", osfile_TYPE_TEMPLATE))
+		error_report_fatal("MissingTemp:Failed to locate suitable Templates file");
+
+	error = xwimp_open_template(res_temp);
+	if (error != NULL)
+		error_report_program(error);
+
+	/* Initialise the program modules. */
+
+	calc_initialise();
+	ibar_initialise(main_application_sprite);
+	win_initialise(sprites);
+	results_initialise();
+
+	/* Close the templates file. */
+
+	wimp_close_template();
+}
+
+/* Wimp_Poll loop. */
+
+static void main_poll(void)
+{
+	wimp_block	blk;
+	wimp_event_no	reason;
+	int		pollword;
+
+	while (!main_quit_flag) {
+		reason = wimp_poll(wimp_MASK_NULL, &blk, &pollword);
+
+		if (!event_process_event(reason, &blk, pollword, NULL)) {
+			switch (reason) {
+			case wimp_OPEN_WINDOW_REQUEST:
+				wimp_open_window(&(blk.open));
+				break;
+
+			case wimp_CLOSE_WINDOW_REQUEST:
+				wimp_close_window(blk.close.w);
+				break;
+
+			case wimp_KEY_PRESSED:
+				wimp_process_key(blk.key.c);
+				break;
+			}
+		}
+	}
+}
+
+/* Global application termination. */
+
+static void main_terminate(void)
+{
+	wimp_close_down(0);
+	msgs_terminate();
+}
+
+/* Message_Quit event handler. */
+
+static osbool main_message_quit(wimp_message *message)
+{
+	main_quit_flag = TRUE;
+
+	return TRUE;
+}

@@ -152,7 +152,7 @@ wimp_set_icon_state(win_handle, WIN_ICON_OPTION3, 0, wimp_ICON_SELECTED);</code>
 
 <p>If this is set for an icon within an ESG, clicking with <mouse>Adjust</mouse> on it will not deselect any other icons within the group which are currently selected &ndash; allowing multiple options to be selected at once.</p>
 
-<p>It&rsquo;s easy to experiment with this by editing the window templates: in <cite>WinEd</cite>, the required option is called <icon>Allow adjust</icon>. For completeness, the change can be found in <reference id="dl-icons-radio-multi"/>, although it is only the <file>!ExamplApp.Templates</file> file which has changed from <reference id="dl-icons-radio-adjust"/>.</p> 
+<p>It&rsquo;s easy to experiment with this by editing the window templates: in <cite>WinEd</cite>, the required option is called <icon>Allow adjust</icon>. For completeness, the change can be found in <reference id="dl-icons-radio-multi"/>, although it is only the <file>!ExamplApp.Templates</file> file which has changed from <reference id="dl-icons-radio-adjust"/>.</p>
 
 <download id="dl-icons-radio-multi" file="MultiRadioIcons" title="Adjust Can Select Several Radio Icons" compatibility="none"/>
 </section>
@@ -173,7 +173,7 @@ wimp_set_icon_state(win_handle, WIN_ICON_OPTION3, 0, wimp_ICON_SELECTED);</code>
 <code lang="c">osbool event_add_window_icon_radio(
 	wimp_w w,
 	wimp_i i,
-	osbool complete 
+	osbool complete
 );</code>
 
 <p>The window and icon handles are what we would expect, and identify the icon to be looked after. The <variable>complete</variable> parameter controls whether or not the radio icon handler will report the handling of the event to be complete, which as described above will determine whether the event gets passed on to any other event handlers.</p>
@@ -184,7 +184,7 @@ wimp_set_icon_state(win_handle, WIN_ICON_OPTION3, 0, wimp_ICON_SELECTED);</code>
 event_add_window_icon_radio(win_handle, WIN_ICON_OPTION2, FALSE);
 event_add_window_icon_radio(win_handle, WIN_ICON_OPTION3, FALSE);</code>
 
-<p>We have set <variable>complete</variable> to <name>FALSE</name>, since we do still wish to receive window-level <name>Mouse_Click</name> events for these icons in order to be able to update the status field. The changes to the code can be found in <reference id="dl-icons-radio-sflib"/>.</p> 
+<p>We have set <variable>complete</variable> to <name>FALSE</name>, since we do still wish to receive window-level <name>Mouse_Click</name> events for these icons in order to be able to update the status field. The changes to the code can be found in <reference id="dl-icons-radio-sflib"/>.</p>
 
 <download id="dl-icons-radio-sflib" file="SFLibRadioIcons" title="Using SFLib to Handle Adjust Clicks" compatibility="none"/>
 </section>
@@ -262,7 +262,7 @@ event_add_window_icon_radio(win_handle, WIN_ICON_OPTION3, FALSE);</code>
 <download id="dl-icons-radio-printf" file="SFLibIconsPrintf" title="Using icons_printf() to Write to the Icon" compatibility="none"/>
 </section>
 
-<section>
+<section id="sect-icons-radio-win-open">
 <title>Opening the window</title>
 
 <p>One other area where we are duplicating code that SFLib can provide is in the <function>win_open()</function> function. The need to set up a window block for <swi>Wimp_OpenWindow</swi> by calling <swi>Wimp_GetWindowState</swi> is a common one when writing Wimp software: it arises every time an application opens a window up on screen for the first time. The window library in SFLib provides some useful functions for this, including <function>windows_open_centred_on_screen()</function>.</p>
