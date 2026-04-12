@@ -202,7 +202,7 @@ typedef struct os_coord os_coord;</code>
 	wimp_set_icon_state(win_handle, win_icon_handle, 0, 0);
 }</code>
 
-<p>As we saw in <reference id="chap-window-theory"/>, the work area coordinates have their origin in the top-left of the window, increasing from left to right and decreasing from top to bottom. A complete set of code for this change can be dound in <reference id="dl-interact-click-coord"/>.</p>
+<p>As we saw in <reference id="chap-window-theory"/>, the work area coordinates conventionally have their origin in the top-left of the window, increasing from left to right and decreasing from top to bottom. A complete set of code for this change can be found in <reference id="dl-interact-click-coord"/>.</p>
 
 <download id="dl-interact-click-coord" file="MouseCoords" title="Calculating Work Area Coordinates for the Mouse" compatibility="none"/>
 

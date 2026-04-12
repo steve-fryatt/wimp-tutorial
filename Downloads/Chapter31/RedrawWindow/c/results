@@ -67,7 +67,7 @@ void results_initialise(void)
 	}
 
 	results_handle = wimp_create_window(window_definition);
-	free(results_handle);
+	free(window_definition);
 
 	/* Window Menu. */
 

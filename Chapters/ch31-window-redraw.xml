@@ -56,7 +56,7 @@
 <section>
 <title>A contrived example</title>
 
-<p>As might be expected, there will be a fair bit of new code needed before our application can redraw a window of its own, so we&rsquo;ll start by getting some groundwork in place. It might be useful if we could save the results of our calculations in a table for future reference, so let&rsquo;s create a results window to do just that.</p>
+<p>As might be expected, there will be a fair bit of new code needed before our application can redraw a window of its own, so we&rsquo;ll start by getting some groundwork in place. It might be useful if our application could save the results of our calculations in a table for future reference, so let&rsquo;s create a results window to do just that.</p>
 
 <p>Out first stop is in <cite>WinEd</cite>, to create a new window within our template file. We have called this &ldquo;Results&rdquo;, and it can be seen in <reference id="fig-redraw-window"/>.</p>
 
@@ -76,7 +76,7 @@
 <section>
 <title>The results module</title>
 
-<p>Moving to our application&rsquo;s source code, we will add a results module to look after the new window. Initially this will be very similar in concept to the ibar and win modules that we already have, so instead of going the the following code in detail we will refer back to where we previously introduced the concepts that we will need.</p>
+<p>Moving to our application&rsquo;s source code, we will add a results module to look after the new window. Initially this will be very similar in concept to the ibar and win modules that we already have, so instead of describing the following pieces of code in detail, we will refer back to where we previously introduced the concepts that we will need.</p>
 
 <p>We will be adding a pair of new files &ndash; <file>c.results</file> and <file>h.results</file> &ndash; to create the new module, so our first step will be to update the <variable>OBJS</variable> list in the <file>Makefile</file> to include a reference to it.</p>
 
@@ -161,7 +161,7 @@ void results_initialise(void)
 	}
 
 	results_handle = wimp_create_window(window_definition);
-	free(results_handle);
+	free(window_definition);
 
 	/* Window Menu. */
 
@@ -276,7 +276,7 @@ BadResultsTempl:Failed to load Results template</code>
 
 <code lang="c">results_icons = window_definition-&gt;icons;</code>
 
-<p>The window definition returned by <function>windows_load_template()</function> is in a block of memory allocated by <function>malloc()</function>, so it won&rsquo; disappear when we exit the <function>results_initialise()</function>. However, we <em>do</em> need to remove the call to <function>free()</function> the memory after calling <function>wimp_create_window()</function>.</p>
+<p>The window definition returned by <function>windows_load_template()</function> is in a block of memory allocated by <function>malloc()</function>, so it won&rsquo;t disappear when we exit the <function>results_initialise()</function>. However, we <em>do</em> need to remove the call to <function>free()</function> the memory after calling <function>wimp_create_window()</function>.</p>
 
 <p>With the changes in place, the <function>results_initialise()</function> now looks as seen in <reference id="list-redraw-results-init-2"/>.</p>
 
@@ -353,7 +353,7 @@ void results_initialise(void)
 
 <p>With this change made, however, we <em>must</em> now update our application to correctly respond to <name>Redraw_Window_Request</name> events. Up to now, perhaps with the exception of <reference id="sect-key-input-hotkeys">not passing on keypresses correctly</reference>, it hasn&rsquo;t been too critical how we have reacted to events that the Wimp has sent us. However, when the Wimp sends us a <name>wimp_REDRAW_WINDOW_REQUEST</name> reason code through <swi>Wimp_Poll</swi>, we <em>must</em> respond correctly or our application will hang.</p>
 
-<p>The Wimp supplies a <name>wimp_draw</name> structure with redraw events, which OSLib defines as follows.</p>
+<p>The memory block that the Wimp supplies with redraw events contains only a <name>wimp_w</name> window handle, which identifies the window which is to be redrawn. The Wimp&rsquo;s API for redrawing leans heavily on the idea of passing the same block between a number of SWI calls, however, so OSLib types it as a <name>wimp_draw</name> structure with only the <variable>w</variable> element containing valid data: this avoids the need for us to cast the type during the redraw process.</p>
 
 <code lang="c">struct wimp_draw
 {
@@ -366,25 +366,33 @@ void results_initialise(void)
 
 typedef struct wimp_draw wimp_draw;</code>
 
-<p>Inside, we get the usual <name>wimp_w</name> handle for the window which requires redrawing; at this point, none of the other fields have been populated. In fact, the use of <name>wimp_draw</name> here might be a little confusing: OSLib shares the struct around a number of related Wimp calls, because the Wimp API expects the same block pointer to be passed around a number of SWI calls.</p>
+<p>As we noted earlier, on receipt of a <name>Redraw_Window_Request</name> event our application must <em>immediately</em> call <swi>Wimp_RedrawWindow</swi> &ndash; in fact, the <cite>Programmer&rsquo;s Reference Manual</cite> states that calling this SWI must be &ldquo;the first Wimp operation after the <swi>Wimp_Poll</swi> which returned a <name>Window_Redraw_Request</name>&rdquo;.</p>
 
-<p>On receipt of a <name>Redraw_Window_Request</name> event, our application must <em>immediately</em> call <swi>Wimp_RedrawWindow</swi> &ndash; in fact, the <cite>Programmer&rsquo;s Reference Manual</cite> states that calling this SWI must be &ldquo;the first Wimp operation after the <swi>Wimp_Poll</swi> which returned a <name>Window_Redraw_Request</name>&rdquo;. <swi>Wimp_RedrawWindow</swi> takes a pointer to the <name>wimp_draw</name> block that came with the event, and returns with the other fields in the block filled in.</p>
+<p>In the process which follows, the Wimp will break the full area to be redrawn down into a series of rectangles which it will ask us to deal with one by one. If the whole window contents need to be redrawn for some reason then this might simply be the whole of the visible area in one rectangle. If our window is behind another one, however, then we might receive two or more: <reference id="fig-redraw-areas-2"/> shows a situation where we might receive details of two rectangles which need to be handled.</p>
+
+<image id="fig-redraw-areas-2" file="redraw-areas-2.png" title="How the Wimp breaks down a redraw"/>
+
+<p>Another situation could be where our window&rsquo;s menu has just closed: this might result in a much smaller area being requested, as seen in <reference id="fig-redraw-areas-1"/>.</p>
+
+<image id="fig-redraw-areas-1" file="redraw-areas-1.png" title="A redraw area might be a window shadow"/>
+
+<p>This process of receiving rectangles is launched by the call to <swi>Wimp_RedrawWindow</swi>, which takes a pointer to the <name>wimp_draw</name> block that came with the event, and returns with the other fields in the block filled in for the first rectangle in the sequence.</p>
 
 <code lang="c">extern osbool wimp_redraw_window(
 	wimp_draw *redraw
 );</code>
 
-<p>In addition to completing the supplied <name>wimp_draw</name> block, <function>wimp_redraw_window()</function> also returns an <name>osbool</name> value which is <name>TRUE</name> if there is a redraw to be performed; in the unlikely event that it returns <name>FALSE</name>, then there is in fact nothing for our application to do.</p>
+<p>In addition to completing the supplied <name>wimp_draw</name> block, <function>wimp_redraw_window()</function> also returns an <name>osbool</name> value which is <name>TRUE</name> if there is a rectangle to be redrawn; in the unlikely (but presumably possible) event that it returns <name>FALSE</name>, then there is in fact nothing for our application to do.</p>
 
-<p>Assuming that <function>wimp_redraw_window()</function> returned <name>TRUE</name>, the data in the <name>wimp_draw</name> block will contain enough information to enable our application to perform the operation that the Wimp is requesting. Once the operation is complete, our application should then call <swi>Wimp_GetRectangle</swi>.</p>
+<p>Assuming that <function>wimp_redraw_window()</function> returned <name>TRUE</name>, then the data in the <name>wimp_draw</name> block will contain enough information to enable our application to perform the operation that the Wimp is requesting. Once the operation is complete, our application should then call <swi>Wimp_GetRectangle</swi> to ask for further instructions.</p>
 
 <code lang="c">extern osbool wimp_get_rectangle(
 	wimp_draw *draw
 );</code>
 
-<p>As with <function>wimp_redraw_window()</function>, <function>wimp_get_rectangle()</function> takes a pointer to the same <name>wimp_draw</name> block and, if there are further redraw operations required from this event, it will update the contents of the block ready for the next one. It too returns an <name>osbool</name> value to indicate if the contents of the block needs to be attended to.</p>
+<p>As with <function>wimp_redraw_window()</function>, <function>wimp_get_rectangle()</function> takes a pointer to the same <name>wimp_draw</name> block and, if there are further rectangles which need to be redrawn, it will update the contents of the block ready for the next one. It too returns an <name>osbool</name> value to indicate whether the contents of the block needs to be attended to.</p>
 
-<p>Armed with this knowledge, we can conclude that the simplest hander that we can supply for <name>Redraw_Window_Request</name> events is as follows.</p>
+<p>Armed with this knowledge, we can conclude that the simplest handler that we can supply for <name>Redraw_Window_Request</name> events is as follows.</p>
 
 <code lang="c">static void results_redraw(wimp_draw *redraw)
 {
@@ -393,7 +401,7 @@ typedef struct wimp_draw wimp_draw;</code>
 	more = wimp_redraw_window(redraw);
 
 	while (more) {
-		/* We could do some redrawing here... */
+		/* Process the supplied rectange here... */
 
 		more = wimp_get_rectangle(redraw);
 	}
@@ -407,7 +415,7 @@ event_add_window_redraw_event(results_handle, results_redraw);
 event_add_window_menu(results_handle, results_menu);
 event_add_window_menu_selection(results_handle, results_menu_selection);</code>
 
-<p>If we add this <function>results_redraw()</function> to <file>c.results</file> and registr it as a handler for <name>Redraw_Window_Request</name> events by adding the code here to <function>results_initialise()</function>, our application will work correctly with the <icon>Auto redraw</icon> flag turned off in the Results window template. The window still looks exactly as it did in <reference id="fig-redraw-icon-defs"/> because we are not doing anything for any of the redraw operations requested by the Wimp, but the redraw loop is being executed each time the window is drawn or refreshed on screen.</p>
+<p>If we add this <function>results_redraw()</function> to <file>c.results</file> and register it as a handler for <name>Redraw_Window_Request</name> events by adding the code here to <function>results_initialise()</function>, our application will work correctly with the <icon>Auto redraw</icon> flag turned off in the Results window template. The window still looks exactly as it did in <reference id="fig-redraw-icon-defs"/> because we are not doing anything for any of the redraw operations requested by the Wimp, but the redraw loop is being executed each time the window is drawn or refreshed on screen.</p>
 
 <p>For completeness, the changes so far can be found in  <reference id="dl-redraw-empty-loop"/>.</p>
 
@@ -432,8 +440,6 @@ while (more) {
 }</code>
 
 
-
-<image id="fig-redraw-areas" file="redraw-areas.png" title="How the Wimp breaks down a redraw"/>
 
 
 

@@ -126,7 +126,7 @@ static void results_redraw(wimp_draw *redraw)
 	more = wimp_redraw_window(redraw);
 
 	while (more) {
-		/* We could do some redrawing here... */
+		/* Process the supplied rectange here... */
 
 		more = wimp_get_rectangle(redraw);
 	}
