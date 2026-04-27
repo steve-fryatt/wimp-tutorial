@@ -178,9 +178,9 @@ typedef struct os_coord os_coord;</code>
 <section>
 <title>Mouse coordinates</title>
 
-<p>When a <name>Mouse_Click</name> event is returned to our application, the coordinates of the click can be found in <variable>pointer-&gt;pos.x</variable> and <variable>pointer-&gt;pos.y</variable>. They are given as absolute values in OS&nbsp;Units, measured from the bottom-left corner of the desktop. Whilst this is often useful, we often wish to know where within our window the user clicked.</p>
+<p>When a <name>Mouse_Click</name> event is returned to our application, the coordinates of the click can be found in <variable>pointer-&gt;pos.x</variable> and <variable>pointer-&gt;pos.y</variable>. They are given as absolute values in OS&nbsp;Units, measured from the bottom-left corner of the desktop. Whilst this can be useful, we more often wish to know where within our window the user clicked.</p>
 
-<p>Fortunately, there&rsquo;s a simple way to get to the window position &ndash; although we do need to know the window&rsquo;s current position and scroll offsets. This information is readily available from the <swi>Wimp_GetWindowState</swi> which we met back in <reference id="chap-window-handling"/>, however, so we can amend the <function>win_mouse_click()</function> as follows to make it report work area coordinates for each click:</p>
+<p>Fortunately, there&rsquo;s a simple way to get to the coordinates in terms of the window&rsquo;s work area coordinates &ndash; although we do need to know the window&rsquo;s current visible area and scroll offsets. This information is readily available from the <swi>Wimp_GetWindowState</swi> which we met back in <reference id="chap-window-handling"/>, however, so we can amend the <function>win_mouse_click()</function> as follows to make it report work area coordinates for each click:</p>
 
 <code lang="c">static void win_mouse_click(wimp_pointer *pointer)
 {
@@ -202,11 +202,15 @@ typedef struct os_coord os_coord;</code>
 	wimp_set_icon_state(win_handle, win_icon_handle, 0, 0);
 }</code>
 
+<p>We looked at the maths behind <reference id="sect-window-theory-dims">a window&rsquo;s work area and visible area</reference> back in <reference id="chap-window-theory"/>. If we know the screen coordinates of the click then, with the help of the screen coordinates of the visible area returned by <swi>Wimp_GetWindowState</swi>, we can work out the <maths>x</maths> distance from the left-hand edge of the visible area to the pointer as <variable>pointer-&gt;pos.x</variable> &minus; <variable>state.visible.x0</variable>. In a similar way, we can get the <maths>y</maths> distance from the top of the visible area to the pointer as <variable>pointer-&gt;pos.y</variable> &minus; <variable>state.visible.x1</variable>. We can see this in <reference id="fig-interact-click-coord"/>.</p>
+
+<image id="fig-interact-click-coord" file="interact-click-coord.png" title="Calculating the work area coordinates of a mouse click"/>
+
+<p>If we add on the <maths>x</maths> and <maths>y</maths> scroll offsets, we will get the distance from the work area origin to mouse pointer, which is exactly what we need in order to be able to locate the click within the window. The resulting <maths>x</maths> and <maths>y</maths> work area coordinates end up stored in the <variable>xpos</variable> and <variable>ypos</variable> variables.</p>
+
 <p>As we saw in <reference id="chap-window-theory"/>, the work area coordinates conventionally have their origin in the top-left of the window, increasing from left to right and decreasing from top to bottom. A complete set of code for this change can be found in <reference id="dl-interact-click-coord"/>.</p>
 
 <download id="dl-interact-click-coord" file="MouseCoords" title="Calculating Work Area Coordinates for the Mouse" compatibility="none"/>
-
-<!-- TODO: Complete this explanation. -->
 
 </section>
 </chapter>
