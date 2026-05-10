@@ -53,7 +53,7 @@
 <p>For many applications, including <cite>ArtWorks</cite> on the left of <reference id="fig-redraw-examples"/>, the best approach is to use a completely blank window and redraw <em>everything</em> that they need from first principles using <swi>OS_Plot</swi>, the Draw module and the Font manager. If the need is for something more &lsquo;icon-like&rsquo;, such as the table from <cite>CashBook</cite> on the bottom-right, then there is a middle ground available to us: we can handle the redraw ourselves, but use the Wimp&rsquo;s icon plotting routines to do a lot of the hard work for us. Another good example of this hybrid approach is the Filer, seen top-right, which needs to display arbitrary collections of files and directories as icons in a window.</p>
 </section>
 
-<section>
+<section id="sect-redraw-example">
 <title>A contrived example</title>
 
 <p>As might be expected, there will be a fair bit of new code needed before our application can redraw a window of its own, so we&rsquo;ll start by getting some groundwork in place. It might be useful if our application could save the results of our calculations in a table for future reference, so let&rsquo;s create a results window to do just that.</p>
@@ -64,7 +64,7 @@
 
 <p>For now, there will be few surprises in the new template. There are a couple of rows of icons along the top of the window, which will represent the rows and columns in our data table. Their widths have been sized to hold the longest text: the name of the shape in the first column, the text &ldquo;Sides&rdquo; in the second column, and the longest title &ndash; which is &ldquo;Internal Angles&rdquo; &ndash; in columns three to six.</p>
 
-<p>With the icons spaced out neatly, the window&rsquo;s work area has been sized from 0 to 1260 OS&nbsp;units horizontally to fit. Vertically, the height of the icons is 52 OS&nbsp;units and so work area has been sized vertically from 0 to &minus;572 OS&nbsp;units to accommodate 10 lines of results and the title row.</p>
+<p>With the icons spaced out neatly, the window&rsquo;s work area has been sized from 0 to 1260 OS&nbsp;units horizontally to fit. Vertically, the height of the icons is 52 OS&nbsp;units and so work area has been sized vertically from 0 to &minus;572 OS&nbsp;units to accommodate ten lines of results and the title row.</p>
 
 <p>The icons themselves are standard label icons, using the <icon>Comment</icon> icon from <cite>WinEd</cite>&rsquo;s <window>Icon picker</window>. We have changed the colours of the title row icons and adjusted the text alignment to get the desired appearance. The icons in the second row, which will eventually be used to display our data, have all been set to be indirected.</p>
 
@@ -392,22 +392,22 @@ typedef struct wimp_draw wimp_draw;</code>
 
 <p>As with <function>wimp_redraw_window()</function>, <function>wimp_get_rectangle()</function> takes a pointer to the same <name>wimp_draw</name> block and, if there are further rectangles which need to be redrawn, it will update the contents of the block ready for the next one. It too returns an <name>osbool</name> value to indicate whether the contents of the block needs to be attended to.</p>
 
-<p>Armed with this knowledge, we can conclude that the simplest handler that we can supply for <name>Redraw_Window_Request</name> events is as follows.</p>
+<p>Armed with this knowledge, we can conclude that the simplest handler that we can supply for <name>Redraw_Window_Request</name> events is the one in <reference id="list-redraw-event-handler"/>.</p>
 
-<code lang="c">static void results_redraw(wimp_draw *redraw)
+<code id="list-redraw-event-handler" lang="c" title="A very basic redraw event handler">static void results_redraw(wimp_draw *redraw)
 {
 	osbool more;
 
 	more = wimp_redraw_window(redraw);
 
 	while (more) {
-		/* Process the supplied rectange here... */
+		/* Process the supplied rectangle here... */
 
 		more = wimp_get_rectangle(redraw);
 	}
 }</code>
 
-<p>If registered as a handler for the <name>wimp_REDRAW_WINDOW_REQUEST</name> reason code, it will immediately call <function>wimp_redraw_window()</function> as required by the Wimp and record the returned <name>osbool</name> value in <variable>more</variable>. While <variable>more</variable> is <name>TRUE</name>, the handler will loop around, performing whatever redraw operations it needs to and then calling <function>wimp_get_rectangle()</function> to request the next set of data.</p>
+<p>If we add the <function>results_redraw()</function> function to <file>c.results</file> and register it as a handler for the <name>wimp_REDRAW_WINDOW_REQUEST</name> reason code in the <window>results</window> window by adding the following code to <function>results_initialise()</function>, our application will work correctly with the <icon>Auto redraw</icon> flag turned off in the Results window template.</p>
 
 <code lang="c">/* Register event handlers. */
 
@@ -415,7 +415,9 @@ event_add_window_redraw_event(results_handle, results_redraw);
 event_add_window_menu(results_handle, results_menu);
 event_add_window_menu_selection(results_handle, results_menu_selection);</code>
 
-<p>If we add this <function>results_redraw()</function> to <file>c.results</file> and register it as a handler for <name>Redraw_Window_Request</name> events by adding the code here to <function>results_initialise()</function>, our application will work correctly with the <icon>Auto redraw</icon> flag turned off in the Results window template. The window still looks exactly as it did in <reference id="fig-redraw-icon-defs"/> because we are not doing anything for any of the redraw operations requested by the Wimp, but the redraw loop is being executed each time the window is drawn or refreshed on screen.</p>
+<p>On receipt of a <name>Redraw_Window_Request</name> event, it will immediately call <function>wimp_redraw_window()</function> as required by the Wimp and record the returned <name>osbool</name> value in <variable>more</variable>. While <variable>more</variable> is <name>TRUE</name>, the handler will loop around, giving our application the opportunity to perform whatever redraw operations it needs to and then calling <function>wimp_get_rectangle()</function> to request the next set of data.</p>
+
+<p>The <window>results</window> window still looks exactly as it did in <reference id="fig-redraw-icon-defs"/> because we are not actually doing anything in the loop beyond responding to the Wimp&rsquo;s requests, but the empty redraw loop is being executed each time the window is drawn or refreshed on screen. The comment &ldquo;Process the supplied rectangle here...&rdquo; marks the place where we will need code to handle each of the redraw rectangles that the Wimp supplies to us.</p>
 
 <p>For completeness, the changes so far can be found in  <reference id="dl-redraw-empty-loop"/>.</p>
 
@@ -426,24 +428,79 @@ event_add_window_menu_selection(results_handle, results_menu_selection);</code>
 <section>
 <title>Plotting some icons</title>
 
-<p></p>
+<p>When the Wimp sets up a new redraw rectangle before returning from either <swi>Wimp_RedrawWindow</swi> or <swi>Wimp_GetRectangle</swi>, it configures the display to plot text at the graphics cursor &ndash; that is, it issues a <code>VDU&nbsp;5</code> &ndash; and it sets the graphics clip window to the area which it is asking us to redraw. If you&rsquo;re familiar with BASIC, this is the <intro>graphics viewport</intro> which is set by a <code>VDU&nbsp;24</code> command.</p>
 
+<p>Unless the window&rsquo;s background colour is set to <name>wimp_COLOUR_TRANSPARENT</name>, the Wimp will also clear the area to the selected colour for us &ndash; including plotting the window texture if the colour is <name>wimp_COLOUR_VERY_LIGHT_GREY</name>. In fact, the purpose of the so-called &ldquo;transparent&rdquo; window background is simply to prevent the Wimp from plotting it for us: this will generally be because we need to plot it ourselves for some reason, and wish to avoid any flicker caused by filling the area twice in quick succession.</p>
 
-<code lang="c">osbool more;
+<p>As a result of the clip window being set, there is actually no need for us to restrict our plotting to the area requested. We could &ndash; if we so wished &ndash; simply plot the whole of our window&rsquo;s contents for each rectangle that we receive, and leave the graphics system to protect the areas which don&rsquo;t need to be updated. The main down-side to this approach is that it can be very slow, especially if we have a large work area that is mostly out of view. On the up-side, it&rsquo;s fairly simple to get working!</p>
 
-more = wimp_redraw_window(redraw);
+<p>When we <reference id="sect-redraw-example">set up the window template</reference>, we sized the work area to accommodate eleven lines: a title row and ten lines of data, each of 52 OS&nbsp;units. The title row is formed from normal icons, so all that we are interested in is redrawing the ten data lines.</p>
 
-while (more) {
-	/* We could do some redrawing here... */
+<image id="fig-redraw-rows" file="redraw-rows.png" title="Calculating the row heights"/>
 
-	more = wimp_get_rectangle(redraw);
+<p>Instead of hard-coding the height of a row, we can read it from our window definition. We will keep all eleven lines the same height for the sake of simplicity, so we can get the height of a row from any of the title icons by subtracting <maths>y0</maths> from <maths>y1</maths> &ndash; see <reference id="fig-redraw-rows"/> for the arrangement. One assumption that we <em>will</em> make is that the <maths>y1</maths> work area coordinate of the title row is 0 OS&nbsp;units.</p>
+
+<code lang="c">row_height = results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y1 -
+		results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y0;</code>
+
+<p>With this information, we can calculate the <maths>y1</maths> coordinate for any of the rows in the window using</p>
+
+<code lang="c">icon_y1 = -(y * row_height);</code>
+
+<p>(where <variable>y</variable> is the row number, counting from 1), and then derive the corresponding <maths>y0</maths> coordinate from it.</p>
+
+<code lang="c">icon_y0 = icon_y1 - row_height;</code>
+
+<p>Armed with this, we can update the <function>results_redraw()</function> function as seen in <reference id="list-redraw-everything"/>, so that it plots all ten rows of the table each time a redraw rectangle is supplied by the Wimp. We&rsquo;re using a new function, <function>results_plot_icon()</function>, to do the icon plotting &ndash; which we haven&rsquo;t yet defined.</p>
+
+<code id="list-redraw-everything" lang="c" title="Redrawing all of the lines in the table">static void results_redraw(wimp_draw *redraw)
+{
+	osbool more;
+	int y, row_height, icon_y0, icon_y1;
+
+	row_height = results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y1 -
+			results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y0;
+
+	/* Redraw the window. */
+
+	more = wimp_redraw_window(redraw);
+
+	while (more) {
+		for (y = 1; y &lt;= RESULTS_MAX_ROWS; y++) {
+			icon_y1 = -(y * row_height);
+			icon_y0 = icon_y1 - row_height;
+
+			results_plot_icon(RESULTS_ICON_ROW_SHAPE, icon_y0, icon_y1);
+			results_plot_icon(RESULTS_ICON_ROW_SIDES, icon_y0, icon_y1);
+			results_plot_icon(RESULTS_ICON_ROW_ANGLES, icon_y0, icon_y1);
+			results_plot_icon(RESULTS_ICON_ROW_LENGTH, icon_y0, icon_y1);
+			results_plot_icon(RESULTS_ICON_ROW_PERIMETER, icon_y0, icon_y1);
+			results_plot_icon(RESULTS_ICON_ROW_AREA, icon_y0, icon_y1);
+		}
+
+		more = wimp_get_rectangle(redraw);
+	}
 }</code>
 
+<p>Unlike <name>RESULTS_ICON_TITLE_SHAPE</name> and its siblings, which we left in the window definition that we passed to <swi>Wimp_CreateWindow</swi>, <name>RESULTS_ICON_ROW_SHAPE</name> and the other icons being passed to <function>results_plot_icon()</function> are the ones that we <em>removed</em> from the template by adjusting <variable>window_definition-&gt;icon_count</variable>. This means that they don&rsquo;t exist as icons in the window: they are only icon <em>definitions</em> in our window definition block, which we will use for performing our window&rsquo;s redraw.</p>
 
+<p>To do this, we will need a new Wimp SWI: <swi>Wimp_PlotIcon</swi>. Like <swi>Wimp_CreateIcon</swi>, this takes a pointer to an icon definition block &ndash; but instead of using it to create a new icon, it uses the Wimp&rsquo;s icon plotting routines to draw it to the screen. <swi>Wimp_PlotIcon</swi> is usually intended to be called from within a redraw loop and so, since icon defintions don&rsquo;t contain a window handle, the Wimp assumes that the window is the one currently being redrawn. As a result, the coordinates used to define the icon&rsquo;s position are work coordinates within our window.</p>
 
+<p>This means that the code needed within our new <function>results_plot_icon()</function> function is relatively simple. The icons don&rsquo;t move horizontally within the window compared to where we placed them in the template, so all that we need to do is to set <variable>extent.y0</variable> and <variable>extent.y1</variable> in the icon definition to the values calculated in <function>results_redraw()</function> &ndash; we can access these via the global <variable>results_icons</variable> variable that we set up for the purpose in <function>results_initialise()</function>.</p>
 
+<p>With the values updated, we then pass a pointer to the definition to <function>wimp_plot_icon()</function> as seen in <reference id="list-redraw-plot-icon"/>.</p>
 
+<code id="list-redraw-plot-icon" lang="c" title="Calling Wimp_PlotIcon">static void results_plot_icon(wimp_i icon, int y0, int y1)
+{
+	results_icons[icon].extent.y0 = y0;
+	results_icons[icon].extent.y1 = y1;
 
+	wimp_plot_icon(results_icons + icon);
+}</code>
+
+<p>If we compile and run this code now, we should find that we get ten copies of the placefolder line in our window, beneath the title row. Once again, for completeness, the changes so far can be found in  <reference id="dl-redraw-all"/>.</p>
+
+<download id="dl-redraw-all" file="RedrawAll" title="Redraw Everything" compatibility="none"/>
 </section>
 </chapter>
 </manual>

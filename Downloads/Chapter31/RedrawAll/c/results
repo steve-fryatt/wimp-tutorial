@@ -59,6 +59,10 @@
 
 #define RESULTS_MENU_CLEAR 0
 
+/* The number of rows in the results window. */
+
+#define RESULTS_MAX_ROWS 10
+
 /* Global Variables. */
 
 static wimp_w results_handle = NULL;
@@ -68,6 +72,7 @@ static wimp_menu *results_menu = NULL;
 /* Function Prototypes. */
 
 static void results_redraw(wimp_draw *redraw);
+static void results_plot_icon(wimp_i icon, int y0, int y1);
 static void results_menu_selection(wimp_w window, wimp_menu *menu, wimp_selection *selection);
 
 /* Results Window Initialisation. */
@@ -119,17 +124,41 @@ void results_open(void)
 
 static void results_redraw(wimp_draw *redraw)
 {
-	osbool				more;
+	osbool more;
+	int y, row_height, icon_y0, icon_y1;
+
+	row_height = results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y1 -
+			results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y0;
 
 	/* Redraw the window. */
 
 	more = wimp_redraw_window(redraw);
 
 	while (more) {
-		/* Process the supplied rectangle here... */
+		for (y = 1; y <= RESULTS_MAX_ROWS; y++) {
+			icon_y1 = -(y * row_height);
+			icon_y0 = icon_y1 - row_height;
+
+			results_plot_icon(RESULTS_ICON_ROW_SHAPE, icon_y0, icon_y1);
+			results_plot_icon(RESULTS_ICON_ROW_SIDES, icon_y0, icon_y1);
+			results_plot_icon(RESULTS_ICON_ROW_ANGLES, icon_y0, icon_y1);
+			results_plot_icon(RESULTS_ICON_ROW_LENGTH, icon_y0, icon_y1);
+			results_plot_icon(RESULTS_ICON_ROW_PERIMETER, icon_y0, icon_y1);
+			results_plot_icon(RESULTS_ICON_ROW_AREA, icon_y0, icon_y1);
+		}
 
 		more = wimp_get_rectangle(redraw);
 	}
+}
+
+/* Plot an icon in the redraw loop. */
+
+static void results_plot_icon(wimp_i icon, int y0, int y1)
+{
+	results_icons[icon].extent.y0 = y0;
+	results_icons[icon].extent.y1 = y1;
+
+	wimp_plot_icon(results_icons + icon);
 }
 
 /* Menu Selection event handler. */
