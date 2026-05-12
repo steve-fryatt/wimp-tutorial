@@ -175,7 +175,7 @@ typedef struct os_coord os_coord;</code>
 <p>An icon&rsquo;s button type always takes precedence over the window beneath it when the pointer is within the icon&rsquo;s borders. Some of the button types also behave slightly differently when applied to a window, since there&rsquo;s no concept of &lsquo;selecting&rsquo; the work area or making it writable. Before moving on, it would be a good idea to experiment with the button types that we&rsquo;ve seen so far, to ensure that their behaviour makes sense.</p>
 </section>
 
-<section>
+<section id="sect-interact-click-coords">
 <title>Mouse coordinates</title>
 
 <p>When a <name>Mouse_Click</name> event is returned to our application, the coordinates of the click can be found in <variable>pointer-&gt;pos.x</variable> and <variable>pointer-&gt;pos.y</variable>. They are given as absolute values in OS&nbsp;Units, measured from the bottom-left corner of the desktop. Whilst this can be useful, we more often wish to know where within our window the user clicked.</p>

@@ -502,5 +502,55 @@ event_add_window_menu_selection(results_handle, results_menu_selection);</code>
 
 <download id="dl-redraw-all" file="RedrawAll" title="Redraw Everything" compatibility="none"/>
 </section>
+
+<section>
+<title>Narrowing things down</title>
+
+<p>Whilst the code above undoubtedly works, it&rsquo;s hardly efficient as we&rsquo;re redrawing all ten lines in the window each time we&rsquo;re given a rectangle by the Wimp. This might be acceptable for just ten lines, but what if we had one hundred or one thousand? Or perhaps a complex, multi-page document?</p>
+
+<p>Fortunately, when returning from <swi>Wimp_RedrawWindow</swi> and <swi>Wimp_GetRectangle</swi>, the Wimp puts some useful information into the <name>wimp_draw</name> structure alongside the window handle in <variable>w</variable>.</p>
+
+<code lang="c">struct wimp_draw
+{
+	wimp_w	w;
+	os_box	box;
+	int	xscroll;
+	int	yscroll;
+	os_box	clip;
+};
+
+typedef struct wimp_draw wimp_draw;</code>
+
+<p>The values within the <variable>clip</variable> structure give us the position of the graphics clip window which has been set for us, in terms of screen coordinates. As we have come to expect, <maths>x0</maths> and <maths>y0</maths> are supplied <em>inclusively</em>, whilst <maths>x1</maths> and <maths>y1</maths> are <em>exclusive</em>. The other values &ndash; the contents of the <variable>box</variable> structure, along with the <variable>xscroll</variable> and <variable>yscroll</variable> variables &ndash; give us the window&rsquo;s visible area and scroll offsets, in a form that should be <reference id="chap-window-theory">very familiar</reference> to us by now.</p>
+
+<p>We have already seen how to <reference id="sect-interact-click-coords">convert the screen coordinates of a mouse click into work area coordinates</reference>, and the maths that we will need to do here is very similar. The first thing that we need to do is to work out in terms of screen coordinates where the origin of the window&rsquo;s work area lies, as shown in <reference id="fig-redraw-origin"/>.</p>
+
+<image id="fig-redraw-origin" file="redraw-origin.png" title="Finding the work area coordinate origin"/>
+
+<p>Using maths which should by now be familiar, we can get the <maths>x</maths> origin by taking the <maths>x0</maths> coordinate of the visible area and subtracting the horizontal scroll offset. In a similar way, the <maths>y</maths> origin can be found by taking the <maths>y1</maths> coordinate of the visible area and subtracting the vertical scroll offset.</p>
+
+<code lang="c">int ox = redraw-&gt;box.x0 - redraw-&gt;xscroll;
+int oy = redraw-&gt;box.y1 - redraw-&gt;yscroll;</code>
+
+<p>The values now in variables <variable>ox</variable> and <variable>oy</variable> represent the origin of the window&rsquo;s work area in terms of screen coordinates. They will be useful to us within the redraw loop because they will allow us to convert between work area coordinates and screen coordinates. If we wanted to calculate the position of the clip window in terms of work area coordinates, we can take the screen coordinates from the <variable>clip</variable> structure and subtract the work area origin values.</p>
+
+<code lang="c">int top = redraw-&gt;clip.y1 - oy;
+int bottom = redraw-&gt;clip.y0 - oy;
+int left = redraw-&gt;clip.x0 - ox;
+int right = redraw-&gt;clip.x1 - ox;</code>
+
+
+
+
+<!-- top = ((oy - redraw->clip.y1) - heading_height) / row_height; // if (top < 0) top = 0;
+bottom = ((oy - redraw->clip.y0) - heading_height) / row_height; -->
+
+
+
+
+
+<!-- Unlike Wimp_PlotIcon, all other plotting will be to screen coordinates. -->
+
+</section>
 </chapter>
 </manual>
