@@ -74,7 +74,7 @@ SYS &quot;Wimp_Initialise&quot;, 310, &amp;4B534154, &quot;Example App&quot;, 0<
 <section>
 <title>Doing what we&rsquo;re told</title>
 
-<p>With the initialisation complete, the application can move on to the business of multitasking. RISC&nbsp;OS uses a system of &lsquo;cooperative multitasking&rsquo;: that is, each application must yield control back to the Wimp as soon as it&rsquo;s finished its current activity. If an application doesn&rsquo;t yield for more than a few fractions of a second at a time, the desktop can very quickly become extremely sluggish.</p>
+<p>With the initialisation complete, the application can move on to the business of multitasking. RISC&nbsp;OS uses a system of &lsquo;cooperative multitasking&rsquo;: that is, each application must yield control back to the Wimp as soon as it has finished its current activity. If an application doesn&rsquo;t yield for more than a few fractions of a second at a time, the desktop can very quickly become extremely sluggish.</p>
 
 <p>This yielding is done via the <swi>Wimp_Poll</swi> SWI. When an application calls <swi>Wimp_Poll</swi>, it yields control back to the Wimp and the Wimp, in turn, goes off and services all of the other applications running on the system. When <swi>Wimp_Poll</swi> returns, it brings with it details of an &lsquo;event&rsquo; that the application must deal with. This is enough to make the whole system multitask.</p>
 
@@ -154,4 +154,3 @@ END</code>
 </section>
 </chapter>
 </manual>
-
