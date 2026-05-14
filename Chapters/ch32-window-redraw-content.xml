@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+
+<!DOCTYPE xmlmanual SYSTEM "../wimp.dtd">
+
+<!-- Copyright 2020-2026, Stephen Fryatt (info@stevefryatt.org.uk)
+   -
+   - This file is part of Wimp Programming In C:
+   -
+   -   http://www.stevefryatt.org.uk/risc-os/wimp-prog
+   -
+   - Licensed under the EUPL, Version 1.2 only (the "Licence");
+   - You may not use this work except in compliance with the
+   - Licence.
+   -
+   - You may obtain a copy of the Licence at:
+   -
+   -   http://joinup.ec.europa.eu/software/page/eupl
+   -
+   - Unless required by applicable law or agreed to in
+   - writing, software distributed under the Licence is
+   - distributed on an "AS IS" basis, WITHOUT WARRANTIES
+   - OR CONDITIONS OF ANY KIND, either express or implied.
+   -
+   - See the Licence for the specific language governing
+   - permissions and limitations under the Licence.
+  -->
+
+<manual xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="xmldoc.xsd" version="1.8.6">
+
+<!-- Chapter 32
+   -
+   - Window Redraw - Content
+  -->
+
+<chapter id="chap-redraw-content">
+<resources>
+<images>Chapter32</images>
+<downloads>Chapter32</downloads>
+</resources>
+<filename>window-redraw-content.php</filename>
+<uri>window-redraw-content</uri>
+<title>Redrawing Some Content</title>
+
+<summary>Doing something useful with our new ability to redraw our window&rsquo;s contents.</summary>
+
+<section>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</section>
+</chapter>
+</manual>

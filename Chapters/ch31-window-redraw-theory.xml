@@ -29,17 +29,17 @@
 
 <!-- Chapter 31
    -
-   - Window Redraw
+   - Window Redraw - Theory
   -->
 
-<chapter id="chap-redraw">
+<chapter id="chap-redraw-theory">
 <resources>
 <images>Chapter31</images>
 <downloads>Chapter31</downloads>
 </resources>
-<filename>window-redraw.php</filename>
-<uri>window-redraw</uri>
-<title>Window Redraw</title>
+<filename>window-redraw-theory.php</filename>
+<uri>window-redraw-theory</uri>
+<title>Window Redraw Theory</title>
 
 <summary>We can break free from the limitations of icons by drawing our own windows!</summary>
 
@@ -48,19 +48,19 @@
 
 <p>Depending on the type of applications that they work on, many developers may find that this approach is fine for the vast majority &ndash; if not all &ndash; of the applications that they create. However, there are many places where icons don&rsquo;t work well. An obvious example are windows in which documents or graphics are created, such as <cite>ArtWorks</cite> or <cite>Ovation&nbsp;Pro</cite> files, where a mixture of arbitrary text and graphics need to be displayed. A less obvious situation would be when displaying tabular data like a spreadsheet: icons <em>could</em> be used, but this quickly becomes slow and &ndash; as we saw before we <reference id="chap-templates">introduced window templates</reference> &ndash; keeping track of all of the indirected data that we need soon becomes a headache.</p>
 
-<image id="fig-redraw-examples" file="redraw-examples.png" title="Three windows which use manual redraw"/>
+<image id="fig-redraw-theory-examples" file="redraw-theory-examples.png" title="Three windows which use manual redraw"/>
 
-<p>For many applications, including <cite>ArtWorks</cite> on the left of <reference id="fig-redraw-examples"/>, the best approach is to use a completely blank window and redraw <em>everything</em> that they need from first principles using <swi>OS_Plot</swi>, the Draw module and the Font manager. If the need is for something more &lsquo;icon-like&rsquo;, such as the table from <cite>CashBook</cite> on the bottom-right, then there is a middle ground available to us: we can handle the redraw ourselves, but use the Wimp&rsquo;s icon plotting routines to do a lot of the hard work for us. Another good example of this hybrid approach is the Filer, seen top-right, which needs to display arbitrary collections of files and directories as icons in a window.</p>
+<p>For many applications, including <cite>ArtWorks</cite> on the left of <reference id="fig-redraw-theory-examples"/>, the best approach is to use a completely blank window and redraw <em>everything</em> that they need from first principles using <swi>OS_Plot</swi>, the Draw module and the Font manager. If the need is for something more &lsquo;icon-like&rsquo;, such as the table from <cite>CashBook</cite> on the bottom-right, then there is a middle ground available to us: we can handle the redraw ourselves, but use the Wimp&rsquo;s icon plotting routines to do a lot of the hard work for us. Another good example of this hybrid approach is the Filer, seen top-right, which needs to display arbitrary collections of files and directories as icons in a window.</p>
 </section>
 
-<section id="sect-redraw-example">
+<section id="sect-redraw-theory-example">
 <title>A contrived example</title>
 
 <p>As might be expected, there will be a fair bit of new code needed before our application can redraw a window of its own, so we&rsquo;ll start by getting some groundwork in place. It might be useful if our application could save the results of our calculations in a table for future reference, so let&rsquo;s create a results window to do just that.</p>
 
-<p>Out first stop is in <cite>WinEd</cite>, to create a new window within our template file. We have called this &ldquo;Results&rdquo;, and it can be seen in <reference id="fig-redraw-window"/>.</p>
+<p>Out first stop is in <cite>WinEd</cite>, to create a new window within our template file. We have called this &ldquo;Results&rdquo;, and it can be seen in <reference id="fig-redraw-theory-window"/>.</p>
 
-<image id="fig-redraw-window" file="redraw-window.png" title="Our new window template"/>
+<image id="fig-redraw-theory-window" file="redraw-theory-window.png" title="Our new window template"/>
 
 <p>For now, there will be few surprises in the new template. There are a couple of rows of icons along the top of the window, which will represent the rows and columns in our data table. Their widths have been sized to hold the longest text: the name of the shape in the first column, the text &ldquo;Sides&rdquo; in the second column, and the longest title &ndash; which is &ldquo;Internal Angles&rdquo; &ndash; in columns three to six.</p>
 
@@ -82,9 +82,9 @@
 
 <code lang="makefile">OBJS = calc main menu ibar win results</code>
 
-<p>The interface to the rest of the application will initially be very similar to the one used by the win module to look after the main window, and can be seen in <reference id="list-redraw-results-h"/> &ndash; take a look back at <reference id="list-windows-win-h"/> in <reference id="chap-windows"/> if you need a reminder of how we got here.</p>
+<p>The interface to the rest of the application will initially be very similar to the one used by the win module to look after the main window, and can be seen in <reference id="list-redraw-theory-results-h"/> &ndash; take a look back at <reference id="list-windows-win-h"/> in <reference id="chap-windows"/> if you need a reminder of how we got here.</p>
 
-<code lang="c" file="h.results" id="list-redraw-results-h" title="The header file to define the results module&rsquo;s interface"> /**
+<code lang="c" file="h.results" id="list-redraw-theory-results-h" title="The header file to define the results module&rsquo;s interface"> /**
  * Example 31.1
  *
  * (c) Stephen Fryatt, 2026
@@ -105,18 +105,18 @@ void results_open(void);
 
 #endif</code>
 
-<p>Our new <function>results_initialise()</function> function will need to be called from within <function>main_initialise()</function> in <file>c.main</file>, and we can add that call alongside the calls to the other initialisation functions as seen in <reference id="list-redraw-main-initialise"/>.</p>
+<p>Our new <function>results_initialise()</function> function will need to be called from within <function>main_initialise()</function> in <file>c.main</file>, and we can add that call alongside the calls to the other initialisation functions as seen in <reference id="list-redraw-theory-main-initialise"/>.</p>
 
-<code lang="c" id="list-redraw-main-initialise" title="Initialising the results module">/* Initialise the program modules. */
+<code lang="c" id="list-redraw-theory-main-initialise" title="Initialising the results module">/* Initialise the program modules. */
 
 calc_initialise();
 ibar_initialise(main_application_sprite);
 win_initialise(sprites);
 results_initialise();</code>
 
-<p>We can open the new results window with the currently unused <mouse>Adjust</mouse>-click on our iconbar icon, and this can be achieved by updating the <function>ibar_mouse_click()</function> fuction within <file>c.ibar</file> as seen in <reference id="list-redraw-ibar-click"/>.</p>
+<p>We can open the new results window with the currently unused <mouse>Adjust</mouse>-click on our iconbar icon, and this can be achieved by updating the <function>ibar_mouse_click()</function> fuction within <file>c.ibar</file> as seen in <reference id="list-redraw-theory-ibar-click"/>.</p>
 
-<code lang="c" id="list-redraw-ibar-click" title="Opening the results window from the iconbar icon">/* Mouse Click event handler */
+<code lang="c" id="list-redraw-theory-ibar-click" title="Opening the results window from the iconbar icon">/* Mouse Click event handler */
 
 static void ibar_mouse_click(wimp_pointer *pointer)
 {
@@ -130,9 +130,9 @@ static void ibar_mouse_click(wimp_pointer *pointer)
 	}
 }</code>
 
-<p>Initialising the new results window and its associated menu is done within the <function>results_initialise()</function> function, as seen in <reference id="list-redraw-results-init-1"/>.</p>
+<p>Initialising the new results window and its associated menu is done within the <function>results_initialise()</function> function, as seen in <reference id="list-redraw-theory-results-init-1"/>.</p>
 
-<code lang="c" id="list-redraw-results-init-1" title="Initialising the results window">/* Results Menu Entries. */
+<code lang="c" id="list-redraw-theory-results-init-1" title="Initialising the results window">/* Results Menu Entries. */
 
 #define RESULTS_MENU_CLEAR 0
 
@@ -187,9 +187,9 @@ void results_initialise(void)
 
 <p>Finally, the menu is registered with the window and a handler is registered for receiving user selections &ndash; see <reference id="chap-menus-revisited"/> for details of SFLib&rsquo;s support for menus and event handlers.</p>
 
-<p>The <function>results_menu_selection()</function> function for handling menu selections is defined in <reference id="list-redraw-results-menu-selection"/>. This is just a placeholder for now, and selection events will simply be ignored.</p>
+<p>The <function>results_menu_selection()</function> function for handling menu selections is defined in <reference id="list-redraw-theory-results-menu-selection"/>. This is just a placeholder for now, and selection events will simply be ignored.</p>
 
-<code lang="c" id="list-redraw-results-menu-selection" title="The placeholder for handling menu selections">/* Menu Selection event handler. */
+<code lang="c" id="list-redraw-theory-results-menu-selection" title="The placeholder for handling menu selections">/* Menu Selection event handler. */
 
 static void results_menu_selection(wimp_w window, wimp_menu *menu, wimp_selection *selection)
 {
@@ -204,9 +204,9 @@ static void results_menu_selection(wimp_w window, wimp_menu *menu, wimp_selectio
 	}
 }</code>
 
-<p>The final piece of code that we need is the <function>results_open()</function> function, defined in <reference id="list-redraw-results-open"/>. This should be familiar from <reference id="chap-window-handling"/> and <reference id="chap-icons-radio"/>, when we created <reference id="sect-icons-radio-win-open">and then later modified</reference> the <function>win_open()</function> function.</p>
+<p>The final piece of code that we need is the <function>results_open()</function> function, defined in <reference id="list-redraw-theory-results-open"/>. This should be familiar from <reference id="chap-window-handling"/> and <reference id="chap-icons-radio"/>, when we created <reference id="sect-icons-radio-win-open">and then later modified</reference> the <function>win_open()</function> function.</p>
 
-<code lang="c" id="list-redraw-results-open" title="Opening the results window on screen">/* Open the Window. */
+<code lang="c" id="list-redraw-theory-results-open" title="Opening the results window on screen">/* Open the Window. */
 
 void results_open(void)
 {
@@ -220,13 +220,13 @@ ResultsMenu0:Clear contents
 BadResultsMenu:Failed to create Results Menu
 BadResultsTempl:Failed to load Results template</code>
 
-<p>With all of these changes in place, we should have an application with a results window: this can be opened, as seen in <reference id="fig-redraw-new-app"/>, using an <mouse>Adjust</mouse> click on the iconbar icon.</p>
+<p>With all of these changes in place, we should have an application with a results window: this can be opened, as seen in <reference id="fig-redraw-theory-new-app"/>, using an <mouse>Adjust</mouse> click on the iconbar icon.</p>
 
-<image id="fig-redraw-new-app" file="redraw-new-app.png" title="Our new results window in action"/>
+<image id="fig-redraw-theory-new-app" file="redraw-theory-new-app.png" title="Our new results window in action"/>
 
-<p>The updated code as it stands can be found in <reference id="dl-redraw-window"/>. There should be nothing surprising or unexpected here if you have followed the tutorial up to this point, but it would be worth making sure that you understand what has been added before we move on to make any changes!</p>
+<p>The updated code as it stands can be found in <reference id="dl-redraw-theory-window"/>. There should be nothing surprising or unexpected here if you have followed the tutorial up to this point, but it would be worth making sure that you understand what has been added before we move on to make any changes!</p>
 
-<download id="dl-redraw-window" file="RedrawWindow" title="The Results Window Structure" compatibility="none"/>
+<download id="dl-redraw-theory-window" file="RedrawWindow" title="The Results Window Structure" compatibility="none"/>
 </section>
 
 
@@ -235,7 +235,7 @@ BadResultsTempl:Failed to load Results template</code>
 
 <p>We have already noted that there are a range of approaches to drawing window content, from the completely Do-It-Yourself approach through to using the Wimp&rsquo;s icon plotting routines. If we&rsquo;re going to take the latter route, then we will need some standard icon data blocks to give to the Wimp; often, a good approach is to create these in the template for the window which is to be redrawn. This allows the icons to be designed graphically in a template editor, which is usually easier than creating them programatically.</p>
 
-<p>As it stands in <reference id="dl-redraw-window"/>, our application is allowing the Wimp to create all of the icons in the Results window when the definition is passed to <swi>Wimp_CreateWindow</swi>, so that they appear when the window is opened. However, we can change this by altering the value of <variable>window_definition-&gt;icon_count</variable> in <function>results_initialise()</function>, between loading the template and passing the definition to <function>wimp_create_window()</function>.</p>
+<p>As it stands in <reference id="dl-redraw-theory-window"/>, our application is allowing the Wimp to create all of the icons in the Results window when the definition is passed to <swi>Wimp_CreateWindow</swi>, so that they appear when the window is opened. However, we can change this by altering the value of <variable>window_definition-&gt;icon_count</variable> in <function>results_initialise()</function>, between loading the template and passing the definition to <function>wimp_create_window()</function>.</p>
 
 <p>If we wanted a completely empty window in which to draw our content, we could simply set the value to zero.</p>
 
@@ -278,9 +278,9 @@ BadResultsTempl:Failed to load Results template</code>
 
 <p>The window definition returned by <function>windows_load_template()</function> is in a block of memory allocated by <function>malloc()</function>, so it won&rsquo;t disappear when we exit the <function>results_initialise()</function>. However, we <em>do</em> need to remove the call to <function>free()</function> the memory after calling <function>wimp_create_window()</function>.</p>
 
-<p>With the changes in place, the <function>results_initialise()</function> now looks as seen in <reference id="list-redraw-results-init-2"/>.</p>
+<p>With the changes in place, the <function>results_initialise()</function> now looks as seen in <reference id="list-redraw-theory-results-init-2"/>.</p>
 
-<code lang="c" id="list-redraw-results-init-2" title="Initialising the results window">/* Results Window Initialisation. */
+<code lang="c" id="list-redraw-theory-results-init-2" title="Initialising the results window">/* Results Window Initialisation. */
 
 void results_initialise(void)
 {
@@ -319,13 +319,13 @@ void results_initialise(void)
 
 <p>When initialisation is complete, the icon data blocks will all remain in memory, and can be accessed from anywhere within <file>c.results</file> through the <variable>*results_icons</variable> pointer.</p>
 
-<p>If we compile and run this code now, we should see that only the column headings icons are visible in the results window, as seen in <reference id="fig-redraw-icon-defs"/>. However, checking the templates file should confirm that all of the icons, including those intended for the data rows, are still defined there.</p>
+<p>If we compile and run this code now, we should see that only the column headings icons are visible in the results window, as seen in <reference id="fig-redraw-theory-icon-defs"/>. However, checking the templates file should confirm that all of the icons, including those intended for the data rows, are still defined there.</p>
 
-<image id="fig-redraw-icon-defs" file="redraw-icon-defs.png" title="Hiding the icon definitions"/>
+<image id="fig-redraw-theory-icon-defs" file="redraw-theory-icon-defs.png" title="Hiding the icon definitions"/>
 
-<p>To make it easier to follow the changes, <reference id="dl-redraw-icon-defs"/> contains the changes so far.</p>
+<p>To make it easier to follow the changes, <reference id="dl-redraw-theory-icon-defs"/> contains the changes so far.</p>
 
-<download id="dl-redraw-icon-defs" file="RedrawIconDefs" title="Removing the Unwanted Icons" compatibility="none"/>
+<download id="dl-redraw-theory-icon-defs" file="RedrawIconDefs" title="Removing the Unwanted Icons" compatibility="none"/>
 </section>
 
 
@@ -347,9 +347,9 @@ void results_initialise(void)
 <section>
 <title>Adding a redraw loop</title>
 
-<p>With the background laid, let&rsquo;s start to add some redraw code to our application. The first thing to do is to open the Redraw window template, go into the <window>Edit window</window> dialogue, and turn off the <icon>Auto redraw</icon> flag under <icon>Window behaviour</icon> (this is in <cite>WinEd</cite>, but other template editors will have a similar option). The window should start to display with a hatched background as seen in <reference id="fig-redraw-window-auto-off"/>, which is the template editor&rsquo;s way of showing us that it requires manual redrawing &ndash; most of the template editors, from <cite>FormEd</cite> onwards, use a similar approach.</p>
+<p>With the background laid, let&rsquo;s start to add some redraw code to our application. The first thing to do is to open the Redraw window template, go into the <window>Edit window</window> dialogue, and turn off the <icon>Auto redraw</icon> flag under <icon>Window behaviour</icon> (this is in <cite>WinEd</cite>, but other template editors will have a similar option). The window should start to display with a hatched background as seen in <reference id="fig-redraw-theory-window-auto-off"/>, which is the template editor&rsquo;s way of showing us that it requires manual redrawing &ndash; most of the template editors, from <cite>FormEd</cite> onwards, use a similar approach.</p>
 
-<image id="fig-redraw-window-auto-off" file="redraw-window-auto-off.png" title="Turning auto redraw off"/>
+<image id="fig-redraw-theory-window-auto-off" file="redraw-theory-window-auto-off.png" title="Turning auto redraw off"/>
 
 <p>With this change made, however, we <em>must</em> now update our application to correctly respond to <name>Redraw_Window_Request</name> events. Up to now, perhaps with the exception of <reference id="sect-key-input-hotkeys">not passing on keypresses correctly</reference>, it hasn&rsquo;t been too critical how we have reacted to events that the Wimp has sent us. However, when the Wimp sends us a <name>wimp_REDRAW_WINDOW_REQUEST</name> reason code through <swi>Wimp_Poll</swi>, we <em>must</em> respond correctly or our application will hang.</p>
 
@@ -368,13 +368,13 @@ typedef struct wimp_draw wimp_draw;</code>
 
 <p>As we noted earlier, on receipt of a <name>Redraw_Window_Request</name> event our application must <em>immediately</em> call <swi>Wimp_RedrawWindow</swi> &ndash; in fact, the <cite>Programmer&rsquo;s Reference Manual</cite> states that calling this SWI must be &ldquo;the first Wimp operation after the <swi>Wimp_Poll</swi> which returned a <name>Window_Redraw_Request</name>&rdquo;.</p>
 
-<p>In the process which follows, the Wimp will break the full area to be redrawn down into a series of rectangles which it will ask us to deal with one by one. If the whole window contents need to be redrawn for some reason then this might simply be the whole of the visible area in one rectangle. If our window is behind another one, however, then we might receive two or more: <reference id="fig-redraw-areas-2"/> shows a situation where we might receive details of two rectangles which need to be handled.</p>
+<p>In the process which follows, the Wimp will break the full area to be redrawn down into a series of rectangles which it will ask us to deal with one by one. If the whole window contents need to be redrawn for some reason then this might simply be the whole of the visible area in one rectangle. If our window is behind another one, however, then we might receive two or more: <reference id="fig-redraw-theory-areas-2"/> shows a situation where we might receive details of two rectangles which need to be handled.</p>
 
-<image id="fig-redraw-areas-2" file="redraw-areas-2.png" title="How the Wimp breaks down a redraw"/>
+<image id="fig-redraw-theory-areas-2" file="redraw-theory-areas-2.png" title="How the Wimp breaks down a redraw"/>
 
-<p>Another situation could be where our window&rsquo;s menu has just closed: this might result in a much smaller area being requested, as seen in <reference id="fig-redraw-areas-1"/>.</p>
+<p>Another situation could be where our window&rsquo;s menu has just closed: this might result in a much smaller area being requested, as seen in <reference id="fig-redraw-theory-areas-1"/>.</p>
 
-<image id="fig-redraw-areas-1" file="redraw-areas-1.png" title="A redraw area might be a window shadow"/>
+<image id="fig-redraw-theory-areas-1" file="redraw-theory-areas-1.png" title="A redraw area might be a window shadow"/>
 
 <p>This process of receiving rectangles is launched by the call to <swi>Wimp_RedrawWindow</swi>, which takes a pointer to the <name>wimp_draw</name> block that came with the event, and returns with the other fields in the block filled in for the first rectangle in the sequence.</p>
 
@@ -392,9 +392,9 @@ typedef struct wimp_draw wimp_draw;</code>
 
 <p>As with <function>wimp_redraw_window()</function>, <function>wimp_get_rectangle()</function> takes a pointer to the same <name>wimp_draw</name> block and, if there are further rectangles which need to be redrawn, it will update the contents of the block ready for the next one. It too returns an <name>osbool</name> value to indicate whether the contents of the block needs to be attended to.</p>
 
-<p>Armed with this knowledge, we can conclude that the simplest handler that we can supply for <name>Redraw_Window_Request</name> events is the one in <reference id="list-redraw-event-handler"/>.</p>
+<p>Armed with this knowledge, we can conclude that the simplest handler that we can supply for <name>Redraw_Window_Request</name> events is the one in <reference id="list-redraw-theory-event-handler"/>.</p>
 
-<code id="list-redraw-event-handler" lang="c" title="A very basic redraw event handler">static void results_redraw(wimp_draw *redraw)
+<code id="list-redraw-theory-event-handler" lang="c" title="A very basic redraw event handler">static void results_redraw(wimp_draw *redraw)
 {
 	osbool more;
 
@@ -417,11 +417,11 @@ event_add_window_menu_selection(results_handle, results_menu_selection);</code>
 
 <p>On receipt of a <name>Redraw_Window_Request</name> event, it will immediately call <function>wimp_redraw_window()</function> as required by the Wimp and record the returned <name>osbool</name> value in <variable>more</variable>. While <variable>more</variable> is <name>TRUE</name>, the handler will loop around, giving our application the opportunity to perform whatever redraw operations it needs to and then calling <function>wimp_get_rectangle()</function> to request the next set of data.</p>
 
-<p>The <window>results</window> window still looks exactly as it did in <reference id="fig-redraw-icon-defs"/> because we are not actually doing anything in the loop beyond responding to the Wimp&rsquo;s requests, but the empty redraw loop is being executed each time the window is drawn or refreshed on screen. The comment &ldquo;Process the supplied rectangle here...&rdquo; marks the place where we will need code to handle each of the redraw rectangles that the Wimp supplies to us.</p>
+<p>The <window>results</window> window still looks exactly as it did in <reference id="fig-redraw-theory-icon-defs"/> because we are not actually doing anything in the loop beyond responding to the Wimp&rsquo;s requests, but the empty redraw loop is being executed each time the window is drawn or refreshed on screen. The comment &ldquo;Process the supplied rectangle here...&rdquo; marks the place where we will need code to handle each of the redraw rectangles that the Wimp supplies to us.</p>
 
-<p>For completeness, the changes so far can be found in  <reference id="dl-redraw-empty-loop"/>.</p>
+<p>For completeness, the changes so far can be found in  <reference id="dl-redraw-theory-empty-loop"/>.</p>
 
-<download id="dl-redraw-empty-loop" file="RedrawEmpty" title="A Minimal Redraw Loop" compatibility="none"/>
+<download id="dl-redraw-theory-empty-loop" file="RedrawEmpty" title="A Minimal Redraw Loop" compatibility="none"/>
 </section>
 
 
@@ -434,11 +434,11 @@ event_add_window_menu_selection(results_handle, results_menu_selection);</code>
 
 <p>As a result of the clip window being set, there is actually no need for us to restrict our plotting to the area requested. We could &ndash; if we so wished &ndash; simply plot the whole of our window&rsquo;s contents for each rectangle that we receive, and leave the graphics system to protect the areas which don&rsquo;t need to be updated. The main down-side to this approach is that it can be very slow, especially if we have a large work area that is mostly out of view. On the up-side, it&rsquo;s fairly simple to get working!</p>
 
-<p>When we <reference id="sect-redraw-example">set up the window template</reference>, we sized the work area to accommodate eleven lines: a title row and ten lines of data, each of 52 OS&nbsp;units. The title row is formed from normal icons, so all that we are interested in is redrawing the ten data lines.</p>
+<p>When we <reference id="sect-redraw-theory-example">set up the window template</reference>, we sized the work area to accommodate eleven lines: a title row and ten lines of data, each of 52 OS&nbsp;units. The title row is formed from normal icons, so all that we are interested in is redrawing the ten data lines.</p>
 
-<image id="fig-redraw-rows" file="redraw-rows.png" title="Calculating the row heights"/>
+<image id="fig-redraw-theory-rows" file="redraw-theory-rows.png" title="Calculating the row heights"/>
 
-<p>Instead of hard-coding the height of a row, we can read it from our window definition. We will keep all eleven lines the same height for the sake of simplicity, so we can get the height of a row from any of the title icons by subtracting <maths>y0</maths> from <maths>y1</maths> &ndash; see <reference id="fig-redraw-rows"/> for the arrangement. One assumption that we <em>will</em> make is that the <maths>y1</maths> work area coordinate of the title row is 0 OS&nbsp;units.</p>
+<p>Instead of hard-coding the height of a row, we can read it from our window definition. We will keep all eleven lines the same height for the sake of simplicity, so we can get the height of a row from any of the title icons by subtracting <maths>y0</maths> from <maths>y1</maths> &ndash; see <reference id="fig-redraw-theory-rows"/> for the arrangement. One assumption that we <em>will</em> make is that the <maths>y1</maths> work area coordinate of the title row is 0 OS&nbsp;units.</p>
 
 <code lang="c">row_height = results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y1 -
 		results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y0;</code>
@@ -451,9 +451,9 @@ event_add_window_menu_selection(results_handle, results_menu_selection);</code>
 
 <code lang="c">icon_y0 = icon_y1 - row_height;</code>
 
-<p>Armed with this, we can update the <function>results_redraw()</function> function as seen in <reference id="list-redraw-everything"/>, so that it plots all ten rows of the table each time a redraw rectangle is supplied by the Wimp. We&rsquo;re using a new function, <function>results_plot_icon()</function>, to do the icon plotting &ndash; which we haven&rsquo;t yet defined.</p>
+<p>Armed with this, we can update the <function>results_redraw()</function> function as seen in <reference id="list-redraw-theory-everything"/>, so that it plots all ten rows of the table each time a redraw rectangle is supplied by the Wimp. We&rsquo;re using a new function, <function>results_plot_icon()</function>, to do the icon plotting &ndash; which we haven&rsquo;t yet defined.</p>
 
-<code id="list-redraw-everything" lang="c" title="Redrawing all of the lines in the table">static void results_redraw(wimp_draw *redraw)
+<code id="list-redraw-theory-everything" lang="c" title="Redrawing all of the lines in the table">static void results_redraw(wimp_draw *redraw)
 {
 	osbool more;
 	int y, row_height, icon_y0, icon_y1;
@@ -488,9 +488,9 @@ event_add_window_menu_selection(results_handle, results_menu_selection);</code>
 
 <p>This means that the code needed within our new <function>results_plot_icon()</function> function is relatively simple. The icons don&rsquo;t move horizontally within the window compared to where we placed them in the template, so all that we need to do is to set <variable>extent.y0</variable> and <variable>extent.y1</variable> in the icon definition to the values calculated in <function>results_redraw()</function> &ndash; we can access these via the global <variable>results_icons</variable> variable that we set up for the purpose in <function>results_initialise()</function>.</p>
 
-<p>With the values updated, we then pass a pointer to the definition to <function>wimp_plot_icon()</function> as seen in <reference id="list-redraw-plot-icon"/>.</p>
+<p>With the values updated, we then pass a pointer to the definition to <function>wimp_plot_icon()</function> as seen in <reference id="list-redraw-theory-plot-icon"/>.</p>
 
-<code id="list-redraw-plot-icon" lang="c" title="Calling Wimp_PlotIcon">static void results_plot_icon(wimp_i icon, int y0, int y1)
+<code id="list-redraw-theory-plot-icon" lang="c" title="Calling Wimp_PlotIcon">static void results_plot_icon(wimp_i icon, int y0, int y1)
 {
 	results_icons[icon].extent.y0 = y0;
 	results_icons[icon].extent.y1 = y1;
@@ -498,9 +498,9 @@ event_add_window_menu_selection(results_handle, results_menu_selection);</code>
 	wimp_plot_icon(results_icons + icon);
 }</code>
 
-<p>If we compile and run this code now, we should find that we get ten copies of the placefolder line in our window, beneath the title row. Once again, for completeness, the changes so far can be found in  <reference id="dl-redraw-all"/>.</p>
+<p>If we compile and run this code now, we should find that we get ten copies of the placefolder line in our window, beneath the title row. Once again, for completeness, the changes so far can be found in  <reference id="dl-redraw-theory-all"/>.</p>
 
-<download id="dl-redraw-all" file="RedrawAll" title="Redraw Everything" compatibility="none"/>
+<download id="dl-redraw-theory-all" file="RedrawAll" title="Redraw Everything" compatibility="none"/>
 </section>
 
 <section>
@@ -523,11 +523,11 @@ typedef struct wimp_draw wimp_draw;</code>
 
 <p>The values within the <variable>clip</variable> structure give us the position of the graphics clip window which has been set for us, in terms of screen coordinates. As we have come to expect, <maths>x0</maths> and <maths>y0</maths> are supplied <em>inclusively</em>, whilst <maths>x1</maths> and <maths>y1</maths> are <em>exclusive</em>. The other values &ndash; the contents of the <variable>box</variable> structure, along with the <variable>xscroll</variable> and <variable>yscroll</variable> variables &ndash; give us the window&rsquo;s visible area and scroll offsets, in a form that should be <reference id="chap-window-theory">very familiar</reference> to us by now.</p>
 
-<p>We have already seen how to <reference id="sect-interact-click-coords">convert the screen coordinates of a mouse click into work area coordinates</reference>, and the maths that we will need to do here is very similar. The first thing that we need to do is to work out in terms of screen coordinates where the origin of the window&rsquo;s work area lies, as shown in <reference id="fig-redraw-origin"/>.</p>
+<p>We have already seen how to <reference id="sect-interact-click-coords">convert the screen coordinates of a mouse click into work area coordinates</reference>, and the maths that we will need to do here is very similar. The first thing that we need to do is to work out in terms of screen coordinates where the origin of the window&rsquo;s work area lies, as shown in <reference id="fig-redraw-theory-origin"/>.</p>
 
-<image id="fig-redraw-origin" file="redraw-origin.png" title="Finding the work area coordinate origin"/>
+<image id="fig-redraw-theory-origin" file="redraw-theory-origin.png" title="Finding the work area coordinate origin"/>
 
-<p>Using maths which should by now be familiar, we can get the <maths>x</maths> origin by taking the <maths>x0</maths> coordinate of the visible area and subtracting the horizontal scroll offset. In a similar way, the <maths>y</maths> origin can be found by taking the <maths>y1</maths> coordinate of the visible area and subtracting the vertical scroll offset.</p>
+<p>Using maths which should by now be second-nature, we can get the <maths>x</maths> origin by taking the <maths>x0</maths> coordinate of the visible area and subtracting the horizontal scroll offset. In a similar way, the <maths>y</maths> origin can be found by taking the <maths>y1</maths> coordinate of the visible area and subtracting the vertical scroll offset.</p>
 
 <code lang="c">int ox = redraw-&gt;box.x0 - redraw-&gt;xscroll;
 int oy = redraw-&gt;box.y1 - redraw-&gt;yscroll;</code>
