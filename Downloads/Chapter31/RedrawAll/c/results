@@ -79,7 +79,6 @@ static void results_menu_selection(wimp_w window, wimp_menu *menu, wimp_selectio
 
 void results_initialise(void)
 {
-	os_error		*error;
 	wimp_window		*window_definition;
 
 	/* Load and create the window. */
@@ -125,7 +124,9 @@ void results_open(void)
 static void results_redraw(wimp_draw *redraw)
 {
 	osbool more;
-	int y, row_height, icon_y0, icon_y1;
+	int row_height, icon_y0, icon_y1;
+
+	/* Use the shape column to size the row heights. */
 
 	row_height = results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y1 -
 			results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y0;
@@ -135,7 +136,7 @@ static void results_redraw(wimp_draw *redraw)
 	more = wimp_redraw_window(redraw);
 
 	while (more) {
-		for (y = 1; y <= RESULTS_MAX_ROWS; y++) {
+		for (int y = 1; y <= RESULTS_MAX_ROWS; y++) {
 			icon_y1 = -(y * row_height);
 			icon_y0 = icon_y1 - row_height;
 
@@ -165,8 +166,6 @@ static void results_plot_icon(wimp_i icon, int y0, int y1)
 
 static void results_menu_selection(wimp_w window, wimp_menu *menu, wimp_selection *selection)
 {
-	os_error *error;
-
 	if (menu != results_menu)
 		return;
 

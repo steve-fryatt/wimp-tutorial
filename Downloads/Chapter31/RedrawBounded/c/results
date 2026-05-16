@@ -38,17 +38,41 @@
 
 #include "menu.h"
 
+/* Results Window Icons. */
+
+#define RESULTS_TITLE_ICONS 6
+
+#define RESULTS_ICON_TITLE_SHAPE 0
+#define RESULTS_ICON_TITLE_SIDES 1
+#define RESULTS_ICON_TITLE_ANGLES 2
+#define RESULTS_ICON_TITLE_LENGTH 3
+#define RESULTS_ICON_TITLE_PERIMETER 4
+#define RESULTS_ICON_TITLE_AREA 5
+#define RESULTS_ICON_ROW_SHAPE 6
+#define RESULTS_ICON_ROW_SIDES 7
+#define RESULTS_ICON_ROW_ANGLES 8
+#define RESULTS_ICON_ROW_LENGTH 9
+#define RESULTS_ICON_ROW_PERIMETER 10
+#define RESULTS_ICON_ROW_AREA 11
+
 /* Results Menu Entries. */
 
 #define RESULTS_MENU_CLEAR 0
 
+/* The number of rows in the results window. */
+
+#define RESULTS_MAX_ROWS 10
+
 /* Global Variables. */
 
 static wimp_w results_handle = NULL;
+static wimp_icon *results_icons = NULL;
 static wimp_menu *results_menu = NULL;
 
 /* Function Prototypes. */
 
+static void results_redraw(wimp_draw *redraw);
+static void results_plot_icon(wimp_i icon, int y0, int y1);
 static void results_menu_selection(wimp_w window, wimp_menu *menu, wimp_selection *selection);
 
 /* Results Window Initialisation. */
@@ -65,8 +89,11 @@ void results_initialise(void)
 		return;
 	}
 
+	window_definition->icon_count = RESULTS_TITLE_ICONS;
+
+	results_icons = window_definition->icons;
+
 	results_handle = wimp_create_window(window_definition);
-	free(window_definition);
 
 	/* Window Menu. */
 
@@ -80,6 +107,7 @@ void results_initialise(void)
 
 	/* Register event handlers. */
 
+	event_add_window_redraw_event(results_handle, results_redraw);
 	event_add_window_menu(results_handle, results_menu);
 	event_add_window_menu_selection(results_handle, results_menu_selection);
 }
@@ -89,6 +117,59 @@ void results_initialise(void)
 void results_open(void)
 {
 	windows_open_centred_on_screen(results_handle);
+}
+
+/* Window Redraw event handler. */
+
+static void results_redraw(wimp_draw *redraw)
+{
+	osbool more;
+	int oy, row_height, top, bottom, icon_y0, icon_y1;
+
+	/* Use the shape column to size the row heights. */
+
+	row_height = results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y1 -
+			results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y0;
+
+	/* Redraw the window. */
+
+	more = wimp_redraw_window(redraw);
+
+	while (more) {
+		oy = redraw->box.y1 - redraw->yscroll;
+
+		top = (oy - redraw->clip.y1) / row_height;
+		if (top < 1)
+			top = 1;
+
+		bottom = ((oy - redraw->clip.y0) - 1) / row_height;
+		if (bottom > RESULTS_MAX_ROWS)
+			bottom = RESULTS_MAX_ROWS;
+
+		for (int y = top; y <= bottom; y++) {
+			icon_y1 = -(y * row_height);
+			icon_y0 = icon_y1 - row_height;
+
+			results_plot_icon(RESULTS_ICON_ROW_SHAPE, icon_y0, icon_y1);
+			results_plot_icon(RESULTS_ICON_ROW_SIDES, icon_y0, icon_y1);
+			results_plot_icon(RESULTS_ICON_ROW_ANGLES, icon_y0, icon_y1);
+			results_plot_icon(RESULTS_ICON_ROW_LENGTH, icon_y0, icon_y1);
+			results_plot_icon(RESULTS_ICON_ROW_PERIMETER, icon_y0, icon_y1);
+			results_plot_icon(RESULTS_ICON_ROW_AREA, icon_y0, icon_y1);
+		}
+
+		more = wimp_get_rectangle(redraw);
+	}
+}
+
+/* Plot an icon in the redraw loop. */
+
+static void results_plot_icon(wimp_i icon, int y0, int y1)
+{
+	results_icons[icon].extent.y0 = y0;
+	results_icons[icon].extent.y1 = y1;
+
+	wimp_plot_icon(results_icons + icon);
 }
 
 /* Menu Selection event handler. */

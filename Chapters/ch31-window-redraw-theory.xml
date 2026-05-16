@@ -149,7 +149,6 @@ static void results_menu_selection(wimp_w window, wimp_menu *menu, wimp_selectio
 
 void results_initialise(void)
 {
-	os_error		*error;
 	wimp_window		*window_definition;
 
 	/* Load and create the window. */
@@ -193,8 +192,6 @@ void results_initialise(void)
 
 static void results_menu_selection(wimp_w window, wimp_menu *menu, wimp_selection *selection)
 {
-	os_error *error;
-
 	if (menu != results_menu)
 		return;
 
@@ -456,7 +453,9 @@ event_add_window_menu_selection(results_handle, results_menu_selection);</code>
 <code id="list-redraw-theory-everything" lang="c" title="Redrawing all of the lines in the table">static void results_redraw(wimp_draw *redraw)
 {
 	osbool more;
-	int y, row_height, icon_y0, icon_y1;
+	int row_height, icon_y0, icon_y1;
+
+	/* Use the shape column to size the row heights. */
 
 	row_height = results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y1 -
 			results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y0;
@@ -466,7 +465,7 @@ event_add_window_menu_selection(results_handle, results_menu_selection);</code>
 	more = wimp_redraw_window(redraw);
 
 	while (more) {
-		for (y = 1; y &lt;= RESULTS_MAX_ROWS; y++) {
+		for (int y = 1; y &lt;= RESULTS_MAX_ROWS; y++) {
 			icon_y1 = -(y * row_height);
 			icon_y0 = icon_y1 - row_height;
 
@@ -498,7 +497,11 @@ event_add_window_menu_selection(results_handle, results_menu_selection);</code>
 	wimp_plot_icon(results_icons + icon);
 }</code>
 
-<p>If we compile and run this code now, we should find that we get ten copies of the placefolder line in our window, beneath the title row. Once again, for completeness, the changes so far can be found in  <reference id="dl-redraw-theory-all"/>.</p>
+<p>If we compile and run this code now, we should find that we get ten copies of the placeholder line in our window, beneath the title row &ndash; as seen in <reference id="fig-redraw-theory-redrawn"/>.</p>
+
+<image id="fig-redraw-theory-redrawn" file="redraw-theory-redrawn.png" title="Our window being redrawn"/>
+
+<p>Once again, for completeness, the changes so far can be found in <reference id="dl-redraw-theory-all"/>.</p>
 
 <download id="dl-redraw-theory-all" file="RedrawAll" title="Redraw Everything" compatibility="none"/>
 </section>
@@ -539,18 +542,57 @@ int bottom = redraw-&gt;clip.y0 - oy;
 int left = redraw-&gt;clip.x0 - ox;
 int right = redraw-&gt;clip.x1 - ox;</code>
 
+<p>The vertical work area coordinates are conventionally negative, so if we&rsquo;re planning to use the values as indexes into an array of data it might be useful to negate them.</p>
 
+<code lang="c">int top = -(redraw-&gt;clip.y1 - oy);
+int bottom = -(redraw-&gt;clip.y0 - oy);</code>
 
+<p>From here, a little bit of rearrangement gives is the following.</p>
 
-<!-- top = ((oy - redraw->clip.y1) - heading_height) / row_height; // if (top < 0) top = 0;
-bottom = ((oy - redraw->clip.y0) - heading_height) / row_height; -->
+<code lang="c">int top = oy - redraw-&gt;clip.y1;
+int bottom = oy - redraw-&gt;clip.y0;</code>
 
+<p>If we then divide <variable>top</variable> and <variable>bottom</variable> by the <variable>row_height</variable>, we can add some vertical bounds checks to our redraw loop as follows. We&rsquo;re adjusting <variable>bottom</variable> by 1 before the division to allow for the fact that the <maths>y1</maths> values are exclusive.</p>
 
+<code lang="c">/* Redraw the window. */
 
+more = wimp_redraw_window(redraw);
 
+while (more) {
+	oy = redraw-&gt;box.y1 - redraw-&gt;yscroll;
 
-<!-- Unlike Wimp_PlotIcon, all other plotting will be to screen coordinates. -->
+	top = (oy - redraw-&gt;clip.y1) / row_height;
+	if (top &lt; 1)
+		top = 1;
 
+	bottom = ((oy - redraw-&gt;clip.y0) - 1) / row_height;
+	if (bottom &gt; RESULTS_MAX_ROWS)
+		bottom = RESULTS_MAX_ROWS;
+
+	for (int y = top; y &lt;= bottom; y++) {
+		icon_y1 = -(y * row_height);
+		icon_y0 = icon_y1 - row_height;
+
+		results_plot_icon(RESULTS_ICON_ROW_SHAPE, icon_y0, icon_y1);
+		results_plot_icon(RESULTS_ICON_ROW_SIDES, icon_y0, icon_y1);
+		results_plot_icon(RESULTS_ICON_ROW_ANGLES, icon_y0, icon_y1);
+		results_plot_icon(RESULTS_ICON_ROW_LENGTH, icon_y0, icon_y1);
+		results_plot_icon(RESULTS_ICON_ROW_PERIMETER, icon_y0, icon_y1);
+		results_plot_icon(RESULTS_ICON_ROW_AREA, icon_y0, icon_y1);
+	}
+
+	more = wimp_get_rectangle(redraw);
+}</code>
+
+<p>We are including the title row in our calculation as row 0, but since we will never need to redraw this we bounds-check <variable>top</variable> to make sure that we never start redrawing before row 1. Any attempt to redraw <em>just</em> row 0 will drop out in the <code>for&nbsp;()</code> loop, because <variable>bottom</variable> will be 0 in that situation. We similarly check that <variable>bottom</variable> never goes above the maximum number of rows that we can have.</p>
+
+<p>One thing to note is that we haven&rsquo;t bothered to bounds check the redraw horizontally: we just plot all of the icons in each row. This is a trade-off: it&rsquo;s fairly easy to narrow down the area by row, but detecting the column boundaries would be a lot more work and the payoff probably wouldn&rsquo;t justify the complexity of the resulting code. It is always worth thinking about the benefits of adding additional complexity to the redraw code, and &ndash; ideally &ndash; testing solutions on a range of hardware before making things too complicated.</p>
+
+<p>Putting the code together gives us the application in <reference id="dl-redraw-theory-all"/>.</p>
+
+<download id="dl-redraw-theory-bounded" file="RedrawBounded" title="Redraw Required Rows" compatibility="none"/>
+
+<p>There has been a lot of theory in this chapter but, while we now have a functional redraw loop, we still have no data to redraw. We will solve that problem in the next chapter, however, so that our <window>Results</window> window can finally do something useful!</p>
 </section>
 </chapter>
 </manual>

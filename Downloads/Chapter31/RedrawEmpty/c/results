@@ -74,7 +74,6 @@ static void results_menu_selection(wimp_w window, wimp_menu *menu, wimp_selectio
 
 void results_initialise(void)
 {
-	os_error		*error;
 	wimp_window		*window_definition;
 
 	/* Load and create the window. */
@@ -136,8 +135,6 @@ static void results_redraw(wimp_draw *redraw)
 
 static void results_menu_selection(wimp_w window, wimp_menu *menu, wimp_selection *selection)
 {
-	os_error *error;
-
 	if (menu != results_menu)
 		return;
 
