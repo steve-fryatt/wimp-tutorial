@@ -396,12 +396,10 @@ static double win_value_area = 0.0;</code>
 
 <code id="list-key-input-all-set" lang="c" title="We also need to set the Immediate tick when the menu opens">static void win_set_menu(wimp_w w, wimp_menu *menu, wimp_pointer *pointer)
 {
-	int places;
-
 	if (menu != win_menu)
 		return;
 
-	places = calc_get_places();
+	int places = calc_get_places();
 
 	menus_tick_entry(win_menu, WIN_MENU_DECIMAL1, places == 1);
 	menus_tick_entry(win_menu, WIN_MENU_DECIMAL2, places == 2);

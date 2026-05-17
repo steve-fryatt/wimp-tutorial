@@ -1,0 +1,262 @@
+/* Copyright 2026, Stephen Fryatt (info@stevefryatt.org.uk)
+ *
+ * This file is part of Wimp Programming In C:
+ *
+ *   http://www.stevefryatt.org.uk/risc-os/wimp-prog
+ *
+ * Licensed under the EUPL, Version 1.2 only (the "Licence");
+ * You may not use this work except in compliance with the
+ * Licence.
+ *
+ * You may obtain a copy of the Licence at:
+ *
+ *   http://joinup.ec.europa.eu/software/page/eupl
+ *
+ * Unless required by applicable law or agreed to in
+ * writing, software distributed under the Licence is
+ * distributed on an "AS IS" basis, WITHOUT WARRANTIES
+ * OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ * See the Licence for the specific language governing
+ * permissions and limitations under the Licence.
+ */
+
+/**
+ * File: results.c
+ */
+
+#include "oslib/wimp.h"
+
+#include "sflib/errors.h"
+#include "sflib/event.h"
+#include "sflib/string.h"
+#include "sflib/windows.h"
+
+#include "results.h"
+
+#include "menu.h"
+#include "calc.h"
+
+/* Results Window Icons. */
+
+#define RESULTS_TITLE_ICONS 6
+
+#define RESULTS_ICON_TITLE_SHAPE 0
+#define RESULTS_ICON_TITLE_SIDES 1
+#define RESULTS_ICON_TITLE_ANGLES 2
+#define RESULTS_ICON_TITLE_LENGTH 3
+#define RESULTS_ICON_TITLE_PERIMETER 4
+#define RESULTS_ICON_TITLE_AREA 5
+#define RESULTS_ICON_ROW_SHAPE 6
+#define RESULTS_ICON_ROW_SIDES 7
+#define RESULTS_ICON_ROW_INTERNAL_ANGLES 8
+#define RESULTS_ICON_ROW_SIDE_LENGTH 9
+#define RESULTS_ICON_ROW_PERIMETER 10
+#define RESULTS_ICON_ROW_AREA 11
+
+/* Results Menu Entries. */
+
+#define RESULTS_MENU_CLEAR 0
+
+/* The number of rows in the results window. */
+
+#define RESULTS_MAX_ROWS 10
+
+/* The size of a results test field. */
+
+#define RESULTS_VALUE_LEN 16
+
+/* Line Data Structure */
+
+struct results_data {
+	char shape[RESULTS_VALUE_LEN];
+	char sides[RESULTS_VALUE_LEN];
+	char internal_angle[RESULTS_VALUE_LEN];
+	char side_length[RESULTS_VALUE_LEN];
+	char perimeter[RESULTS_VALUE_LEN];
+	char area[RESULTS_VALUE_LEN];
+};
+
+/* Global Variables. */
+
+static wimp_w results_handle = NULL;
+static wimp_icon *results_icons = NULL;
+static wimp_menu *results_menu = NULL;
+
+static size_t results_row_count = 0;
+static struct results_data results_rows[RESULTS_MAX_ROWS];
+
+/* Function Prototypes. */
+
+static void results_clear_data(void);
+static void results_redraw(wimp_draw *redraw);
+static void results_plot_icon(wimp_i icon, int y0, int y1, char *text);
+static void results_force_redraw_lines(int r0, int r1);
+static void results_menu_selection(wimp_w window, wimp_menu *menu, wimp_selection *selection);
+
+/* Results Window Initialisation. */
+
+void results_initialise(void)
+{
+	wimp_window		*window_definition;
+
+	/* Load and create the window. */
+
+	window_definition = windows_load_template("Results");
+	if (window_definition == NULL) {
+		error_msgs_report_error("BadResultsTempl");
+		return;
+	}
+
+	window_definition->icon_count = RESULTS_TITLE_ICONS;
+
+	results_icons = window_definition->icons;
+
+	results_handle = wimp_create_window(window_definition);
+
+	/* Window Menu. */
+
+	results_menu = menu_create("ResultsMenu", 1);
+	if (results_menu == NULL) {
+		error_msgs_report_error("BadResultsMenu");
+		return;
+	}
+
+	menu_entry(results_menu, RESULTS_MENU_CLEAR, "ResultsMenu0", NULL);
+
+	/* Register event handlers. */
+
+	event_add_window_redraw_event(results_handle, results_redraw);
+	event_add_window_menu(results_handle, results_menu);
+	event_add_window_menu_selection(results_handle, results_menu_selection);
+}
+
+/* Open the Window. */
+
+void results_open(void)
+{
+	windows_open_centred_on_screen(results_handle);
+}
+
+/* Clear all of the stored data. */
+
+static void results_clear_data(void)
+{
+	results_force_redraw_lines(1, results_row_count);
+
+	results_row_count = 0;
+}
+
+/* Store the current calculation data. */
+
+void results_store_current_data(char *shape)
+{
+	if (results_row_count >= RESULTS_MAX_ROWS)
+		return;
+
+	string_copy(results_rows[results_row_count].shape, shape, RESULTS_VALUE_LEN);
+	string_copy(results_rows[results_row_count].sides, calc_get_sides(), RESULTS_VALUE_LEN);
+	string_copy(results_rows[results_row_count].internal_angle, calc_get_internal_angle(), RESULTS_VALUE_LEN);
+	string_copy(results_rows[results_row_count].side_length, calc_get_length(), RESULTS_VALUE_LEN);
+	string_copy(results_rows[results_row_count].perimeter, calc_get_perimeter(), RESULTS_VALUE_LEN);
+	string_copy(results_rows[results_row_count].area, calc_get_area(), RESULTS_VALUE_LEN);
+
+	results_row_count++;
+
+	results_force_redraw_lines(results_row_count, results_row_count);
+}
+
+/* Window Redraw event handler. */
+
+static void results_redraw(wimp_draw *redraw)
+{
+	osbool more;
+	int oy, row_height, top, bottom, icon_y0, icon_y1;
+
+	/* Use the shape column to size the row heights. */
+
+	row_height = results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y1 -
+			results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y0;
+
+	/* Redraw the window. */
+
+	more = wimp_redraw_window(redraw);
+
+	while (more) {
+		oy = redraw->box.y1 - redraw->yscroll;
+
+		top = (oy - redraw->clip.y1) / row_height;
+		if (top < 1)
+			top = 1;
+
+		bottom = ((oy - redraw->clip.y0) - 1) / row_height;
+		if (bottom > RESULTS_MAX_ROWS)
+			bottom = RESULTS_MAX_ROWS;
+
+		if (bottom > results_row_count)
+			bottom = results_row_count;
+
+		for (int y = top; y <= bottom; y++) {
+			icon_y1 = -(y * row_height);
+			icon_y0 = icon_y1 - row_height;
+
+			results_plot_icon(RESULTS_ICON_ROW_SHAPE, icon_y0, icon_y1, results_rows[y - 1].shape);
+			results_plot_icon(RESULTS_ICON_ROW_SIDES, icon_y0, icon_y1, results_rows[y - 1].sides);
+			results_plot_icon(RESULTS_ICON_ROW_INTERNAL_ANGLES, icon_y0, icon_y1, results_rows[y - 1].internal_angle);
+			results_plot_icon(RESULTS_ICON_ROW_SIDE_LENGTH, icon_y0, icon_y1, results_rows[y - 1].side_length);
+			results_plot_icon(RESULTS_ICON_ROW_PERIMETER, icon_y0, icon_y1, results_rows[y - 1].perimeter);
+			results_plot_icon(RESULTS_ICON_ROW_AREA, icon_y0, icon_y1, results_rows[y - 1].area);
+		}
+
+		more = wimp_get_rectangle(redraw);
+	}
+}
+
+/* Plot an icon in the redraw loop. */
+
+static void results_plot_icon(wimp_i icon, int y0, int y1, char *text)
+{
+	results_icons[icon].extent.y0 = y0;
+	results_icons[icon].extent.y1 = y1;
+
+	if (results_icons[icon].flags & (wimp_ICON_TEXT | wimp_ICON_INDIRECTED))
+		results_icons[icon].data.indirected_text.text = text;
+
+	wimp_plot_icon(results_icons + icon);
+}
+
+/* Force the redraw of a range of rows. */
+
+static void results_force_redraw_lines(int r0, int r1)
+{
+	/* Use the shape column to size the row heights. */
+
+	int row_height = results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y1 -
+			results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y0;
+
+	int top = -r0 * row_height;
+	int bottom = -(r1 + 1) * row_height;
+
+	/* Get the column bounds from the Shape and Area columns. */
+
+	int left = results_icons[RESULTS_ICON_TITLE_SHAPE].extent.x0;
+	int right = results_icons[RESULTS_ICON_TITLE_AREA].extent.x1;
+
+	/* Force the redraw of the chosen lines. */
+
+	wimp_force_redraw(results_handle, left, bottom, right, top);
+}
+
+/* Menu Selection event handler. */
+
+static void results_menu_selection(wimp_w window, wimp_menu *menu, wimp_selection *selection)
+{
+	if (menu != results_menu)
+		return;
+
+	switch (selection->items[0]) {
+	case RESULTS_MENU_CLEAR:
+		results_clear_data();
+		break;
+	}
+}

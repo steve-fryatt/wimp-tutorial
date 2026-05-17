@@ -30,9 +30,6 @@
 #include "sflib/errors.h"
 #include "sflib/event.h"
 #include "sflib/windows.h"
-#include "sflib/debug.h"
-
-#include <string.h>
 
 #include "results.h"
 
@@ -50,8 +47,8 @@
 #define RESULTS_ICON_TITLE_AREA 5
 #define RESULTS_ICON_ROW_SHAPE 6
 #define RESULTS_ICON_ROW_SIDES 7
-#define RESULTS_ICON_ROW_ANGLES 8
-#define RESULTS_ICON_ROW_LENGTH 9
+#define RESULTS_ICON_ROW_INTERNAL_ANGLES 8
+#define RESULTS_ICON_ROW_SIDE_LENGTH 9
 #define RESULTS_ICON_ROW_PERIMETER 10
 #define RESULTS_ICON_ROW_AREA 11
 

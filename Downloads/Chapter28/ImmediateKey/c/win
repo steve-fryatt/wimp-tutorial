@@ -271,12 +271,10 @@ static osbool win_shape_menu_selection(wimp_w window, wimp_menu *menu, unsigned 
 
 static void win_set_menu(wimp_w w, wimp_menu *menu, wimp_pointer *pointer)
 {
-	int places;
-
 	if (menu != win_menu)
 		return;
 
-	places = calc_get_places();
+	int places = calc_get_places();
 
 	menus_tick_entry(win_menu, WIN_MENU_DECIMAL1, places == 1);
 	menus_tick_entry(win_menu, WIN_MENU_DECIMAL2, places == 2);

@@ -30,9 +30,6 @@
 #include "sflib/errors.h"
 #include "sflib/event.h"
 #include "sflib/windows.h"
-#include "sflib/debug.h"
-
-#include <string.h>
 
 #include "results.h"
 

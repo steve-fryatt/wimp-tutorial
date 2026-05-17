@@ -41,15 +41,271 @@
 <uri>window-redraw-content</uri>
 <title>Redrawing Some Content</title>
 
-<summary>Doing something useful with our new ability to redraw our window&rsquo;s contents.</summary>
+<summary>Now that we have the ability to redraw our window&rsquo;s content, let&rsquo;s do something useful with it.</summary>
 
 <section>
+<p>In <reference id="chap-redraw-theory">the previous chapter</reference> we added a <window>Results</window> window to our application, and wrote the code needed for it to be redrawn on <name>Redraw_Window_Request</name> events. What we didn&rsquo;t do, however, was arrange for it to display anything useful. To do that, we will need to store some real data within our application and plot it to the screen in the correct place when requested.</p>
+</section>
+
+<section>
+<title>Storing some data</title>
+
+<p>Before we can redraw any data in our window, we will need to find a way to store that data. If our application were a real one with a useful purpose, the format of the data and the way that we hold it in memory would very likely be defined by the task that it was carrying out. Since we don&rsquo;t have the luxury of a purpose, we will have to figure something out for ourselves.</p>
+
+<p>One important thing to consider when devising a data structure is ease (and speed) of access. If we were writing a text editor and we needed to redraw the tenth line of our window&rsquo;s contents, for example, how easy would it be to find that data in memory? If we were developing a vector graphics package like Draw, how easy would it be to find the area of a redraw rectangle within a larger image?</p>
+
+<p>It&rsquo;s worth bearing this kind of thing in mind when devising a data structure, because it can both save redraw time <em>and</em> make writing the redraw routines much easier. All of the objects in a drawfile contain a rectangular bounding box in a standard format, for example, which makes it much quicker for the application to filter down the items which appear within a given area and discard those which don&rsquo;t affect the current operation. A text editor might maintain a list of pointers to the starts of the lines in the current window for a similar reason.</p>
+
+<p>In our case, we have already decided that we will be redrawing our table by line, so a simple array would work well: if we know what line of the window we are redrawing, we can use that to index into an array of data. To avoid duplicating data (and having to then keep it all in sync), it is generally best to read the information from the application&rsquo;s &lsquo;live&rsquo; data and do conversions into human-readable format as part of the redraw process: an accounts package might hold references to accounts within its data and look up the account names within the redraw loop, for example. However, if we look at <file>c.calc</file>, we find that we can only access textual representations of the data in the main window.</p>
+
+<p>To that end, we might as well store results data as a collection of text strings. This has the advantage of being simple, so that we can focus on the redrawing and not the data wrangling. A new <name>results_data</name> structure can store complete sets of results from the main window, a global <variable>results_rows[]</variable> array will hold one of these for each line, and <variable>results_row_count</variable> will track how many are in use. This can all be seen in <reference id="list-redraw-content-data"/>.</p>
+
+<code lang="c" id="list-redraw-content-data" title="The data structures to hold our results">/* The size of a results test field. */
+
+#define RESULTS_VALUE_LEN 16
+
+/* Line Data Structure */
+
+struct results_data {
+	char shape[RESULTS_VALUE_LEN];
+	char sides[RESULTS_VALUE_LEN];
+	char internal_angle[RESULTS_VALUE_LEN];
+	char side_length[RESULTS_VALUE_LEN];
+	char perimeter[RESULTS_VALUE_LEN];
+	char area[RESULTS_VALUE_LEN];
+};
+
+/* Global Variables. */
+
+static size_t results_row_count = 0;
+static struct results_data results_rows[RESULTS_MAX_ROWS];</code>
+
+<p>We will need a way to add results to the collection, and so we will create a new <function>results_store_current_data()</function> function as seen in <reference id="list-redraw-content-store"/>. This takes the name of the shape in the <variable>*shape</variable> parameter, and then reads all of the rest of the details from the calculation code. There is a check to make sure that we don&rsquo;s add lines past the end of the array, and we use SFLib&rsquo;s <function>string_copy()</function> to make sure that our copied strings get terminated safely if any of the buffers fill.</p>
+
+<code lang="c" id="list-redraw-content-store" title="The interface to add new results to the collection">/* Store the current calculation data. */
+
+void results_store_current_data(char *shape)
+{
+	if (results_row_count &gt;= RESULTS_MAX_ROWS)
+		return;
+
+	string_copy(results_rows[results_row_count].shape, shape, RESULTS_VALUE_LEN);
+	string_copy(results_rows[results_row_count].sides, calc_get_sides(), RESULTS_VALUE_LEN);
+	string_copy(results_rows[results_row_count].internal_angle, calc_get_internal_angle(), RESULTS_VALUE_LEN);
+	string_copy(results_rows[results_row_count].side_length, calc_get_length(), RESULTS_VALUE_LEN);
+	string_copy(results_rows[results_row_count].perimeter, calc_get_perimeter(), RESULTS_VALUE_LEN);
+	string_copy(results_rows[results_row_count].area, calc_get_area(), RESULTS_VALUE_LEN);
+
+	results_row_count++;
+}</code>
+
+<p>We need a way to clear the results if the user chooses that option from the <window>Results</window> window menu, so we also add a <function>results_clear_data()</function> function to do this as seen in <reference id="list-redraw-content-clear"/>. All that it needs to do is to reset the <variable>results_row_count</variable> variable to zero. Unlike its counterpart, this function won&rsquo;t need to be called from outside of the <file>c.results</file> module.</p>
+
+<code lang="c" id="list-redraw-content-clear" title="The internal interface to clear the results">/* Clear all of the stored data. */
+
+static void results_clear_data(void)
+{
+	results_row_count = 0;
+}</code>
+
+<p>We can now update the <function>results_menu_selection()</function> handler function to call <function>results_clear_data()</function> when the corresponding menu item is selected.</p>
+
+<code lang="c">static void results_menu_selection(wimp_w window, wimp_menu *menu, wimp_selection *selection)
+{
+	if (menu != results_menu)
+		return;
+
+	switch (selection-&gt;items[0]) {
+	case RESULTS_MENU_CLEAR:
+		results_clear_data();
+		break;
+	}
+}</code>
+
+<p>To facilitate the redraw itself, we will need to make some changes to the redraw code. First, <function>results_plot_icon()</function> will need to be able to take a pointer to the string that the icon should contain when it is plotted. <swi>Wimp_PlotIcon</swi> deals with icon definition blocks and not real icons, so we can simply update the pointer to the indirected text before calling the SWI. We check that the <name>wimp_ICON_TEXT</name> and <name>wimp_ICON_INDIRECTED</name> flags are set before doing this, just in case the templates have been altered &ndash; this avoids any nasty surprises should the Wimp be expecting something other than a pointer to a text buffer.</p>
+
+<code lang="c">static void results_plot_icon(wimp_i icon, int y0, int y1, char *text)
+{
+	results_icons[icon].extent.y0 = y0;
+	results_icons[icon].extent.y1 = y1;
+
+	if (results_icons[icon].flags &amp; (wimp_ICON_TEXT | wimp_ICON_INDIRECTED))
+		results_icons[icon].data.indirected_text.text = text;
+
+	wimp_plot_icon(results_icons + icon);
+}</code>
+
+<p>Finally, for the code in <file>c.results</file>, we update the redraw loop. To avoid running past the end of the valid results, we add a second bounds check for <variable>bottom</variable> against the value of <variable>results_row_count</variable>; the test against <name>RESULTS_MAX_ROWS</name> remains, in case <variable>results_row_count</variable> contains a nonsensical value. Then, for each of the calls to <function>results_plot_icon()</function>, we find the apprpropriate string pointer in our array of data structures and pass it in.</p>
+
+<code lang="c">/* Redraw the window. */
+
+more = wimp_redraw_window(redraw);
+
+while (more) {
+	oy = redraw-&gt;box.y1 - redraw-&gt;yscroll;
+
+	top = (oy - redraw-&gt;clip.y1) / row_height;
+	if (top &lt; 1)
+		top = 1;
+
+	bottom = ((oy - redraw-&gt;clip.y0) - 1) / row_height;
+	if (bottom &gt; RESULTS_MAX_ROWS)
+		bottom = RESULTS_MAX_ROWS;
+
+	if (bottom &gt; results_row_count)
+		bottom = results_row_count;
+
+	for (int y = top; y &lt;= bottom; y++) {
+		icon_y1 = -(y * row_height);
+		icon_y0 = icon_y1 - row_height;
+
+		results_plot_icon(RESULTS_ICON_ROW_SHAPE, icon_y0, icon_y1, results_rows[y - 1].shape);
+		results_plot_icon(RESULTS_ICON_ROW_SIDES, icon_y0, icon_y1, results_rows[y - 1].sides);
+		results_plot_icon(RESULTS_ICON_ROW_INTERNAL_ANGLES, icon_y0, icon_y1, results_rows[y - 1].internal_angle);
+		results_plot_icon(RESULTS_ICON_ROW_SIDE_LENGTH, icon_y0, icon_y1, results_rows[y - 1].side_length);
+		results_plot_icon(RESULTS_ICON_ROW_PERIMETER, icon_y0, icon_y1, results_rows[y - 1].perimeter);
+		results_plot_icon(RESULTS_ICON_ROW_AREA, icon_y0, icon_y1, results_rows[y - 1].area);
+	}
+
+	more = wimp_get_rectangle(redraw);
+}</code>
+
+<p>Over in <file>c.win</file>, we need to add a <menu>Store result</menu> menu item to the window&rsquo;s main menu. This feels as if it would be most sensible at the top of the menu, so we start by adding in a new constant for the entry and shuffling round the extsing indexes for the decimal place selection.</p>
+
+<code lang="c">#define WIN_MENU_STORE_RESULT 0
+#define WIN_MENU_DECIMAL1 1
+#define WIN_MENU_DECIMAL2 2
+#define WIN_MENU_DECIMAL3 3</code>
+
+<p>In <function>win_initialise()</function> we add an extra entry to the call to <function>menu_create()</function>, then create it with a call to <function>menu_entry()</function>. A dotted line is added after the entry, using a call to <function>menu_separator()</function>.</p>
+
+<code lang="c">/* Window Menu. */
+
+win_menu = menu_create(&quot;MainMenu&quot;, 4);
+if (win_menu == NULL) {
+	error_msgs_report_error(&quot;BadMainMenu&quot;);
+	return;
+}
+
+menu_entry(win_menu, WIN_MENU_STORE_RESULT, &quot;MainMenu0&quot;, NULL);
+menu_separator(win_menu, WIN_MENU_STORE_RESULT);
+menu_entry(win_menu, WIN_MENU_DECIMAL1, &quot;MainMenu1&quot;, NULL);
+menu_entry(win_menu, WIN_MENU_DECIMAL2, &quot;MainMenu2&quot;, NULL);
+menu_entry(win_menu, WIN_MENU_DECIMAL3, &quot;MainMenu3&quot;, NULL);</code>
+
+<p>As the change to the order of the menu entries messed up our sequential message tokens, we make the apprpropriate changes to the <file>Messages</file> file as well.</p>
+
+<code lang="messtrans"># Main menu
+
+MainMenu0:Store result
+MainMenu1:1 Decimal place
+MainMenu2:2 Decimal places
+MainMenu3:3 Decimal places</code>
+
+<p>Finally, in the <function>win_menu_selection()</function> function, we add an entry in the <code>switch&nbsp;()</code> statement to handle the new menu entry. This uses SFLib&rsquo;s <function>icons_get_indirected_text_addr()</function> to find a pointer to the string representing the name of the shape, so that this can be passed to the new <function>results_store_current_data()</function> function.</p>
+
+<code lang="c">case WIN_MENU_STORE_RESULT:
+	results_store_current_data(icons_get_indirected_text_addr(win_handle, WIN_ICON_SHAPE_FIELD));
+	break;</code>
+
+<p>With all of these changes in place, we should find that we can finally store results from the main window using the new menu entry in the main window menu, as seen in <reference id="fig-redraw-content-data"/>. We can also clear the results using the menu in the <window>Results</window> window.</p>
+
+<image id="fig-redraw-content-data" file="redraw-content-data.png" title="The Results window with real data on display"/>
+
+<p>If you&rsquo;re trying this for yourself, you will probably find that you need to swipe another window over our <window>Results</window> window in order to see any of the changes, but that after this the display works as expected. We will look at why this is happening in the next section, but for now the code so far can be found in <reference id="dl-redraw-content-data"/>.</p>
+
+<download id="dl-redraw-content-data" file="RedrawData" title="Redraw Data" compatibility="none"/>
+</section>
+
+<section>
+<title>Requesting a redraw</title>
+
+<code lang="c">/* Force the redraw of a range of rows. */
+
+static void results_force_redraw_lines(int r0, int r1)
+{
+	/* Use the shape column to size the row heights. */
+
+	int row_height = results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y1 -
+			results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y0;
+
+	int top = -r0 * row_height;
+	int bottom = -(r1 + 1) * row_height;
+
+	/* Get the column bounds from the Shape and Area columns. */
+
+	int left = results_icons[RESULTS_ICON_TITLE_SHAPE].extent.x0;
+	int right = results_icons[RESULTS_ICON_TITLE_AREA].extent.x1;
+
+	/* Force the redraw of the chosen lines. */
+
+	wimp_force_redraw(results_handle, left, bottom, right, top);
+}</code>
+
+<code lang="c">results_force_redraw_lines(results_row_count, results_row_count);</code>
+
+<code lang="c">results_force_redraw_lines(1, results_row_count);</code>
+
+<download id="dl-redraw-content-force" file="ForceRedraw" title="Requesting Screen Redraw" compatibility="none"/>
+</section>
+
+<section>
+<title>Updating menu states</title>
+
+<code lang="c">/* Is there space to store another result? */
+
+osbool results_get_free_space(void)
+{
+	return (results_row_count &lt; RESULTS_MAX_ROWS) ? TRUE : FALSE;
+}</code>
+
+
+<code lang="c">static void win_set_menu(wimp_w w, wimp_menu *menu, wimp_pointer *pointer)
+{
+	if (menu != win_menu)
+		return;
+
+	int places = calc_get_places();
+
+	menus_tick_entry(win_menu, WIN_MENU_DECIMAL1, places == 1);
+	menus_tick_entry(win_menu, WIN_MENU_DECIMAL2, places == 2);
+	menus_tick_entry(win_menu, WIN_MENU_DECIMAL3, places == 3);
+
+	osbool free_space = results_get_free_space();
+
+	menus_shade_entry(win_menu, WIN_MENU_STORE_RESULT, !free_space);
+}</code>
 
 
 
 
+<code lang="c">/* Menu Prepare event handler. */
+
+static void results_set_menu(wimp_w w, wimp_menu *menu, wimp_pointer *pointer)
+{
+	if (menu != results_menu)
+		return;
+
+	menus_shade_entry(results_menu, RESULTS_MENU_CLEAR, (results_row_count == 0) ? TRUE : FALSE);
+}</code>
+
+<code lang="c">event_add_window_menu_prepare(results_handle, results_set_menu);</code>
 
 
+<image id="fig-redraw-content-menus" file="redraw-content-menus.png" title="Shading the Store menu item when the Results are full"/>
+
+<download id="dl-redraw-content-menus" file="RedrawSetMenus" title="Updating Menu States" compatibility="none"/>
+
+
+<!-- is there any point mentioning transparent in the previous chapter? -->
+
+
+<!-- top = ((oy - redraw->clip.y1) - heading_height) / row_height; // if (top < 0) top = 0;
+bottom = ((oy - redraw->clip.y0) - heading_height) / row_height; -->
+
+
+
+<!-- Unlike Wimp_PlotIcon, all other plotting will be to screen coordinates. -->
 
 
 

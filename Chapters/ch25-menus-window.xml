@@ -350,9 +350,7 @@ menu_entry(win_menu, WIN_MENU_DECIMAL3, &quot;3 Decimal places&quot;, NULL);</co
 
 <code id="list-menus-window-set" lang="c" title="Updating the main menu ready for display">static void win_set_menu(void)
 {
-	int places;
-
-	places = calc_get_places();
+	int places = calc_get_places();
 
 	menus_tick_entry(win_menu, WIN_MENU_DECIMAL1, places == 1);
 	menus_tick_entry(win_menu, WIN_MENU_DECIMAL2, places == 2);
