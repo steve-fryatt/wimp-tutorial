@@ -114,7 +114,7 @@ ibar_initialise(main_application_sprite);
 win_initialise(sprites);
 results_initialise();</code>
 
-<p>We can open the new results window with the currently unused <mouse>Adjust</mouse>-click on our iconbar icon, and this can be achieved by updating the <function>ibar_mouse_click()</function> fuction within <file>c.ibar</file> as seen in <reference id="list-redraw-theory-ibar-click"/>.</p>
+<p>We can open the new results window with the currently unused <mouse>Adjust</mouse>-click on our iconbar icon, and this can be achieved by updating the <function>ibar_mouse_click()</function> function within <file>c.ibar</file> as seen in <reference id="list-redraw-theory-ibar-click"/>.</p>
 
 <code lang="c" id="list-redraw-theory-ibar-click" title="Opening the results window from the iconbar icon">/* Mouse Click event handler */
 
@@ -254,8 +254,8 @@ BadResultsTempl:Failed to load Results template</code>
 #define RESULTS_ICON_TITLE_AREA 5
 #define RESULTS_ICON_ROW_SHAPE 6
 #define RESULTS_ICON_ROW_SIDES 7
-#define RESULTS_ICON_ROW_ANGLES 8
-#define RESULTS_ICON_ROW_LENGTH 9
+#define RESULTS_ICON_ROW_INTERNAL_ANGLES 8
+#define RESULTS_ICON_ROW_SIDE_LENGTH 9
 #define RESULTS_ICON_ROW_PERIMETER 10
 #define RESULTS_ICON_ROW_AREA 11</code>
 
@@ -471,8 +471,8 @@ event_add_window_menu_selection(results_handle, results_menu_selection);</code>
 
 			results_plot_icon(RESULTS_ICON_ROW_SHAPE, icon_y0, icon_y1);
 			results_plot_icon(RESULTS_ICON_ROW_SIDES, icon_y0, icon_y1);
-			results_plot_icon(RESULTS_ICON_ROW_ANGLES, icon_y0, icon_y1);
-			results_plot_icon(RESULTS_ICON_ROW_LENGTH, icon_y0, icon_y1);
+			results_plot_icon(RESULTS_ICON_ROW_INTERNAL_ANGLES, icon_y0, icon_y1);
+			results_plot_icon(RESULTS_ICON_ROW_SIDE_LENGTH, icon_y0, icon_y1);
 			results_plot_icon(RESULTS_ICON_ROW_PERIMETER, icon_y0, icon_y1);
 			results_plot_icon(RESULTS_ICON_ROW_AREA, icon_y0, icon_y1);
 		}
@@ -575,8 +575,8 @@ while (more) {
 
 		results_plot_icon(RESULTS_ICON_ROW_SHAPE, icon_y0, icon_y1);
 		results_plot_icon(RESULTS_ICON_ROW_SIDES, icon_y0, icon_y1);
-		results_plot_icon(RESULTS_ICON_ROW_ANGLES, icon_y0, icon_y1);
-		results_plot_icon(RESULTS_ICON_ROW_LENGTH, icon_y0, icon_y1);
+		results_plot_icon(RESULTS_ICON_ROW_INTERNAL_ANGLES, icon_y0, icon_y1);
+		results_plot_icon(RESULTS_ICON_ROW_SIDE_LENGTH, icon_y0, icon_y1);
 		results_plot_icon(RESULTS_ICON_ROW_PERIMETER, icon_y0, icon_y1);
 		results_plot_icon(RESULTS_ICON_ROW_AREA, icon_y0, icon_y1);
 	}

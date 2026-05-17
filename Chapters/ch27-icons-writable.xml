@@ -108,7 +108,7 @@ enum calc_dimension {
 	CALC_DIMENSION_AREA
 };</code>
 
-<p>Over in <file>c.calc</file>, we will add a couple of global variables to allow us to track what calculations are required. We will be allowing the user to specify a value for one of the three dimensions in the list &ndash; length, perimiter or area &ndash; and then updating the other two values accordingly. To this end, we will use the <variable>calc_current_dimension</variable> to remember what type of value was most recently supplied, and hold the value itself in <variable>calc_current_dimension_size</variable>. The changes can be seen in <reference id="list-icons-writable-const"/>.</p>
+<p>Over in <file>c.calc</file>, we will add a couple of global variables to allow us to track what calculations are required. We will be allowing the user to specify a value for one of the three dimensions in the list &ndash; length, perimeter or area &ndash; and then updating the other two values accordingly. To this end, we will use the <variable>calc_current_dimension</variable> variable to remember what type of value was most recently supplied, and hold the value itself in <variable>calc_current_dimension_size</variable>. The changes can be seen in <reference id="list-icons-writable-const"/>.</p>
 
 <code id="list-icons-writable-const" lang="c" title="The constants and global variables used for calculations.">/* Constants. */
 
