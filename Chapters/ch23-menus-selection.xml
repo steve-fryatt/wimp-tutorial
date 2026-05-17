@@ -198,7 +198,7 @@ static void (*menu_current_callback)(wimp_menu *menu, wimp_selection *selection)
 
 <p>When the user selects an item from a menu, the Wimp will close the menu structure, which means that the two pointers that we hold (<variable>menu_current_menu</variable> and <variable>menu_current_callback</variable>) no longer have any purpose. We reset them both to <name>NULL</name>, so that they don&rsquo;t accidentally get used in the future. This leaves a question, though: what happens if the menu closes <em>without</em> the user making a selection?</p>
 
-<p>The answer is that the Wimp will send our task a <name>Message_MenusDeleted</name> to inform us that the menu is no longer visible. We can register a message handler for this using the code in <reference id="list-menus-selection-menu-deleted"/>.</p>
+<p>The answer is that the Wimp will send our task a <name>Message_MenusDeleted</name> to inform us that the menu is no longer visible. We can register a message handler for this using the code in <reference id="list-menus-selection-menu-deleted"/>. We will quickly explore it here, and return to look at it properly in <reference id="chap-user-messages"/>.</p>
 
 <code id="list-menus-selection-menu-deleted" lang="c" title="Handling Message_MenusDeleted messages">void menu_initialise(void)
 {

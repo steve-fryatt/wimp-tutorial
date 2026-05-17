@@ -2,7 +2,7 @@
 
 <!DOCTYPE xmlmanual SYSTEM "../wimp.dtd">
 
-<!-- Copyright 2020-2026, Stephen Fryatt (info@stevefryatt.org.uk)
+<!-- Copyright 2026, Stephen Fryatt (info@stevefryatt.org.uk)
    -
    - This file is part of Wimp Programming In C:
    -
@@ -220,7 +220,41 @@ MainMenu3:3 Decimal places</code>
 <section>
 <title>Requesting a redraw</title>
 
-<code lang="c">/* Force the redraw of a range of rows. */
+<p>If you have run the application as it exists in <reference id="dl-redraw-content-data"/>, you should have noticed that the contents of the <window>Results</window> window doesn&rsquo;t update when results are stored or cleared. Forcing the Wimp to redraw the window contents &ndash; which can be done by dragging another window over ours &ndash; has the desired effect, but clearly it would be better if our application could ask the Wimp to perform this refresh when the data changes.</p>
+
+<p>The Wimp provides us with the <swi>Wimp_ForceRedraw</swi> for exactly this kind of situation. As we noted in <reference id="chap-redraw-theory">the previous chapter</reference>, applications can&rsquo;t just plot new data to the screen when it becomes available; instead, they must follow a defined process:</p>
+
+<list type="ol">
+<li>Add the data into their internal data structure in the apprpropriate place,</li>
+<li>Work out where in their window that data will appear,</li>
+<li>Ask the Wimp to schedule a redraw of that part of the window, and then</li>
+<li>Wait for a redraw request to arrive through <name>Redraw_Window_Request</name> in the usual way.</li>
+</list>
+
+<p>There is a way to conflate steps 3 and 4 into one immediate update using the <swi>Wimp_UpdateWindow</swi> SWI, but this adds some complexity which isn&rsquo;t necessary for a lot of applications and so for now we&rsquo;ll stick with the easy option. If you find yourself writing a text editor, then it may be something to keep in mind. Also remember that if the new data falls in part of the window which isn&rsquo;t currently visible, the redraw request may not arrive until that changes.</p>
+
+<p>OSLib defines <function>wimp_force_redraw()</function> as follows:</p>
+
+<code lang="c">extern void wimp_force_redraw(
+	wimp_w w,
+	int x0,
+	int y0,
+	int x1,
+	int y1
+);</code>
+
+<p>The SWI takes five parameters: a window handle in <variable>w</variable> and then four coordinates in <variable>x0</variable>, <variable>y0</variable>, <variable>x1</variable> and <variable>y1</variable>. As we might expect, these are two sets of coordinate pairs which represent a space within the window&rsquo;s work area that we wish to be redrawn. They are calculated in the usual way, with <maths>x0</maths> and <maths>y0</maths> being inclusive of the required area, but <maths>x1</maths> and <maths>y1</maths> being exclusive.</p>
+
+<p>There are also a couple of magic numbers which can be passed in <variable>w</variable> to represent different areas of the screen.</p>
+
+<code lang="c">#define wimp_BACKGROUND	((wimp_w) 0xFFFFFFFFu)
+#define wimp_ICON_BAR	((wimp_w) 0xFFFFFFFEu)</code>
+
+<p>If we pass <name>wimp_ICON_BAR</name> then we can request a redraw of part of the iconbar so that we can update our application&rsquo;s icon. If we pass <name>wimp_BACKGROUND</name> then we are asking to redraw an arbitrary part of the screen, and the parameters <variable>x0</variable>, <variable>y0</variable>, <variable>x1</variable> and <variable>y1</variable> represent absolute screen coordinates instead of anything in a window&rsquo;s work area.</p>
+
+<p>Armed with this new SWI, we can create a new <function>results_force_redraw_lines()</function> function as seen in <reference id="list-redraw-content-force"/>, which takes a couple of parameters representing the first and last rows in a range to be redrawn. Both <variable>r0</variable> and <variable>r1</variable> treat the title row as being row 0, so the first data row will be row 1.</p>
+
+<code lang="c" id="list-redraw-content-force" title="Using Wimp_ForceRedraw to refresh the window">/* Force the redraw of a range of rows. */
 
 static void results_force_redraw_lines(int r0, int r1)
 {
@@ -242,9 +276,21 @@ static void results_force_redraw_lines(int r0, int r1)
 	wimp_force_redraw(results_handle, left, bottom, right, top);
 }</code>
 
+<p>There is a lot of similarity with the code that we have in our redraw loop: we calculate <variable>row_height</variable> from the title row icon templates, and then use this to calculate <variable>top</variable> and <variable>bottom</variable>. By adding 1 to <variable>r1</variable>, we ensure that if we pass the same value in for <variable>r0</variable> and <variable>r1</variable>, then we will end up calculating the vertical offsets of the top and bottom of that single row.</p>
+
+<p>The <variable>left</variable> and <variable>right</variable> coordinates are found from the <maths>x0</maths> coordinate of the left-most icon in the title row (the <icon>Shape</icon> title) and the <maths>x1</maths> coordinate of the right-most icon (the <icon>Area</icon> title). Assuming that we have aligned all of the icons correctly in the template, this will encompass the full width to be redrawn &ndash; if some of this turns out to be out of sight, then the Wimp won&rsquo;t bother to include it in the subsequent redraw requests.</p>
+
+<p>With the area calculated, we can call the <function>wimp_force_redraw()</function> SWI to request the update. If you follow the code through, you&rsquo;ll see that after calling <swi>Wimp_ForceRedraw</swi> we return back to the poll loop through the event handler and then call <swi>Wimp_Poll</swi>. Having called <swi>Wimp_ForceRedraw</swi>, we can rely on the Wimp sending us a <name>Redraw_Window_Request</name> at a suitable point in the future if any of our window actually needs to be redrawn.</p>
+
+<p>With <function>results_force_redraw_lines()</function> defined, all that remains is to make use of it. To redraw lines of data when they are added, we can add the following call to the end of <function>results_store_current_data()</function>, after <variable>results_row_count</variable> has been incremented. This should force a redraw of the single line which has just been added to the data collection.</p>
+
 <code lang="c">results_force_redraw_lines(results_row_count, results_row_count);</code>
 
+<p>To redraw the window when the collected results are cleared, we can add the following line to the start of <function>results_clear_data()</function>, before <variable>results_row_count</variable> is reset to zero. This uses the ability of <function>results_force_redraw_lines()</function> to take a range of lines, and requests thet redraw of all of the lines which held results in one go.</p>
+
 <code lang="c">results_force_redraw_lines(1, results_row_count);</code>
+
+<p>With these changes in place, we should find that the application updates its window when changes are made, which gives a much more intuitive experience for the user! The full code can be found in <reference id="dl-redraw-content-force"/>.</p>
 
 <download id="dl-redraw-content-force" file="ForceRedraw" title="Requesting Screen Redraw" compatibility="none"/>
 </section>
@@ -252,13 +298,18 @@ static void results_force_redraw_lines(int r0, int r1)
 <section>
 <title>Updating menu states</title>
 
-<code lang="c">/* Is there space to store another result? */
+<p>While we&rsquo;re thinking about intuitiveness, there is one other small thing... RISC&nbsp;OS convention is that menu items are shaded when they aren&rsquo;t applicable, but if we store ten results and then try to store another, the <menu>Store result</menu> menu entry is still available but will be ignored. Since <file>c.win</file> is already registering its <function>win_set_menu()</function> function as an event handler for SFLib&rsquo;s <reference id="chap-menus-revisited">menu prepare event</reference> so that it can set the ticks against the decimal place options, we could also shade <menu>Store result</menu> if we knew that the <window>Results</window> window was full.</p>
+
+<p>To this end, we can add a public function to <file>c.results</file> in order to make this information available. If <function>results_get_free_space()</function> in <reference id="list-redraw-content-is-free"/> is called, it will return <name>TRUE</name> if there is space to add another result and <name>FALSE</name> otherwise.</p>
+
+<code lang="c" id="list-redraw-content-is-free" title="Share the availability of free results space">/* Is there space to store another result? */
 
 osbool results_get_free_space(void)
 {
 	return (results_row_count &lt; RESULTS_MAX_ROWS) ? TRUE : FALSE;
 }</code>
 
+<p>We can then update <function>win_set_menu()</function> to read this information and use SFLib&rsquo;s <function>menus_shade_entry()</function> function to update the menu entry as required &ndash; this is a much less contrived example of this function&rsquo;s use than when we introduced it back in <reference id="chap-menus-popup"/>!</p>
 
 <code lang="c">static void win_set_menu(wimp_w w, wimp_menu *menu, wimp_pointer *pointer)
 {
@@ -276,10 +327,9 @@ osbool results_get_free_space(void)
 	menus_shade_entry(win_menu, WIN_MENU_STORE_RESULT, !free_space);
 }</code>
 
+<p>To do the same thing for the <menu>Clear contents</menu> entry in the <window>Results</window> window menu, we can create a new <function>results_set_menu()</function> in <file>c.results</file> as seen in <reference id="list-redraw-content-results-prepare"/>. This shades the entry if <variable>results_row_count</variable> is zero, indicating that there are no results to be cleared.</p>
 
-
-
-<code lang="c">/* Menu Prepare event handler. */
+<code lang="c" id="list-redraw-content-results-prepare" title="Preparing the Results window menu">/* Menu Prepare event handler. */
 
 static void results_set_menu(wimp_w w, wimp_menu *menu, wimp_pointer *pointer)
 {
@@ -289,32 +339,19 @@ static void results_set_menu(wimp_w w, wimp_menu *menu, wimp_pointer *pointer)
 	menus_shade_entry(results_menu, RESULTS_MENU_CLEAR, (results_row_count == 0) ? TRUE : FALSE);
 }</code>
 
+<p>This new function can be registered as a menu prepare event handler from <function>results_initialise()</function>.</p>
+
 <code lang="c">event_add_window_menu_prepare(results_handle, results_set_menu);</code>
 
+<p>We should now find that the menu entries relating to the results shade out when appropriate, as seen in <reference id="fig-redraw-content-menus"/>. It's a small thing, but it follows the convention and saves the user wondering why a menu entry doesn&rsquo;t respond.</p>
 
 <image id="fig-redraw-content-menus" file="redraw-content-menus.png" title="Shading the Store menu item when the Results are full"/>
 
-<download id="dl-redraw-content-menus" file="RedrawSetMenus" title="Updating Menu States" compatibility="none"/>
+<p>The full application code with these changes included can be found in <reference id="dl-redraw-content-menus"/>.</p>
 
+<download id="dl-redraw-content-menus" file="RedrawSetMenus" title="Updating Menu States" compatibility="none"/> (in the context of a useless application)
 
-<!-- is there any point mentioning transparent in the previous chapter? -->
-
-
-<!-- top = ((oy - redraw->clip.y1) - heading_height) / row_height; // if (top < 0) top = 0;
-bottom = ((oy - redraw->clip.y0) - heading_height) / row_height; -->
-
-
-
-<!-- Unlike Wimp_PlotIcon, all other plotting will be to screen coordinates. -->
-
-
-
-
-
-
-
-
-
+<p>We now have a fully functional <window>Results</window> window (at least in the context of a useless application), but before moving on from window redraw we should note that we aren&rsquo;t restricted to using <swi>Wimp_PlotIcon</swi> to draw content in our windows. It&rsquo;s a very useful call, because it makes it easy to keep a standard &lsquo;look and feel&rsquo; to our window contents, but any graphics calls are available to us from within the redraw loop. In the next chapter, we will take a short diversion to look at some of these.</p>
 </section>
 </chapter>
 </manual>

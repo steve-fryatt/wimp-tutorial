@@ -2,7 +2,7 @@
 
 <!DOCTYPE xmlmanual SYSTEM "../wimp.dtd">
 
-<!-- Copyright 2020-2026, Stephen Fryatt (info@stevefryatt.org.uk)
+<!-- Copyright 2026, Stephen Fryatt (info@stevefryatt.org.uk)
    -
    - This file is part of Wimp Programming In C:
    -
@@ -248,8 +248,8 @@ BadResultsTempl:Failed to load Results template</code>
 
 #define RESULTS_ICON_TITLE_SHAPE 0
 #define RESULTS_ICON_TITLE_SIDES 1
-#define RESULTS_ICON_TITLE_ANGLES 2
-#define RESULTS_ICON_TITLE_LENGTH 3
+#define RESULTS_ICON_TITLE_INTERNAL_ANGLES 2
+#define RESULTS_ICON_TITLE_SIDE_LENGTH 3
 #define RESULTS_ICON_TITLE_PERIMETER 4
 #define RESULTS_ICON_TITLE_AREA 5
 #define RESULTS_ICON_ROW_SHAPE 6
@@ -506,7 +506,7 @@ event_add_window_menu_selection(results_handle, results_menu_selection);</code>
 <download id="dl-redraw-theory-all" file="RedrawAll" title="Redraw Everything" compatibility="none"/>
 </section>
 
-<section>
+<section id="sect-redraw-theory-origin">
 <title>Narrowing things down</title>
 
 <p>Whilst the code above undoubtedly works, it&rsquo;s hardly efficient as we&rsquo;re redrawing all ten lines in the window each time we&rsquo;re given a rectangle by the Wimp. This might be acceptable for just ten lines, but what if we had one hundred or one thousand? Or perhaps a complex, multi-page document?</p>

@@ -307,7 +307,7 @@ menu_entry(win_shape_menu, WIN_MENU_SHAPE_SQUARE, &quot;Square&quot;, NULL);</co
 			shape == WIN_SHAPE_SQUARE);
 }</code>
 
-<p>When run, this will result in the <menu>Triangle</menu> entry becoming unavailable if the current shape is a square, as seen in <reference id="fig-menus-popup-shade"/>. The code is avaulable in <reference id="dl-menus-popup-shade"/>.</p>
+<p>When run, this will result in the <menu>Triangle</menu> entry becoming unavailable if the current shape is a square, as seen in <reference id="fig-menus-popup-shade"/>. The code is available in <reference id="dl-menus-popup-shade"/>.</p>
 
 <image id="fig-menus-popup-shade" file="menus-popup-shade.png" title="Menu entries can be shaded to prevent the user choosing them"/>
 

@@ -1,0 +1,253 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+
+<!DOCTYPE xmlmanual SYSTEM "../wimp.dtd">
+
+<!-- Copyright 2026, Stephen Fryatt (info@stevefryatt.org.uk)
+   -
+   - This file is part of Wimp Programming In C:
+   -
+   -   http://www.stevefryatt.org.uk/risc-os/wimp-prog
+   -
+   - Licensed under the EUPL, Version 1.2 only (the "Licence");
+   - You may not use this work except in compliance with the
+   - Licence.
+   -
+   - You may obtain a copy of the Licence at:
+   -
+   -   http://joinup.ec.europa.eu/software/page/eupl
+   -
+   - Unless required by applicable law or agreed to in
+   - writing, software distributed under the Licence is
+   - distributed on an "AS IS" basis, WITHOUT WARRANTIES
+   - OR CONDITIONS OF ANY KIND, either express or implied.
+   -
+   - See the Licence for the specific language governing
+   - permissions and limitations under the Licence.
+  -->
+
+<manual xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="xmldoc.xsd" version="1.8.6">
+
+<!-- Chapter 33
+   -
+   - Window Redraw - Cookbook
+  -->
+
+<chapter id="chap-redraw-cookbook">
+<resources>
+<images>Chapter33</images>
+<downloads>Chapter33</downloads>
+</resources>
+<filename>window-redraw-cookbook.php</filename>
+<uri>window-redraw-cookbook</uri>
+<title>A Redraw Cookbook</title>
+
+<summary>Before we move on from window redraw, we need to look at some of the other things that we can do with it.</summary>
+
+<section>
+<p>In <reference id="chap-redraw-content">the previous chapter</reference> we got our <window>Results</window> window up and running, storing data and displaying it to the user. The use of <swi>Wimp_PlotIcon</swi> for drawing the window contents worked well for the tabular nature of the content, and we will be sticking with it going forward.</p>
+
+<p>There are, however, many other ways to plot window contents. The &lsquo;correct&rsquo; one to use will depend a lot on what that content is, how it appears to the user, and individual developer preference &ndash; and there will inevitably be more than one valid way to solve most problems. Before we move on to other things, we will have a quick look at some of these to show what else is possible and introduce a few useful tools to have on hand.</p>
+</section>
+
+<section>
+<title>Free textops</title>
+
+<p>If we need to plot text in a window, without the need for icons but using the desktop font, then <swi>Wimp_TextOp</swi> is a handy SWI to know about. It only arrived with the RiscPC in RISC&nbsp;OS&nbsp;3.50, so it isn&rsquo;t one for the retro audience, and the exact options on offer vary depending on which branch of the OS you&rsquo;re on. Despite that, the core functions are useful and, if you&rsquo;re requiring the Nested Wimp for any reason, it comes for free with that.</p>
+
+<p>Its purpose is to manipulate text in the desktop font, switching seamlessly between outline and System fonts. It&rsquo;s one of those SWIs which takes a reason code in <name>R0</name> to determine exactly what it does, and from the start we had three routines at our disposal.</p>
+
+<list type="ul">
+<li><swi>Wimp_TextOp&nbsp;0</swi> sets the foreground and background colours for the current <swi>Wimp_TextOp&nbsp;2</swi> plotting operation, using <maths>&amp;BBGGRR00</maths> values.</li>
+<li><swi>Wimp_TextOp&nbsp;1</swi> calculates the width of a string in OS&nbsp;units using the current desktop font, with the option to include only the first <maths>n</maths> characters. This can be very useful for working out how to wrap or truncate text.</li>
+<li><swi>Wimp_TextOp&nbsp;2</swi> plots a string to the screen in the current desktop font, and is the one that we&rsquo;re particularly interested in here. It must be used from within a redraw loop.</li>
+</list>
+
+<p>If you&rsquo;re targetting RISC&nbsp;OS&nbsp;5 or a recent version of Nested Wimp, then a couple of additional opcodes give useful variations on <swi>Wimp_TextOp&nbsp;1</swi>. <swi>Wimp_TextOp&nbsp;3</swi> will take a string and, given a width in OS&nbsp;units, return the offset in characters of the necessary split point if splitting at a specific character. <swi>Wimp_TextOp&nbsp;4</swi> will take a string and a width in OS&nbsp;units and, given a suitable output buffer, write a string which will fit the available space when truncated with three full stops or an ellipsis.</p>
+
+<p>For plotting our text, <swi>Wimp_TextOp&nbsp;2</swi> is the one that we need. OSLib defines it as follows:</p>
+
+<code lang="c">extern void wimptextop_paint(
+	wimptextop_paint_flags flags,
+	char const *s,
+	int x0,
+	int y0
+);</code>
+
+<p>It takes a pointer to a string <variable>*s</variable>, <variable>x0</variable> and <variable>y0</variable> coordinates of a point on the baseline of the text, and some <variable>flags</variable> to control how these values are interpreted.</p>
+
+<code lang="c">#define wimptextop_VJUSTIFY		((wimptextop_paint_flags) 0x10000000u)
+#define wimptextop_OFFSETS_FOR_REDRAW	((wimptextop_paint_flags) 0x20000000u)
+#define wimptextop_GIVEN_BASELINE	((wimptextop_paint_flags) 0x40000000u)
+#define wimptextop_RJUSTIFY		((wimptextop_paint_flags) 0x80000000u)</code>
+
+<p>The <name>wimptextop_GIVEN_BASELINE</name> flag indicates that the <variable>y0</variable> coordinate should be adjusted so that System and outline fonts appear to use the same vertical baseline. The text will usually be plotted left-aligned to <variable>x0</variable>, but if <name>wimptextop_RJUSTIFY</name> is set then it will be right-aligned to this point instead. The other two flags aren&rsquo;t mentioned in the <cite>Programmer&rsquo;s Reference Manual</cite> or the StrongHelp Manuals, but the <link href="https://www.riscosopen.org/wiki/documentation/show/Wimp_TextOp%202" external="true">ROOL Wiki</link> indicates that <name>wimptextop_VJUSTIFY</name> will cause the text to be vertically centred on <variable>y0</variable> while <name>wimptextop_OFFSETS_FOR_REDRAW</name> causes the supplied coordinates to be treated as work area coordinates in the same way as with <swi>Wimp_PlotIcon</swi>. It isn&rsquo;t clear on which versions of RISC&nbsp;OS these latter two flags can be used, but it may be fair to assume RISC&nbsp;OS&nbsp;5.</p>
+
+<p>Armed with this information, we can replace our <function>results_plot_icon()</function> function with a new <function>results_plot_text()</function> as seen in <reference id="list-redraw-cookbook-plot-text"/>. Superficially this looks similar to its predecessor, but there are some significant changes that we will need to investigate.</p>
+
+<code lang="c" id="list-redraw-cookbook-plot-text" title="Plotting text with Wimp_TextOp">#define RESULTS_LINE_INSET 12
+
+/* Plot a piece of text in the redraw loop. */
+
+static void results_plot_text(wimp_i icon, int ox, int y, char *text)
+{
+	wimptextop_paint_flags flags = wimptextop_GIVEN_BASELINE;
+	int x;
+
+	if (icon == RESULTS_ICON_TITLE_SHAPE) {
+		x = ox + results_icons[icon].extent.x0 + RESULTS_LINE_INSET;
+	} else {
+		x = ox + results_icons[icon].extent.x1 - RESULTS_LINE_INSET;
+		flags |= wimptextop_RJUSTIFY;
+	}
+
+	wimptextop_paint(flags, text, x, y + RESULTS_LINE_INSET);
+}</code>
+
+<p>The function still takes an <variable>icon</variable>, but instead of being a template to use with <swi>Wimp_PlotIcon</swi> this is now an icon from the title row to use for positioning. The <variable>ox</variable> parameter is the screen coordinate of the horizontal work area origin, which we introduced <reference  id="sect-redraw-theory-origin">a couple of chapters ago</reference>. On the other hand, <variable>y</variable> is the vertical screen coordinate of the bottom of the row in which we want to plot the text. Unlike <swi>Wimp_PlotIcon</swi>, <swi>Wimp_TextOp&nbsp;2</swi> works in screen coordinates unless we set the <name>wimptextop_VJUSTIFY</name> flag, and so there are no work area coordinates here. The <variable>*text</variable> parameter continues to point to the text to be plotted, however.</p>
+
+<p>We want to plot on a standard baseline, so we initialise <variable>flags</variable> with <name>wimptextop_GIVEN_BASELINE</name> set. All of the columns in our window are right-aligned apart from the <icon>Shape</icon> column, so we test for this and treat it as a special case. If we are in the left-aligned column, then</p>
+
+<code lang="c">x = ox + results_icons[icon].extent.x0 + 12;</code>
+
+<p>takes the screen coordinate of the horizontal work area origin <variable>ox</variable> and adds the work area coordinate of the left-hand side of the icon in order to get the screen coordinate of the left-hand side of the column. It then adds on a constant inset value to provide some margin around the text. For all of the other columns, which are right-aligned,</p>
+
+<code lang="c">x = ox + results_icons[icon].extent.x1 - RESULTS_LINE_INSET;
+flags |= wimptextop_RJUSTIFY;</code>
+
+<p>does a similar thing but uses the right-hand side of the icon in order to get the screen coordinate of the right-hand side of the column. The constant inset is subtracted so that it insets the text in from the right, and the <name>wimptextop_RJUSTIFY</name> flag is set to tell <swi>Wimp_TextOp&nbsp;2</swi> that we want to right-justify the text.</p>
+
+<p>Finally, <swi>Wimp_TextOp&nbsp;2</swi> is called &ndash; passing the <variable>flags</variable>, the <variable>text</variable> pointer and the <variable>x</variable> and <variable>y</variable> screen coordinates. An inset up is applied to the vertical coordinate, in a similar way that we did conditionally for the horizontal position.</p>
+
+<p>Returning to the redraw loop within <function>results_redraw()</function>, we have updated the code as follows.</p>
+
+<code lang="c">/* Redraw the window. */
+
+more = wimp_redraw_window(redraw);
+
+wimp_set_colour(wimp_COLOUR_BLACK);
+wimp_set_colour(wimp_COLOUR_VERY_LIGHT_GREY | 0x80u);
+
+while (more) {
+	ox = redraw-&gt;box.x0 - redraw-&gt;xscroll;
+	oy = redraw-&gt;box.y1 - redraw-&gt;yscroll;
+
+	top = (oy - redraw-&gt;clip.y1) / row_height;
+	if (top &lt; 1)
+		top = 1;
+
+	bottom = ((oy - redraw-&gt;clip.y0) - 1) / row_height;
+	if (bottom &gt; RESULTS_MAX_ROWS)
+		bottom = RESULTS_MAX_ROWS;
+
+	if (bottom &gt; results_row_count)
+		bottom = results_row_count;
+
+	for (int y = top; y &lt;= bottom; y++) {
+		y0 = oy - ((y + 1) * row_height);
+
+		results_plot_text(RESULTS_ICON_TITLE_SHAPE, ox, y0, results_rows[y - 1].shape);
+		results_plot_text(RESULTS_ICON_TITLE_SIDES, ox, y0, results_rows[y - 1].sides);
+		results_plot_text(RESULTS_ICON_TITLE_INTERNAL_ANGLES, ox, y0, results_rows[y - 1].internal_angle);
+		results_plot_text(RESULTS_ICON_TITLE_SIDE_LENGTH, ox, y0, results_rows[y - 1].side_length);
+		results_plot_text(RESULTS_ICON_TITLE_PERIMETER, ox, y0, results_rows[y - 1].perimeter);
+		results_plot_text(RESULTS_ICON_TITLE_AREA, ox, y0, results_rows[y - 1].area);
+	}
+
+	more = wimp_get_rectangle(redraw);
+}</code>
+
+<p>Before calling <swi>Wimp_TextOp&nbsp;2</swi>, we need to set the colours which it will use. These can be changed at any point if we need multi-colour text, but since we are only using black text we set this at the start of the redraw code. The use of anti-aliased outline fonts means that we must set the foreground <em>and</em> background colours. We can use either <swi>Wimp_TextOp&nbsp;0</swi> or <swi>Wimp_SetColour</swi> for this purpose, which OSLib defines as follows; we have chosen to use the latter.</p>
+
+<code lang="c">extern void wimptextop_set_colour(
+	os_colour fg,
+	os_colour bg
+);
+
+extern void wimp_set_colour(
+	wimp_colour colour
+);</code>
+
+<p>We need both the <variable>ox</variable> and <variable>oy</variable> screen coordinates for the work area origin, so we calculate these at the top of the outer redraw loop. For each line in the inner loop, we calculate the baseline <variable>y0</variable> in screen coordinates, and then pass <variable>ox</variable> and <variable>y0</variable> to each of the calls to <function>results_plot_text()</function>.</p>
+
+<p>If we compile the application with these changes, we can see from <reference id="fig-redraw-cookbook-textop"/> that there is little visible change.</p>
+
+<image id="fig-redraw-cookbook-textop" file="redraw-cookbook-textop.png" title="Plotting the rows of results using Wimp_TextOp"/>
+
+<p>There is at least one important difference, however. If we adjust some of the column widths as we have in <reference id="fig-redraw-cookbook-clipping"/>, we can see that when plotting the table cells using <swi>Wimp_PlotIcon</swi> (as the window at the back is doing) the Wimp clips the text for us when it would otherwise spill outside of the area allowed for it. The version which uses <swi>Wimp_TextOp&nbsp;2</swi> (the window in fromt) does not do this as standard: it would be up to us to use the other <swi>Wimp_TextOp</swi> calls to calculate the widths of the strings and truncate them as necessary before plotting them. This may be something which swings the decision towards one or the other of the approaches.</p>
+
+<image id="fig-redraw-cookbook-clipping" file="redraw-cookbook-clipping.png" title="Wimp_PlotIcon clips to the icon area, while Wimp_TextOp doesn&rsquo;t"/>
+
+<p>The full application code with these changes included can be found in <reference id="dl-redraw-cookbook-textop"/>.</p>
+
+<download id="dl-redraw-cookbook-textop" file="RedrawTextOp" title="Redraw With Wimp_TextOp" compatibility="none"/>
+</section>
+
+<section>
+<title>Going old-school</title>
+
+<p>There&rsquo;s no requirement to use any fancy Wimp calls to do the text plotting, however: it&rsquo;s possible to use <function>printf()</function> for the job. The Wimp issues a <code>VDU&nbsp;5</code> before exiting from <swi>Wimp_RedrawWindow</swi> and <swi>Wimp_GetRectangle</swi>, so we can position the graphics cursor with a call to <swi>OS_Plot</swi> and print the text that we need.</p>
+
+<code lang="c">/* Redraw the window. */
+
+more = wimp_redraw_window(redraw);
+
+wimp_set_colour(wimp_COLOUR_BLACK);
+
+while (more) {
+	ox = redraw-&gt;box.x0 - redraw-&gt;xscroll;
+	oy = redraw-&gt;box.y1 - redraw-&gt;yscroll;
+
+	top = (oy - redraw-&gt;clip.y1) / row_height;
+	if (top &lt; 1)
+		top = 1;
+
+	bottom = ((oy - redraw-&gt;clip.y0) - 1) / row_height;
+	if (bottom &gt; RESULTS_MAX_ROWS)
+		bottom = RESULTS_MAX_ROWS;
+
+	if (bottom &gt; results_row_count)
+		bottom = results_row_count;
+
+	for (int y = top; y &lt;= bottom; y++) {
+		y1 = oy - (y * row_height);
+
+		os_plot(os_MOVE_TO, ox + RESULTS_LINE_INSET, y1 - RESULTS_LINE_INSET);
+
+		printf(&quot;%-8s %4s  %14s  %14s  %14s  %14s&quot;,
+				results_rows[y - 1].shape,
+				results_rows[y - 1].sides,
+				results_rows[y - 1].internal_angle,
+				results_rows[y - 1].side_length,
+				results_rows[y - 1].perimeter,
+				results_rows[y - 1].area
+		);
+	}
+
+	more = wimp_get_rectangle(redraw);
+}</code>
+
+<p>The results seen in <reference id="fig-redraw-cookbook-printf"/> might look a bit nostalgic, but may well be all that is required for some quick-but-functional applications. It should be noted that some care was needed with spaces and field widths in the <function>printf()</function> format string in order to get the columns to line up &ndash; how robust this would be in different screen modes is another question! If we wanted more repeatability then we could, of course, make six calls to <function>printf()</function> for each line, and align each one to the appropriate column heading icon &ndash; but it&rsquo;s quickly becoming a lot of effort compared to the icons in <reference id="dl-redraw-content-menus"/> from the previous chapter.</p>
+
+<image id="fig-redraw-cookbook-printf" file="redraw-cookbook-printf.png" title="Outputting the results using printf()"/>
+
+<p>The full application code with <function>printf()</function> can be found in <reference id="dl-redraw-cookbook-printf"/>.</p>
+
+<download id="dl-redraw-cookbook-printf" file="RedrawPrintf" title="Redraw With printf()" compatibility="none"/>
+
+
+
+<!-- is there any point mentioning transparent in the previous chapter? -->
+
+
+
+
+
+
+
+
+
+
+
+</section>
+</chapter>
+</manual>

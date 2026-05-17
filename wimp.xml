@@ -100,5 +100,6 @@
 <chapter file="ch30-internationalisation.xml"/>
 <chapter file="ch31-window-redraw-theory.xml"/>
 <chapter file="ch32-window-redraw-content.xml"/>
-<chapter file="ch33-user-messages.xml"/>
+<chapter file="ch33-window-redraw-cookbook.xml"/>
+<chapter file="ch34-user-messages.xml"/>
 </manual>

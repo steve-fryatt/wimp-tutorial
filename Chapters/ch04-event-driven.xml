@@ -173,7 +173,7 @@ case wimp_USER_MESSAGE_RECORDED:
 </section>
 
 
-<section>
+<section id="sect-event-driven-dispatch">
 <title>Event dispatch</title>
 <p>It&rsquo;s not a great leap to go from here to full event handlers, but it will require assistance from a third-party library. Over the years, several libraries have been written which include a Wimp event dispatcher &ndash; which to use is a matter of personal preference and this guide will be sticking to SFLib (and in turn OSLib) throughout.</p>
 
@@ -186,13 +186,13 @@ case wimp_USER_MESSAGE_RECORDED:
 	return TRUE;
 }</code>
 
-<p>This shows the standard form of a message event handler for use with SFLib: it takes a single parameter <code>wimp_message *message</code>, which is a pointer to the message block that arrived from <swi>Wimp_Poll</swi>, and will be called whenever a <message>Message_Quit</message> is received by the application. The function returns <name>TRUE</name> to let SFLib know that the message has been handled: we&rsquo;ll see why when we look at messages in more detail later on.</p>
+<p>This shows the standard form of a message event handler for use with SFLib: it takes a single parameter <code>wimp_message *message</code>, which is a pointer to the message block that arrived from <swi>Wimp_Poll</swi>, and will be called whenever a <message>Message_Quit</message> is received by the application. The function returns <name>TRUE</name> to let SFLib know that the message has been handled: we&rsquo;ll see why when we look at messages in more detail later on in <reference id="chap-user-messages"/>.</p>
 
 <p>To let SFLib&rsquo;s event library know that this hander exists, we can add a line to <function>main_initialise()</function> to register it.</p>
 
 <code lang="c">event_add_message_handler(message_QUIT, EVENT_MESSAGE_INCOMING, main_message_quit);</code>
 
-<p>This call to <function>event_add_message_handler()</function> lets the event dispatcher know that <function>main_message_quit()</function> is interested in receiving details of <message>Message_Quit</message> &ndash; it&rsquo;s only possible to specify one message, but the same handler can be registered multiple times (with different messages in each) if required. <name>EVENT_MESSAGE_INCOMING</name> indicates that the handler is interested in messages arriving by both the <name>User_Message</name> and <name>User_Message_Recorded</name> events &ndash; again, we&rsquo;ll explain this properly later on.</p>
+<p>This call to <function>event_add_message_handler()</function> lets the event dispatcher know that <function>main_message_quit()</function> is interested in receiving details of <message>Message_Quit</message> &ndash; it&rsquo;s only possible to specify one message, but the same handler can be registered multiple times (with different messages in each) if required. <name>EVENT_MESSAGE_INCOMING</name> indicates that the handler is interested in messages arriving by both the <name>User_Message</name> and <name>User_Message_Recorded</name> events &ndash; again, we&rsquo;ll explain this properly later on in <reference id="chap-user-messages"/>.</p>
 
 <p>It&rsquo;s this call to <function>event_add_message_handler()</function> which replaces the tests in the original <code>switch</code> statement: the event dispatcher won&rsquo;t pass the event to <function>main_message_quit()</function> unless the exact requirements are met.</p>
 
@@ -297,4 +297,3 @@ static osbool main_message_quit(wimp_message *message)
 </section>
 </chapter>
 </manual>
-
