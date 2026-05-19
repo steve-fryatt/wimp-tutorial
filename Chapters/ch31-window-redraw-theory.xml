@@ -437,7 +437,7 @@ event_add_window_menu_selection(results_handle, results_menu_selection);</code>
 
 <p>Instead of hard-coding the height of a row, we can read it from our window definition. We will keep all eleven lines the same height for the sake of simplicity, so we can get the height of a row from any of the title icons by subtracting <maths>y0</maths> from <maths>y1</maths> &ndash; see <reference id="fig-redraw-theory-rows"/> for the arrangement. One assumption that we <em>will</em> make is that the <maths>y1</maths> work area coordinate of the title row is 0 OS&nbsp;units.</p>
 
-<code lang="c">row_height = results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y1 -
+<code lang="c">int row_height = results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y1 -
 		results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y0;</code>
 
 <p>With this information, we can calculate the <maths>y1</maths> coordinate for any of the rows in the window using</p>
@@ -453,11 +453,11 @@ event_add_window_menu_selection(results_handle, results_menu_selection);</code>
 <code id="list-redraw-theory-everything" lang="c" title="Redrawing all of the lines in the table">static void results_redraw(wimp_draw *redraw)
 {
 	osbool more;
-	int row_height, icon_y0, icon_y1;
+	int icon_y0, icon_y1;
 
 	/* Use the shape column to size the row heights. */
 
-	row_height = results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y1 -
+	int row_height = results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y1 -
 			results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y0;
 
 	/* Redraw the window. */
@@ -552,36 +552,47 @@ int bottom = -(redraw-&gt;clip.y0 - oy);</code>
 <code lang="c">int top = oy - redraw-&gt;clip.y1;
 int bottom = oy - redraw-&gt;clip.y0;</code>
 
-<p>If we then divide <variable>top</variable> and <variable>bottom</variable> by the <variable>row_height</variable>, we can add some vertical bounds checks to our redraw loop as follows. We&rsquo;re adjusting <variable>bottom</variable> by 1 before the division to allow for the fact that the <maths>y1</maths> values are exclusive.</p>
+<p>If we then divide <variable>top</variable> and <variable>bottom</variable> by the <variable>row_height</variable>, we can add some vertical bounds checks to our redraw loop as seen in <reference id="list-redraw-theory-bounded"/>. We&rsquo;re adjusting <variable>bottom</variable> by 1 before the division to allow for the fact that the <maths>y1</maths> values are exclusive.</p>
 
-<code lang="c">/* Redraw the window. */
+<code lang="c" id="list-redraw-theory-bounded" title="Redrawing just the lines that we need to">static void results_redraw(wimp_draw *redraw)
+{
+	osbool more;
+	int oy, top, bottom, icon_y0, icon_y1;
 
-more = wimp_redraw_window(redraw);
+	/* Use the shape column to size the row heights. */
 
-while (more) {
-	oy = redraw-&gt;box.y1 - redraw-&gt;yscroll;
+	int row_height = results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y1 -
+			results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y0;
 
-	top = (oy - redraw-&gt;clip.y1) / row_height;
-	if (top &lt; 1)
-		top = 1;
+	/* Redraw the window. */
 
-	bottom = ((oy - redraw-&gt;clip.y0) - 1) / row_height;
-	if (bottom &gt; RESULTS_MAX_ROWS)
-		bottom = RESULTS_MAX_ROWS;
+	more = wimp_redraw_window(redraw);
 
-	for (int y = top; y &lt;= bottom; y++) {
-		icon_y1 = -(y * row_height);
-		icon_y0 = icon_y1 - row_height;
+	while (more) {
+		oy = redraw-&gt;box.y1 - redraw-&gt;yscroll;
 
-		results_plot_icon(RESULTS_ICON_ROW_SHAPE, icon_y0, icon_y1);
-		results_plot_icon(RESULTS_ICON_ROW_SIDES, icon_y0, icon_y1);
-		results_plot_icon(RESULTS_ICON_ROW_INTERNAL_ANGLES, icon_y0, icon_y1);
-		results_plot_icon(RESULTS_ICON_ROW_SIDE_LENGTH, icon_y0, icon_y1);
-		results_plot_icon(RESULTS_ICON_ROW_PERIMETER, icon_y0, icon_y1);
-		results_plot_icon(RESULTS_ICON_ROW_AREA, icon_y0, icon_y1);
+		top = (oy - redraw-&gt;clip.y1) / row_height;
+		if (top &lt; 1)
+			top = 1;
+
+		bottom = ((oy - redraw-&gt;clip.y0) - 1) / row_height;
+		if (bottom &gt; RESULTS_MAX_ROWS)
+			bottom = RESULTS_MAX_ROWS;
+
+		for (int y = top; y &lt;= bottom; y++) {
+			icon_y1 = -(y * row_height);
+			icon_y0 = icon_y1 - row_height;
+
+			results_plot_icon(RESULTS_ICON_ROW_SHAPE, icon_y0, icon_y1);
+			results_plot_icon(RESULTS_ICON_ROW_SIDES, icon_y0, icon_y1);
+			results_plot_icon(RESULTS_ICON_ROW_INTERNAL_ANGLES, icon_y0, icon_y1);
+			results_plot_icon(RESULTS_ICON_ROW_SIDE_LENGTH, icon_y0, icon_y1);
+			results_plot_icon(RESULTS_ICON_ROW_PERIMETER, icon_y0, icon_y1);
+			results_plot_icon(RESULTS_ICON_ROW_AREA, icon_y0, icon_y1);
+		}
+
+		more = wimp_get_rectangle(redraw);
 	}
-
-	more = wimp_get_rectangle(redraw);
 }</code>
 
 <p>We are including the title row in our calculation as row 0, but since we will never need to redraw this we bounds-check <variable>top</variable> to make sure that we never start redrawing before row 1. Any attempt to redraw <em>just</em> row 0 will drop out in the <code>for&nbsp;()</code> loop, because <variable>bottom</variable> will be 0 in that situation. We similarly check that <variable>bottom</variable> never goes above the maximum number of rows that we can have.</p>

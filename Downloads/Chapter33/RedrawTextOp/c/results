@@ -175,11 +175,11 @@ void results_store_current_data(char *shape)
 static void results_redraw(wimp_draw *redraw)
 {
 	osbool more;
-	int ox, oy, row_height, top, bottom, y0;
+	int ox, oy, top, bottom, y0;
 
 	/* Use the shape column to size the row heights. */
 
-	row_height = results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y1 -
+	int row_height = results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y1 -
 			results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y0;
 
 	/* Redraw the window. */

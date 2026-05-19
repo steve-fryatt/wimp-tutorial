@@ -25,10 +25,8 @@
  * File: results.c
  */
 
-#include <stdio.h>
-
-#include "oslib/os.h"
 #include "oslib/wimp.h"
+#include "oslib/os.h"
 
 #include "sflib/errors.h"
 #include "sflib/event.h"
@@ -43,12 +41,20 @@
 
 /* Results Window Icons. */
 
+#define RESULTS_TITLE_ICONS 6
+
 #define RESULTS_ICON_TITLE_SHAPE 0
 #define RESULTS_ICON_TITLE_SIDES 1
 #define RESULTS_ICON_TITLE_INTERNAL_ANGLES 2
 #define RESULTS_ICON_TITLE_SIDE_LENGTH 3
 #define RESULTS_ICON_TITLE_PERIMETER 4
 #define RESULTS_ICON_TITLE_AREA 5
+#define RESULTS_ICON_ROW_SHAPE 6
+#define RESULTS_ICON_ROW_SIDES 7
+#define RESULTS_ICON_ROW_INTERNAL_ANGLES 8
+#define RESULTS_ICON_ROW_SIDE_LENGTH 9
+#define RESULTS_ICON_ROW_PERIMETER 10
+#define RESULTS_ICON_ROW_AREA 11
 
 /* Results Menu Entries. */
 
@@ -61,10 +67,6 @@
 /* The size of a results test field. */
 
 #define RESULTS_VALUE_LEN 16
-
-/* An inset to apply when plotting text into the rows. */
-
-#define RESULTS_LINE_INSET 12
 
 /* Line Data Structure */
 
@@ -90,6 +92,7 @@ static struct results_data results_rows[RESULTS_MAX_ROWS];
 
 static void results_clear_data(void);
 static void results_redraw(wimp_draw *redraw);
+static void results_plot_icon(wimp_i icon, int y0, int y1, char *text);
 static void results_force_redraw_lines(int r0, int r1);
 static void results_menu_selection(wimp_w window, wimp_menu *menu, wimp_selection *selection);
 static void results_set_menu(wimp_w w, wimp_menu *menu, wimp_pointer *pointer);
@@ -107,6 +110,8 @@ void results_initialise(void)
 		error_msgs_report_error("BadResultsTempl");
 		return;
 	}
+
+	window_definition->icon_count = RESULTS_TITLE_ICONS;
 
 	results_icons = window_definition->icons;
 
@@ -177,51 +182,67 @@ void results_store_current_data(char *shape)
 static void results_redraw(wimp_draw *redraw)
 {
 	osbool more;
-	int ox, oy, top, bottom, y1;
+	int ox, oy, top, bottom, icon_y0, icon_y1;
 
 	/* Use the shape column to size the row heights. */
 
 	int row_height = results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y1 -
 			results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y0;
 
+	int row_x0 = results_icons[RESULTS_ICON_TITLE_SHAPE].extent.x0;
+	int row_x1 = results_icons[RESULTS_ICON_TITLE_AREA].extent.x1;
+
 	/* Redraw the window. */
 
 	more = wimp_redraw_window(redraw);
-
-	wimp_set_colour(wimp_COLOUR_BLACK);
 
 	while (more) {
 		ox = redraw->box.x0 - redraw->xscroll;
 		oy = redraw->box.y1 - redraw->yscroll;
 
 		top = (oy - redraw->clip.y1) / row_height;
-		if (top < 1)
-			top = 1;
+		if (top < 0)
+			top = 0;
 
 		bottom = ((oy - redraw->clip.y0) - 1) / row_height;
 		if (bottom > RESULTS_MAX_ROWS)
 			bottom = RESULTS_MAX_ROWS;
 
-		if (bottom > results_row_count)
-			bottom = results_row_count;
-
 		for (int y = top; y <= bottom; y++) {
-			y1 = oy - (y * row_height);
+			icon_y1 = -(y * row_height);
+			icon_y0 = icon_y1 - row_height;
 
-			os_plot(os_MOVE_TO, ox + RESULTS_LINE_INSET, y1 - RESULTS_LINE_INSET);
+			wimp_set_colour((y % 2) ? wimp_COLOUR_WHITE : wimp_COLOUR_LIGHT_GREY);
 
-			printf("%-8s %4s  %14s  %14s  %14s  %14s",
-					results_rows[y - 1].shape,
-					results_rows[y - 1].sides,
-					results_rows[y - 1].internal_angle,
-					results_rows[y - 1].side_length,
-					results_rows[y - 1].perimeter,
-					results_rows[y - 1].area
-			);
+			os_plot(os_MOVE_TO, ox + row_x0, oy + icon_y0);
+			os_plot(os_PLOT_TO | os_PLOT_RECTANGLE, ox + row_x1, oy + icon_y1);
+
+			if (y < 1 || y > results_row_count)
+				continue;
+
+			results_plot_icon(RESULTS_ICON_ROW_SHAPE, icon_y0, icon_y1, results_rows[y - 1].shape);
+			results_plot_icon(RESULTS_ICON_ROW_SIDES, icon_y0, icon_y1, results_rows[y - 1].sides);
+			results_plot_icon(RESULTS_ICON_ROW_INTERNAL_ANGLES, icon_y0, icon_y1, results_rows[y - 1].internal_angle);
+			results_plot_icon(RESULTS_ICON_ROW_SIDE_LENGTH, icon_y0, icon_y1, results_rows[y - 1].side_length);
+			results_plot_icon(RESULTS_ICON_ROW_PERIMETER, icon_y0, icon_y1, results_rows[y - 1].perimeter);
+			results_plot_icon(RESULTS_ICON_ROW_AREA, icon_y0, icon_y1, results_rows[y - 1].area);
 		}
 
 		more = wimp_get_rectangle(redraw);
 	}
+}
+
+/* Plot an icon in the redraw loop. */
+
+static void results_plot_icon(wimp_i icon, int y0, int y1, char *text)
+{
+	results_icons[icon].extent.y0 = y0;
+	results_icons[icon].extent.y1 = y1;
+
+	if (results_icons[icon].flags & (wimp_ICON_TEXT | wimp_ICON_INDIRECTED))
+		results_icons[icon].data.indirected_text.text = text;
+
+	wimp_plot_icon(results_icons + icon);
 }
 
 /* Force the redraw of a range of rows. */

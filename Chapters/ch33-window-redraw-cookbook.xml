@@ -118,42 +118,53 @@ flags |= wimptextop_RJUSTIFY;</code>
 
 <p>Finally, <swi>Wimp_TextOp&nbsp;2</swi> is called &ndash; passing the <variable>flags</variable>, the <variable>text</variable> pointer and the <variable>x</variable> and <variable>y</variable> screen coordinates. An inset up is applied to the vertical coordinate, in a similar way that we did conditionally for the horizontal position.</p>
 
-<p>Returning to the redraw loop within <function>results_redraw()</function>, we have updated the code as follows.</p>
+<p>Returning to the redraw loop within <function>results_redraw()</function>, we have updated the code as seen in <reference id="list-redraw-cookbook-textop"/>.</p>
 
-<code lang="c">/* Redraw the window. */
+<code lang="c" id="list-redraw-cookbook-textop" title="Calling redraw_plot_text() from the redraw loop">static void results_redraw(wimp_draw *redraw)
+{
+	osbool more;
+	int ox, oy, top, bottom, y0;
 
-more = wimp_redraw_window(redraw);
+	/* Use the shape column to size the row heights. */
 
-wimp_set_colour(wimp_COLOUR_BLACK);
-wimp_set_colour(wimp_COLOUR_VERY_LIGHT_GREY | 0x80u);
+	int row_height = results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y1 -
+			results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y0;
 
-while (more) {
-	ox = redraw-&gt;box.x0 - redraw-&gt;xscroll;
-	oy = redraw-&gt;box.y1 - redraw-&gt;yscroll;
+	/* Redraw the window. */
 
-	top = (oy - redraw-&gt;clip.y1) / row_height;
-	if (top &lt; 1)
-		top = 1;
+	more = wimp_redraw_window(redraw);
 
-	bottom = ((oy - redraw-&gt;clip.y0) - 1) / row_height;
-	if (bottom &gt; RESULTS_MAX_ROWS)
-		bottom = RESULTS_MAX_ROWS;
+	wimp_set_colour(wimp_COLOUR_BLACK);
+	wimp_set_colour(wimp_COLOUR_VERY_LIGHT_GREY | 0x80u);
 
-	if (bottom &gt; results_row_count)
-		bottom = results_row_count;
+	while (more) {
+		ox = redraw-&gt;box.x0 - redraw-&gt;xscroll;
+		oy = redraw-&gt;box.y1 - redraw-&gt;yscroll;
 
-	for (int y = top; y &lt;= bottom; y++) {
-		y0 = oy - ((y + 1) * row_height);
+		top = (oy - redraw-&gt;clip.y1) / row_height;
+		if (top &lt; 1)
+			top = 1;
 
-		results_plot_text(RESULTS_ICON_TITLE_SHAPE, ox, y0, results_rows[y - 1].shape);
-		results_plot_text(RESULTS_ICON_TITLE_SIDES, ox, y0, results_rows[y - 1].sides);
-		results_plot_text(RESULTS_ICON_TITLE_INTERNAL_ANGLES, ox, y0, results_rows[y - 1].internal_angle);
-		results_plot_text(RESULTS_ICON_TITLE_SIDE_LENGTH, ox, y0, results_rows[y - 1].side_length);
-		results_plot_text(RESULTS_ICON_TITLE_PERIMETER, ox, y0, results_rows[y - 1].perimeter);
-		results_plot_text(RESULTS_ICON_TITLE_AREA, ox, y0, results_rows[y - 1].area);
+		bottom = ((oy - redraw-&gt;clip.y0) - 1) / row_height;
+		if (bottom &gt; RESULTS_MAX_ROWS)
+			bottom = RESULTS_MAX_ROWS;
+
+		if (bottom &gt; results_row_count)
+			bottom = results_row_count;
+
+		for (int y = top; y &lt;= bottom; y++) {
+			y0 = oy - ((y + 1) * row_height);
+
+			results_plot_text(RESULTS_ICON_TITLE_SHAPE, ox, y0, results_rows[y - 1].shape);
+			results_plot_text(RESULTS_ICON_TITLE_SIDES, ox, y0, results_rows[y - 1].sides);
+			results_plot_text(RESULTS_ICON_TITLE_INTERNAL_ANGLES, ox, y0, results_rows[y - 1].internal_angle);
+			results_plot_text(RESULTS_ICON_TITLE_SIDE_LENGTH, ox, y0, results_rows[y - 1].side_length);
+			results_plot_text(RESULTS_ICON_TITLE_PERIMETER, ox, y0, results_rows[y - 1].perimeter);
+			results_plot_text(RESULTS_ICON_TITLE_AREA, ox, y0, results_rows[y - 1].area);
+		}
+
+		more = wimp_get_rectangle(redraw);
 	}
-
-	more = wimp_get_rectangle(redraw);
 }</code>
 
 <p>Before calling <swi>Wimp_TextOp&nbsp;2</swi>, we need to set the colours which it will use. These can be changed at any point if we need multi-colour text, but since we are only using black text we set this at the start of the redraw code. The use of anti-aliased outline fonts means that we must set the foreground <em>and</em> background colours. We can use either <swi>Wimp_TextOp&nbsp;0</swi> or <swi>Wimp_SetColour</swi> for this purpose, which OSLib defines as follows; we have chosen to use the latter.</p>
@@ -185,45 +196,56 @@ extern void wimp_set_colour(
 <section>
 <title>Going old-school</title>
 
-<p>There&rsquo;s no requirement to use any fancy Wimp calls to do the text plotting, however: it&rsquo;s possible to use <function>printf()</function> for the job. The Wimp issues a <code>VDU&nbsp;5</code> before exiting from <swi>Wimp_RedrawWindow</swi> and <swi>Wimp_GetRectangle</swi>, so we can position the graphics cursor with a call to <swi>OS_Plot</swi> and print the text that we need.</p>
+<p>There&rsquo;s no requirement to use any fancy Wimp calls to do the text plotting, however: it&rsquo;s possible to use <function>printf()</function> for the job as shown in <reference id="list-redraw-cookbook-printf"/>. The Wimp issues a <code>VDU&nbsp;5</code> before exiting from <swi>Wimp_RedrawWindow</swi> and <swi>Wimp_GetRectangle</swi>, so we can position the graphics cursor with a call to <swi>OS_Plot</swi> and print the text that we need.</p>
 
-<code lang="c">/* Redraw the window. */
+<code lang="c" id="list-redraw-cookbook-printf" title="Redrawing the text using printf()">static void results_redraw(wimp_draw *redraw)
+{
+	osbool more;
+	int ox, oy, top, bottom, y1;
 
-more = wimp_redraw_window(redraw);
+	/* Use the shape column to size the row heights. */
 
-wimp_set_colour(wimp_COLOUR_BLACK);
+	int row_height = results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y1 -
+			results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y0;
 
-while (more) {
-	ox = redraw-&gt;box.x0 - redraw-&gt;xscroll;
-	oy = redraw-&gt;box.y1 - redraw-&gt;yscroll;
+	/* Redraw the window. */
 
-	top = (oy - redraw-&gt;clip.y1) / row_height;
-	if (top &lt; 1)
-		top = 1;
+	more = wimp_redraw_window(redraw);
 
-	bottom = ((oy - redraw-&gt;clip.y0) - 1) / row_height;
-	if (bottom &gt; RESULTS_MAX_ROWS)
-		bottom = RESULTS_MAX_ROWS;
+	wimp_set_colour(wimp_COLOUR_BLACK);
 
-	if (bottom &gt; results_row_count)
-		bottom = results_row_count;
+	while (more) {
+		ox = redraw-&gt;box.x0 - redraw-&gt;xscroll;
+		oy = redraw-&gt;box.y1 - redraw-&gt;yscroll;
 
-	for (int y = top; y &lt;= bottom; y++) {
-		y1 = oy - (y * row_height);
+		top = (oy - redraw-&gt;clip.y1) / row_height;
+		if (top &lt; 1)
+			top = 1;
 
-		os_plot(os_MOVE_TO, ox + RESULTS_LINE_INSET, y1 - RESULTS_LINE_INSET);
+		bottom = ((oy - redraw-&gt;clip.y0) - 1) / row_height;
+		if (bottom &gt; RESULTS_MAX_ROWS)
+			bottom = RESULTS_MAX_ROWS;
 
-		printf(&quot;%-8s %4s  %14s  %14s  %14s  %14s&quot;,
-				results_rows[y - 1].shape,
-				results_rows[y - 1].sides,
-				results_rows[y - 1].internal_angle,
-				results_rows[y - 1].side_length,
-				results_rows[y - 1].perimeter,
-				results_rows[y - 1].area
-		);
+		if (bottom &gt; results_row_count)
+			bottom = results_row_count;
+
+		for (int y = top; y &lt;= bottom; y++) {
+			y1 = oy - (y * row_height);
+
+			os_plot(os_MOVE_TO, ox + RESULTS_LINE_INSET, y1 - RESULTS_LINE_INSET);
+
+			printf(&quot;%-8s %4s  %14s  %14s  %14s  %14s&quot;,
+					results_rows[y - 1].shape,
+					results_rows[y - 1].sides,
+					results_rows[y - 1].internal_angle,
+					results_rows[y - 1].side_length,
+					results_rows[y - 1].perimeter,
+					results_rows[y - 1].area
+			);
+		}
+
+		more = wimp_get_rectangle(redraw);
 	}
-
-	more = wimp_get_rectangle(redraw);
 }</code>
 
 <p>The results seen in <reference id="fig-redraw-cookbook-printf"/> might look a bit nostalgic, but may well be all that is required for some quick-but-functional applications. It should be noted that some care was needed with spaces and field widths in the <function>printf()</function> format string in order to get the columns to line up &ndash; how robust this would be in different screen modes is another question! If we wanted more repeatability then we could, of course, make six calls to <function>printf()</function> for each line, and align each one to the appropriate column heading icon &ndash; but it&rsquo;s quickly becoming a lot of effort compared to the icons in <reference id="dl-redraw-content-menus"/> from the previous chapter.</p>
@@ -233,7 +255,81 @@ while (more) {
 <p>The full application code with <function>printf()</function> can be found in <reference id="dl-redraw-cookbook-printf"/>.</p>
 
 <download id="dl-redraw-cookbook-printf" file="RedrawPrintf" title="Redraw With printf()" compatibility="none"/>
+</section>
 
+
+<section>
+<title>Horizontal lines</title>
+
+<p>Going back to the code that we had in <reference id="dl-redraw-content-menus"/>, one thing that we might want to do is rule off each of the lines in the table so that our eye can follow more easily. We can do this using the line drawing capabilities of <swi>OS_Plot</swi>, as shown in <reference id="list-redraw-cookbook-rules"/>.</p>
+
+<code lang="c" id="list-redraw-cookbook-rules" title="Plotting rule-off lines between the data">static void results_redraw(wimp_draw *redraw)
+{
+	osbool more;
+	int ox, oy, top, bottom, icon_y0, icon_y1;
+
+	/* Use the shape column to size the row heights. */
+
+	int row_height = results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y1 -
+			results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y0;
+
+	int row_x0 = results_icons[RESULTS_ICON_TITLE_SHAPE].extent.x0;
+	int row_x1 = results_icons[RESULTS_ICON_TITLE_AREA].extent.x1;
+
+	/* Redraw the window. */
+
+	more = wimp_redraw_window(redraw);
+
+	while (more) {
+		ox = redraw-&gt;box.x0 - redraw-&gt;xscroll;
+		oy = redraw-&gt;box.y1 - redraw-&gt;yscroll;
+
+		top = (oy - redraw-&gt;clip.y1) / row_height;
+		if (top &lt; 1)
+			top = 1;
+
+		bottom = ((oy - redraw-&gt;clip.y0) - 1) / row_height;
+		if (bottom &gt; RESULTS_MAX_ROWS)
+			bottom = RESULTS_MAX_ROWS;
+
+		if (bottom &gt; results_row_count)
+			bottom = results_row_count;
+
+		for (int y = top; y &lt;= bottom; y++) {
+			icon_y1 = -(y * row_height);
+			icon_y0 = icon_y1 - row_height;
+
+			wimp_set_colour(wimp_COLOUR_VERY_DARK_GREY);
+
+			os_plot(os_MOVE_TO, ox + row_x0, oy + icon_y0);
+			os_plot(os_PLOT_TO, ox + row_x1, oy + icon_y0);
+
+			results_plot_icon(RESULTS_ICON_ROW_SHAPE, icon_y0, icon_y1, results_rows[y - 1].shape);
+			results_plot_icon(RESULTS_ICON_ROW_SIDES, icon_y0, icon_y1, results_rows[y - 1].sides);
+			results_plot_icon(RESULTS_ICON_ROW_INTERNAL_ANGLES, icon_y0, icon_y1, results_rows[y - 1].internal_angle);
+			results_plot_icon(RESULTS_ICON_ROW_SIDE_LENGTH, icon_y0, icon_y1, results_rows[y - 1].side_length);
+			results_plot_icon(RESULTS_ICON_ROW_PERIMETER, icon_y0, icon_y1, results_rows[y - 1].perimeter);
+			results_plot_icon(RESULTS_ICON_ROW_AREA, icon_y0, icon_y1, results_rows[y - 1].area);
+		}
+
+		more = wimp_get_rectangle(redraw);
+	}
+}</code>
+
+<p>To do the plotting, we will need both the horizontal and vertical position of the work area origin in terms of screen coordinates, stored in <variable>ox</variable> and <variable>oy</variable> respectively. We also calculate the left- and right-hand extents of the work area by reading the positions of the end icons, storing these in <variable>row_x0</variable> and <variable>row_x1</variable>.</p>
+
+<p>Plotting a line below each of the rows is done with a call to <swi>Wimp_SetColour</swi> to select the foreground colour, followed by a couple of calls to <swi>OS_Plot</swi> to move and then plot the line. In each case, the screen coordinates for the plotting are calculated by adding the work area coordinates to the screen coordinates of the work area origin in the usual way. The result can be seen in <reference id="fig-redraw-cookbook-rules"/>.</p>
+
+<image id="fig-redraw-cookbook-rules" file="redraw-cookbook-rules.png" title="Drawing rule-offs with OS_Plot"/>
+
+<p>The full code is available in <reference id="dl-redraw-cookbook-rule"/>.</p>
+
+<download id="dl-redraw-cookbook-rule" file="RedrawRules" title="Redraw With Rule-Offs" compatibility="none"/>
+
+</section>
+
+<section>
+<title>Background effects</title>
 
 
 <!-- is there any point mentioning transparent in the previous chapter? -->
@@ -246,7 +342,7 @@ while (more) {
 
 
 
-
+<download id="dl-redraw-cookbook-rect" file="RedrawRectangles" title="Redraw With Rectangles" compatibility="none"/>
 
 </section>
 </chapter>
