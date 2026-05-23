@@ -102,4 +102,5 @@
 <chapter file="ch32-window-redraw-content.xml"/>
 <chapter file="ch33-window-redraw-cookbook.xml"/>
 <chapter file="ch34-user-messages.xml"/>
+<chapter file="ch35-interactive-help.xml"/>
 </manual>

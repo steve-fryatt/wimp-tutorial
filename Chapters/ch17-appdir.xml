@@ -205,7 +205,7 @@ RMEnsure SharedCLibrary 5.34 Error This application requires SharedCLibrary 5.34
 
 <p>There is one last thing that we should probably add to our <file>!Run</file> file at this stage, before moving on. We noted <reference id="chap-appdir-runfile">above</reference> that the <variable>Obey$Dir</variable> system variable was set to point to the folder containing the file, but didn&rsquo;t elaborate. In fact, this is something that the system does whenever an Obey file is executed, and it will remain set until either we reach the end of <file>!Run</file> or we call another Obey file from within it.</p>
 
-<p>This is OK for now, but could be a problem if we needed to find our <file>!ExamplApp</file> folder again later. By then, another Obey file could have been run by the system (perhaps another application has been launched by the user), and this would clearly change <variable>Obey$Dir</variable> and lose the reference that we had been relying on. To protect against this, we can set our own system variable with the value contained in <variable>Obey$Dir</variable>, so that we can always find our way back. By convention (see <reference id="chap-appdir-allocation"/> below), we can create and use any variables whose names start with &ldquo;ExamplApp$&rdquo;, so we can add a line to our <file>!Run</file> file as follows:</p>
+<p>This is OK for now, but could be a problem if we needed to find our <file>!ExamplApp</file> folder again later. By then, another Obey file could have been run by the system (perhaps another application has been launched by the user), and this would clearly change <variable>Obey$Dir</variable> and lose the reference that we had been relying on. To protect against this, we can set our own system variable with the value contained in <variable>Obey$Dir</variable>, so that we can always find our way back. By convention (see <reference id="sect-appdir-allocation"/> below), we can create and use any variables whose names start with &ldquo;ExamplApp$&rdquo;, so we can add a line to our <file>!Run</file> file as follows:</p>
 
 <code lang="obey">Set ExamplApp$Dir &lt;Obey$Dir&gt;</code>
 
@@ -249,7 +249,7 @@ Run &lt;Obey$Dir&gt;.!RunImage</code>
 <download id="dl-appdir-sprite" file="AppSprite" title="Using Our Own Application Icon" compatibility="none"/>
 </section>
 
-<section id="chap-appdir-allocation">
+<section id="sect-appdir-allocation">
 <title>A note about allocation</title>
 
 <p>So far in this tutorial, we have named our application &ldquo;ExamplApp&rdquo; without any real consideration of the consequences. Until this chapter that&rsquo;s not been a problem, but now things have changed a bit: we&rsquo;ve added some sprites, with the names &ldquo;!examplapp&rdquo; and &ldquo;sm!examplapp&rdquo; into the Wimp Sprite Pool, and set an <variable>ExamplApp$Dir</variable> system variable.</p>

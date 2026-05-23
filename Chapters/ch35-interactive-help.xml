@@ -1,0 +1,126 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+
+<!DOCTYPE xmlmanual SYSTEM "../wimp.dtd">
+
+<!-- Copyright 2026, Stephen Fryatt (info@stevefryatt.org.uk)
+   -
+   - This file is part of Wimp Programming In C:
+   -
+   -   http://www.stevefryatt.org.uk/risc-os/wimp-prog
+   -
+   - Licensed under the EUPL, Version 1.2 only (the "Licence");
+   - You may not use this work except in compliance with the
+   - Licence.
+   -
+   - You may obtain a copy of the Licence at:
+   -
+   -   http://joinup.ec.europa.eu/software/page/eupl
+   -
+   - Unless required by applicable law or agreed to in
+   - writing, software distributed under the Licence is
+   - distributed on an "AS IS" basis, WITHOUT WARRANTIES
+   - OR CONDITIONS OF ANY KIND, either express or implied.
+   -
+   - See the Licence for the specific language governing
+   - permissions and limitations under the Licence.
+  -->
+
+<manual xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="xmldoc.xsd" version="1.8.6">
+
+<!-- Chapter 35
+   -
+   - Interactive Help
+  -->
+
+<chapter id="chap-int-help">
+<resources>
+<images>Chapter35</images>
+<downloads>Chapter35</downloads>
+</resources>
+<filename>interactive-help.php</filename>
+<uri>interactive-help</uri>
+<title>Interactive Help</title>
+
+<summary>Let&rsquo;s continue with our dive into user messages by looking at how the RISC&nbsp;OS provides assistance to its users.</summary>
+
+<section>
+<p>Many RISC&nbsp;OS users will be familiar with the Interactive Help system, provided by the built-in <cite>Help</cite> application and a number of other third-party alternatives. With a suitable application loaded, moving the mouse around the desktop will reveal details about the things under the pointer. Some of the details provided by the Filer can be seen in <reference id="fig-int-help-filer"/>.</p>
+
+<image id="fig-int-help-filer" file="int-help-filer.png" title="The Filer can provide interactive help to the user"/>
+
+<p>Since <cite>Help</cite> is just another application, the interactive help system is implemented through user messages. This also means that other applications which may want to provide an alternative to <cite>Help</cite> can simply send the same messages out. Unlike the messages that we have met so far, however, our application will need to be able to respond to the ones that it receives from <cite>Help</cite>.</p>
+</section>
+
+<section>
+<title>Requests for help</title>
+
+<p>In order to provide interactive help to users, <cite>Help</cite> tracks the position of the mouse pointer on the screen and &ndash; based on some internal calculation of &ldquo;when the thing under the pointer has changed&rdquo; &ndash; it will send a <name>Message_HelpRequest</name> to the owner of the object at the pointer. If the recipient can supply help for that object, it should do so by sending back a <name>Message_RelpReply</name> in response.</p>
+
+<p>To add support for interactive help to our application, we will need to add some code to listen out for <name>Message_HelpRequest</name> and respond in the correct way. We will put this into a new code module formed of a pair of new <file>c.inthlp</file> and <file>h.inthlp</file> files, so we start by adding these to the list of objects in the Makefile in a way that should be familiar.</p>
+
+<code lang="makefile">OBJS = calc main menu inthlp ibar win results</code>
+
+<p>For now, all that we need to do is to initialise the new code module from within <function>main_initialise()</function>, so we define an interface for this in <file>c.inthlp</file> as seen in <reference id="list-int-help-inthlp-h"/>.</p>
+
+<code lang="c" file="h.inthlp" id="list-int-help-inthlp-h" title="The header file to define the interactive help module&rsquo;s interface"> /**
+ * Example 35.1
+ *
+ * (c) Stephen Fryatt, 2026
+ *
+ * File: inthlp.h
+ */
+
+#ifndef EXAMPLEAPP_INTHLP
+#define EXAMPLEAPP_INTHLP
+
+/* Interactive Help Initialisation. */
+
+void inthlp_initialise(void);
+
+#endif</code>
+
+<p>We can then add a call to this function from within <function>main_initialise()</function> in <file>c.main</file> as seen in <reference id="list-int-help-main-initialise"/>.</p>
+
+<code lang="c" id="list-int-help-main-initialise" title="Initialising the interactive help module">/* Initialise the program modules. */
+
+calc_initialise();
+inthlp_initialise();
+ibar_initialise(main_application_sprite);
+win_initialise(sprites);
+results_initialise();</code>
+
+<p>
+
+
+
+<p>OSLib defines the messages relating to the interactive help protocol in the <file>oslib/help.h</file> header, as follows:</p>
+
+<code lang="c">struct help_message_request {
+	os_coord		pos;
+	wimp_mouse_state	buttons;
+	wimp_w			w;
+	wimp_i			i;
+};
+
+struct help_full_message_request {
+	wimp_MESSAGE_HEADER_MEMBERS
+	os_coord		pos;
+	wimp_mouse_state	buttons;
+	wimp_w			w;
+	wimp_i			i;
+};</code>
+
+
+
+
+
+<code lang="messtrans"># Interactive Help
+
+HelpMessage:This is an example help message from an Example application!</code>
+
+
+
+
+</section>
+</chapter>
+</manual>

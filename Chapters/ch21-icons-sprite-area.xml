@@ -44,7 +44,7 @@
 <summary>Sprites don&rsquo;t need text in them, and we can do more if we escape the Wimp Sprite Pool.</summary>
 
 <section>
-<p>Up to this point in our exploration, all of the sprite icons that we&rsquo;ve used have taken their sprites from the Wimp Sprite Pool. In many cases this is a valid thing to do: where a sprite is one that is provided by the Wimp for all applications to use, or where we provide a sprite that other applications might need to use (for example our application sprite, and the icons for any filetypes that we might register). However, as we saw in <reference id="chap-appdir-allocation"/>, any sprites that we add to the pool need to have their names covered by a name allocation &ndash; and for many sprites that we might wish to use in our icons, there won&rsquo;t be a valid reason for requesting one.</p>
+<p>Up to this point in our exploration, all of the sprite icons that we&rsquo;ve used have taken their sprites from the Wimp Sprite Pool. In many cases this is a valid thing to do: where a sprite is one that is provided by the Wimp for all applications to use, or where we provide a sprite that other applications might need to use (for example our application sprite, and the icons for any filetypes that we might register). However, as we saw in <reference id="sect-appdir-allocation"/>, any sprites that we add to the pool need to have their names covered by a name allocation &ndash; and for many sprites that we might wish to use in our icons, there won&rsquo;t be a valid reason for requesting one.</p>
 
 <p>Fortunately, there&rsquo;s another option: to create our own sprite area and store our sprites in this. There are several advantages to this approach, in addition to not polluting the namespace in the Wimp Sprite Pool. The memory allocated to our own area can be freed when our application exits, whereas sprites that we add to the Wimp Sprite Pool are stuck there consuming space until the machine is rebooted. There is no risk of name clashes, or of our affecting (not to mention being affected <em>by</em>) other applications.</p>
 </section>
@@ -413,7 +413,7 @@ enum win_shape {
 	int		size;
 } indirected_sprite;</code>
 
-<p>Unlike the other two types of indirected icon, indirected sprite icons do not have a validation string pointer. Instead, that part of the block contains the <variable>*area</variable> pointer, which tells the Wimp where the sprite can be found. If it is set to 1, the sprite can be found in the Wimp Sprite Pool &ndash; and OSLib defines a <name>wimpspriteop_AREA</name> constant for us to use.</p> 
+<p>Unlike the other two types of indirected icon, indirected sprite icons do not have a validation string pointer. Instead, that part of the block contains the <variable>*area</variable> pointer, which tells the Wimp where the sprite can be found. If it is set to 1, the sprite can be found in the Wimp Sprite Pool &ndash; and OSLib defines a <name>wimpspriteop_AREA</name> constant for us to use.</p>
 
 <code lang="c">#define wimpspriteop_AREA	((osspriteop_area *) 0x1u)</code>
 
