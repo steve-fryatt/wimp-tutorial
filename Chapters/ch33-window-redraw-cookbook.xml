@@ -266,22 +266,18 @@ extern void wimp_set_colour(
 <code lang="c" id="list-redraw-cookbook-rules" title="Plotting rule-off lines between the data">static void results_redraw(wimp_draw *redraw)
 {
 	osbool more;
-	int ox, oy, top, bottom, icon_y0, icon_y1;
+	int oy, top, bottom, icon_y0, icon_y1;
 
 	/* Use the shape column to size the row heights. */
 
 	int row_height = results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y1 -
 			results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y0;
 
-	int row_x0 = results_icons[RESULTS_ICON_TITLE_SHAPE].extent.x0;
-	int row_x1 = results_icons[RESULTS_ICON_TITLE_AREA].extent.x1;
-
 	/* Redraw the window. */
 
 	more = wimp_redraw_window(redraw);
 
 	while (more) {
-		ox = redraw-&gt;box.x0 - redraw-&gt;xscroll;
 		oy = redraw-&gt;box.y1 - redraw-&gt;yscroll;
 
 		top = (oy - redraw-&gt;clip.y1) / row_height;
@@ -301,8 +297,8 @@ extern void wimp_set_colour(
 
 			wimp_set_colour(wimp_COLOUR_VERY_DARK_GREY);
 
-			os_plot(os_MOVE_TO, ox + row_x0, oy + icon_y0);
-			os_plot(os_PLOT_TO, ox + row_x1, oy + icon_y0);
+			os_plot(os_MOVE_TO, redraw-&gt;clip.x0, oy + icon_y0);
+			os_plot(os_PLOT_TO, redraw-&gt;clip.x1, oy + icon_y0);
 
 			results_plot_icon(RESULTS_ICON_ROW_SHAPE, icon_y0, icon_y1, results_rows[y - 1].shape);
 			results_plot_icon(RESULTS_ICON_ROW_SIDES, icon_y0, icon_y1, results_rows[y - 1].sides);
@@ -316,9 +312,9 @@ extern void wimp_set_colour(
 	}
 }</code>
 
-<p>To do the plotting, we will need both the horizontal and vertical position of the work area origin in terms of screen coordinates, stored in <variable>ox</variable> and <variable>oy</variable> respectively. We also calculate the left- and right-hand extents of the work area by reading the positions of the end icons, storing these in <variable>row_x0</variable> and <variable>row_x1</variable>.</p>
+<p>To do the plotting, we will need to know the horizontal and vertical positions of the ends of the lines in terms of screen coordinates. We can calculate the vertical position using the work area coordinate <variable>icon_y0</variable>, which is the baseline of the icons in the row, and adding it to the vertical work area origin <variable>oy</variable>. We could calculate the horizontal positions in a similar way, using the <maths>x0</maths> and <maths>x1</maths> coordinates of the work area extent and the horizontal work area origin <variable>ox</variable> that we have used in previous examples; there is, however, an easier option. For any given redraw rectangle that the Wimp supplies to us, we only need to plot a line from its left hand side to its right hand side. We can therefore use the clip rectangle, which the Wimp gives us in screen coordinates within the <name>wimp_draw</name> structure, and plot from <variable>redraw-&gt;clip.x0</variable> to <variable>redraw-&gt;clip.x1</variable>.</p>
 
-<p>Plotting a line below each of the rows is done with a call to <swi>Wimp_SetColour</swi> to select the foreground colour, followed by a couple of calls to <swi>OS_Plot</swi> to move and then plot the line. In each case, the screen coordinates for the plotting are calculated by adding the work area coordinates to the screen coordinates of the work area origin in the usual way. The result can be seen in <reference id="fig-redraw-cookbook-rules"/>.</p>
+<p>Actually plotting the line below each of the rows is done with a call to <swi>Wimp_SetColour</swi> to select the foreground colour, followed by a couple of calls to <swi>OS_Plot</swi> to move and then plot the line. In each case, the screen coordinates for the plotting are calculated by adding the work area coordinates to the screen coordinates of the work area origin in the usual way. The result can be seen in <reference id="fig-redraw-cookbook-rules"/>.</p>
 
 <image id="fig-redraw-cookbook-rules" file="redraw-cookbook-rules.png" title="Drawing rule-offs with OS_Plot"/>
 
@@ -331,19 +327,95 @@ extern void wimp_set_colour(
 <section>
 <title>Background effects</title>
 
+<p>So far, we have been allowing the Wimp to draw the work area in the window&rsquo;s background colour for. A lot of the time this is useful and, in the case of windows whose background is <name>wimp_COLOUR_VERY_LIGHT_GREY</name>, it means that we get the standard textured window background plooted for us with no effort on our part. However, what if we wanted to do something like alternating coloured backgrounds for the rows?</p>
+
+<p>If we set the window background to <name>wimp_COLOUR_TRANSPARENT</name> then, rather than making the window background transparent (which would be a neat trick), we actually tell the Wimp that we don&rsquo;t want the work area cleared and filled for us: we can see this in action in <reference id="fig-redraw-cookbook-transparent"/>, when updating the template in <cite>WinEd</cite>. We can now plot the background for ourselves, which saves any flicker being caused by the Wimp clearing and plotting its bacground, followed by our application plotting over it in a different colours in quick succession. A colour of <name>wimp_COLOUR_TRANSPARENT</name> will also work for windows which have their <name>wimp_WINDOW_AUTO_REDRAW</name> flag set, but it&rsquo;s not much use in that situation as <em>nothing</em> clears the background!</p>
+
+<image id="fig-redraw-cookbook-transparent" file="redraw-cookbook-transparent.png" title="Setting the window work area background to transparent"/>
+
+<p>The code to redraw the window can be seen in <reference id="list-redraw-cookbook-rect"/>. There should be few surprises after the previous examples, but there are still a few points of interest.</p>
+
+<code lang="c" id="list-redraw-cookbook-rect" title="Adding highlighting to alternate rows">static void results_redraw(wimp_draw *redraw)
+{
+	osbool more;
+	int oy, top, bottom, icon_y0, icon_y1;
+
+	/* Use the shape column to size the row heights. */
+
+	int row_height = results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y1 -
+			results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y0;
+
+	/* Redraw the window. */
+
+	more = wimp_redraw_window(redraw);
+
+	while (more) {
+		oy = redraw-&gt;box.y1 - redraw-&gt;yscroll;
+
+		top = (oy - redraw-&gt;clip.y1) / row_height;
+		if (top &lt; 0)
+			top = 0;
+
+		bottom = ((oy - redraw-&gt;clip.y0) - 1) / row_height;
+		if (bottom &gt; RESULTS_MAX_ROWS)
+			bottom = RESULTS_MAX_ROWS;
+
+		for (int y = top; y &lt;= bottom; y++) {
+			icon_y1 = -(y * row_height);
+			icon_y0 = icon_y1 - row_height;
+
+			wimp_set_colour((y % 2) ? wimp_COLOUR_WHITE : wimp_COLOUR_LIGHT_GREY);
+
+			os_plot(os_MOVE_TO, redraw-&gt;clip.x0, oy + icon_y0);
+			os_plot(os_PLOT_TO | os_PLOT_RECTANGLE, redraw-&gt;clip.x1 - 1, oy + icon_y1 - 1);
+
+			if (y &lt; 1 || y &gt; results_row_count)
+				continue;
+
+			results_plot_icon(RESULTS_ICON_ROW_SHAPE, icon_y0, icon_y1, results_rows[y - 1].shape);
+			results_plot_icon(RESULTS_ICON_ROW_SIDES, icon_y0, icon_y1, results_rows[y - 1].sides);
+			results_plot_icon(RESULTS_ICON_ROW_INTERNAL_ANGLES, icon_y0, icon_y1, results_rows[y - 1].internal_angle);
+			results_plot_icon(RESULTS_ICON_ROW_SIDE_LENGTH, icon_y0, icon_y1, results_rows[y - 1].side_length);
+			results_plot_icon(RESULTS_ICON_ROW_PERIMETER, icon_y0, icon_y1, results_rows[y - 1].perimeter);
+			results_plot_icon(RESULTS_ICON_ROW_AREA, icon_y0, icon_y1, results_rows[y - 1].area);
+		}
+
+		more = wimp_get_rectangle(redraw);
+	}
+}</code>
+
+<p>The first thing to note is that with no work area background being plotted by the Wimp, we will now need to redraw the space behind the title icons: to achieve this, we change the bounds checks at the start of the <code>while&nbsp;()</code> loop. The test which clipped the minimum value of <variable>top</variable> to 1 has been changed so that the value can go down to 0: this way, the title row will be included in the <code>for&nbsp;()</code> loop. At the other end, we need to plot a background for all of the empty rows below the data, so the comparison of <variable>bottom</variable> with <variable>results_row_count</variable> has been removed.</p>
+
+<p>The rectangle plotting is done using <swi>OS_Plot</swi>, in a similar way to that in which we plotted the rule-off lines before. The call to <swi>Wimp_SetColour</swi> now selects one of <name>wimp_COLOUR_WHITE</name> or <name>wimp_COLOUR_LIGHT_GREY</name> depending on whether the row number is odd or even. After the background has been drawn, we do a bounds check on <variable>y</variable> to skip the icon plotting if we are outside the range of the available data. The result can be seen in <reference id="fig-redraw-cookbook-rect"/>.</p>
+
+<image id="fig-redraw-cookbook-rect" file="redraw-cookbook-rect.png" title="Plotting alternate row highlights"/>
+
+<p>There are a couple of other potential &lsquo;gotchas&rsquo; in the code. If we look closely at the calls to <swi>OS_Plot</swi>, we can see that there are a couple of extra &minus;1s in the second line.</p>
+
+<code lang="c">os_plot(os_MOVE_TO, redraw-&gt;clip.x0, oy + icon_y0);
+os_plot(os_PLOT_TO | os_PLOT_RECTANGLE, redraw-&gt;clip.x1 - 1, oy + icon_y1 - 1);</code>
+
+<p>Unlike the Wimp, <swi>OS_Plot</swi> <em>includes</em> the <maths>x1</maths> and <maths>y1</maths> coordinate in its plotting area, so we need to make sure that we compensate for the fact that the coordinates from the Wimp <em>exclude</em> these pixels. If we remove these, then we can see in <reference id="fig-redraw-cookbook-artifacts"/> that the edges of the rows can move up and down by a pixel if the edges of the clip window interact with them. It&rsquo;s always a good idea to check the operation of redraw code carefully, including when other windows or menus are dragged over the window one pixel at a time.</p>
+
+<image id="fig-redraw-cookbook-artifacts" file="redraw-cookbook-artifacts.png" title="Redraw artifacts in the window"/>
+
+<p>The other thing that we can see in <reference id="fig-redraw-cookbook-artifacts"/> is that the anti-aliasing of the text on the grey rows isn&rsquo;t quite right. It turns out that, due to the changes made to the Wimp to make themes look good, we can&rsquo;t rely on being able to control the background colour of a font when plotting it in an unfilled icon &ndash; we could set the background colour of the icon definition before calling <swi>Wimp_PlotIcon</swi>, but there is no guarantee that it will be respected. In practice, if we will be plotting text over different colour background like this, we would probably be better off using <swi>Wimp_TextOp&nbsp;2</swi> instead of <swi>Wimp_PlotIcon</swi> and setting the background colour correctly.</p>
+
+<!-- (or, at least, to 0xffu &ndash; which is all that will fit into the byte allocated in the <name>wimp_window</name> structure for a <name>wimp_colour</name> member) then -->
 
 <!-- is there any point mentioning transparent in the previous chapter? -->
 
-
-
-
-
-
-
-
+<p>With that said, the code for the example can be found in <reference id="dl-redraw-cookbook-rect"/>.</p>
 
 <download id="dl-redraw-cookbook-rect" file="RedrawRectangles" title="Redraw With Rectangles" compatibility="none"/>
+</section>
 
+<section>
+<title>Use your imagination</title>
+
+<p>Window redraw is a huge topic, and there are many things that can be done by an application to display content within its windows. There is no way that we can cover everything here, but hopefully the last three chapters have given you some inspiration and the building blocks and tools needed to implement that code that you need for your own projects.</p>
+
+<p>For now, though, we must leave the vast topic of window redraw behind and move on to something completely different.</p>
 </section>
 </chapter>
 </manual>

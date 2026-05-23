@@ -182,22 +182,18 @@ void results_store_current_data(char *shape)
 static void results_redraw(wimp_draw *redraw)
 {
 	osbool more;
-	int ox, oy, top, bottom, icon_y0, icon_y1;
+	int oy, top, bottom, icon_y0, icon_y1;
 
 	/* Use the shape column to size the row heights. */
 
 	int row_height = results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y1 -
 			results_icons[RESULTS_ICON_TITLE_SHAPE].extent.y0;
 
-	int row_x0 = results_icons[RESULTS_ICON_TITLE_SHAPE].extent.x0;
-	int row_x1 = results_icons[RESULTS_ICON_TITLE_AREA].extent.x1;
-
 	/* Redraw the window. */
 
 	more = wimp_redraw_window(redraw);
 
 	while (more) {
-		ox = redraw->box.x0 - redraw->xscroll;
 		oy = redraw->box.y1 - redraw->yscroll;
 
 		top = (oy - redraw->clip.y1) / row_height;
@@ -214,8 +210,8 @@ static void results_redraw(wimp_draw *redraw)
 
 			wimp_set_colour((y % 2) ? wimp_COLOUR_WHITE : wimp_COLOUR_LIGHT_GREY);
 
-			os_plot(os_MOVE_TO, ox + row_x0, oy + icon_y0);
-			os_plot(os_PLOT_TO | os_PLOT_RECTANGLE, ox + row_x1, oy + icon_y1);
+			os_plot(os_MOVE_TO, redraw->clip.x0, oy + icon_y0);
+			os_plot(os_PLOT_TO | os_PLOT_RECTANGLE, redraw->clip.x1 -1, oy + icon_y1 -1);
 
 			if (y < 1 || y > results_row_count)
 				continue;
