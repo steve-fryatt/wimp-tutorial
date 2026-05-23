@@ -395,7 +395,7 @@ extern void wimp_set_colour(
 <code lang="c">os_plot(os_MOVE_TO, redraw-&gt;clip.x0, oy + icon_y0);
 os_plot(os_PLOT_TO | os_PLOT_RECTANGLE, redraw-&gt;clip.x1 - 1, oy + icon_y1 - 1);</code>
 
-<p>Unlike the Wimp, <swi>OS_Plot</swi> <em>includes</em> the <maths>x1</maths> and <maths>y1</maths> coordinate in its plotting area, so we need to make sure that we compensate for the fact that the coordinates from the Wimp <em>exclude</em> these pixels. If we remove these, then we can see in <reference id="fig-redraw-cookbook-artifacts"/> that the edges of the rows can move up and down by a pixel if the edges of the clip window interact with them. It&rsquo;s always a good idea to check the operation of redraw code carefully, including when other windows or menus are dragged over the window one pixel at a time.</p>
+<p>Unlike the Wimp, <swi>OS_Plot</swi> <em>includes</em> the <maths>x1</maths> and <maths>y1</maths> coordinates in its plotting area, so we need to make sure that we compensate for the fact that the coordinates from the Wimp <em>exclude</em> these pixels. If we remove these, then we can see in <reference id="fig-redraw-cookbook-artifacts"/> that the edges of the rows can move up and down by a pixel if the edges of the clip window interact with them. It&rsquo;s always a good idea to check the operation of redraw code carefully, including when other windows or menus are dragged over the window one pixel at a time.</p>
 
 <image id="fig-redraw-cookbook-artifacts" file="redraw-cookbook-artifacts.png" title="Redraw artifacts in the window"/>
 
@@ -413,7 +413,7 @@ os_plot(os_PLOT_TO | os_PLOT_RECTANGLE, redraw-&gt;clip.x1 - 1, oy + icon_y1 - 1
 <section>
 <title>Use your imagination</title>
 
-<p>Window redraw is a huge topic, and there are many things that can be done by an application to display content within its windows. There is no way that we can cover everything here, but hopefully the last three chapters have given you some inspiration and the building blocks and tools needed to implement that code that you need for your own projects.</p>
+<p>Window redraw is a huge topic, and there are many things that can be done by an application to display content within its windows. There is no way that we can cover everything here, but hopefully the last three chapters have given you some inspiration and both the building blocks and tools needed to implement the code that you need for your own projects.</p>
 
 <p>For now, though, we must leave the vast topic of window redraw behind and move on to something completely different.</p>
 </section>
