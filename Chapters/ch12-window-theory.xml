@@ -235,7 +235,7 @@ window_definition.highlight_bg = wimp_COLOUR_CREAM;</code>
 
 <p>There&rsquo;s no problem experimenting with these values, but with the advent of modern versions of the Wimp which use textured bitmaps to make up the window furniture, an increasing number of the colours have little or no effect because the parts of the window that they control are no longer visible &ndash; being hidden behind the new window tool sprite designs.</p>
 
-<p>There&rsquo;s also the important fact that <em>all</em> of these colours are tightly defined by the <cite>Style Guide</cite>, which is supplied electronically with the DDE and can be <link href="https://www.riscosopen.org/content/sales/style-guide">purchased from RISC&nbsp;OS Open</link> in printed form. The <em>only</em> value which should be changed in normal cases is <variable>window_definition.work_bg</variable> &ndash; and even this should remain as <name>wimp_COLOUR_VERY_LIGHT_GREY</name> most of the time (including in <em>all</em> dialogue boxes).</p>
+<p>There&rsquo;s also the important fact that <em>all</em> of these colours are tightly defined by the <cite>Style Guide</cite>, which is supplied electronically with the DDE, is available for <link href="https://www.riscosopen.org/content/downloads/common" external="true">download as a PDF from RISC&nbsp;OS Open</link> and can also be <link href="https://www.riscosopen.org/content/sales/style-guide">purchased from them in printed form</link>. The <em>only</em> value which should be changed in normal cases is <variable>window_definition.work_bg</variable> &ndash; and even this should remain as <name>wimp_COLOUR_VERY_LIGHT_GREY</name> most of the time (including in <em>all</em> dialogue boxes).</p>
 
 <p>Aside from its colours, the window&rsquo;s appearance can be changed by using some of the <intro>window flags</intro> and <intro>extended window flags</intro> stored in <variable>window_definition.flags</variable> and <variable>window_definition.extra_flags</variable> respectively:</p>
 
@@ -249,7 +249,7 @@ window_definition.extra_flags = 0;</code>
 
 <p>The flags control many aspects of a window&rsquo;s behaviour, and OSLib defines constants for all of them; as with all flags words, the required individual bits for the two fields are bitwise-ORed together to produce the numbers to be stored in the variables. Flags which are bits within <variable>window_definition.flags</variable> have the type <name>wimp_window_flags</name>; those which are bits within <variable>window_definition.extra_flags</variable> have the type <name>wimp_extra_window_flags</name>. For now we&rsquo;re not setting any exended window flags, so the code above sets <variable>window_definition.extra_flags</variable> to be zero.</p>
 
-<p>One window flag which must <em>always</em> be included is <name>wimp_WINDOW_NEW_FORMAT</name>:</p> 
+<p>One window flag which must <em>always</em> be included is <name>wimp_WINDOW_NEW_FORMAT</name>:</p>
 
 <code lang="c">#define wimp_WINDOW_NEW_FORMAT			((wimp_window_flags) 0x80000000u)</code>
 
@@ -364,4 +364,3 @@ strncpy(window_definition.title_data.text, &quot;Hello World!&quot;, 12);</code>
 </section>
 </chapter>
 </manual>
-
