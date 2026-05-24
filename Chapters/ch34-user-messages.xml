@@ -69,7 +69,7 @@
 
 typedef struct wimp_message wimp_message;</code>
 
-<p>Sticking with the &lsquo;almost&rsquo; for the time being, all user messages come with a standard 20 byte header but can optionally hold additional data after this within the <variable>reserved</variable> array of bytes. To assist the recipient with decoding the contents, the <variable>size</variable> member holds the number of bytes which are in use in the message, including the 20 byte header.</p>
+<p>Sticking with the &lsquo;almost&rsquo; for the time being, all user messages come with a standard 20 byte header but can optionally hold additional data after this within the <variable>reserved</variable> array of bytes. To assist the recipient with decoding the contents, the <variable>size</variable> member holds the number of bytes which are in use in the message, including the 20 byte header, rounded up to a complete number of 4-byte words.</p>
 
 <p>The <variable>action</variable> member contains a numeric code which identifies the <intro>action</intro> of the message which has been received. Of the messages that we have met so far, action <name>Message_Quit</name> has the value 0x0u, action <name>Message_SubmenuWarning</name> has the value 0x400C0u and action <name>Message_MenusDeleted</name> has the value 0x400C9u. Thankfully, it&rsquo;s rare to need to remember these, as OSLib defines constants for many of the actions &ndash; for example:</p>
 
