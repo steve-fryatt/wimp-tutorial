@@ -44,9 +44,9 @@
 <summary>We can break free from the limitations of icons by drawing our own windows!</summary>
 
 <section>
-<p>So far in our investigations into the Wimp, we have managed to create all of our windows using just icons. For many purposes &ndash; especially standard dialogue boxes &ndash; this is fine: it&rsquo;s what icons are designed to do, and leaving the Wimp to handle all of the work of drawing the window contents on to the screen is a lot easier than trying to do it ourselves.</p>
+<p>So far in our investigations into the Wimp, we have managed to create all of our windows using just icons. For a lot of purposes &ndash; especially standard dialogue boxes &ndash; this is fine: it&rsquo;s what icons are designed to do, and leaving the Wimp to handle all of the work of drawing the window contents on to the screen is a lot easier than trying to do it ourselves.</p>
 
-<p>Depending on the type of applications that they work on, many developers may find that this approach is fine for the vast majority &ndash; if not all &ndash; of the applications that they create. However, there are many places where icons don&rsquo;t work well. An obvious example are windows in which documents or graphics are created, such as <cite>ArtWorks</cite> or <cite>Ovation&nbsp;Pro</cite> files, where a mixture of arbitrary text and graphics need to be displayed. A less obvious situation would be when displaying tabular data like a spreadsheet: icons <em>could</em> be used, but this quickly becomes slow and &ndash; as we saw before we <reference id="chap-templates">introduced window templates</reference> &ndash; keeping track of all of the indirected data that we need soon becomes a headache.</p>
+<p>Depending on the type of applications that they work on, developers may find that this approach is fine for the vast majority &ndash; if not all &ndash; of the applications that they create. However, there are many places where icons don&rsquo;t work well. An obvious example are windows in which documents or graphics are created, such as <cite>ArtWorks</cite> or <cite>Ovation&nbsp;Pro</cite> files, where a mixture of arbitrary text and graphics need to be displayed. A less obvious situation would be when displaying tabular data like a spreadsheet: icons <em>could</em> be used, but this quickly becomes slow and &ndash; as we saw before we <reference id="chap-templates">introduced window templates</reference> &ndash; keeping track of all of the indirected data that we need soon becomes a headache.</p>
 
 <image id="fig-redraw-theory-examples" file="redraw-theory-examples.png" title="Three windows which use manual redraw"/>
 
@@ -238,7 +238,7 @@ BadResultsTempl:Failed to load Results template</code>
 
 <code lang="c">window_definition-&gt;icon_count = 0;</code>
 
-<p>However, we are going to take an even more hybrid approach here: we will leave the Wimp to draw the icons in the heading line as normal, but will plot the lines of saved results data ourselves. This makes sense, as we don&rsquo;t know how many sets of results data there will be: it could be a couple of lines, or it could potentially be hundreds of even thousands (although, spoiler, to keep things simple, we won&rsquo;t be implementing limitless results storage in our example, so as to keep things simple).</p>
+<p>However, we are going to take an even more hybrid approach here: we will leave the Wimp to draw the icons in the heading line as normal, but will plot the lines of saved results data ourselves. This makes sense, as we don&rsquo;t know how many sets of results data there will be: it could be a couple of lines, or it could potentially be hundreds of even thousands (although, spoiler, to keep things simple, we won&rsquo;t be implementing limitless results storage in our example).</p>
 
 <p>We will start by defining some constants for the icons in our window template, in the usual way.</p>
 
