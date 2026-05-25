@@ -58,7 +58,7 @@
 
 <p>The style of coding has evolved a little over the decade or more that work on the project has been in progress. These day it tends to favour the C99 standard that RISC&nbsp;OS Open encourage with the DDE, but older examples often adhere to older styles of coding. I sometimes update older code when I come across it, but there are still many pre-C99 constructs in the application. Given that C99 is supported on RISC&nbsp;OS by both the DDE and GCC, I would recommend taking advantage of the facilities offered by the newer standard whenever possible.</p>
 
-<p>Many thanks to all those on the <link href="https://www.riscosopen.org/forum/">ROOL Forums</link> who have answered my questions about the DDE and offered suggestions while I&rsquo;ve worked on this guide.</p>
+<p>Many thanks to all those on the <link href="https://www.riscosopen.org/forum/">ROOL Forums</link> who have answered my questions about the Wimp and the DDE, and offered suggestions while I&rsquo;ve worked on this guide.</p>
 </section>
 
 <chapterlist/>
