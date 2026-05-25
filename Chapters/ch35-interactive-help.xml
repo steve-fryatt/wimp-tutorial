@@ -416,7 +416,7 @@ Help.Info:This \w gives information about Example.</code>
 
 <p>There are a couple of things that are worth pointing out here. The first is if you should find a need to include a backslash in a help message, this can be done by inserting a pair of backslashes.</p>
 
-<p>The second doesn&rsquo;t apply to us, as we are holding our messages in a Messages file and so they never go near any literal strings that the compiler will have to process. However, if you find yourself writing help messages in C literal strings, you will need to escape the backslashes themselves for the benefit of the compiler. Thus the C literal <code>&quot;\\Tmain Example \\w.&quot;</code> would give us the message that is contained in the &ldquo;Help.Main&rdquo; token above. This can very quickly get confusing and is, in itself, a good reason for using MessageTrans to handle our application&rsquo;s text!.</p>
+<p>The second doesn&rsquo;t apply to us, as we are holding our messages in a Messages file and so they never go near any literal strings that the compiler will have to process. However, if you find yourself writing help messages in C literal strings then you will need to escape the backslashes themselves for the benefit of the compiler. Thus the C literal <code>&quot;\\Tmain Example \\w.&quot;</code> would give us the message that is contained in the &ldquo;Help.Main&rdquo; token above. This can very quickly get confusing and is, in itself, a good reason for using MessageTrans to handle our application&rsquo;s text!.</p>
 
 <p>The only change to the application is in its <file>Messages</file> file, but the full code can be found in <reference id="dl-int-help-tokens"/>.</p>
 
