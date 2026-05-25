@@ -48,15 +48,15 @@
 
 <image id="fig-int-help-filer" file="int-help-filer.png" title="The Filer can provide interactive help to the user"/>
 
-<p>Since <cite>Help</cite> is just another application, the interactive help system is implemented through user messages. This also means that other applications which may want to provide an alternative to <cite>Help</cite> can simply send the same messages out. Unlike the messages that we have met so far, however, our application will need to be able to respond to the ones that it receives from <cite>Help</cite>.</p>
+<p>Since <cite>Help</cite> is just another application, the interactive help system is implemented through user messages. This has a side benefit that any applications which may want to provide an alternative to <cite>Help</cite> can simply send the same messages out, and other applications on the system will not need to know the difference. Unlike the purely informational messages that we have met so far, however, the messages from <cite>Help</cite> will be asking <em>us</em> for information and our application will need to be able to respond to them.</p>
 </section>
 
 <section>
 <title>Requests for help</title>
 
-<p>In order to provide interactive help to users, <cite>Help</cite> tracks the position of the mouse pointer on the screen and it will send a <name>Message_HelpRequest</name> to the owner of the object at the pointer several times every second. If the recipient can supply help for that object, it should do so by sending back a <name>Message_HelpReply</name> in response.</p>
+<p>In order to provide interactive help to users, <cite>Help</cite> tracks the position of the mouse pointer on the screen and it will send a <name>Message_HelpRequest</name> to the owner of the object at the pointer several times every second. If the recipient can supply help for that object, it should do so by sending back a <name>Message_HelpReply</name> in response. This is a good example of why it is wise for applications to request only the messages that they are interested in through <swi>Wimp_Poll</swi> and <swi>Wimp_AddMessages</swi>: up to this point our application has been saving itself from receiving approximately ten messages every second that it hasn&rsquo;t had a use for.</p>
 
-<p>To add support for interactive help to our application, we will need to add some code to listen out for <name>Message_HelpRequest</name> and respond in the correct way. We will put this into a new code module formed of a pair of new <file>c.inthlp</file> and <file>h.inthlp</file> files, so we start by adding these to the list of objects in the Makefile in a way that should be familiar.</p>
+<p>We now want to receive those messages, however, so to add support for interactive help to our application we will need to add some code to listen out for <name>Message_HelpRequest</name> and respond in the correct way. We will put this into a new code module formed of a pair of new <file>c.inthlp</file> and <file>h.inthlp</file> files, so we start by adding these to the list of objects in the Makefile in a way that should be familiar.</p>
 
 <code lang="makefile">OBJS = calc main menu inthlp ibar win results</code>
 
@@ -119,11 +119,9 @@ struct help_full_message_reply {
 	char reply[236];
 };</code>
 
-<p>All of the available 236 bytes are made available for the help message, in the form of <variable>reply[]</variable>. Allowing for a string terminator, this allows messages of up to 235 characters in length &ndash; although there are some escape sequences defined which expand into longer pieces of text, which we will look at shortly.</p>
+<p>All of the available 236 bytes are used for the help message, in the form of <variable>reply[]</variable>. After including a string terminator, this allows messages of up to 235 characters in length &ndash; although there are some escape sequences defined which expand into longer pieces of text, which we will look at shortly.</p>
 
 <p>Our application will need to listen for incoming <name>Message_HelpRequest</name>, decode the contents, turn that into a suitable help message and then reply with a <name>Message_HelpReply</name>. For now, however, let&rsquo;s just get it to respond with a generic message. To that end, we can define our handler for <name>Message_HelpRequest</name> in the form of the <function>inthlp_send_reply_help_request()</function> function as seen in <reference id="list-int-help-inthlp-handler"/>.</p>
-
-
 
 <code lang="c" id="list-int-help-inthlp-handler" title="The handler for Message_HelpRequest">/* Round the given block size to the next full word. */
 
@@ -149,11 +147,11 @@ static osbool inthlp_send_reply_help_request(wimp_message *message)
 	return TRUE;
 }</code>
 
-<p>We start by casting the incoming pointer to the <name>wimp_message</name> structure into a pointer to a <name>help_full_message_request</name> structure, so that we can access the message contents. We also define the <variable>help_reply</variable> variable, to claim space for the reply from the stack.</p>
+<p>We begin by casting the incoming pointer to the <name>wimp_message</name> structure into a pointer to a <name>help_full_message_request</name> structure, so that we can access the message contents. We also define the <variable>help_reply</variable> variable, to claim space for the reply from the stack.</p>
 
-<p>With the two message variables set up, we start to reply by using MessageTrans to look up the &ldquo;HelpMessage&rdquo; token and write the corresponding message text into the 236 bytes of space within the <name>Message_HelpReply</name> block that is pointed to by <variable>help_reply.reply</variable>. The <variable>size</variable> member should hold the total length of the message block, so we calculate this by taking 20 bytes for the header fields, adding a byte for the string terminator to get 21, then adding on the number of bytes in the string. The <name>INTHLP_WORDALIGN()</name> macro is used to round the size up to the next word (four byte) boundary.</p>
+<p>With the two message variables set up, we start to reply by using MessageTrans to look up the &ldquo;HelpMessage&rdquo; token and write the corresponding message text into the 236 bytes of space within the <name>Message_HelpReply</name> block that is pointed to by <variable>help_reply.reply</variable>. The <variable>size</variable> member should hold the total length of the message block, so we calculate this by taking 20 bytes for the header fields, adding a byte for the string terminator to get 21, then adding on the number of bytes in the string. The <name>INTHLP_WORDALIGN()</name> macro is used to round the size up to the next word (four byte) boundary, as required by the Wimp user message protocol.</p>
 
-<p>Whenever a user message is sent, the Wimp allocates it a unique reference number which will go into <variable>my_ref</variable>. This is done automatically by <swi>Wimp_SendMessage</swi>, so there is no need for our application to fill in this member of the <name>wimp_message</name> structure: it will have been updated by the time the message reaches the recipient. However, when we <em>reply</em> to a message, the <variable>your_ref</variable> field of the reply should contain the <variable>my_ref</variable> from the original message. We therefore copy this value across.</p>
+<p>Whenever a user message is sent, the Wimp allocates it a unique reference number which will go into <variable>my_ref</variable>. This is done automatically by <swi>Wimp_SendMessage</swi>, so there is no need for our application to fill in this member of the <name>wimp_message</name> structure: it will have been updated by the time the message reaches the recipient. However, when we <em>reply</em> to a message, the <variable>your_ref</variable> field of the reply should contain the <variable>my_ref</variable> from the original message. We therefore copy this value across from the incoming message block.</p>
 
 <p>The Wimp will also fill in the <variable>sender</variable> field for us with our task handle, so again there is no need to do this. We do, however, need to remember to set the <variable>action</variable> field to <name>message_HELP_REPLY</name>, so that the recipient knows what the message is about.</p>
 
@@ -167,7 +165,7 @@ static osbool inthlp_send_reply_help_request(wimp_message *message)
 
 <p>The <variable>event</variable> parameter indicates the <swi>Wimp_Poll</swi> reason code that we want the recipient to receive. This will be one of the three user message codes, and since we are not expecting a reply (indeed, <name>Message_HelpReply</name> is not documented as being replied to), we send it as the simple un-recorded <name>User_Message</name>. The <variable>*message</variable> parameter takes a pointer to the message block that we wish to send, and <variable>to</variable> takes the task handle of the intended recipient &ndash; in effect the address of the message. We are replying to a message sent to us, so we can get the task handle that we need from the <variable>sender</variable> field of the incoming message.</p>
 
-<p>There isn&rsquo;t much that we can do if <swi>Wimp_SendMessage</swi> fails, but since it involves many things outside of our control we check the returned error pointer and report any issue to the user. The handler then returns <name>TRUE</name>, to let SFLib&rsquo;s event library know that we have dealt with the message and there is no point letting any other parts of our application know about it &ndash; we know that there are no other things claiming <name>Message_HelpRequest</name>, but it&rsquo;s still good practice to do the right thing.</p>
+<p>There isn&rsquo;t much that we can do if <swi>Wimp_SendMessage</swi> fails, but since it involves many things outside of our control we check the returned error pointer and report any issue to the user. The handler then returns <name>TRUE</name>, to let SFLib&rsquo;s event library know that we have dealt with the message and there is no point letting any other parts of our application know about it &ndash; we know that there are no other things within our application which will be claiming <name>Message_HelpRequest</name>, but it&rsquo;s still good practice to do the right thing.</p>
 
 <p>With the <function>inthlp_send_reply_help_request()</function> function defined, we can register it from within <function>inthlp_initialise()</function> as shown in <reference id="list-int-help-inthlp-init"/>.</p>
 
@@ -196,23 +194,233 @@ HelpMessage:This is an example help message from an Example application!</code>
 <section>
 <title>Being helpful</title>
 
+<p>Whilst our application responds to requests for help messages, it isn&rsquo;t a lot of use because we only have one message &ndash; and even that isn&rsquo;t very helpful! <name>Message_HelpRequest</name> contains the current position of the pointer and the handles of the window and icon that are underneath it, so we could use this information to narrow things down a bit. Simplistically, we could just use some giant, nested <code>switch&nbsp;()</code> statements &ndash; but we can probably do better.</p>
 
+<p>There are many possible solutions, but since we have use of MessageTrans to look up help messages, it would make sense to build up some hierarchical message tokens. We could start each token with the word &ldquo;Help&rdquo;, follow it with a dot as a separator for clarity, then the name of the target window. The dot means nothing to MessageTrans, and is there purely for our benefit.</p>
 
-<!--
-\S:Click SELECT to
-\R:Move the pointer right to
-\A:Click ADJUST to
-\T:This is the
-\G:This option is greyed out because
-\W:This window is
-\D:Drag SELECT to
-\d:Drag ADJUST to
-\w:window
-\s:SELECT
-\a:ADJUST
+<code lang="messtrans"># Interactive Help
 
-With the exception of \w, \s and \a, all of the expansion texts have a trailing space.-->
+Help.IconBar:This is the Example application.
+Help.Main:This is the main Example window.
+Help.Results:This is the Example results window.
+Help.Info:This window gives information about Example.</code>
 
+<p>If we can then find a way to convert the window handle in the incoming <name>Message_HelpRequest</name> into the appropriate window name, we could build up the complete message token for each help message and use use MessageTrans to look it up. Since the code in <file>c.inthlp</file> doesn&rsquo;t know anything about the window handles in the other parts of the application, we will need a way for those window handles to be given to and stored by it. We therefore start by creating the simple linked-list data structure in <reference id="list-int-help-data-struct"/>, to hold any information that we might be given.</p>
+
+<code lang="c" id="list-int-help-data-struct" title="The data structure to store window details">#define INTHLP_OBJECT_NAME_LENGTH 16
+
+/* Target Window Data Structure. */
+
+struct inthlp_window {
+	wimp_w			window;
+	char			name[INTHLP_OBJECT_NAME_LENGTH];
+
+	struct inthlp_window	*next;
+};
+
+/* Global Variables. */
+
+static struct inthlp_window *inthlp_windows = NULL;</code>
+
+<p>The <name>inthlp_window</name> structure contains space for a window handle in <variable>window</variable> and a name to use for the associated MessageTrans token in <variable>name[]</variable>. The <variable>*next</variable> pointer will allow us to link to the next item in the list, and the global <variable>*inthlp_windows</variable> variable will point to the head of the list.</p>
+
+<p>We will provide an <function>inthlp_add_window()</function> function to allow the clients to add their windows to the list that we know about: it takes a window handle in the <variable>window</variable> parameter, and a token name in the <variable>*name</variable> parameter. The definition is in <reference id="list-int-help-add-window"/>.</p>
+
+<code lang="c" id="list-int-help-add-window" title="Add new window details to the list">* Add a new window handle and name. */
+
+void inthlp_add_window(wimp_w window, char *name)
+{
+	if (inthlp_find_window(window) != NULL)
+		return;
+
+	struct inthlp_window *new = malloc(sizeof(struct inthlp_window));
+
+	if (new == NULL)
+		return;
+
+	new-&gt;window = window;
+	string_copy(new-&gt;name, name, INTHLP_OBJECT_NAME_LENGTH);
+
+	new-&gt;next = inthlp_windows;
+	inthlp_windows = new;
+}</code>
+
+<p>The first thing that the function does it check to see if the window handle is already in the list: if it is, it just returns. If the window isn&rsquo;t known, memory is claimed for a new item in the list, the <name>inthlp_window</name> structure is filled in, and the new entry linked in at the head of the list.</p>
+
+<p>Finding windows by their window handles is done using the <function>inthlp_find_window()</function> function in <reference id="list-int-help-find-window"/>. This takes a window handle in <variable>window</variable> and searches the linked list; if a match is found, a pointer to the list entry is returned.</p>
+
+<code lang="c" id="list-int-help-find-window" title="Finding window details in the list">/* Find a window definition by window handle. */
+
+static struct inthlp_window *inthlp_find_window(wimp_w window)
+{
+	struct inthlp_window *list = inthlp_windows;
+
+	while (list != NULL &amp;&amp; list-&gt;window != window)
+		list = list-&gt;next;
+
+	return list;
+}</code>
+
+<p>With a linked list of windows in place, we will also need to be able to look up window handles which arrive in <name>Message_HelpRequest</name> and convert them into message tokens. To do this, we create a new <function>inthlp_lookup_help_text()</function> function as seen in <reference  id="list-int-help-lookup-text"/>. This takes a pointer to a buffer to hold a help message in <variable>*buffer</variable> and its length in <variable>length</variable>. The window handle is passed in <variable>window</variable>. The function will return <name>TRUE</name> if a message is found, or <name>FALSE</name> otherwise.</p>
+
+<code lang="c" id="list-int-help-lookup-text" title="Convert window handles to message tokens">#define INTHLP_MESSAGE_TOKEN_LENGTH 128
+
+/* Look up a help text. */
+
+static osbool inthlp_lookup_help_text(char *buffer, size_t length, wimp_w window)
+{
+	if (buffer == NULL || length == 0)
+		return FALSE;
+
+	struct inthlp_window *window_data = NULL;
+	char token[INTHLP_MESSAGE_TOKEN_LENGTH];
+
+	if (window == wimp_ICON_BAR) {
+		if (msgs_lookup_result(&quot;Help.IconBar&quot;, buffer, length))
+			return TRUE;
+	} else if ((window_data = inthlp_find_window(window)) != NULL) {
+		string_printf(token, INTHLP_MESSAGE_TOKEN_LENGTH, &quot;Help.%s&quot;, window_data-&gt;name);
+		if (msgs_lookup_result(token, buffer, length))
+			return TRUE;
+	}
+
+	*buffer = '\0';
+
+	return FALSE;
+}</code>
+
+<p>After checking that a valid buffer pointer was supplied, the function starts to search for a suitable help message. If the supplied window handle was the iconbar, a special case is employed which simply looks up the &ldquo;Help.IconBar&rdquo; token and stores the result in the supplied buffer. This means that the code in <file>c.ibar</file> doesn&rsquo;t need to register a name for the iconbar icon itself (although it <em>does</em> need to register a handle and name for the <window>program information</window> window.</p>
+
+<p>In all other cases, the window handle is looked up in the linked list and if a match is found, the name associated with the handle in the list is appended to &ldquo;Help.&rdquo; to get a message token. This token is again looked up, and the result stored in the supplied buffer.</p>
+
+<p>If either of the lookup attempts was successful, the function will return <name>TRUE</name>. Otherwise, it will safely terminate the buffer and return <name>FALSE</name>.</p>
+
+<p>With this code in place, we can now update <function>inthlp_send_reply_help_request()</function> to call <function>inthlp_lookup_help_text()</function> instead of going directly to MessageTrans. An <code>if&nbsp;()</code> statement is added so that should no message be found, the function will simply return without sending <name>Message_HelpReply</name> or claiming the event from SFLib.</p>
+
+<code lang="c">static osbool inthlp_send_reply_help_request(wimp_message *message)
+{
+	help_full_message_request	*help_request = (help_full_message_request *) message;
+	help_full_message_reply		help_reply;
+
+	if (inthlp_lookup_help_text(help_reply.reply, 236, help_request-&gt;w) == FALSE)
+		return FALSE;
+
+	help_reply.size = INTHLP_WORDALIGN(21 + strlen(help_reply.reply));
+	help_reply.your_ref = help_request-&gt;my_ref;
+	help_reply.action = message_HELP_REPLY;
+
+	os_error *error = xwimp_send_message(wimp_USER_MESSAGE, (wimp_message *) &amp;help_reply, help_request-&gt;sender);
+	if (error != NULL)
+		error_report_os_error(error, wimp_ERROR_BOX_CANCEL_ICON);
+
+	return TRUE;
+}</code>
+
+<p>All that remains for us to do is to register the window names for each of the three windows in the application using the new <function>inthlp_add_window()</function> function. We can do this within <function>ibar_initialise()</function> in <file>c.ibar</file>...</p>
+
+<code lang="c">/* Program Info Window. */
+
+window_definition = windows_load_template(&quot;ProgInfo&quot;);
+if (window_definition == NULL) {
+	error_msgs_report_error(&quot;BadInfoTempl&quot;);
+	return;
+}
+
+prog_info = wimp_create_window(window_definition);
+free(window_definition);
+
+inthlp_add_window(prog_info, &quot;Info&quot;);
+event_add_window_icon_click(prog_info, IBAR_PROGINFO_ICON_WEB, ibar_proginfo_web_click);</code>
+
+<p>...<function>win_initialise()</function> in <file>c.win</file>...</p>
+
+<code lang="c">/* Register event handlers. */
+
+inthlp_add_window(win_handle, &quot;Main&quot;);
+event_add_window_key_event(win_handle, win_keypress);
+event_add_window_menu(win_handle, win_menu);
+event_add_window_menu_prepare(win_handle, win_set_menu);
+event_add_window_menu_selection(win_handle, win_menu_selection);
+event_add_window_icon_popup(win_handle, WIN_ICON_SHAPE_POPUP, win_shape_menu, WIN_ICON_SHAPE_FIELD, NULL);
+event_set_window_icon_popup_action(win_handle, WIN_ICON_SHAPE_POPUP, FALSE, win_shape_menu_selection);</code>
+
+<p>...and <function>results_initialise()</function> in <file>c.results</file>.</p>
+
+<code lang="c">/* Register event handlers. */
+
+inthlp_add_window(results_handle, &quot;Results&quot;);
+event_add_window_redraw_event(results_handle, results_redraw);
+event_add_window_menu(results_handle, results_menu);
+event_add_window_menu_prepare(results_handle, results_set_menu);
+event_add_window_menu_selection(results_handle, results_menu_selection);</code>
+
+<p>If we build and run the application now, we should find that we have a different interactive help message for each of the windows and the iconbar icon. If we hover the pointer over our iconbar icon, for example, we get the message seen in <reference id="fig-int-help-ibar-text"/>.</p>
+
+<image id="fig-int-help-ibar-text" file="int-help-ibar-text.png" title="A slightly more specific message"/>
+
+<p>The code so far can be found in <reference id="dl-int-help-windows"/>.</p>
+
+<download id="dl-int-help-windows" file="HelpWindows" title="Specific Help for Windows" compatibility="none"/>
+</section>
+
+<section>
+<title>The help message format</title>
+
+<p>Before we move on to improve the targetting of our messages any further, we should take a closer look at the way that we have written the help messages in our Messages file. <name>Message_HelpReply</name> is happy with up to 235 characters of plain text (allowing space for a terminating <code>'\0'</code>), but there is a bit more that we can do with it.</p>
+
+<p>First, if you look around the desktop with <cite>Help</cite> active, you will notice that a lot of messages use multiple lines &ndash; this is particularly noticeable when the individual lines are bulleted, as they are in many help clients. We can do this by inserting a <code>|M</code> sequence in the text: this takes two precious characters, but inserts a newline into the message. Inserting a normal newline character (either <code>'\r'</code> or <code>'\n'</code>) into the text won&rsquo;t work, because any control character is taken to be the end of the text; a number of applications out in the wild make use of this feature, so it can&rsquo;t be changed.</p>
+
+<p>If we wanted to do a more standard explanation for our iconbar icon, we could write something like this.</p>
+
+<code lang="messtrans"># Interactive Help
+
+Help.IconBar:This is the Example application, a demonstration of Wimp development in C.|MClick SELECT to open the Shape window.|MClick ADJUST to open the Results window.
+Help.Main:This is the main Example window.
+Help.Results:This is the Example results window.
+Help.Info:This window gives information about Example.</code>
+
+<p>If we run the application now, we will find that our iconbar icon has a more conventional help message: describing the application and listing the main actions available from the icon (with space being at a premium, it is assumed that the user knows how to click <mouse>Menu</mouse> over the icon to access the iconbar menu &ndash; where they should find more helpful guidance). The new message can be seen in <reference id="fig-int-help-ibar-multiline"/>.</p>
+
+<image id="fig-int-help-ibar-multiline" file="int-help-ibar-multiline.png" title="Splitting the text on to more than one line"/>
+
+<p>There is another small optimisation that we can do, however. The help protocol includes a number of &lsquo;tokens&rsquo; which can be included to shorten standard words and phrases. Many of these are for internal use by parts of the OS and change between RISC&nbsp;OS versions, but there are a few that are standard and therefore usable by applications like ours. All of them start with a backslash and are followed by a case-sensitive character. The full set can be found in <reference id="table-int-help-tokens"/> &ndash; note that with the exception of <code>\w</code>, <code>\s</code> and <code>\a</code>, all of the expanded texts have a trailing space appended.</p>
+
+<table id="table-int-help-tokens" title="The standard interactive help message tokens">
+<columns>
+<col align="centre">Token</col>
+<col align="left">Text</col>
+</columns>
+<row><col>\S</col><col>Click SELECT to</col></row>
+<row><col>\R</col><col>Move the pointer right to</col></row>
+<row><col>\A</col><col>Click ADJUST to</col></row>
+<row><col>\T</col><col>This is the</col></row>
+<row><col>\G</col><col>This option is greyed out because</col></row>
+<row><col>\W</col><col>This window is</col></row>
+<row><col>\D</col><col>Drag SELECT to</col></row>
+<row><col>\d</col><col>Drag ADJUST to</col></row>
+<row><col>\w</col><col>window</col></row>
+<row><col>\s</col><col>SELECT</col></row>
+<row><col>\a</col><col>ADJUST</col></row>
+</table>
+
+<p>If we make use of these in our help messages, we can trim down the length of the individual lines of text quite a lot.</p>
+
+<code lang="messtrans"># Interactive Help
+
+Help.IconBar:\TExample application, a demonstration of Wimp development in C.|M\Sopen the Shape window.|M\Aopen the Results window.
+Help.Main:\Tmain Example \w.
+Help.Results:\TExample results \w.
+Help.Info:This \w gives information about Example.</code>
+
+<p>You can see how we are using the trailing spaces that are present in some of the expanded texts. Also note that the standard forms don&rsquo;t always work for the messages that we need: the entry for the <window>program information</window> window is a good example.</p>
+
+<p>There are a couple of things that are worth pointing out here. The first is if you should find a need to include a backslash in a help message, this can be done by inserting a pair of backslashes.</p>
+
+<p>The second doesn&rsquo;t apply to us, as we are holding our messages in a Messages file and so they never go near any literal strings that the compiler will have to process. However, if you find yourself writing help messages in C literal strings, you will need to escape the backslashes themselves for the benefit of the compiler. Thus the C literal <code>&quot;\\Tmain Example \\w.&quot;</code> would give us the message that is contained in the &ldquo;Help.Main&rdquo; token above. This can very quickly get confusing and is, in itself, a good reason for using MessageTrans to handle our application&rsquo;s text!.</p>
+
+<p>The only change to the application is in its <file>Messages</file> file, but the full code can be found in <reference id="dl-int-help-tokens"/>.</p>
+
+<download id="dl-int-help-tokens" file="HelpTokens" title="Using Help Tokens" compatibility="none"/>
 </section>
 </chapter>
 </manual>

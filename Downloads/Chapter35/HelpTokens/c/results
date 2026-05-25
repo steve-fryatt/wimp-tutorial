@@ -35,6 +35,7 @@
 
 #include "results.h"
 
+#include "inthlp.h"
 #include "menu.h"
 #include "calc.h"
 
@@ -128,6 +129,7 @@ void results_initialise(void)
 
 	/* Register event handlers. */
 
+	inthlp_add_window(results_handle, "Results");
 	event_add_window_redraw_event(results_handle, results_redraw);
 	event_add_window_menu(results_handle, results_menu);
 	event_add_window_menu_prepare(results_handle, results_set_menu);
