@@ -63,7 +63,7 @@
 
 #define RESULTS_LINE_INSET 12
 
-/* Line Data Structure */
+/* Line Data Structure. */
 
 struct results_data {
 	char shape[RESULTS_VALUE_LEN];
