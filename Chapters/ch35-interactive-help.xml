@@ -202,8 +202,8 @@ HelpMessage:This is an example help message from an Example application!</code>
 
 Help.IconBar:This is the Example application.
 Help.Main:This is the main Example window.
-Help.Results:This is the Example results window.
-Help.Info:This window gives information about Example.</code>
+Help.Info:This window gives information about Example.
+Help.Results:This is the Example results window.</code>
 
 <p>If we can then find a way to convert the window handle in the incoming <name>Message_HelpRequest</name> into the appropriate window name, we could build up the complete message token for each help message and use use MessageTrans to look it up. Since the code in <file>c.inthlp</file> doesn&rsquo;t know anything about the window handles in the other parts of the application, we will need a way for those window handles to be given to and stored by it. We therefore start by creating the simple linked-list data structure in <reference id="list-int-help-data-struct"/>, to hold any information that we might be given.</p>
 
@@ -261,7 +261,7 @@ static struct inthlp_window *inthlp_find_window(wimp_w window)
 	return list;
 }</code>
 
-<p>With a linked list of windows in place, we will also need to be able to look up window handles which arrive in <name>Message_HelpRequest</name> and convert them into message tokens. To do this, we create a new <function>inthlp_lookup_help_text()</function> function as seen in <reference  id="list-int-help-lookup-text"/>. This takes a pointer to a buffer to hold a help message in <variable>*buffer</variable> and its length in <variable>length</variable>. The window handle is passed in <variable>window</variable>. The function will return <name>TRUE</name> if a message is found, or <name>FALSE</name> otherwise.</p>
+<p>With a linked list of windows in place, we will also need to be able to look up the window handles which arrive in <name>Message_HelpRequest</name> and convert them into message tokens. To do this, we create a new <function>inthlp_lookup_help_text()</function> function as seen in <reference  id="list-int-help-lookup-text"/>. This takes a pointer to a buffer to hold a help message in <variable>*buffer</variable> and its length in <variable>length</variable>. The window handle is passed in <variable>window</variable>. The function will return <name>TRUE</name> if a message is found, or <name>FALSE</name> otherwise.</p>
 
 <code lang="c" id="list-int-help-lookup-text" title="Convert window handles to message tokens">#define INTHLP_MESSAGE_TOKEN_LENGTH 128
 
@@ -376,8 +376,8 @@ event_add_window_menu_selection(results_handle, results_menu_selection);</code>
 
 Help.IconBar:This is the Example application, a demonstration of Wimp development in C.|MClick SELECT to open the Shape window.|MClick ADJUST to open the Results window.
 Help.Main:This is the main Example window.
-Help.Results:This is the Example results window.
-Help.Info:This window gives information about Example.</code>
+Help.Info:This window gives information about Example.
+Help.Results:This is the Example results window.</code>
 
 <p>If we run the application now, we will find that our iconbar icon has a more conventional help message: describing the application and listing the main actions available from the icon (with space being at a premium, it is assumed that the user knows how to click <mouse>Menu</mouse> over the icon to access the iconbar menu &ndash; where they should find more helpful guidance). The new message can be seen in <reference id="fig-int-help-ibar-multiline"/>.</p>
 
@@ -409,8 +409,8 @@ Help.Info:This window gives information about Example.</code>
 
 Help.IconBar:\TExample application, a demonstration of Wimp development in C.|M\Sopen the Shape window.|M\Aopen the Results window.
 Help.Main:\Tmain Example \w.
-Help.Results:\TExample results \w.
-Help.Info:This \w gives information about Example.</code>
+Help.Info:This \w gives information about Example.
+Help.Results:\TExample results \w.</code>
 
 <p>You can see how we are using the trailing spaces that are present in some of the expanded texts. Also note that the standard forms don&rsquo;t always work for the messages that we need: the entry for the <window>program information</window> window is a good example.</p>
 
@@ -421,6 +421,76 @@ Help.Info:This \w gives information about Example.</code>
 <p>The only change to the application is in its <file>Messages</file> file, but the full code can be found in <reference id="dl-int-help-tokens"/>.</p>
 
 <download id="dl-int-help-tokens" file="HelpTokens" title="Using Help Tokens" compatibility="none"/>
+</section>
+
+<section>
+<title>Identifying the icons</title>
+
+<p>Our application is now able to differentiate between its various windows when responding to requests for interactive help messages, but to actually be useful it will need to narrow that down to the individual icons within a window. A user will expect to be able to point to the different parts of a window in order to get assistance with them, but as it stands we can not do that.</p>
+
+<p>To continue with the approach that we are using, we will need to find a way to turn the icon handles from <name>Message_HelpRequest</name> into names that we can add to our message tokens. We could take the same approach that we used for the windows and have the different parts of our application give the icons names that we can store, but this could quickly turn into a lot of work for complex windows with lots of icons. There is, however, another possibility: if we look back at <reference id="table-icons-indirect-validation"/>, which listed the icon validation string commands, there is one in the table whose action is to &ldquo;Set Icon Name&rdquo;.</p>
+
+<p>The <name>N</name> validation command is a bit odd, in that it isn&rsquo;t actually an official validation command implemented by the Wimp. Instead, it came from a convention by third party developers and template editors such as <cite>WinEd</cite>, which became prevalent enough to be included amongst the validation commands listed in the Wimp&rsquo;s source code &ndash; ensuring that it is safe for us to use. The command can be followed in the validation string by a piece of arbitrary text, such as &ldquo;<code>NCancel</code>&rdquo; &ndash; anything which wishes to do so can then treat this text as the icon&rsquo;s name.</p>
+
+<p>Using the <name>N</name> command, we can give a name to any indirected icon. The requirement for the icon to be indirected may seem like a limitation, but with the advent of 3D windows many of the icons in a standard dialogue will be indirected anyway &ndash; if only to allow the use of the <name>R</name> command. The main potential problem comes from sprite-only icons, which don&rsquo;t have a validation string; these are fairly rare, so we can probably find a way around them when they do come up.</p>
+
+<p>The first step is to name our icons, so we start by loading our <file>Templates</file> in to <cite>WinEd</cite> and updating the validation strings for the icons in the Main window. <reference id="fig-int-help-icon-name"/> shows how this works: if we add the <name>N</name> command to an icon&rsquo;s validation string in the usual way and <icon>Update</icon> the icon, <cite>WinEd</cite> will show the name in the <icon>Icon name</icon> field of the <window>Monitor</window> when we hover the mouse pointer over the icon.</p>
+
+<image id="fig-int-help-icon-name" file="int-help-icon-name.png" title="Naming an icon in WinEd"/>
+
+<p>We will go through the <file>Templates</file> and add names to all of the &lsquo;active&rsquo; icons in the <window>Main</window> window, as well as the <icon>Website</icon> button in the <window>ProgInfo</window> window. For now, we will leave the <window>Results</window> alone. Have a look at the file inside <reference id="dl-int-help-icons"/> to see what has changed.</p>
+
+<p>We can also update the help texts in our <file>Messages</file> file as follows. Continuing with the naming convention, messages for icons have a second dot and then the icon name. You should be able to match up the names here with the names in the <file>Templates</file> file! The anomaly is &ldquo;Help.Main.Icon0&rdquo; which looks as if it should match up with the sprite icon &ndash; we&rsquo;ll explain this shortly, when we update the <function>inthlp_lookup_help_text()</function> function.</p>
+
+<code lang="messtrans"># Interactive Help
+
+Help.IconBar:\TExample application, a demonstration of Wimp development in C.|M\Sopen the Shape window.|M\Aopen the Results window.
+Help.Main:\Tmain Example \w.|MTo give us some sense of purpose, we can use it to superficially explore shapes.
+Help.Main.Icon0:\Tshape that we are working with.|MUse the fields below to investigate its properties.
+Help.Main.Shape:\Tcurrently selected shape.|MUse the pop-up menu to change it.
+Help.Main.Menu:\Schoose a new shape.
+Help.Main.Sides:\Tnumber of sides that the shape has.
+Help.Main.Angles:\Tsize of the internal angles of the shape.
+Help.Main.Length:\Tlength of a side of the shape.|MType a new value and press Return to update the calculation.
+Help.Main.Perimeter:\Tlength of the perimeter of the shape.|MType a new value and press Return to update the calculation.
+Help.Main.Area:\Tarea of the shape.|MType a new value and press Return to update the calculation.
+Help.Info:This \w gives information about Example.
+Help.Info.Website:\Svisit the application's website.
+Help.Results:\TExample results \w.</code>
+
+<code lang="c">static osbool inthlp_lookup_help_text(char *buffer, size_t length, wimp_w window, wimp_i icon)
+{
+	if (buffer == NULL || length == 0)
+		return FALSE;
+
+	struct inthlp_window *window_data = NULL;
+	char token[INTHLP_MESSAGE_TOKEN_LENGTH];
+
+	if (window == wimp_ICON_BAR) {
+		if (msgs_lookup_result(&quot;Help.IconBar&quot;, buffer, length))
+			return TRUE;
+	} else if ((window_data = inthlp_find_window(window)) != NULL) {
+		if (icon &gt;= 0) {
+			char icon_name[INTHLP_ICON_NAME_LENGTH];
+			if (!icons_get_validation_command(icon_name, INTHLP_ICON_NAME_LENGTH, window, icon, 'N'))
+				string_printf(icon_name, INTHLP_ICON_NAME_LENGTH, &quot;Icon%d&quot;, icon);
+
+			string_printf(token, INTHLP_MESSAGE_TOKEN_LENGTH, &quot;Help.%s.%s&quot;, window_data-&gt;name, icon_name);
+			if (msgs_lookup_result(token, buffer, length))
+				return TRUE;
+		}
+
+		string_printf(token, INTHLP_MESSAGE_TOKEN_LENGTH, &quot;Help.%s&quot;, window_data-&gt;name);
+		if (msgs_lookup_result(token, buffer, length))
+			return TRUE;
+	}
+
+	*buffer = '\0';
+
+	return FALSE;
+}</code>
+
+<download id="dl-int-help-icons" file="HelpIcons" title="Specific Help For Icons" compatibility="none"/>
 </section>
 </chapter>
 </manual>

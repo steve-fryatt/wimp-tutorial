@@ -70,5 +70,5 @@ BadInfoTempl:Failed to load ProgInfo template
 
 Help.IconBar:\TExample application, a demonstration of Wimp development in C.|M\Sopen the Shape window.|M\Aopen the Results window.
 Help.Main:\Tmain Example \w.
-Help.Results:\TExample results \w.
 Help.Info:This \w gives information about Example.
+Help.Results:\TExample results \w.
