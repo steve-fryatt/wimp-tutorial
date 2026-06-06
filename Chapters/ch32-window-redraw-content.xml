@@ -60,7 +60,7 @@
 
 <p>To that end, we might as well store results data as a collection of text strings. This has the advantage of being simple, so that we can focus on the redrawing and not the data wrangling. A new <name>results_data</name> structure can store complete sets of results from the main window, a global <variable>results_rows[]</variable> array will hold one of these for each line, and <variable>results_row_count</variable> will track how many are in use. This can all be seen in <reference id="list-redraw-content-data"/>.</p>
 
-<code lang="c" id="list-redraw-content-data" title="The data structures to hold our results">/* The size of a results test field. */
+<code lang="c" id="list-redraw-content-data" title="The data structures to hold our results">/* The size of a results text field. */
 
 #define RESULTS_VALUE_LEN 16
 

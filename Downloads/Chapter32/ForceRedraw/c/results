@@ -62,7 +62,7 @@
 
 #define RESULTS_MAX_ROWS 10
 
-/* The size of a results test field. */
+/* The size of a results text field. */
 
 #define RESULTS_VALUE_LEN 16
 
