@@ -135,7 +135,7 @@ static void results_clear_data(void)
 	wimp_plot_icon(results_icons + icon);
 }</code>
 
-<p>Finally, for the code in <file>c.results</file>, we update the redraw loop as seen in <reference id="list-redraw-content-loop"/>. To avoid running past the end of the valid results, we add a second bounds check for <variable>bottom</variable> against the value of <variable>results_row_count</variable>; the test against <name>RESULTS_MAX_ROWS</name> remains, in case <variable>results_row_count</variable> contains a nonsensical value. Then, for each of the calls to <function>results_plot_icon()</function>, we find the apprpropriate string pointer in our array of data structures and pass it in.</p>
+<p>Finally, for the code in <file>c.results</file>, we update the redraw loop as seen in <reference id="list-redraw-content-loop"/>. To avoid running past the end of the valid results, we add a second bounds check for <variable>bottom</variable> against the value of <variable>results_row_count</variable>; the test against <name>RESULTS_MAX_ROWS</name> remains, in case <variable>results_row_count</variable> contains a nonsensical value. Then, for each of the calls to <function>results_plot_icon()</function>, we find the appropriate string pointer in our array of data structures and pass it in.</p>
 
 <code lang="c" id="list-redraw-content-loop" title="Redrawing the stored data">static void results_redraw(wimp_draw *redraw)
 {
@@ -204,7 +204,7 @@ menu_entry(win_menu, WIN_MENU_DECIMAL1, &quot;MainMenu1&quot;, NULL);
 menu_entry(win_menu, WIN_MENU_DECIMAL2, &quot;MainMenu2&quot;, NULL);
 menu_entry(win_menu, WIN_MENU_DECIMAL3, &quot;MainMenu3&quot;, NULL);</code>
 
-<p>As the change to the order of the menu entries messed up our sequential message tokens, we make the apprpropriate changes to the <file>Messages</file> file as well.</p>
+<p>As the change to the order of the menu entries messed up our sequential message tokens, we make the appropriate changes to the <file>Messages</file> file as well.</p>
 
 <code lang="messtrans"># Main menu
 
@@ -236,7 +236,7 @@ MainMenu3:3 Decimal places</code>
 <p>The Wimp provides us with the <swi>Wimp_ForceRedraw</swi> for exactly this kind of situation. As we noted in <reference id="chap-redraw-theory">the previous chapter</reference>, applications can&rsquo;t just plot new data to the screen when it becomes available; instead, they must follow a defined process:</p>
 
 <list type="ol">
-<li>Add the data into their internal data structure in the apprpropriate place,</li>
+<li>Add the data into their internal data structure in the appropriate place,</li>
 <li>Work out where in their window that data will appear,</li>
 <li>Ask the Wimp to schedule a redraw of that part of the window, and then</li>
 <li>Wait for a redraw request to arrive through <name>Redraw_Window_Request</name> in the usual way.</li>
