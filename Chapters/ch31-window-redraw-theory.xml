@@ -425,7 +425,7 @@ event_add_window_menu_selection(results_handle, results_menu_selection);</code>
 <section>
 <title>Plotting some icons</title>
 
-<p>When the Wimp sets up a new redraw rectangle before returning from either <swi>Wimp_RedrawWindow</swi> or <swi>Wimp_GetRectangle</swi>, it configures the display to plot text at the graphics cursor &ndash; that is, it issues a <code>VDU&nbsp;5</code> &ndash; and it sets the graphics clip window to the area which it is asking us to redraw. If you&rsquo;re familiar with BASIC, this is the <intro>graphics viewport</intro> which is set by a <code>VDU&nbsp;24</code> command.</p>
+<p>When the Wimp sets up a new redraw rectangle before returning from either <swi>Wimp_RedrawWindow</swi> or <swi>Wimp_GetRectangle</swi>, it sets the graphics clip window to the area which it is asking us to redraw. If you&rsquo;re familiar with BASIC, this is the <intro>graphics viewport</intro> which is set by a VDU&nbsp;24 command.</p>
 
 <p>Unless the window&rsquo;s background colour is set to <name>wimp_COLOUR_TRANSPARENT</name>, the Wimp will also clear the area to the selected colour for us &ndash; including plotting the window texture if the colour is <name>wimp_COLOUR_VERY_LIGHT_GREY</name>. In fact, the purpose of the so-called &ldquo;transparent&rdquo; window background is simply to prevent the Wimp from plotting it for us: this will generally be because we need to plot it ourselves for some reason, and wish to avoid any flicker caused by filling the area twice in quick succession.</p>
 

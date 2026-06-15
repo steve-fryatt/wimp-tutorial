@@ -196,7 +196,17 @@ extern void wimp_set_colour(
 <section>
 <title>Going old-school</title>
 
-<p>There&rsquo;s no requirement to use any fancy Wimp calls to do the text plotting, however: it&rsquo;s possible to use <function>printf()</function> for the job as shown in <reference id="list-redraw-cookbook-printf"/>. The Wimp issues a <code>VDU&nbsp;5</code> before exiting from <swi>Wimp_RedrawWindow</swi> and <swi>Wimp_GetRectangle</swi>, so we can position the graphics cursor with a call to <swi>OS_Plot</swi> and print the text that we need.</p>
+<p>There&rsquo;s no requirement to use any fancy Wimp calls to do the text plotting, however: it&rsquo;s completely possible to use <function>printf()</function> for the job. The Wimp issues a VDU&nbsp;5 before exiting from <swi>Wimp_RedrawWindow</swi> and <swi>Wimp_GetRectangle</swi>, so we can position the graphics cursor with a call to <swi>OS_Plot</swi> and print the text that we need using anything that calls one of the OS_Write family. Given the availability of <swi>Wimp_TextOp</swi>, <swi>OS_Font</swi> and <swi>Wimp_PlotIcon</swi> &ndash; not to mention the general use of a desktop font since RISC&nbsp;OS&nbsp;3.5 &ndash; we should be clear that this probably isn&rsquo;t something that a developer in the 21st Century should be considering. Nonetheless, it still remains an option if the need arises!</p>
+
+<p>One potential issue with plotting text in the System Font is that the size of characters is dependent on the screen mode and eigenvalues that are currently in force, because as standard the font is 8&nbsp;&times;&nbsp;8 pixels in size regardless of the proportions of the current mode. This effect can still be seen in the old command window, an example of which can be seen in <reference id="fig-redraw-cookbook-sysfont-90"/> as displayed in a standard 90dpi mode.</p>
+
+<image id="fig-redraw-cookbook-sysfont-90" file="redraw-cookbook-sysfont-90.png" title="A command window in a 90dpi mode"/>
+
+<p>If its appearance is compared to a command window being displayed in a high-resolution 180dpi mode, as seen in <reference id="fig-redraw-cookbook-sysfont-180"/>, it can be seen that in the 180dpi mode the text appears to be very small &ndash; &lsquo;half size&rsquo;, in fact &ndash; compared to that in the standard 90dpi mode. This is due to the way that one pixel equals one OS&nbsp;unit on screen in the 180dpi mode, compared to there being two OS&nbsp;units per pixel in a 90dpi mode: meaning that the font occupies an area of twice as many square OS&nbsp;units in the 90dpi mode compared to the 180dpi one. The effect manifests in a different way when returning to the old rectangular-pixel modes, where the characters stretch upwards to be twice as height as they are wide, because there are now four OS&nbsp;units for every pixel vertically compared to two horizontally.</p>
+
+<image id="fig-redraw-cookbook-sysfont-180" file="redraw-cookbook-sysfont-180.png" title="A command window in a 180dpi mode"/>
+
+<p>Wimp adresses this for applications which wish to plot text in the System Font by using VDU&nbsp;23,17,7 to ensure that, when in VDU&nbsp;5 mode, the font is plotted at 16&nbsp;&times;&nbsp;32 OS&nbsp;units regardless of the mode resolution. The settings are updated on a mode change, and applications are trusted not to issue their own VDU&nbsp;23,17,7 commands to change them! This means that we can safely write code like that seen in <reference id="list-redraw-cookbook-printf"/>, and rely on the text coming out the same regardless of the user&rsquo;s chosen screen mode.</p>
 
 <code lang="c" id="list-redraw-cookbook-printf" title="Redrawing the text using printf()">static void results_redraw(wimp_draw *redraw)
 {

@@ -234,7 +234,7 @@ struct wimp_menu_entry {
 
 <p>Using very similar logic to <function>menu_create()</function>, the title length is checked and a buffer allocated if it will need to be indirected. This time, we are dealing with  standard icon data &ndash; so the process of updating the <name>wimp_icon_data</name> block and setting the <name>wimp_ICON_INDIRECTED</name> flag should be familiar from earlier chapters.</p>
 
-<p>We then update the menu width, which was initialised in <function>menu_create()</function> to be 16 OS&nbsp;units. Since outline fonts arrived on the desktop in RISC&nbsp;OS&nbsp;3.5, the Wimp has ignored the <variable>width</variable> field and automatically calculated menu widths based on the size of the entries in the current desktop font. This means that the width is being calculated for users of RISC&nbsp;OS&nbsp;3.1 &ndash; it is in terms of the old system font, where characters were 16 OS&nbsp;units wide on the desktop.</p>
+<p>We then update the menu width, which was initialised in <function>menu_create()</function> to be 16 OS&nbsp;units. Since outline fonts arrived on the desktop in RISC&nbsp;OS&nbsp;3.5, the Wimp has ignored the <variable>width</variable> field and automatically calculated menu widths based on the size of the entries in the current desktop font. This means that the width is being calculated for users of RISC&nbsp;OS&nbsp;3.1 &ndash; it is in terms of the old System Font, where characters were 16 OS&nbsp;units wide on the desktop.</p>
 </section>
 
 <section>
