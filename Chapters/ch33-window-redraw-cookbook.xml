@@ -206,7 +206,7 @@ extern void wimp_set_colour(
 
 <image id="fig-redraw-cookbook-sysfont-180" file="redraw-cookbook-sysfont-180.png" title="A command window in a 180dpi mode"/>
 
-<p>The Wimp addresses this for applications which wish to plot text in the System Font by using VDU&nbsp;23,17,7 to ensure that, when in VDU&nbsp;5 mode, the font is plotted at 16&nbsp;&times;&nbsp;32 OS&nbsp;units regardless of the mode resolution. The settings are updated on a mode change, and applications are trusted not to issue their own VDU&nbsp;23,17,7 commands to change them! This means that we can safely write code like that seen in <reference id="list-redraw-cookbook-printf"/>, and rely on the text coming out the same regardless of the user&rsquo;s chosen screen mode.</p>
+<p>The Wimp addresses this for applications which wish to plot text in the System Font by using VDU&nbsp;23,17,7 to ensure that, when in VDU&nbsp;5 mode, the font is plotted at 16&nbsp;&times;&nbsp;32 OS&nbsp;units regardless of the mode resolution. The settings are updated on a mode change, and applications are trusted not to issue their own VDU&nbsp;23,17,7 commands afterwards! This means that we can safely write code like that seen in <reference id="list-redraw-cookbook-printf"/>, and rely on the text coming out the same regardless of the user&rsquo;s chosen screen mode.</p>
 
 <code lang="c" id="list-redraw-cookbook-printf" title="Redrawing the text using printf()">static void results_redraw(wimp_draw *redraw)
 {
