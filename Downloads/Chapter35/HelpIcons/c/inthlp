@@ -1,0 +1,160 @@
+/* Copyright 2026, Stephen Fryatt (info@stevefryatt.org.uk)
+ *
+ * This file is part of Wimp Programming In C:
+ *
+ *   http://www.stevefryatt.org.uk/risc-os/wimp-prog
+ *
+ * Licensed under the EUPL, Version 1.2 only (the "Licence");
+ * You may not use this work except in compliance with the
+ * Licence.
+ *
+ * You may obtain a copy of the Licence at:
+ *
+ *   http://joinup.ec.europa.eu/software/page/eupl
+ *
+ * Unless required by applicable law or agreed to in
+ * writing, software distributed under the Licence is
+ * distributed on an "AS IS" basis, WITHOUT WARRANTIES
+ * OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ * See the Licence for the specific language governing
+ * permissions and limitations under the Licence.
+ */
+
+/**
+ * File: ihelp.c
+ */
+
+#include <stdlib.h>
+#include <string.h>
+
+#include "oslib/help.h"
+#include "oslib/wimp.h"
+
+#include "sflib/errors.h"
+#include "sflib/event.h"
+#include "sflib/msgs.h"
+#include "sflib/icons.h"
+#include "sflib/string.h"
+
+#include "inthlp.h"
+
+/* Round the given block size to the next full word. */
+
+#define INTHLP_WORDALIGN(x) ( (x+3) & ~3 )
+
+#define INTHLP_OBJECT_NAME_LENGTH 16
+#define INTHLP_ICON_NAME_LENGTH 64
+#define INTHLP_MESSAGE_TOKEN_LENGTH 128
+
+/* Target Window Data Structure. */
+
+struct inthlp_window {
+	wimp_w			window;
+	char			name[INTHLP_OBJECT_NAME_LENGTH];
+
+	struct inthlp_window	*next;
+};
+
+/* Global Variables. */
+
+static struct inthlp_window *inthlp_windows = NULL;
+
+/* Function Prototypes. */
+
+static struct inthlp_window *inthlp_find_window(wimp_w window);
+static osbool inthlp_send_reply_help_request(wimp_message *message);
+static osbool inthlp_lookup_help_text(char *buffer, size_t length, wimp_w window, wimp_i icon);
+
+/* Interactive Help Initialisation. */
+
+void inthlp_initialise(void)
+{
+	event_add_message_handler(message_HELP_REQUEST, EVENT_MESSAGE_INCOMING, inthlp_send_reply_help_request);
+}
+
+/* Add a new window handle and name. */
+
+void inthlp_add_window(wimp_w window, char *name)
+{
+	if (inthlp_find_window(window) != NULL)
+		return;
+
+	struct inthlp_window *new = malloc(sizeof(struct inthlp_window));
+
+	if (new == NULL)
+		return;
+
+	new->window = window;
+	string_copy(new->name, name, INTHLP_OBJECT_NAME_LENGTH);
+
+	new->next = inthlp_windows;
+	inthlp_windows = new;
+}
+
+/* Find a window definition by window handle. */
+
+static struct inthlp_window *inthlp_find_window(wimp_w window)
+{
+	struct inthlp_window *list = inthlp_windows;
+
+	while (list != NULL && list->window != window)
+		list = list->next;
+
+	return list;
+}
+
+/* Message_HelpRequest event handler. */
+
+static osbool inthlp_send_reply_help_request(wimp_message *message)
+{
+	help_full_message_request	*help_request = (help_full_message_request *) message;
+	help_full_message_reply		help_reply;
+
+	if (inthlp_lookup_help_text(help_reply.reply, 236, help_request->w, help_request->i) == FALSE)
+		return FALSE;
+
+	help_reply.size = INTHLP_WORDALIGN(21 + strlen(help_reply.reply));
+	help_reply.your_ref = help_request->my_ref;
+	help_reply.action = message_HELP_REPLY;
+
+	os_error *error = xwimp_send_message(wimp_USER_MESSAGE, (wimp_message *) &help_reply, help_request->sender);
+	if (error != NULL)
+		error_report_os_error(error, wimp_ERROR_BOX_CANCEL_ICON);
+
+	return TRUE;
+}
+
+/* Look up a help text. */
+
+static osbool inthlp_lookup_help_text(char *buffer, size_t length, wimp_w window, wimp_i icon)
+{
+	if (buffer == NULL || length == 0)
+		return FALSE;
+
+	struct inthlp_window *window_data = NULL;
+	char token[INTHLP_MESSAGE_TOKEN_LENGTH];
+
+	if (window == wimp_ICON_BAR) {
+		if (msgs_lookup_result("Help.IconBar", buffer, length))
+			return TRUE;
+	} else if ((window_data = inthlp_find_window(window)) != NULL) {
+		if (icon >= 0) {
+			char icon_name[INTHLP_ICON_NAME_LENGTH];
+			if (!icons_get_validation_command(icon_name, INTHLP_ICON_NAME_LENGTH, window, icon, 'N'))
+				string_printf(icon_name, INTHLP_ICON_NAME_LENGTH, "Icon%d", icon);
+
+			string_printf(token, INTHLP_MESSAGE_TOKEN_LENGTH, "Help.%s.%s", window_data->name, icon_name);
+			if (msgs_lookup_result(token, buffer, length))
+				return TRUE;
+		}
+
+		string_printf(token, INTHLP_MESSAGE_TOKEN_LENGTH, "Help.%s", window_data->name);
+		if (msgs_lookup_result(token, buffer, length))
+			return TRUE;
+	}
+
+	*buffer = '\0';
+
+	return FALSE;
+}

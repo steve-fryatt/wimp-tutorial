@@ -440,7 +440,7 @@ Help.Results:\TExample results \w.</code>
 
 <p>We will go through the <file>Templates</file> and add names to all of the &lsquo;active&rsquo; icons in the <window>Main</window> window, as well as the <icon>Website</icon> button in the <window>ProgInfo</window> window. For now, we will leave the <window>Results</window> alone. Have a look at the file inside <reference id="dl-int-help-icons"/> to see what has changed.</p>
 
-<p>We can also update the help texts in our <file>Messages</file> file as follows. Continuing with the naming convention, messages for icons have a second dot and then the icon name. You should be able to match up the names here with the names in the <file>Templates</file> file! The anomaly is &ldquo;Help.Main.Icon0&rdquo; which looks as if it should match up with the sprite icon &ndash; we&rsquo;ll explain this shortly, when we update the <function>inthlp_lookup_help_text()</function> function.</p>
+<p>We can also update the help texts in our <file>Messages</file> file as follows. Continuing with the naming convention that we started above, messages for icons will have a second dot following the window name and then the name of the icon. You should be able to match up the names here with the names in the <file>Templates</file> file! The anomaly is &ldquo;Help.Main.Icon0&rdquo; which looks as if it should match up with the sprite icon &ndash; we&rsquo;ll explain this shortly, when we update the <function>inthlp_lookup_help_text()</function> function.</p>
 
 <code lang="messtrans"># Interactive Help
 
@@ -457,6 +457,24 @@ Help.Main.Area:\Tarea of the shape.|MType a new value and press Return to update
 Help.Info:This \w gives information about Example.
 Help.Info.Website:\Svisit the application's website.
 Help.Results:\TExample results \w.</code>
+
+<p>The process for looking up help texts within <function>inthlp_lookup_help_text()</function> will now be a sequential one. We will continue to use the window handle from <name>Message_HelpRequest</name> to find a window name but, before appending that to &ldquo;Help.&rdquo; as we were doing before to get a help message for the whole window, we will try to find a more specific message for the icon under the pointer.</p>
+
+<p>The first step is to use the window hand icon handles to find a name for the icon. Within its icons library, SFLib has a function called <function>icons_get_validation_command()</function> which is defined as follows.</p>
+
+<code lang="c">osbool icons_get_validation_command(
+	char	*buffer,
+	size_t	length,
+	wimp_w	w,
+	wimp_i	i,
+	char	command
+);</code>
+
+<p>It takes a window and icon handle pair in <variable>w</variable> and <variable>i</variable>, along with the validation command character of interest in <variable>command</variable>. If the icon in question exists, is indirected <em>and</em> has the specified command within its validation string, then the text following the command character is copied into the buffer whose address and length are passed in <variable>*buffer</variable> and <variable>length</variable> respectively; the function will then return <name>TRUE</name>. In any other situation, the function will return <name>FALSE</name> to indicate that either the icon wasn&rsquo;t indirected or the command wasn&rsquo;t found.</p>
+
+<p>In the updated <function>inthlp_lookup_help_text()</function> function, if <variable>icon</variable> contains an icon handle then it will start by attempting to get the icon name from the validation string. If this fails, it could be because there was no <name>N</name> command in the validation string or because there was no validation string at all: the icon may not be indirected, or it might be an indirected sprite-only icon. In this case, it will use the text &ldquo;Icon<maths>N</maths>&rdquo; &ndash; where <maths>N</maths> is the icon handle &ndash; as a fall-back name. This explains that &ldquo;Help.Main.Icon0&rdquo; token in our updated <file>Messages</file> file above.</p>
+
+<p>Once an icon name of some form has been obtained, the full help token is looked up in the <file>Messages</file> file. If a match is found, the resulting text is used as the interactive help message; if it fails, we fall back to trying just the window name as before.</p>
 
 <code lang="c">static osbool inthlp_lookup_help_text(char *buffer, size_t length, wimp_w window, wimp_i icon)
 {
@@ -489,6 +507,12 @@ Help.Results:\TExample results \w.</code>
 
 	return FALSE;
 }</code>
+
+<p>With this code in place, we now see messages for the individual icons as we hover the mouse over them: as seen in <reference id="fig-int-help-icon-msg"/>. If we hover over an icon for which we haven&rsquo;t provided a help message, however, then we still see the original one for the window itself.</p>
+
+<image id="fig-int-help-icon-msg" file="int-help-icon-msg.png" title="Specific help for the individual icons"/>
+
+<p>The updates to the code can be found in <reference id="dl-int-help-icons"/>.</p>
 
 <download id="dl-int-help-icons" file="HelpIcons" title="Specific Help For Icons" compatibility="none"/>
 </section>
