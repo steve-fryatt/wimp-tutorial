@@ -31,13 +31,10 @@
 
 #include "sflib/errors.h"
 #include "sflib/event.h"
+#include "sflib/general.h"
 #include "sflib/msgs.h"
 
 #include "inthlp.h"
-
-/* Round the given block size to the next full word. */
-
-#define INTHLP_WORDALIGN(x) ( (x+3) & ~3 )
 
 /* Function Prototypes. */
 
@@ -59,7 +56,7 @@ static osbool inthlp_send_reply_help_request(wimp_message *message)
 
 	msgs_lookup("HelpMessage", help_reply.reply, 236);
 
-	help_reply.size = INTHLP_WORDALIGN(21 + strlen(help_reply.reply));
+	help_reply.size = WORDALIGN(21 + strlen(help_reply.reply));
 	help_reply.your_ref = help_request->my_ref;
 	help_reply.action = message_HELP_REPLY;
 

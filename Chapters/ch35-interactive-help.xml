@@ -54,7 +54,7 @@
 <section>
 <title>Requests for help</title>
 
-<p>In order to provide interactive help to users, <cite>Help</cite> tracks the position of the mouse pointer on the screen and it will send a <name>Message_HelpRequest</name> to the owner of the object at the pointer several times every second. If the recipient can supply help for that object, it should do so by sending back a <name>Message_HelpReply</name> in response. This is a good example of why it is wise for applications to request only the messages that they are interested in through <swi>Wimp_Poll</swi> and <swi>Wimp_AddMessages</swi>: up to this point our application has been saving itself from receiving approximately ten messages every second that it hasn&rsquo;t had a use for.</p>
+<p>In order to provide interactive help to users, <cite>Help</cite> tracks the position of the mouse pointer on the screen and it will send a <name>Message_HelpRequest</name> to the owner of the object at the pointer several times every second. If the recipient can supply help for that object, it should do so by sending back a <name>Message_HelpReply</name> in response. This is a good example of why it is wise for applications to request only the messages that they are interested in through <swi>Wimp_Poll</swi> and <swi>Wimp_AddMessages</swi>: up to this point our application has been saving itself from receiving approximately ten messages every second that it hasn&rsquo;t had a use for, not to mention the saving on system overhead by not paging it in and out of memory each time!</p>
 
 <p>We now want to receive those messages, however, so to add support for interactive help to our application we will need to add some code to listen out for <name>Message_HelpRequest</name> and respond in the correct way. We will put this into a new code module formed of a pair of new <file>c.inthlp</file> and <file>h.inthlp</file> files, so we start by adding these to the list of objects in the Makefile in a way that should be familiar.</p>
 
@@ -123,11 +123,7 @@ struct help_full_message_reply {
 
 <p>Our application will need to listen for incoming <name>Message_HelpRequest</name>, decode the contents, turn that into a suitable help message and then reply with a <name>Message_HelpReply</name>. For now, however, let&rsquo;s just get it to respond with a generic message. To that end, we can define our handler for <name>Message_HelpRequest</name> in the form of the <function>inthlp_send_reply_help_request()</function> function as seen in <reference id="list-int-help-inthlp-handler"/>.</p>
 
-<code lang="c" id="list-int-help-inthlp-handler" title="The handler for Message_HelpRequest">/* Round the given block size to the next full word. */
-
-#define INTHLP_WORDALIGN(x) ( (x+3) &amp; ~3 )
-
-/* Message_HelpRequest event handler. */
+<code lang="c" id="list-int-help-inthlp-handler" title="The handler for Message_HelpRequest">/* Message_HelpRequest event handler. */
 
 static osbool inthlp_send_reply_help_request(wimp_message *message)
 {
@@ -136,7 +132,7 @@ static osbool inthlp_send_reply_help_request(wimp_message *message)
 
 	msgs_lookup(&quot;HelpMessage&quot;, help_reply.reply, 236);
 
-	help_reply.size = INTHLP_WORDALIGN(21 + strlen(help_reply.reply));
+	help_reply.size = WORDALIGN(21 + strlen(help_reply.reply));
 	help_reply.your_ref = help_request-&gt;my_ref;
 	help_reply.action = message_HELP_REPLY;
 
@@ -149,11 +145,15 @@ static osbool inthlp_send_reply_help_request(wimp_message *message)
 
 <p>We begin by casting the incoming pointer to the <name>wimp_message</name> structure into a pointer to a <name>help_full_message_request</name> structure, so that we can access the message contents. We also define the <variable>help_reply</variable> variable, to claim space for the reply from the stack.</p>
 
-<p>With the two message variables set up, we start to reply by using MessageTrans to look up the &ldquo;HelpMessage&rdquo; token and write the corresponding message text into the 236 bytes of space within the <name>Message_HelpReply</name> block that is pointed to by <variable>help_reply.reply</variable>. The <variable>size</variable> member should hold the total length of the message block, so we calculate this by taking 20 bytes for the header fields, adding a byte for the string terminator to get 21, then adding on the number of bytes in the string. The <name>INTHLP_WORDALIGN()</name> macro is used to round the size up to the next word (four byte) boundary, as required by the Wimp user message protocol.</p>
+<p>With the two message variables set up, we start to reply by using MessageTrans to look up the &ldquo;HelpMessage&rdquo; token and write the corresponding message text into the 236 bytes of space within the <name>Message_HelpReply</name> block that is pointed to by <variable>help_reply.reply</variable>. The <variable>size</variable> member should hold the total length of the message block, so we calculate this by taking 20 bytes for the header fields, adding a byte for the string terminator to get 21, then adding on the number of bytes in the string. The user message protocol expects the size to be rounded up to the nearest multiple of four bytes, so we use the <name>WORDALIGN()</name> macro that is defined in SFLib&rsquo;s <file>general</file> library to do this.</p>
+
+<code lang="c">/* Round the given block size to the next full word. */
+
+#define WORDALIGN(x) ( (x + 3) &amp; ~3 )</code>
 
 <p>Whenever a user message is sent, the Wimp allocates it a unique reference number which will go into <variable>my_ref</variable>. This is done automatically by <swi>Wimp_SendMessage</swi>, so there is no need for our application to fill in this member of the <name>wimp_message</name> structure: it will have been updated by the time the message reaches the recipient. However, when we <em>reply</em> to a message, the <variable>your_ref</variable> field of the reply should contain the <variable>my_ref</variable> from the original message. We therefore copy this value across from the incoming message block.</p>
 
-<p>The Wimp will also fill in the <variable>sender</variable> field for us with our task handle, so again there is no need to do this. We do, however, need to remember to set the <variable>action</variable> field to <name>message_HELP_REPLY</name>, so that the recipient knows what the message is about.</p>
+<p>The Wimp will also fill in the <variable>sender</variable> field for us with our task handle, so again there is no need to do this. We do, however, need to remember to set the <variable>action</variable> field to <name>message_HELP_REPLY</name> so that when the message arrives, the recipient knows what it is about.</p>
 
 <p>With the <variable>help_reply</variable> structure complete, we are ready to call <swi>Wimp_SendMessage</swi>. OSLib defines this as follows:</p>
 
@@ -305,7 +305,7 @@ static osbool inthlp_lookup_help_text(char *buffer, size_t length, wimp_w window
 	if (inthlp_lookup_help_text(help_reply.reply, 236, help_request-&gt;w) == FALSE)
 		return FALSE;
 
-	help_reply.size = INTHLP_WORDALIGN(21 + strlen(help_reply.reply));
+	help_reply.size = WORDALIGN(21 + strlen(help_reply.reply));
 	help_reply.your_ref = help_request-&gt;my_ref;
 	help_reply.action = message_HELP_REPLY;
 
