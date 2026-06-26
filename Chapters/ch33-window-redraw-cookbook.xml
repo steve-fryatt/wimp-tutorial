@@ -258,6 +258,8 @@ extern void wimp_set_colour(
 	}
 }</code>
 
+<p>The call to <swi>OS_Plot</swi> puts the graphics cursor into the position where we want the top-left pixel of the first character to appear, as this is the origin used when printing in VDU&nbsp;5 mode. This means that we&rsquo;re calculating the vertical position of the <em>top</em> of the row and storing it in <variable>y1</variable>, instead of the bottom of the row in <variable>y0</variable> as we&rsquo;ve been doing before, and then subtracting an offset from that. We could have added an offset to <variable>y0</variable>, but that would have required us to consider the height of the text (although this should always be 32 OS&nbsp;units, as noted above).</p>
+
 <p>The results seen in <reference id="fig-redraw-cookbook-printf"/> might look a bit nostalgic, but may well be all that is required for some quick-but-functional applications. It should be noted that some care was needed with spaces and field widths in the <function>printf()</function> format string in order to get the columns to line up &ndash; how robust this would be in different screen modes is another question! If we wanted more repeatability then we could, of course, make six calls to <function>printf()</function> for each line, and align each one to the appropriate column heading icon &ndash; but it&rsquo;s quickly becoming a lot of effort compared to the icons in <reference id="dl-redraw-content-menus"/> from the previous chapter.</p>
 
 <image id="fig-redraw-cookbook-printf" file="redraw-cookbook-printf.png" title="Outputting the results using printf()"/>
