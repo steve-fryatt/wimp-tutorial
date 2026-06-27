@@ -77,7 +77,7 @@ typedef struct wimp_message wimp_message;</code>
 #define message_MENU_WARNING	0x400C0u
 #define message_MENUS_DELETED	0x400C9u</code>
 
-<p>The other three members of the <name>wimp_message</name> structure give us some context about the message. The <variable>sender</variable> member holds the task handle of the sending task, which will be zero if the Wimp sent the message. This can be useful information if a message requires a response, or some other action which would need our application to know its origin.</p>
+<p>The other three members of the <name>wimp_message</name> structure give us some context about the message. The <variable>sender</variable> member holds the task handle of the sending task, which will be zero if the Wimp sent the message. This can be useful information if a message requires a response, or is asking for some other action which would need our application to know its origin.</p>
 
 <p>Finally, the <variable>my_ref</variable> and <variable>your_ref</variable> members hold numerical reference numbers which allow messages to be easily identified. We will look at these in <reference id="chap-int-help">the next chapter</reference>.</p>
 </section>
@@ -159,11 +159,11 @@ typedef struct wimp_full_message_menus_deleted wimp_full_message_menus_deleted;<
 <section>
 <title>Getting the message</title>
 
-<p>On a normal RISC&nbsp;OS system there will be a <em>lot</em> of user messages flowing around. The ones that we have mentioned above are sent to individual applications, but messages can also be broadcast to all of the applications which are currently running. Broadcasts fall into two categories: those which are intended to notify every application of an event (such as a task starting, changing its memory allocation or exiting, or of a screen mode change), and those which are announcing something they hope an application will be able to claim and handle.</p>
+<p>On a normal RISC&nbsp;OS system there will be a <em>lot</em> of user messages flowing around. The ones that we have mentioned above are sent to individual applications, but messages can also be broadcast to all of the applications which are currently running. Broadcasts fall into two categories: those which are intended to notify every application of an event (such as a task starting, changing its memory allocation or exiting, or of a screen mode change), and those which are announcing something they hope one of the running applications will be able to claim and handle (such as an attempt by the user to load a file).</p>
 
-<p>On RISC&nbsp;OS&nbsp;2, every application would receive every event which might come its way. This was easy for application authors, but wasted a <em>lot</em> of time paging applications in and out again just to pass on messages that most applications didn&rsquo;t even look at. As a result, RISC&nbsp;OS&nbsp;3 introduced a different approach: if an application passes <name>wimp_VERSION_RO3</name> as a minimum version to <swi>Wimp_Initialise</swi>, then the <variable>*messages</variable> parameter to <function>wimp_initialise()</function> will come into effect.</p>
+<p>On RISC&nbsp;OS&nbsp;2, every application would receive every message which might come its way. This was easy for application authors, but wasted a <em>lot</em> of time paging applications in and out again just to pass on messages that most applications didn&rsquo;t even look at. As a result, RISC&nbsp;OS&nbsp;3 introduced a different approach: if an application passes <name>wimp_VERSION_RO3</name> as a minimum version to <swi>Wimp_Initialise</swi>, then the <variable>*messages</variable> parameter to <function>wimp_initialise()</function> will come into effect.</p>
 
-<p>When we originally introduced this code back in <reference id="chap-moving-to-c"/>, we simply said that we would pass <name>NULL</name> for the <variable>*messages</variable> parameter, but didn&rsquo;t really explain <em>why</em> that was the case! As a reminder, the parameters passed to <function>wimp_initialise()</function> are as follows:</p>
+<p>When we originally introduced this code back in <reference id="chap-moving-to-c"/>, we simply said that we would pass <name>NULL</name> for the <variable>*messages</variable> parameter, but once again we didn&rsquo;t really explain <em>why</em> that was the case! As a reminder, the parameters passed to <function>wimp_initialise()</function> are as follows:</p>
 
 <code lang="c">extern wimp_t wimp_initialise(
 	wimp_version_no		version,
@@ -172,7 +172,7 @@ typedef struct wimp_full_message_menus_deleted wimp_full_message_menus_deleted;<
 	wimp_version_no		*version_out
 );</code>
 
-<p>OSLib defines the parameter in question as a pointer to a <name>wimp_message_list</name> structure, and this turns out to contain an array of user message numbers and is defined as follows (where <name>UNKNOWN</name> is defined as <code>1</code> to provide a C90 form of flexible array):</p>
+<p>OSLib defines the parameter in question as a pointer to a <name>wimp_message_list</name> structure, and this turns out to contain an array of user message numbers which is defined as follows (where <name>UNKNOWN</name> is defined as <code>1</code> to provide a C90 form of flexible array):</p>
 
 <code lang="c">struct wimp_message_list {
 	int messages[UNKNOWN];
@@ -232,7 +232,7 @@ typedef struct wimp_message_list wimp_message_list;</code>
 
 <p>This version would actually perform the same as our application currently does, only receiving <name>Message_MenusDeleted</name> and <name>Message_Quit</name>. If we needed more messages, we could simply allocate more space in the <name>wimp_message_list</name> structure and add their codes to the list. The problem, which is probably already apparent, is that we would need to curate a list of all of the messages that our code &ndash; not to mention the libraries that is uses &ndash; requires.</p>
 
-<p>As we have already seen, however, our application is actually using the third option for calling <function>wimp_initialise()</function>: passing <name>NULL</name> to the <variable>*messages</variable> parameter. This automatically gets us <name>Message_Quit</name>, but since <reference id="chap-menus-selection"/> we have also been receiving <name>Message_MenusDeleted</name> without any problems. The reason for this is that the Wimp has a couple of additional SWIs &ndash; <swi>Wimp_AddMessages</swi> and <swi>Wimp_RemoveMessages</swi> &ndash; which can add or remove messages from the list which an application wishes to receive after the call to <swi>Wimp_Initialise</swi>.</p>
+<p>As we have already seen, however, our application is actually using the third option for calling <function>wimp_initialise()</function>: passing <name>NULL</name> to the <variable>*messages</variable> parameter. This automatically gets us <name>Message_Quit</name>, but since <reference id="chap-menus-selection"/> we have also been receiving <name>Message_MenusDeleted</name> without any problems. The reason for this is that the Wimp has a couple of additional SWIs &ndash; <swi>Wimp_AddMessages</swi> and <swi>Wimp_RemoveMessages</swi> &ndash; which can add or remove messages from the list that an application wishes to receive after the call to <swi>Wimp_Initialise</swi>.</p>
 
 <code lang="c">extern void wimp_add_messages(
 	wimp_message_list const *messages
@@ -242,7 +242,7 @@ extern void wimp_remove_messages(
 	wimp_message_list const *messages
 );</code>
 
-<p>These both take pointers to <name>wimp_message_list</name> structures in the same format as <function>wimp_initialise()</function>, and allow messages to be added and removed from the list that an application will receive (although it&rsquo;s worth remembering that <swi>Wimp_RemoveMessages</swi> may not always work as expected in some versions of the Wimp). And because we&rsquo;re registering messages using the <function>event_add_message_handler()</function> function from SFLib&rsquo;s event library, this is calling <swi>Wimp_AddMessages</swi> to add messages to the list for us.</p>
+<p>These both take pointers to <name>wimp_message_list</name> structures in the same format as <function>wimp_initialise()</function>, and allow messages to be added and removed from the list that an application will receive (although it&rsquo;s worth remembering that <swi>Wimp_RemoveMessages</swi> may not always work as expected in some versions of the Wimp). Our application receives <name>Message_MenusDeleted</name> because we&rsquo;re registering messages using the <function>event_add_message_handler()</function> function from SFLib&rsquo;s event library, this is calling <swi>Wimp_AddMessages</swi> to add messages to the list for us.</p>
 
 <p>This is a much cleaner solution compared to passing an exhaustive list of all of the messages that we will need to receive as part of the call to <swi>Wimp_Initialise</swi> and, after our short diversion above, we will continue to use it.</p>
 </section>
