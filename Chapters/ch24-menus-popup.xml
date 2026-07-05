@@ -346,20 +346,28 @@ wimp_set_icon_state(win_handle, WIN_ICON_SHAPE_FIELD, 0, 0);</code>
 
 <p>This works, and in fact the compiler may well optimise out the extra string constants when it compiles the code. It isn&rsquo;t great code, however, and it would be neater if we only defined the text in one place. One possible solution would be to read the text from the appropriate pop-up menu entry when updating the pop-up menu field.</p>
 
-<p>Reading a menu text sounds simple, but it isn't quite as straight-forward as it might seem. For non-indirected menu entries, the text is held in the 12 bytes of icon data within the <name>wimp_menu_entry</name> structure, but if the entry is indirected then we need to look in the location indicated by the pointer stored at this address. SFLib provides a function to return a pointer to the text, in the form of <function>menus_get_text_addr()</function> seen in <reference id="list-menus-popup-sflib-read"/>.</p>
+<p>Reading a menu text sounds simple, but it isn't quite as straight-forward as it might seem. For non-indirected menu entries, the text is held in the 12 bytes of icon data within the <name>wimp_menu_entry</name> structure, but if the entry is indirected then we need to look in the location indicated by the pointer stored at this address. Worse, if the icon is not indirected and the text is 12 characters long, the string isn&rsquo;t even terminated!</p>
 
-<code id="list-menus-popup-sflib-read" lang="c" title="SFLib's routine for reading the addres of a menu text">char *menus_get_text_addr(wimp_menu *menu, int entry)
+<p>To overcome these problems and ensure that we have a terminated string to work with, SFLib provides a function to copy the text into a buffer that we supply. This is <function>menus_copy_text()</function>, as seen in <reference id="list-menus-popup-sflib-read"/>.</p>
+
+<code id="list-menus-popup-sflib-read" lang="c" title="SFLib's routine for reading the addres of a menu text">char *menus_copy_text(wimp_menu *menu, int entry)
 {
-	if (menu == NULL)
+	if (menu == NULL || buffer == NULL || length == 0)
 		return NULL;
 
-	if (menu-&gt;entries[entry].icon_flags &amp; wimp_ICON_INDIRECTED)
-		return menu-&gt;entries[entry].data.indirected_text.text;
-	else
-		return menu-&gt;entries[entry].data.text;
+	if (menu-&gt;entries[entry].icon_flags &amp; wimp_ICON_INDIRECTED) {
+		string_ctrl_copy(buffer, menu-&gt;entries[entry].data.indirected_text.text, length);
+	} else if (length &gt; 12) {
+		string_ctrl_strncpy(buffer, menu-&gt;entries[entry].data.text, 12);
+		buffer[12] = '\0';
+	} else {
+		string_ctrl_copy(buffer, menu-&gt;entries[entry].data.text, length);
+	}
+
+	return buffer;
 }</code>
 
-<p>This function takes a pointer to the <name>wimp_menu</name> structure and the index of the menu entry for which we require the text, and returns a pointer to the string (or <name>NULL</name> if we pass it a <name>NULL</name> menu pointer). We could use this to update our <function>win_set_shape_menu()</function> function, but instead we will take a slightly different route and create a new <function>menu_set_popup_menu()</function> function in <file>c.menu</file> as shown in <reference id="list-menus-popup-set-popup"/>.</p>
+<p>This function takes a pointer to the <name>wimp_menu</name> structure and the index of the menu entry for which we require the text, a pointer to a buffer to hold the text and the size of that buffer; it then returns a pointer to the string in the buffer (or <name>NULL</name> if we pass it a <name>NULL</name> menu pointer). We could use this to update our <function>win_set_shape_menu()</function> function, but instead we will take a slightly different route and create a new <function>menu_set_popup_menu()</function> function in <file>c.menu</file> as shown in <reference id="list-menus-popup-set-popup"/>.</p>
 
 <code id="list-menus-popup-set-popup" lang="c" title="A new routine to set the ticks in any pop-up menu">void menu_set_popup_menu(wimp_menu *menu, int selection, wimp_w window, wimp_i icon)
 {
@@ -380,7 +388,16 @@ wimp_set_icon_state(win_handle, WIN_ICON_SHAPE_FIELD, 0, 0);</code>
 	/* Update the pop-up menu field to the current selection. */
 
 	if (selection &gt;= 0 &amp;&amp; selection &lt; entry) {
-		icons_strncpy(window, icon, menus_get_text_addr(menu, selection));
+		wimp_icon_state state;
+		state.w = window;
+		state.i = icon;
+
+		if ((xwimp_get_icon_state(&amp;state) == NULL) &amp;&amp; (state.icon.flags &amp; wimp_ICON_INDIRECTED)) {
+			menus_copy_text(menu, selection,
+					state.icon.data.indirected_text.text,
+					state.icon.data.indirected_text.size);
+		}
+
 		wimp_set_icon_state(window, icon, 0, 0);
 	}
 }</code>

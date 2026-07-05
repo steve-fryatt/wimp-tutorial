@@ -262,7 +262,16 @@ void menu_set_popup_menu(wimp_menu *menu, int selection, wimp_w window, wimp_i i
 	/* Update the pop-up menu field to the current selection. */
 
 	if (selection >= 0 && selection < entry) {
-		icons_strncpy(window, icon, menus_get_text_addr(menu, selection));
+		wimp_icon_state state;
+		state.w = window;
+		state.i = icon;
+
+		if ((xwimp_get_icon_state(&state) == NULL) && (state.icon.flags & wimp_ICON_INDIRECTED)) {
+			menus_copy_text(menu, selection,
+					state.icon.data.indirected_text.text,
+					state.icon.data.indirected_text.size);
+		}
+
 		wimp_set_icon_state(window, icon, 0, 0);
 	}
 }
