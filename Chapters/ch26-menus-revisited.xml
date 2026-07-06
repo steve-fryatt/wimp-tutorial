@@ -52,7 +52,7 @@
 
 <p>One of the biggest probems with the Wimp&rsquo;s native support for menus is the somewhat piecemeal approach used. It is left up to the application to create and open menus using <swi>Wimp_CreateMenu</swi>, and to re-open them if selections are made with <mouse>Adjust</mouse>. In addition, as we have already seen, it is also the responsibility of the application to ensure that the menu is correctly set up before <swi>Wimp_CreateMenu</swi> is called.</p>
 
-<p>Selections by the user are reported through the <name>Menu_Selection</name> event, but closure of a menu is harder to pin down. If a selection is made, the application can assume that the menu has closed if it does not take action to reopen it; if a menu closes for any other reason, then it is instead reported by the <name>Message_MenusDeleted</name> message.</p>
+<p>Selections made by the user are reported through the <name>Menu_Selection</name> event, but closure of a menu is harder to pin down. If a selection is made, the application can assume that the menu has closed if it does not take action to reopen it; if a menu closes for any other reason, then it is instead reported by the <name>Message_MenusDeleted</name> message.</p>
 
 <p>In an attempt to improve this situation, SFLib&rsquo;s event library provides a range of support for menus. Menus can be attached to windows or individual icons, and they are opened automatically when requested by the user. To allow an application to interact with its menus, the library creates the four window-level &lsquo;pseudo-events&rsquo; listed in <reference id="table-menus-revisited-events"/>, which are reported to the window where the menu is attached.</p>
 
