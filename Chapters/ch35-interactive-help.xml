@@ -143,7 +143,7 @@ static osbool inthlp_send_reply_help_request(wimp_message *message)
 	return TRUE;
 }</code>
 
-<p>We begin by casting the incoming pointer to the <name>wimp_message</name> structure into a pointer to a <name>help_full_message_request</name> structure, so that we can access the message contents. We also define the <variable>help_reply</variable> variable, to claim space for the reply from the stack.</p>
+<p>We begin by casting the incoming pointer to the <name>wimp_message</name> structure into a pointer to a <name>help_full_message_request</name> structure, so that we can access the message contents. We also define the <variable>help_reply</variable> variable, to claim some space from the stack in which we can build up the <name>Message_HelpReply</name> that we will be sending back as a response.</p>
 
 <p>With the two message variables set up, we start to reply by using MessageTrans to look up the &ldquo;HelpMessage&rdquo; token and write the corresponding message text into the 236 bytes of space within the <name>Message_HelpReply</name> block that is pointed to by <variable>help_reply.reply</variable>. The <variable>size</variable> member should hold the total length of the message block, so we calculate this by taking 20 bytes for the header fields, adding a byte for the string terminator to get 21, then adding on the number of bytes in the string. The user message protocol expects the size to be rounded up to the nearest multiple of four bytes, so we make use of the <name>WORDALIGN()</name> macro that is defined in SFLib&rsquo;s <file>general</file> library to do this for us.</p>
 
@@ -186,7 +186,7 @@ HelpMessage:This is an example help message from an Example application!</code>
 
 <image id="fig-int-help-initial-msg" file="int-help-initial-msg.png" title="The 'Hello World' of the interactive help world"/>
 
-<p>The full set of code can be found in <reference id="dl-int-help-initial-msg"/>. As with any new section of the application, there is a fair bit of boilerplate code required to get the new <file>c.inthlp</file> and <file>h.inthlp</file> files into the application &ndash; if any of it seems new or surprising, it&rsquo;s worth going back through the earlier parts of this tutorial to understand how they work before we move on.</p>
+<p>The full set of code can be found in <reference id="dl-int-help-initial-msg"/>. As with any new section of the application, there is a fair bit of boilerplate code required to get the new <file>c.inthlp</file> and <file>h.inthlp</file> files into the codebase &ndash; if any of it seems new or surprising, it&rsquo;s worth going back through the earlier parts of this tutorial to understand how they work before we move on.</p>
 
 <download id="dl-int-help-initial-msg" file="RespondToHelp" title="Respond to Help Requests" compatibility="none"/>
 </section>
@@ -245,7 +245,7 @@ void inthlp_add_window(wimp_w window, char *name)
 	inthlp_windows = new;
 }</code>
 
-<p>The first thing that the function does it check to see if the window handle is already in the list: if it is, it just returns. If the window isn&rsquo;t known, memory is claimed for a new item in the list, the <name>inthlp_window</name> structure is filled in, and the new entry linked in at the head of the list.</p>
+<p>The first thing that the function does is check to see if the window handle is already in the list: if it is, it just returns. If the window isn&rsquo;t known, memory is claimed for a new item in the list, the <name>inthlp_window</name> structure is filled in, and the new entry linked in at the head of the list.</p>
 
 <p>Finding windows by their window handles is done using the <function>inthlp_find_window()</function> function in <reference id="list-int-help-find-window"/>. This takes a window handle in <variable>window</variable> and searches the linked list; if a match is found, a pointer to the list entry is returned.</p>
 
@@ -460,7 +460,7 @@ Help.Results:\TExample results \w.</code>
 
 <p>The process for looking up help texts within <function>inthlp_lookup_help_text()</function> will now be a sequential one. We will continue to use the window handle from <name>Message_HelpRequest</name> to find a window name but, before appending that to &ldquo;Help.&rdquo; as we were doing before to get a help message for the whole window, we will try to find a more specific message for the icon under the pointer.</p>
 
-<p>The first step is to use the window hand icon handles to find a name for the icon. Within its icons library, SFLib has a function called <function>icons_get_validation_command()</function> which is defined as follows.</p>
+<p>The first step is to use the window and icon handles to find a name for the icon. Within its icons library, SFLib has a function called <function>icons_get_validation_command()</function> which is defined as follows.</p>
 
 <code lang="c">osbool icons_get_validation_command(
 	char	*buffer,
@@ -472,7 +472,7 @@ Help.Results:\TExample results \w.</code>
 
 <p>It takes a window and icon handle pair in <variable>w</variable> and <variable>i</variable>, along with the validation command character of interest in <variable>command</variable>. If the icon in question exists, is indirected, isn&rsquo;t sprite-only <em>and</em> has the specified command within its validation string, then the text following the command character is copied into the buffer whose address and length are passed in <variable>*buffer</variable> and <variable>length</variable> respectively; the function will then return <name>TRUE</name>. In any other situation, the function will return <name>FALSE</name> to indicate that either the icon wasn&rsquo;t indirected or the command wasn&rsquo;t found.</p>
 
-<p>In the updated <function>inthlp_lookup_help_text()</function> function, if <variable>icon</variable> contains an icon handle then it will start by attempting to get the icon name from the validation string. If this fails, it could be because there was no <name>N</name> command in the validation string or because there was no validation string at all: the icon may not be indirected, or it might be an indirected sprite-only icon. In this case, it will fall back to using the text &ldquo;Icon<maths>N</maths>&rdquo; &ndash; where <maths>N</maths> is the icon handle. This explains that &ldquo;Help.Main.Icon0&rdquo; token in our updated <file>Messages</file> file above.</p>
+<p>In the updated <function>inthlp_lookup_help_text()</function> function, if <variable>icon</variable> contains an icon handle then it will start by attempting to get the icon name from the validation string. If this fails, it could be because there was no <name>N</name> command in the validation string or because there was no validation string at all: the icon may not be indirected, or it might be an indirected sprite-only icon. In this case, the function will fall back to using the text &ldquo;Icon<maths>N</maths>&rdquo; &ndash; where <maths>N</maths> is the icon handle. This explains that &ldquo;Help.Main.Icon0&rdquo; token in our updated <file>Messages</file> file above.</p>
 
 <p>Once an icon name of some form has been obtained, the full help token is looked up in the <file>Messages</file> file. If a match is found, the resulting text is used as the interactive help message; if it fails, we fall back to trying just the window name as before &ndash; this can be seen if the pointer is hovered over any of the label texts.</p>
 
