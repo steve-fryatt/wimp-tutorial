@@ -280,7 +280,7 @@ static void win_update_all_calculations(void)
 <section>
 <title>A window menu</title>
 
-<p>When adding our calculation facility, we included support for setting the number of decimal places to which values will be displayed. This doesn&rsquo;t actually make a lot of difference for the shapes and data that we are able to show &ndash; although it would become relevant if we extended the shapes to include a heptagon, where the internal angle isn&rsquo;s a round number of degrees. What we can&rsquo;t do at present is change this value without recompiling our code.</p>
+<p>When adding our calculation facility, we included support for setting the number of decimal places to which values will be displayed. This doesn&rsquo;t actually make a lot of difference for the shapes and data that we are able to show &ndash; although it would become relevant if we extended the shapes to include a heptagon, where the internal angle isn&rsquo;t a round number of degrees. What we can&rsquo;t do at present is change this value without recompiling our code.</p>
 
 <p>An obvious solution would be to provide a menu which contains these options, so we will do just that. It&rsquo;s possible to imagine further &lsquo;behavioural&rsquo; parameters that we might wish to adjust in the future, so we will create a general menu for the window to hold them all. We can start by adding some constants to <file>c.win</file> which define the menu entries as seen in <reference id="list-menus-window-const"/> and a new global variable for the <name>wimp_menu</name> block pointer as in <reference id="list-menus-window-global"/>.</p>.
 
